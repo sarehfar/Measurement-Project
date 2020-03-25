@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Md5Crypt.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Codec</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.codec.digest</a> &gt; <span class="el_source">Md5Crypt.java</span></div><h1>Md5Crypt.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.codec.digest;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * The libc crypt() &quot;$1$&quot; and Apache &quot;$apr1$&quot; MD5-based hash algorithm.
+ * &lt;p&gt;
+ * Based on the public domain (&quot;beer-ware&quot;) C implementation from Poul-Henning Kamp which was found at: &lt;a
+ * href=&quot;http://www.freebsd.org/cgi/cvsweb.cgi/src/lib/libcrypt/crypt-md5.c?rev=1.1;content-type=text%2Fplain&quot;&gt;
+ * crypt-md5.c @ freebsd.org&lt;/a&gt;
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * Source:
+ * &lt;/p&gt;
+ * &lt;pre&gt;
+ * $FreeBSD: src/lib/libcrypt/crypt-md5.c,v 1.1 1999/01/21 13:50:09 brandon Exp $
+ * &lt;/pre&gt;
+ * &lt;p&gt;
+ * Conversion to Kotlin and from there to Java in 2012.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * The C style comments are from the original C code, the ones with &quot;//&quot; from the port.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * This class is immutable and thread-safe.
+ * &lt;/p&gt;
+ *
+ * @since 1.7
+ */
+<span class="fc" id="L53">public class Md5Crypt {</span>
+
+    /** The Identifier of the Apache variant. */
+    static final String APR1_PREFIX = &quot;$apr1$&quot;;
+
+    /** The number of bytes of the final hash. */
+    private static final int BLOCKSIZE = 16;
+
+    /** The Identifier of this crypt() variant. */
+    static final String MD5_PREFIX = &quot;$1$&quot;;
+
+    /** The number of rounds of the big loop. */
+    private static final int ROUNDS = 1000;
+
+    /**
+     * See {@link #apr1Crypt(byte[], String)} for details.
+     * &lt;p&gt;
+     * A salt is generated for you using {@link SecureRandom}; your own {@link Random} in
+     * {@link #apr1Crypt(byte[], Random)}.
+     * &lt;/p&gt;
+     *
+     * @param keyBytes plaintext string to hash.
+     * @return the hash value
+     * @throws IllegalArgumentException when a {@link java.security.NoSuchAlgorithmException} is caught. *
+     * @see #apr1Crypt(byte[], String)
+     */
+    public static String apr1Crypt(final byte[] keyBytes) {
+<span class="fc" id="L80">        return apr1Crypt(keyBytes, APR1_PREFIX + B64.getRandomSalt(8));</span>
+    }
+
+    /**
+     * See {@link #apr1Crypt(byte[], String)} for details.
+     * &lt;p&gt;
+     * A salt is generated for you using the user provided {@link Random}.
+     * &lt;/p&gt;
+     *
+     * @param keyBytes plaintext string to hash.
+     * @param random the instance of {@link Random} to use for generating the salt. Consider using {@link SecureRandom}
+     *            or {@link ThreadLocalRandom}.
+     * @return the hash value
+     * @throws IllegalArgumentException when a {@link java.security.NoSuchAlgorithmException} is caught. *
+     * @see #apr1Crypt(byte[], String)
+     * @since 1.12
+     */
+    public static String apr1Crypt(final byte[] keyBytes, final Random random) {
+<span class="fc" id="L98">        return apr1Crypt(keyBytes, APR1_PREFIX + B64.getRandomSalt(8, random));</span>
+    }
+
+    /**
+     * See {@link #apr1Crypt(String, String)} for details.
+     * &lt;p&gt;
+     * A salt is generated for you using {@link SecureRandom}
+     * &lt;/p&gt;
+     *
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @param salt
+     *            An APR1 salt. The salt may be null, in which case a salt is generated for you using
+     *            {@link ThreadLocalRandom}; for more secure salts consider using {@link SecureRandom} to generate your
+     *            own salts.
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             if the salt does not match the allowed pattern
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     */
+    public static String apr1Crypt(final byte[] keyBytes, String salt) {
+        // to make the md5Crypt regex happy
+<span class="fc bfc" id="L121" title="All 4 branches covered.">        if (salt != null &amp;&amp; !salt.startsWith(APR1_PREFIX)) {</span>
+<span class="fc" id="L122">            salt = APR1_PREFIX + salt;</span>
+        }
+<span class="fc" id="L124">        return Md5Crypt.md5Crypt(keyBytes, salt, APR1_PREFIX);</span>
+    }
+
+    /**
+     * See {@link #apr1Crypt(String, String)} for details.
+     * &lt;p&gt;
+     * A salt is generated for you using {@link ThreadLocalRandom}; for more secure salts consider using
+     * {@link SecureRandom} to generate your own salts and calling {@link #apr1Crypt(byte[], String)}.
+     * &lt;/p&gt;
+     *
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     * @see #apr1Crypt(byte[], String)
+     */
+    public static String apr1Crypt(final String keyBytes) {
+<span class="fc" id="L142">        return apr1Crypt(keyBytes.getBytes(StandardCharsets.UTF_8));</span>
+    }
+
+    /**
+     * Generates an Apache htpasswd compatible &quot;$apr1$&quot; MD5 based hash value.
+     * &lt;p&gt;
+     * The algorithm is identical to the crypt(3) &quot;$1$&quot; one but produces different outputs due to the different salt
+     * prefix.
+     *
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @param salt
+     *            salt string including the prefix and optionally garbage at the end. The salt may be null, in which
+     *            case a salt is generated for you using {@link ThreadLocalRandom}; for more secure salts consider using
+     *            {@link SecureRandom} to generate your own salts.
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             if the salt does not match the allowed pattern
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     */
+    public static String apr1Crypt(final String keyBytes, final String salt) {
+<span class="fc" id="L164">        return apr1Crypt(keyBytes.getBytes(StandardCharsets.UTF_8), salt);</span>
+    }
+
+    /**
+     * Generates a libc6 crypt() compatible &quot;$1$&quot; hash value.
+     * &lt;p&gt;
+     * See {@link #md5Crypt(byte[], String)} for details.
+     *&lt;/p&gt;
+     * &lt;p&gt;
+     * A salt is generated for you using {@link ThreadLocalRandom}; for more secure salts consider using
+     * {@link SecureRandom} to generate your own salts and calling {@link #md5Crypt(byte[], String)}.
+     * &lt;/p&gt;
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     * @see #md5Crypt(byte[], String)
+     */
+    public static String md5Crypt(final byte[] keyBytes) {
+<span class="fc" id="L184">        return md5Crypt(keyBytes, MD5_PREFIX + B64.getRandomSalt(8));</span>
+    }
+
+    /**
+     * Generates a libc6 crypt() compatible &quot;$1$&quot; hash value.
+     * &lt;p&gt;
+     * See {@link #md5Crypt(byte[], String)} for details.
+     *&lt;/p&gt;
+     * &lt;p&gt;
+     * A salt is generated for you using the instance of {@link Random} you supply.
+     * &lt;/p&gt;
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @param random
+     *            the instance of {@link Random} to use for generating the salt. Consider using {@link SecureRandom}
+     *            or {@link ThreadLocalRandom}.
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     * @see #md5Crypt(byte[], String)
+     * @since 1.12
+     */
+    public static String md5Crypt(final byte[] keyBytes, final Random random) {
+<span class="fc" id="L207">        return md5Crypt(keyBytes, MD5_PREFIX + B64.getRandomSalt(8, random));</span>
+    }
+
+    /**
+     * Generates a libc crypt() compatible &quot;$1$&quot; MD5 based hash value.
+     * &lt;p&gt;
+     * See {@link Crypt#crypt(String, String)} for details. We use {@link SecureRandom} for seed generation by
+     * default.
+     * &lt;/p&gt;
+     *
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @param salt
+     *            salt string including the prefix and optionally garbage at the end. The salt may be null, in which
+     *            case a salt is generated for you using {@link ThreadLocalRandom}; for more secure salts consider using
+     *            {@link SecureRandom} to generate your own salts.
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             if the salt does not match the allowed pattern
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     */
+    public static String md5Crypt(final byte[] keyBytes, final String salt) {
+<span class="fc" id="L230">        return md5Crypt(keyBytes, salt, MD5_PREFIX);</span>
+    }
+
+    /**
+     * Generates a libc6 crypt() &quot;$1$&quot; or Apache htpasswd &quot;$apr1$&quot; hash value.
+     * &lt;p&gt;
+     * See {@link Crypt#crypt(String, String)} or {@link #apr1Crypt(String, String)} for details. We use
+     * {@link SecureRandom by default}.
+     * &lt;/p&gt;
+     *
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @param salt
+     *            real salt value without prefix or &quot;rounds=&quot;. The salt may be null, in which case a salt
+     *            is generated for you using {@link ThreadLocalRandom}; for more secure salts consider
+     *            using {@link SecureRandom} to generate your own salts.
+     * @param prefix
+     *            salt prefix
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             if the salt does not match the allowed pattern
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     */
+    public static String md5Crypt(final byte[] keyBytes, final String salt, final String prefix) {
+<span class="fc" id="L255">        return md5Crypt(keyBytes, salt, prefix, new SecureRandom());</span>
+    }
+
+    /**
+     * Generates a libc6 crypt() &quot;$1$&quot; or Apache htpasswd &quot;$apr1$&quot; hash value.
+     * &lt;p&gt;
+     * See {@link Crypt#crypt(String, String)} or {@link #apr1Crypt(String, String)} for details.
+     * &lt;/p&gt;
+     *
+     * @param keyBytes
+     *            plaintext string to hash.
+     * @param salt
+     *            real salt value without prefix or &quot;rounds=&quot;. The salt may be null, in which case a salt
+     *            is generated for you using {@link ThreadLocalRandom}; for more secure salts consider
+     *            using {@link SecureRandom} to generate your own salts.
+     * @param prefix
+     *            salt prefix
+     * @param random
+     *            the instance of {@link Random} to use for generating the salt. Consider using {@link SecureRandom}
+     *            or {@link ThreadLocalRandom}.
+     * @return the hash value
+     * @throws IllegalArgumentException
+     *             if the salt does not match the allowed pattern
+     * @throws IllegalArgumentException
+     *             when a {@link java.security.NoSuchAlgorithmException} is caught.
+     * @since 1.12
+     */
+    public static String md5Crypt(final byte[] keyBytes, final String salt, final String prefix, final Random random) {
+<span class="fc" id="L283">        final int keyLen = keyBytes.length;</span>
+
+        // Extract the real salt from the given string which can be a complete hash string.
+        String saltString;
+<span class="fc bfc" id="L287" title="All 2 branches covered.">        if (salt == null) {</span>
+<span class="fc" id="L288">            saltString = B64.getRandomSalt(8, random);</span>
+<span class="fc" id="L289">        } else {</span>
+<span class="fc" id="L290">            final Pattern p = Pattern.compile(&quot;^&quot; + prefix.replace(&quot;$&quot;, &quot;\\$&quot;) + &quot;([\\.\\/a-zA-Z0-9]{1,8}).*&quot;);</span>
+<span class="fc" id="L291">            final Matcher m = p.matcher(salt);</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">            if (!m.find()) {</span>
+<span class="fc" id="L293">                throw new IllegalArgumentException(&quot;Invalid salt value: &quot; + salt);</span>
+            }
+<span class="fc" id="L295">            saltString = m.group(1);</span>
+        }
+<span class="fc" id="L297">        final byte[] saltBytes = saltString.getBytes(StandardCharsets.UTF_8);</span>
+
+<span class="fc" id="L299">        final MessageDigest ctx = DigestUtils.getMd5Digest();</span>
+
+        /*
+         * The password first, since that is what is most unknown
+         */
+<span class="fc" id="L304">        ctx.update(keyBytes);</span>
+
+        /*
+         * Then our magic string
+         */
+<span class="fc" id="L309">        ctx.update(prefix.getBytes(StandardCharsets.UTF_8));</span>
+
+        /*
+         * Then the raw salt
+         */
+<span class="fc" id="L314">        ctx.update(saltBytes);</span>
+
+        /*
+         * Then just as many characters of the MD5(pw,salt,pw)
+         */
+<span class="fc" id="L319">        MessageDigest ctx1 = DigestUtils.getMd5Digest();</span>
+<span class="fc" id="L320">        ctx1.update(keyBytes);</span>
+<span class="fc" id="L321">        ctx1.update(saltBytes);</span>
+<span class="fc" id="L322">        ctx1.update(keyBytes);</span>
+<span class="fc" id="L323">        byte[] finalb = ctx1.digest();</span>
+<span class="fc" id="L324">        int ii = keyLen;</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        while (ii &gt; 0) {</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">            ctx.update(finalb, 0, ii &gt; 16 ? 16 : ii);</span>
+<span class="fc" id="L327">            ii -= 16;</span>
+        }
+
+        /*
+         * Don't leave anything around in vm they could use.
+         */
+<span class="fc" id="L333">        Arrays.fill(finalb, (byte) 0);</span>
+
+        /*
+         * Then something really weird...
+         */
+<span class="fc" id="L338">        ii = keyLen;</span>
+<span class="fc" id="L339">        final int j = 0;</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        while (ii &gt; 0) {</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">            if ((ii &amp; 1) == 1) {</span>
+<span class="fc" id="L342">                ctx.update(finalb[j]);</span>
+<span class="fc" id="L343">            } else {</span>
+<span class="fc" id="L344">                ctx.update(keyBytes[j]);</span>
+            }
+<span class="fc" id="L346">            ii &gt;&gt;= 1;</span>
+        }
+
+        /*
+         * Now make the output string
+         */
+<span class="fc" id="L352">        final StringBuilder passwd = new StringBuilder(prefix + saltString + &quot;$&quot;);</span>
+<span class="fc" id="L353">        finalb = ctx.digest();</span>
+
+        /*
+         * and now, just to make sure things don't run too fast On a 60 Mhz Pentium this takes 34 msec, so you would
+         * need 30 seconds to build a 1000 entry dictionary...
+         */
+<span class="fc bfc" id="L359" title="All 2 branches covered.">        for (int i = 0; i &lt; ROUNDS; i++) {</span>
+<span class="fc" id="L360">            ctx1 = DigestUtils.getMd5Digest();</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">            if ((i &amp; 1) != 0) {</span>
+<span class="fc" id="L362">                ctx1.update(keyBytes);</span>
+<span class="fc" id="L363">            } else {</span>
+<span class="fc" id="L364">                ctx1.update(finalb, 0, BLOCKSIZE);</span>
+            }
+
+<span class="fc bfc" id="L367" title="All 2 branches covered.">            if (i % 3 != 0) {</span>
+<span class="fc" id="L368">                ctx1.update(saltBytes);</span>
+            }
+
+<span class="fc bfc" id="L371" title="All 2 branches covered.">            if (i % 7 != 0) {</span>
+<span class="fc" id="L372">                ctx1.update(keyBytes);</span>
+            }
+
+<span class="fc bfc" id="L375" title="All 2 branches covered.">            if ((i &amp; 1) != 0) {</span>
+<span class="fc" id="L376">                ctx1.update(finalb, 0, BLOCKSIZE);</span>
+<span class="fc" id="L377">            } else {</span>
+<span class="fc" id="L378">                ctx1.update(keyBytes);</span>
+            }
+<span class="fc" id="L380">            finalb = ctx1.digest();</span>
+        }
+
+        // The following was nearly identical to the Sha2Crypt code.
+        // Again, the buflen is not really needed.
+        // int buflen = MD5_PREFIX.length() - 1 + salt_string.length() + 1 + BLOCKSIZE + 1;
+<span class="fc" id="L386">        B64.b64from24bit(finalb[0], finalb[6], finalb[12], 4, passwd);</span>
+<span class="fc" id="L387">        B64.b64from24bit(finalb[1], finalb[7], finalb[13], 4, passwd);</span>
+<span class="fc" id="L388">        B64.b64from24bit(finalb[2], finalb[8], finalb[14], 4, passwd);</span>
+<span class="fc" id="L389">        B64.b64from24bit(finalb[3], finalb[9], finalb[15], 4, passwd);</span>
+<span class="fc" id="L390">        B64.b64from24bit(finalb[4], finalb[10], finalb[5], 4, passwd);</span>
+<span class="fc" id="L391">        B64.b64from24bit((byte) 0, (byte) 0, finalb[11], 2, passwd);</span>
+
+        /*
+         * Don't leave anything around in vm they could use.
+         */
+        // Is there a better way to do this with the JVM?
+<span class="fc" id="L397">        ctx.reset();</span>
+<span class="fc" id="L398">        ctx1.reset();</span>
+<span class="fc" id="L399">        Arrays.fill(keyBytes, (byte) 0);</span>
+<span class="fc" id="L400">        Arrays.fill(saltBytes, (byte) 0);</span>
+<span class="fc" id="L401">        Arrays.fill(finalb, (byte) 0);</span>
+
+<span class="fc" id="L403">        return passwd.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
