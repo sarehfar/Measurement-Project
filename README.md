@@ -1,5 +1,7 @@
 # Measurement-Project
 SOEN6611
+<h2><strong>Metrics</strong></h2>
+<p><strong>Metric 1:</strong> Statement Coverage (Test coverage metric)<br /><strong>Metric 2:</strong> Branch Coverage (Test coverage metric)<br /><strong>Metric 3:</strong> Mutation Score (Test-suite effectiveness)<br /><strong>Metric 4:</strong> McCabe complexity (Complexity metric)<br /><strong>Metric 5:</strong> Code churn (Software maintenance metric)<br /><strong>Metric 6:</strong> Post-release defect density (Software quality)</p>
 <p style="text-align: center;"><strong>Team G</strong></p>
 <table>
 <tbody>
