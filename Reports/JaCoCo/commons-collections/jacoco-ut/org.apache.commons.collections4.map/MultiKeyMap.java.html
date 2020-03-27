@@ -1,0 +1,915 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultiKeyMap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Collections</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.collections4.map</a> &gt; <span class="el_source">MultiKeyMap.java</span></div><h1>MultiKeyMap.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.collections4.map;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Map;
+import java.util.Objects;
+
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.keyvalue.MultiKey;
+
+/**
+ * A {@code Map} implementation that uses multiple keys to map the value.
+ * &lt;p&gt;
+ * This class is the most efficient way to uses multiple keys to map to a value.
+ * The best way to use this class is via the additional map-style methods.
+ * These provide {@code get}, {@code containsKey}, {@code put} and
+ * {@code remove} for individual keys which operate without extra object creation.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * The additional methods are the main interface of this map.
+ * As such, you will not normally hold this map in a variable of type {@code Map}.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * The normal map methods take in and return a {@link MultiKey}.
+ * If you try to use {@code put()} with any other object type a
+ * {@code ClassCastException} is thrown. If you try to use {@code null} as
+ * the key in {@code put()} a {@code NullPointerException} is thrown.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * This map is implemented as a decorator of a {@code AbstractHashedMap} which
+ * enables extra behaviour to be added easily.
+ * &lt;/p&gt;
+ * &lt;ul&gt;
+ * &lt;li&gt;{@code MultiKeyMap.decorate(new LinkedMap())} creates an ordered map.
+ * &lt;li&gt;{@code MultiKeyMap.decorate(new LRUMap())} creates an least recently used map.
+ * &lt;li&gt;{@code MultiKeyMap.decorate(new ReferenceMap())} creates a garbage collector sensitive map.
+ * &lt;/ul&gt;
+ * &lt;p&gt;
+ * Note that {@code IdentityMap} and {@code ReferenceIdentityMap} are unsuitable
+ * for use as the key comparison would work on the whole MultiKey, not the elements within.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * As an example, consider a least recently used cache that uses a String airline code
+ * and a Locale to lookup the airline's name:
+ * &lt;/p&gt;
+ * &lt;pre&gt;
+ * private MultiKeyMap cache = MultiKeyMap.multiKeyMap(new LRUMap(50));
+ *
+ * public String getAirlineName(String code, String locale) {
+ *   String name = (String) cache.get(code, locale);
+ *   if (name == null) {
+ *     name = getAirlineNameFromDB(code, locale);
+ *     cache.put(code, locale, name);
+ *   }
+ *   return name;
+ * }
+ * &lt;/pre&gt;
+ * &lt;p&gt;
+ * &lt;strong&gt;Note that MultiKeyMap is not synchronized and is not thread-safe.&lt;/strong&gt;
+ * If you wish to use this map from multiple threads concurrently, you must use
+ * appropriate synchronization. This class may throw exceptions when accessed
+ * by concurrent threads without synchronization.
+ * &lt;/p&gt;
+ *
+ * @param &lt;K&gt; the type of the keys in this map
+ * @param &lt;V&gt; the type of the values in this map
+ * @since 3.1
+ */
+public class MultiKeyMap&lt;K, V&gt; extends AbstractMapDecorator&lt;MultiKey&lt;? extends K&gt;, V&gt;
+        implements Serializable, Cloneable {
+
+    /** Serialisation version */
+    private static final long serialVersionUID = -1788199231038721040L;
+
+    //-----------------------------------------------------------------------
+    /**
+     * Decorates the specified map to add the MultiKeyMap API and fast query.
+     * The map must not be null and must be empty.
+     *
+     * @param &lt;K&gt;  the key type
+     * @param &lt;V&gt;  the value type
+     * @param map  the map to decorate, not null
+     * @return a new multi key map
+     * @throws NullPointerException if map is null
+     * @throws IllegalArgumentException if the map is not empty
+     * @since 4.0
+     */
+    public static &lt;K, V&gt; MultiKeyMap&lt;K, V&gt; multiKeyMap(final AbstractHashedMap&lt;MultiKey&lt;? extends K&gt;, V&gt; map) {
+<span class="fc" id="L107">        Objects.requireNonNull(map, &quot;map&quot;);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (map.size() &gt; 0) {</span>
+<span class="nc" id="L109">            throw new IllegalArgumentException(&quot;Map must be empty&quot;);</span>
+        }
+<span class="fc" id="L111">        return new MultiKeyMap&lt;&gt;(map);</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Constructs a new MultiKeyMap that decorates a {@code HashedMap}.
+     */
+    public MultiKeyMap() {
+<span class="fc" id="L119">        this(new HashedMap&lt;MultiKey&lt;? extends K&gt;, V&gt;());</span>
+<span class="fc" id="L120">    }</span>
+
+    /**
+     * Constructor that decorates the specified map and is called from
+     * {@link #multiKeyMap(AbstractHashedMap)}.
+     * The map must not be null and should be empty or only contain valid keys.
+     * This constructor performs no validation.
+     *
+     * @param map  the map to decorate
+     */
+    protected MultiKeyMap(final AbstractHashedMap&lt;MultiKey&lt;? extends K&gt;, V&gt; map) {
+<span class="fc" id="L131">        super(map);</span>
+<span class="fc" id="L132">        this.map = map;</span>
+<span class="fc" id="L133">    }</span>
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the value mapped to the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @return the mapped value, null if no match
+     */
+    public V get(final Object key1, final Object key2) {
+<span class="fc" id="L144">        final int hashCode = hash(key1, key2);</span>
+<span class="fc" id="L145">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L146">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="fc bfc" id="L148" title="All 4 branches covered.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2)) {</span>
+<span class="fc" id="L149">                return entry.getValue();</span>
+            }
+<span class="fc" id="L151">            entry = entry.next;</span>
+        }
+<span class="fc" id="L153">        return null;</span>
+    }
+
+    /**
+     * Checks whether the map contains the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @return true if the map contains the key
+     */
+    public boolean containsKey(final Object key1, final Object key2) {
+<span class="fc" id="L164">        final int hashCode = hash(key1, key2);</span>
+<span class="fc" id="L165">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L166">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="fc bfc" id="L168" title="All 4 branches covered.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2)) {</span>
+<span class="fc" id="L169">                return true;</span>
+            }
+<span class="fc" id="L171">            entry = entry.next;</span>
+        }
+<span class="fc" id="L173">        return false;</span>
+    }
+
+    /**
+     * Stores the value against the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param value  the value to store
+     * @return the value previously mapped to this combined key, null if none
+     */
+    public V put(final K key1, final K key2, final V value) {
+<span class="fc" id="L185">        final int hashCode = hash(key1, key2);</span>
+<span class="fc" id="L186">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L187">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="fc bfc" id="L189" title="All 4 branches covered.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2)) {</span>
+<span class="fc" id="L190">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L191">                decorated().updateEntry(entry, value);</span>
+<span class="fc" id="L192">                return oldValue;</span>
+            }
+<span class="fc" id="L194">            entry = entry.next;</span>
+        }
+<span class="fc" id="L196">        decorated().addMapping(index, hashCode, new MultiKey&lt;&gt;(key1, key2), value);</span>
+<span class="fc" id="L197">        return null;</span>
+    }
+
+    /**
+     * Removes the specified multi-key from this map.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @return the value mapped to the removed key, null if key not in map
+     * @since 4.0 (previous name: remove(Object, Object))
+     */
+    public V removeMultiKey(final Object key1, final Object key2) {
+<span class="fc" id="L209">        final int hashCode = hash(key1, key2);</span>
+<span class="fc" id="L210">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L211">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc" id="L212">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; previous = null;</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L214" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2)) {</span>
+<span class="fc" id="L215">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L216">                decorated().removeMapping(entry, index, previous);</span>
+<span class="fc" id="L217">                return oldValue;</span>
+            }
+<span class="fc" id="L219">            previous = entry;</span>
+<span class="fc" id="L220">            entry = entry.next;</span>
+        }
+<span class="fc" id="L222">        return null;</span>
+    }
+
+    /**
+     * Gets the hash code for the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @return the hash code
+     */
+    protected int hash(final Object key1, final Object key2) {
+<span class="fc" id="L233">        int h = 0;</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (key1 != null) {</span>
+<span class="fc" id="L235">            h ^= key1.hashCode();</span>
+        }
+<span class="fc bfc" id="L237" title="All 2 branches covered.">        if (key2 != null) {</span>
+<span class="fc" id="L238">            h ^= key2.hashCode();</span>
+        }
+<span class="fc" id="L240">        h += ~(h &lt;&lt; 9);</span>
+<span class="fc" id="L241">        h ^=  h &gt;&gt;&gt; 14;</span>
+<span class="fc" id="L242">        h +=  h &lt;&lt; 4;</span>
+<span class="fc" id="L243">        h ^=  h &gt;&gt;&gt; 10;</span>
+<span class="fc" id="L244">        return h;</span>
+    }
+
+    /**
+     * Is the key equal to the combined key.
+     *
+     * @param entry  the entry to compare to
+     * @param key1  the first key
+     * @param key2  the second key
+     * @return true if the key matches
+     */
+    protected boolean isEqualKey(final AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry,
+            final Object key1, final Object key2) {
+<span class="fc" id="L257">        final MultiKey&lt;? extends K&gt; multi = entry.getKey();</span>
+<span class="fc" id="L258">        return</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">            multi.size() == 2 &amp;&amp;</span>
+<span class="pc bpc" id="L260" title="1 of 6 branches missed.">            (key1 == multi.getKey(0) || key1 != null &amp;&amp; key1.equals(multi.getKey(0))) &amp;&amp;</span>
+<span class="pc bpc" id="L261" title="5 of 6 branches missed.">            (key2 == multi.getKey(1) || key2 != null &amp;&amp; key2.equals(multi.getKey(1)));</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the value mapped to the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @return the mapped value, null if no match
+     */
+    public V get(final Object key1, final Object key2, final Object key3) {
+<span class="fc" id="L274">        final int hashCode = hash(key1, key2, key3);</span>
+<span class="fc" id="L275">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L276">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L278" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3)) {</span>
+<span class="fc" id="L279">                return entry.getValue();</span>
+            }
+<span class="fc" id="L281">            entry = entry.next;</span>
+        }
+<span class="fc" id="L283">        return null;</span>
+    }
+
+    /**
+     * Checks whether the map contains the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @return true if the map contains the key
+     */
+    public boolean containsKey(final Object key1, final Object key2, final Object key3) {
+<span class="fc" id="L295">        final int hashCode = hash(key1, key2, key3);</span>
+<span class="fc" id="L296">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L297">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L299" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3)) {</span>
+<span class="fc" id="L300">                return true;</span>
+            }
+<span class="fc" id="L302">            entry = entry.next;</span>
+        }
+<span class="fc" id="L304">        return false;</span>
+    }
+
+    /**
+     * Stores the value against the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param value  the value to store
+     * @return the value previously mapped to this combined key, null if none
+     */
+    public V put(final K key1, final K key2, final K key3, final V value) {
+<span class="fc" id="L317">        final int hashCode = hash(key1, key2, key3);</span>
+<span class="fc" id="L318">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L319">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L321" title="2 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3)) {</span>
+<span class="fc" id="L322">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L323">                decorated().updateEntry(entry, value);</span>
+<span class="fc" id="L324">                return oldValue;</span>
+            }
+<span class="nc" id="L326">            entry = entry.next;</span>
+        }
+<span class="fc" id="L328">        decorated().addMapping(index, hashCode, new MultiKey&lt;&gt;(key1, key2, key3), value);</span>
+<span class="fc" id="L329">        return null;</span>
+    }
+
+    /**
+     * Removes the specified multi-key from this map.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @return the value mapped to the removed key, null if key not in map
+     * @since 4.0 (previous name: remove(Object, Object, Object))
+     */
+    public V removeMultiKey(final Object key1, final Object key2, final Object key3) {
+<span class="fc" id="L342">        final int hashCode = hash(key1, key2, key3);</span>
+<span class="fc" id="L343">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L344">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc" id="L345">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; previous = null;</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L347" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3)) {</span>
+<span class="fc" id="L348">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L349">                decorated().removeMapping(entry, index, previous);</span>
+<span class="fc" id="L350">                return oldValue;</span>
+            }
+<span class="fc" id="L352">            previous = entry;</span>
+<span class="fc" id="L353">            entry = entry.next;</span>
+        }
+<span class="fc" id="L355">        return null;</span>
+    }
+
+    /**
+     * Gets the hash code for the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @return the hash code
+     */
+    protected int hash(final Object key1, final Object key2, final Object key3) {
+<span class="fc" id="L367">        int h = 0;</span>
+<span class="fc bfc" id="L368" title="All 2 branches covered.">        if (key1 != null) {</span>
+<span class="fc" id="L369">            h ^= key1.hashCode();</span>
+        }
+<span class="fc bfc" id="L371" title="All 2 branches covered.">        if (key2 != null) {</span>
+<span class="fc" id="L372">            h ^= key2.hashCode();</span>
+        }
+<span class="fc bfc" id="L374" title="All 2 branches covered.">        if (key3 != null) {</span>
+<span class="fc" id="L375">            h ^= key3.hashCode();</span>
+        }
+<span class="fc" id="L377">        h += ~(h &lt;&lt; 9);</span>
+<span class="fc" id="L378">        h ^=  h &gt;&gt;&gt; 14;</span>
+<span class="fc" id="L379">        h +=  h &lt;&lt; 4;</span>
+<span class="fc" id="L380">        h ^=  h &gt;&gt;&gt; 10;</span>
+<span class="fc" id="L381">        return h;</span>
+    }
+
+    /**
+     * Is the key equal to the combined key.
+     *
+     * @param entry  the entry to compare to
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @return true if the key matches
+     */
+    protected boolean isEqualKey(final AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry,
+                                 final Object key1, final Object key2, final Object key3) {
+<span class="fc" id="L395">        final MultiKey&lt;? extends K&gt; multi = entry.getKey();</span>
+<span class="fc" id="L396">        return</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">            multi.size() == 3 &amp;&amp;</span>
+<span class="pc bpc" id="L398" title="2 of 6 branches missed.">            (key1 == multi.getKey(0) || key1 != null &amp;&amp; key1.equals(multi.getKey(0))) &amp;&amp;</span>
+<span class="pc bpc" id="L399" title="5 of 6 branches missed.">            (key2 == multi.getKey(1) || key2 != null &amp;&amp; key2.equals(multi.getKey(1))) &amp;&amp;</span>
+<span class="pc bpc" id="L400" title="5 of 6 branches missed.">            (key3 == multi.getKey(2) || key3 != null &amp;&amp; key3.equals(multi.getKey(2)));</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the value mapped to the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @return the mapped value, null if no match
+     */
+    public V get(final Object key1, final Object key2, final Object key3, final Object key4) {
+<span class="fc" id="L414">        final int hashCode = hash(key1, key2, key3, key4);</span>
+<span class="fc" id="L415">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L416">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L417" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L418" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4)) {</span>
+<span class="fc" id="L419">                return entry.getValue();</span>
+            }
+<span class="fc" id="L421">            entry = entry.next;</span>
+        }
+<span class="fc" id="L423">        return null;</span>
+    }
+
+    /**
+     * Checks whether the map contains the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @return true if the map contains the key
+     */
+    public boolean containsKey(final Object key1, final Object key2, final Object key3, final Object key4) {
+<span class="fc" id="L436">        final int hashCode = hash(key1, key2, key3, key4);</span>
+<span class="fc" id="L437">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L438">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L439" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L440" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4)) {</span>
+<span class="fc" id="L441">                return true;</span>
+            }
+<span class="fc" id="L443">            entry = entry.next;</span>
+        }
+<span class="fc" id="L445">        return false;</span>
+    }
+
+    /**
+     * Stores the value against the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @param value  the value to store
+     * @return the value previously mapped to this combined key, null if none
+     */
+    public V put(final K key1, final K key2, final K key3, final K key4, final V value) {
+<span class="fc" id="L459">        final int hashCode = hash(key1, key2, key3, key4);</span>
+<span class="fc" id="L460">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L461">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc bfc" id="L462" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L463" title="2 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4)) {</span>
+<span class="fc" id="L464">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L465">                decorated().updateEntry(entry, value);</span>
+<span class="fc" id="L466">                return oldValue;</span>
+            }
+<span class="nc" id="L468">            entry = entry.next;</span>
+        }
+<span class="fc" id="L470">        decorated().addMapping(index, hashCode, new MultiKey&lt;&gt;(key1, key2, key3, key4), value);</span>
+<span class="fc" id="L471">        return null;</span>
+    }
+
+    /**
+     * Removes the specified multi-key from this map.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @return the value mapped to the removed key, null if key not in map
+     * @since 4.0 (previous name: remove(Object, Object, Object, Object))
+     */
+    public V removeMultiKey(final Object key1, final Object key2, final Object key3, final Object key4) {
+<span class="fc" id="L485">        final int hashCode = hash(key1, key2, key3, key4);</span>
+<span class="fc" id="L486">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L487">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc" id="L488">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; previous = null;</span>
+<span class="fc bfc" id="L489" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L490" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4)) {</span>
+<span class="fc" id="L491">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L492">                decorated().removeMapping(entry, index, previous);</span>
+<span class="fc" id="L493">                return oldValue;</span>
+            }
+<span class="fc" id="L495">            previous = entry;</span>
+<span class="fc" id="L496">            entry = entry.next;</span>
+        }
+<span class="fc" id="L498">        return null;</span>
+    }
+
+    /**
+     * Gets the hash code for the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @return the hash code
+     */
+    protected int hash(final Object key1, final Object key2, final Object key3, final Object key4) {
+<span class="fc" id="L511">        int h = 0;</span>
+<span class="fc bfc" id="L512" title="All 2 branches covered.">        if (key1 != null) {</span>
+<span class="fc" id="L513">            h ^= key1.hashCode();</span>
+        }
+<span class="fc bfc" id="L515" title="All 2 branches covered.">        if (key2 != null) {</span>
+<span class="fc" id="L516">            h ^= key2.hashCode();</span>
+        }
+<span class="fc bfc" id="L518" title="All 2 branches covered.">        if (key3 != null) {</span>
+<span class="fc" id="L519">            h ^= key3.hashCode();</span>
+        }
+<span class="fc bfc" id="L521" title="All 2 branches covered.">        if (key4 != null) {</span>
+<span class="fc" id="L522">            h ^= key4.hashCode();</span>
+        }
+<span class="fc" id="L524">        h += ~(h &lt;&lt; 9);</span>
+<span class="fc" id="L525">        h ^=  h &gt;&gt;&gt; 14;</span>
+<span class="fc" id="L526">        h +=  h &lt;&lt; 4;</span>
+<span class="fc" id="L527">        h ^=  h &gt;&gt;&gt; 10;</span>
+<span class="fc" id="L528">        return h;</span>
+    }
+
+    /**
+     * Is the key equal to the combined key.
+     *
+     * @param entry  the entry to compare to
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @return true if the key matches
+     */
+    protected boolean isEqualKey(final AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry,
+                                 final Object key1, final Object key2, final Object key3, final Object key4) {
+<span class="fc" id="L543">        final MultiKey&lt;? extends K&gt; multi = entry.getKey();</span>
+<span class="fc" id="L544">        return</span>
+<span class="fc bfc" id="L545" title="All 2 branches covered.">            multi.size() == 4 &amp;&amp;</span>
+<span class="pc bpc" id="L546" title="2 of 6 branches missed.">            (key1 == multi.getKey(0) || key1 != null &amp;&amp; key1.equals(multi.getKey(0))) &amp;&amp;</span>
+<span class="pc bpc" id="L547" title="2 of 6 branches missed.">            (key2 == multi.getKey(1) || key2 != null &amp;&amp; key2.equals(multi.getKey(1))) &amp;&amp;</span>
+<span class="pc bpc" id="L548" title="5 of 6 branches missed.">            (key3 == multi.getKey(2) || key3 != null &amp;&amp; key3.equals(multi.getKey(2))) &amp;&amp;</span>
+<span class="pc bpc" id="L549" title="5 of 6 branches missed.">            (key4 == multi.getKey(3) || key4 != null &amp;&amp; key4.equals(multi.getKey(3)));</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the value mapped to the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @param key5  the fifth key
+     * @return the mapped value, null if no match
+     */
+    public V get(final Object key1, final Object key2, final Object key3, final Object key4, final Object key5) {
+<span class="fc" id="L564">        final int hashCode = hash(key1, key2, key3, key4, key5);</span>
+<span class="fc" id="L565">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L566">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L567" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L568" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4, key5)) {</span>
+<span class="fc" id="L569">                return entry.getValue();</span>
+            }
+<span class="fc" id="L571">            entry = entry.next;</span>
+        }
+<span class="fc" id="L573">        return null;</span>
+    }
+
+    /**
+     * Checks whether the map contains the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @param key5  the fifth key
+     * @return true if the map contains the key
+     */
+    public boolean containsKey(final Object key1, final Object key2, final Object key3,
+                               final Object key4, final Object key5) {
+<span class="fc" id="L588">        final int hashCode = hash(key1, key2, key3, key4, key5);</span>
+<span class="fc" id="L589">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry =</span>
+<span class="fc" id="L590">                decorated().data[decorated().hashIndex(hashCode, decorated().data.length)];</span>
+<span class="fc bfc" id="L591" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L592" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4, key5)) {</span>
+<span class="fc" id="L593">                return true;</span>
+            }
+<span class="fc" id="L595">            entry = entry.next;</span>
+        }
+<span class="fc" id="L597">        return false;</span>
+    }
+
+    /**
+     * Stores the value against the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @param key5  the fifth key
+     * @param value  the value to store
+     * @return the value previously mapped to this combined key, null if none
+     */
+    public V put(final K key1, final K key2, final K key3, final K key4, final K key5, final V value) {
+<span class="fc" id="L612">        final int hashCode = hash(key1, key2, key3, key4, key5);</span>
+<span class="fc" id="L613">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L614">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc bfc" id="L615" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L616" title="2 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4, key5)) {</span>
+<span class="fc" id="L617">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L618">                decorated().updateEntry(entry, value);</span>
+<span class="fc" id="L619">                return oldValue;</span>
+            }
+<span class="nc" id="L621">            entry = entry.next;</span>
+        }
+<span class="fc" id="L623">        decorated().addMapping(index, hashCode, new MultiKey&lt;&gt;(key1, key2, key3, key4, key5), value);</span>
+<span class="fc" id="L624">        return null;</span>
+    }
+
+    /**
+     * Removes the specified multi-key from this map.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @param key5  the fifth key
+     * @return the value mapped to the removed key, null if key not in map
+     * @since 4.0 (previous name: remove(Object, Object, Object, Object, Object))
+     */
+    public V removeMultiKey(final Object key1, final Object key2, final Object key3,
+                            final Object key4, final Object key5) {
+<span class="fc" id="L640">        final int hashCode = hash(key1, key2, key3, key4, key5);</span>
+<span class="fc" id="L641">        final int index = decorated().hashIndex(hashCode, decorated().data.length);</span>
+<span class="fc" id="L642">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry = decorated().data[index];</span>
+<span class="fc" id="L643">        AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; previous = null;</span>
+<span class="fc bfc" id="L644" title="All 2 branches covered.">        while (entry != null) {</span>
+<span class="pc bpc" id="L645" title="1 of 4 branches missed.">            if (entry.hashCode == hashCode &amp;&amp; isEqualKey(entry, key1, key2, key3, key4, key5)) {</span>
+<span class="fc" id="L646">                final V oldValue = entry.getValue();</span>
+<span class="fc" id="L647">                decorated().removeMapping(entry, index, previous);</span>
+<span class="fc" id="L648">                return oldValue;</span>
+            }
+<span class="fc" id="L650">            previous = entry;</span>
+<span class="fc" id="L651">            entry = entry.next;</span>
+        }
+<span class="fc" id="L653">        return null;</span>
+    }
+
+    /**
+     * Gets the hash code for the specified multi-key.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @param key5  the fifth key
+     * @return the hash code
+     */
+    protected int hash(final Object key1, final Object key2, final Object key3, final Object key4, final Object key5) {
+<span class="fc" id="L667">        int h = 0;</span>
+<span class="fc bfc" id="L668" title="All 2 branches covered.">        if (key1 != null) {</span>
+<span class="fc" id="L669">            h ^= key1.hashCode();</span>
+        }
+<span class="fc bfc" id="L671" title="All 2 branches covered.">        if (key2 != null) {</span>
+<span class="fc" id="L672">            h ^= key2.hashCode();</span>
+        }
+<span class="fc bfc" id="L674" title="All 2 branches covered.">        if (key3 != null) {</span>
+<span class="fc" id="L675">            h ^= key3.hashCode();</span>
+        }
+<span class="fc bfc" id="L677" title="All 2 branches covered.">        if (key4 != null) {</span>
+<span class="fc" id="L678">            h ^= key4.hashCode();</span>
+        }
+<span class="fc bfc" id="L680" title="All 2 branches covered.">        if (key5 != null) {</span>
+<span class="fc" id="L681">            h ^= key5.hashCode();</span>
+        }
+<span class="fc" id="L683">        h += ~(h &lt;&lt; 9);</span>
+<span class="fc" id="L684">        h ^=  h &gt;&gt;&gt; 14;</span>
+<span class="fc" id="L685">        h +=  h &lt;&lt; 4;</span>
+<span class="fc" id="L686">        h ^=  h &gt;&gt;&gt; 10;</span>
+<span class="fc" id="L687">        return h;</span>
+    }
+
+    /**
+     * Is the key equal to the combined key.
+     *
+     * @param entry  the entry to compare to
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @param key5  the fifth key
+     * @return true if the key matches
+     */
+    protected boolean isEqualKey(final AbstractHashedMap.HashEntry&lt;MultiKey&lt;? extends K&gt;, V&gt; entry,
+            final Object key1, final Object key2, final Object key3, final Object key4, final Object key5) {
+<span class="fc" id="L703">        final MultiKey&lt;? extends K&gt; multi = entry.getKey();</span>
+<span class="fc" id="L704">        return</span>
+<span class="fc bfc" id="L705" title="All 2 branches covered.">            multi.size() == 5 &amp;&amp;</span>
+<span class="pc bpc" id="L706" title="2 of 6 branches missed.">            (key1 == multi.getKey(0) || key1 != null &amp;&amp; key1.equals(multi.getKey(0))) &amp;&amp;</span>
+<span class="pc bpc" id="L707" title="5 of 6 branches missed.">            (key2 == multi.getKey(1) || key2 != null &amp;&amp; key2.equals(multi.getKey(1))) &amp;&amp;</span>
+<span class="pc bpc" id="L708" title="5 of 6 branches missed.">            (key3 == multi.getKey(2) || key3 != null &amp;&amp; key3.equals(multi.getKey(2))) &amp;&amp;</span>
+<span class="pc bpc" id="L709" title="5 of 6 branches missed.">            (key4 == multi.getKey(3) || key4 != null &amp;&amp; key4.equals(multi.getKey(3))) &amp;&amp;</span>
+<span class="pc bpc" id="L710" title="5 of 6 branches missed.">            (key5 == multi.getKey(4) || key5 != null &amp;&amp; key5.equals(multi.getKey(4)));</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Removes all mappings where the first key is that specified.
+     * &lt;p&gt;
+     * This method removes all the mappings where the {@code MultiKey}
+     * has one or more keys, and the first matches that specified.
+     *
+     * @param key1  the first key
+     * @return true if any elements were removed
+     */
+    public boolean removeAll(final Object key1) {
+<span class="fc" id="L724">        boolean modified = false;</span>
+<span class="fc" id="L725">        final MapIterator&lt;MultiKey&lt;? extends K&gt;, V&gt; it = mapIterator();</span>
+<span class="fc bfc" id="L726" title="All 2 branches covered.">        while (it.hasNext()) {</span>
+<span class="fc" id="L727">            final MultiKey&lt;? extends K&gt; multi = it.next();</span>
+<span class="pc bpc" id="L728" title="2 of 4 branches missed.">            if (multi.size() &gt;= 1 &amp;&amp;</span>
+<span class="pc bpc" id="L729" title="2 of 4 branches missed.">                (key1 == null ? multi.getKey(0) == null : key1.equals(multi.getKey(0)))) {</span>
+<span class="fc" id="L730">                it.remove();</span>
+<span class="fc" id="L731">                modified = true;</span>
+            }
+<span class="fc" id="L733">        }</span>
+<span class="fc" id="L734">        return modified;</span>
+    }
+
+    /**
+     * Removes all mappings where the first two keys are those specified.
+     * &lt;p&gt;
+     * This method removes all the mappings where the {@code MultiKey}
+     * has two or more keys, and the first two match those specified.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @return true if any elements were removed
+     */
+    public boolean removeAll(final Object key1, final Object key2) {
+<span class="fc" id="L748">        boolean modified = false;</span>
+<span class="fc" id="L749">        final MapIterator&lt;MultiKey&lt;? extends K&gt;, V&gt; it = mapIterator();</span>
+<span class="fc bfc" id="L750" title="All 2 branches covered.">        while (it.hasNext()) {</span>
+<span class="fc" id="L751">            final MultiKey&lt;? extends K&gt; multi = it.next();</span>
+<span class="pc bpc" id="L752" title="2 of 4 branches missed.">            if (multi.size() &gt;= 2 &amp;&amp;</span>
+<span class="pc bpc" id="L753" title="3 of 6 branches missed.">                (key1 == null ? multi.getKey(0) == null : key1.equals(multi.getKey(0))) &amp;&amp;</span>
+<span class="pc bpc" id="L754" title="2 of 4 branches missed.">                (key2 == null ? multi.getKey(1) == null : key2.equals(multi.getKey(1)))) {</span>
+<span class="fc" id="L755">                it.remove();</span>
+<span class="fc" id="L756">                modified = true;</span>
+            }
+<span class="fc" id="L758">        }</span>
+<span class="fc" id="L759">        return modified;</span>
+    }
+
+    /**
+     * Removes all mappings where the first three keys are those specified.
+     * &lt;p&gt;
+     * This method removes all the mappings where the {@code MultiKey}
+     * has three or more keys, and the first three match those specified.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @return true if any elements were removed
+     */
+    public boolean removeAll(final Object key1, final Object key2, final Object key3) {
+<span class="fc" id="L774">        boolean modified = false;</span>
+<span class="fc" id="L775">        final MapIterator&lt;MultiKey&lt;? extends K&gt;, V&gt; it = mapIterator();</span>
+<span class="fc bfc" id="L776" title="All 2 branches covered.">        while (it.hasNext()) {</span>
+<span class="fc" id="L777">            final MultiKey&lt;? extends K&gt; multi = it.next();</span>
+<span class="pc bpc" id="L778" title="1 of 4 branches missed.">            if (multi.size() &gt;= 3 &amp;&amp;</span>
+<span class="pc bpc" id="L779" title="3 of 6 branches missed.">                (key1 == null ? multi.getKey(0) == null : key1.equals(multi.getKey(0))) &amp;&amp;</span>
+<span class="pc bpc" id="L780" title="4 of 6 branches missed.">                (key2 == null ? multi.getKey(1) == null : key2.equals(multi.getKey(1))) &amp;&amp;</span>
+<span class="pc bpc" id="L781" title="3 of 4 branches missed.">                (key3 == null ? multi.getKey(2) == null : key3.equals(multi.getKey(2)))) {</span>
+<span class="fc" id="L782">                it.remove();</span>
+<span class="fc" id="L783">                modified = true;</span>
+            }
+<span class="fc" id="L785">        }</span>
+<span class="fc" id="L786">        return modified;</span>
+    }
+
+    /**
+     * Removes all mappings where the first four keys are those specified.
+     * &lt;p&gt;
+     * This method removes all the mappings where the {@code MultiKey}
+     * has four or more keys, and the first four match those specified.
+     *
+     * @param key1  the first key
+     * @param key2  the second key
+     * @param key3  the third key
+     * @param key4  the fourth key
+     * @return true if any elements were removed
+     */
+    public boolean removeAll(final Object key1, final Object key2, final Object key3, final Object key4) {
+<span class="fc" id="L802">        boolean modified = false;</span>
+<span class="fc" id="L803">        final MapIterator&lt;MultiKey&lt;? extends K&gt;, V&gt; it = mapIterator();</span>
+<span class="fc bfc" id="L804" title="All 2 branches covered.">        while (it.hasNext()) {</span>
+<span class="fc" id="L805">            final MultiKey&lt;? extends K&gt; multi = it.next();</span>
+<span class="pc bpc" id="L806" title="1 of 4 branches missed.">            if (multi.size() &gt;= 4 &amp;&amp;</span>
+<span class="pc bpc" id="L807" title="3 of 6 branches missed.">                (key1 == null ? multi.getKey(0) == null : key1.equals(multi.getKey(0))) &amp;&amp;</span>
+<span class="pc bpc" id="L808" title="4 of 6 branches missed.">                (key2 == null ? multi.getKey(1) == null : key2.equals(multi.getKey(1))) &amp;&amp;</span>
+<span class="pc bpc" id="L809" title="4 of 6 branches missed.">                (key3 == null ? multi.getKey(2) == null : key3.equals(multi.getKey(2))) &amp;&amp;</span>
+<span class="pc bpc" id="L810" title="3 of 4 branches missed.">                (key4 == null ? multi.getKey(3) == null : key4.equals(multi.getKey(3)))) {</span>
+<span class="fc" id="L811">                it.remove();</span>
+<span class="fc" id="L812">                modified = true;</span>
+            }
+<span class="fc" id="L814">        }</span>
+<span class="fc" id="L815">        return modified;</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Check to ensure that input keys are valid MultiKey objects.
+     *
+     * @param key  the key to check
+     */
+    protected void checkKey(final MultiKey&lt;?&gt; key) {
+<span class="fc" id="L825">        Objects.requireNonNull(key, &quot;key&quot;);</span>
+<span class="fc" id="L826">    }</span>
+
+    /**
+     * Clones the map without cloning the keys or values.
+     *
+     * @return a shallow clone
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    @Override
+    public MultiKeyMap&lt;K, V&gt; clone() {
+        try {
+<span class="fc" id="L837">            return (MultiKeyMap&lt;K, V&gt;) super.clone();</span>
+<span class="nc" id="L838">        } catch (final CloneNotSupportedException e) {</span>
+<span class="nc" id="L839">            throw new InternalError();</span>
+        }
+    }
+
+    /**
+     * Puts the key and value into the map, where the key must be a non-null
+     * MultiKey object.
+     *
+     * @param key  the non-null MultiKey object
+     * @param value  the value to store
+     * @return the previous value for the key
+     * @throws NullPointerException if the key is null
+     * @throws ClassCastException if the key is not a MultiKey
+     */
+    @Override
+    public V put(final MultiKey&lt;? extends K&gt; key, final V value) {
+<span class="fc" id="L855">        checkKey(key);</span>
+<span class="fc" id="L856">        return super.put(key, value);</span>
+    }
+
+    /**
+     * Copies all of the keys and values from the specified map to this map.
+     * Each key must be non-null and a MultiKey object.
+     *
+     * @param mapToCopy  to this map
+     * @throws NullPointerException if the mapToCopy or any key within is null
+     * @throws ClassCastException if any key in mapToCopy is not a MultiKey
+     */
+    @Override
+    public void putAll(final Map&lt;? extends MultiKey&lt;? extends K&gt;, ? extends V&gt; mapToCopy) {
+<span class="fc bfc" id="L869" title="All 2 branches covered.">        for (final MultiKey&lt;? extends K&gt; key : mapToCopy.keySet()) {</span>
+<span class="fc" id="L870">            checkKey(key);</span>
+<span class="fc" id="L871">        }</span>
+<span class="fc" id="L872">        super.putAll(mapToCopy);</span>
+<span class="fc" id="L873">    }</span>
+
+    //-----------------------------------------------------------------------
+    @Override
+    public MapIterator&lt;MultiKey&lt;? extends K&gt;, V&gt; mapIterator() {
+<span class="fc" id="L878">        return decorated().mapIterator();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected AbstractHashedMap&lt;MultiKey&lt;? extends K&gt;, V&gt; decorated() {
+<span class="fc" id="L886">        return (AbstractHashedMap&lt;MultiKey&lt;? extends K&gt;, V&gt;) super.decorated();</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Write the map out using a custom routine.
+     *
+     * @param out  the output stream
+     * @throws IOException if an error occurs while writing to the stream
+     */
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+<span class="fc" id="L897">        out.defaultWriteObject();</span>
+<span class="fc" id="L898">        out.writeObject(map);</span>
+<span class="fc" id="L899">    }</span>
+
+    /**
+     * Read the map in using a custom routine.
+     *
+     * @param in  the input stream
+     * @throws IOException if an error occurs while reading from the stream
+     * @throws ClassNotFoundException if an object read from the stream can not be loaded
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+<span class="fc" id="L910">        in.defaultReadObject();</span>
+<span class="fc" id="L911">        map = (Map&lt;MultiKey&lt;? extends K&gt;, V&gt;) in.readObject();</span>
+<span class="fc" id="L912">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
