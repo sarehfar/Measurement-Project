@@ -1,0 +1,1330 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimeSeries.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JFreeChart</a> &gt; <a href="index.source.html" class="el_package">org.jfree.data.time</a> &gt; <span class="el_source">TimeSeries.java</span></div><h1>TimeSeries.java</h1><pre class="source lang-java linenums">/* ===========================================================
+ * JFreeChart : a free chart library for the Java(tm) platform
+ * ===========================================================
+ *
+ * (C) Copyright 2000-2020, by Object Refinery Limited and Contributors.
+ *
+ * Project Info:  http://www.jfree.org/jfreechart/index.html
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ * USA.
+ *
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates. 
+ * Other names may be trademarks of their respective owners.]
+ *
+ * ---------------
+ * TimeSeries.java
+ * ---------------
+ * (C) Copyright 2001-2020, by Object Refinery Limited.
+ *
+ * Original Author:  David Gilbert (for Object Refinery Limited);
+ * Contributor(s):   Bryan Scott;
+ *                   Nick Guenther;
+ *
+ */
+
+package org.jfree.data.time;
+
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+import org.jfree.chart.util.ObjectUtils;
+
+import org.jfree.chart.util.Args;
+import org.jfree.chart.util.CloneUtils;
+import org.jfree.data.Range;
+import org.jfree.data.general.Series;
+import org.jfree.data.general.SeriesChangeEvent;
+import org.jfree.data.general.SeriesException;
+
+/**
+ * Represents a sequence of zero or more data items in the form (period, value)
+ * where 'period' is some instance of a subclass of {@link RegularTimePeriod}.
+ * The time series will ensure that (a) all data items have the same type of
+ * period (for example, {@link Day}) and (b) that each period appears at
+ * most one time in the series.
+ */
+public class TimeSeries&lt;S extends Comparable&lt;S&gt;&gt; extends Series&lt;S&gt; 
+        implements Cloneable, Serializable {
+
+    /** For serialization. */
+    private static final long serialVersionUID = -5032960206869675528L;
+
+    /** Default value for the domain description. */
+    protected static final String DEFAULT_DOMAIN_DESCRIPTION = &quot;Time&quot;;
+
+    /** Default value for the range description. */
+    protected static final String DEFAULT_RANGE_DESCRIPTION = &quot;Value&quot;;
+
+    /** A description of the domain. */
+    private String domain;
+
+    /** A description of the range. */
+    private String range;
+
+    /** The type of period for the data. */
+    protected Class timePeriodClass;
+
+    /** The list of data items in the series. */
+    protected List&lt;TimeSeriesDataItem&gt; data;
+
+    /** The maximum number of items for the series. */
+    private int maximumItemCount;
+
+    /**
+     * The maximum age of items for the series, specified as a number of
+     * time periods.
+     */
+    private long maximumItemAge;
+
+    /**
+     * The minimum y-value in the series.
+     * 
+     * @since 1.0.14
+     */
+    private double minY;
+
+    /**
+     * The maximum y-value in the series.
+     *
+     * @since 1.0.14
+     */
+    private double maxY;
+
+    /**
+     * Creates a new (empty) time series.  By default, a daily time series is
+     * created.  Use one of the other constructors if you require a different
+     * time period.
+     *
+     * @param name  the series name ({@code null} not permitted).
+     */
+    public TimeSeries(S name) {
+<span class="fc" id="L123">        this(name, DEFAULT_DOMAIN_DESCRIPTION, DEFAULT_RANGE_DESCRIPTION);</span>
+<span class="fc" id="L124">    }</span>
+
+    /**
+     * Creates a new time series that contains no data.
+     * &lt;P&gt;
+     * Descriptions can be specified for the domain and range.  One situation
+     * where this is helpful is when generating a chart for the time series -
+     * axis labels can be taken from the domain and range description.
+     *
+     * @param name  the name of the series ({@code null} not permitted).
+     * @param domain  the domain description ({@code null} permitted).
+     * @param range  the range description ({@code null} permitted).
+     *
+     * @since 1.0.13
+     */
+    public TimeSeries(S name, String domain, String range) {
+<span class="fc" id="L140">        super(name);</span>
+<span class="fc" id="L141">        this.domain = domain;</span>
+<span class="fc" id="L142">        this.range = range;</span>
+<span class="fc" id="L143">        this.timePeriodClass = null;</span>
+<span class="fc" id="L144">        this.data = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L145">        this.maximumItemCount = Integer.MAX_VALUE;</span>
+<span class="fc" id="L146">        this.maximumItemAge = Long.MAX_VALUE;</span>
+<span class="fc" id="L147">        this.minY = Double.NaN;</span>
+<span class="fc" id="L148">        this.maxY = Double.NaN;</span>
+<span class="fc" id="L149">    }</span>
+
+    /**
+     * Returns the domain description.
+     *
+     * @return The domain description (possibly {@code null}).
+     *
+     * @see #setDomainDescription(String)
+     */
+    public String getDomainDescription() {
+<span class="fc" id="L159">        return this.domain;</span>
+    }
+
+    /**
+     * Sets the domain description and sends a {@code PropertyChangeEvent}
+     * (with the property name {@code Domain}) to all registered
+     * property change listeners.
+     *
+     * @param description  the description ({@code null} permitted).
+     *
+     * @see #getDomainDescription()
+     */
+    public void setDomainDescription(String description) {
+<span class="nc" id="L172">        String old = this.domain;</span>
+<span class="nc" id="L173">        this.domain = description;</span>
+<span class="nc" id="L174">        firePropertyChange(&quot;Domain&quot;, old, description);</span>
+<span class="nc" id="L175">    }</span>
+
+    /**
+     * Returns the range description.
+     *
+     * @return The range description (possibly {@code null}).
+     *
+     * @see #setRangeDescription(String)
+     */
+    public String getRangeDescription() {
+<span class="fc" id="L185">        return this.range;</span>
+    }
+
+    /**
+     * Sets the range description and sends a {@code PropertyChangeEvent}
+     * (with the property name {@code Range}) to all registered listeners.
+     *
+     * @param description  the description ({@code null} permitted).
+     *
+     * @see #getRangeDescription()
+     */
+    public void setRangeDescription(String description) {
+<span class="nc" id="L197">        String old = this.range;</span>
+<span class="nc" id="L198">        this.range = description;</span>
+<span class="nc" id="L199">        firePropertyChange(&quot;Range&quot;, old, description);</span>
+<span class="nc" id="L200">    }</span>
+
+    /**
+     * Returns the number of items in the series.
+     *
+     * @return The item count.
+     */
+    @Override
+    public int getItemCount() {
+<span class="fc" id="L209">        return this.data.size();</span>
+    }
+
+    /**
+     * Returns the list of data items for the series (the list contains
+     * {@link TimeSeriesDataItem} objects and is unmodifiable).
+     *
+     * @return The list of data items.
+     */
+    public List&lt;TimeSeriesDataItem&gt; getItems() {
+<span class="nc" id="L219">        return CloneUtils.cloneList(this.data);</span>
+    }
+
+    /**
+     * Returns the maximum number of items that will be retained in the series.
+     * The default value is {@code Integer.MAX_VALUE}.
+     *
+     * @return The maximum item count.
+     *
+     * @see #setMaximumItemCount(int)
+     */
+    public int getMaximumItemCount() {
+<span class="fc" id="L231">        return this.maximumItemCount;</span>
+    }
+
+    /**
+     * Sets the maximum number of items that will be retained in the series.
+     * If you add a new item to the series such that the number of items will
+     * exceed the maximum item count, then the FIRST element in the series is
+     * automatically removed, ensuring that the maximum item count is not
+     * exceeded.
+     *
+     * @param maximum  the maximum (requires &amp;gt;= 0).
+     *
+     * @see #getMaximumItemCount()
+     */
+    public void setMaximumItemCount(int maximum) {
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">        if (maximum &lt; 0) {</span>
+<span class="nc" id="L247">            throw new IllegalArgumentException(&quot;Negative 'maximum' argument.&quot;);</span>
+        }
+<span class="fc" id="L249">        this.maximumItemCount = maximum;</span>
+<span class="fc" id="L250">        int count = this.data.size();</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        if (count &gt; maximum) {</span>
+<span class="fc" id="L252">            delete(0, count - maximum - 1);</span>
+        }
+<span class="fc" id="L254">    }</span>
+
+    /**
+     * Returns the maximum item age (in time periods) for the series.
+     *
+     * @return The maximum item age.
+     *
+     * @see #setMaximumItemAge(long)
+     */
+    public long getMaximumItemAge() {
+<span class="fc" id="L264">        return this.maximumItemAge;</span>
+    }
+
+    /**
+     * Sets the number of time units in the 'history' for the series.  This
+     * provides one mechanism for automatically dropping old data from the
+     * time series. For example, if a series contains daily data, you might set
+     * the history count to 30.  Then, when you add a new data item, all data
+     * items more than 30 days older than the latest value are automatically
+     * dropped from the series.
+     *
+     * @param periods  the number of time periods.
+     *
+     * @see #getMaximumItemAge()
+     */
+    public void setMaximumItemAge(long periods) {
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">        if (periods &lt; 0) {</span>
+<span class="nc" id="L281">            throw new IllegalArgumentException(&quot;Negative 'periods' argument.&quot;);</span>
+        }
+<span class="fc" id="L283">        this.maximumItemAge = periods;</span>
+<span class="fc" id="L284">        removeAgedItems(true);  // remove old items and notify if necessary</span>
+<span class="fc" id="L285">    }</span>
+
+    /**
+     * Returns the range of y-values in the time series.  Any {@code null} or 
+     * {@code Double.NaN} data values in the series will be ignored (except for
+     * the special case where all data values are {@code null}, in which case 
+     * the return value is {@code Range(Double.NaN, Double.NaN)}).  If the time 
+     * series contains no items, this method will return {@code null}.
+     * 
+     * @return The range of y-values in the time series (possibly {@code null}).
+     * 
+     * @since 1.0.18
+     */
+    public Range findValueRange() {
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (this.data.isEmpty()) {</span>
+<span class="fc" id="L300">            return null;</span>
+        }
+<span class="fc" id="L302">        return new Range(this.minY, this.maxY);</span>
+    }
+    
+    /**
+     * Returns the range of y-values in the time series that fall within 
+     * the specified range of x-values.  This is equivalent to
+     * {@code findValueRange(xRange, TimePeriodAnchor.MIDDLE, timeZone)}.
+     * 
+     * @param xRange  the subrange of x-values ({@code null} not permitted).
+     * @param timeZone  the time zone used to convert x-values to time periods
+     *     ({@code null} not permitted).
+     * 
+     * @return The range. 
+     * 
+     * @since 1.0.18
+     */
+    public Range findValueRange(Range xRange, TimeZone timeZone) {
+<span class="nc" id="L319">        return findValueRange(xRange, TimePeriodAnchor.MIDDLE, timeZone);</span>
+    }
+    
+    /**
+     * Finds the range of y-values that fall within the specified range of
+     * x-values (where the x-values are interpreted as milliseconds since the
+     * epoch and converted to time periods using the specified timezone).
+     * 
+     * @param xRange  the subset of x-values to use ({@code null} not
+     *     permitted).
+     * @param xAnchor  the anchor point for the x-values ({@code null}
+     *     not permitted).
+     * @param zone  the time zone ({@code null} not permitted).
+     * 
+     * @return The range of y-values.
+     * 
+     * @since 1.0.18
+     */
+    public Range findValueRange(Range xRange, TimePeriodAnchor xAnchor, 
+            TimeZone zone) {
+<span class="fc" id="L339">        Args.nullNotPermitted(xRange, &quot;xRange&quot;);</span>
+<span class="fc" id="L340">        Args.nullNotPermitted(xAnchor, &quot;xAnchor&quot;);</span>
+<span class="fc" id="L341">        Args.nullNotPermitted(zone, &quot;zone&quot;);</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">        if (this.data.isEmpty()) {</span>
+<span class="fc" id="L343">            return null;</span>
+        }
+<span class="fc" id="L345">        Calendar calendar = Calendar.getInstance(zone);</span>
+        // since the items are ordered, we could be more clever here and avoid
+        // iterating over all the data
+<span class="fc" id="L348">        double lowY = Double.POSITIVE_INFINITY;</span>
+<span class="fc" id="L349">        double highY = Double.NEGATIVE_INFINITY;</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">        for (int i = 0; i &lt; this.data.size(); i++) {</span>
+<span class="fc" id="L351">            TimeSeriesDataItem item = this.data.get(i);</span>
+<span class="fc" id="L352">            long millis = item.getPeriod().getMillisecond(xAnchor, calendar);</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">            if (xRange.contains(millis)) {</span>
+<span class="fc" id="L354">                Number n = item.getValue();</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">                if (n != null) {</span>
+<span class="fc" id="L356">                    double v = n.doubleValue();</span>
+<span class="fc" id="L357">                    lowY = minIgnoreNaN(lowY, v);</span>
+<span class="fc" id="L358">                    highY = maxIgnoreNaN(highY, v);</span>
+                }
+            }
+        }
+<span class="pc bpc" id="L362" title="1 of 4 branches missed.">        if (Double.isInfinite(lowY) &amp;&amp; Double.isInfinite(highY)) {</span>
+<span class="pc bpc" id="L363" title="1 of 2 branches missed.">            if (lowY &lt; highY) {</span>
+<span class="nc" id="L364">                return new Range(lowY, highY);</span>
+            } else {
+<span class="fc" id="L366">                return new Range(Double.NaN, Double.NaN);</span>
+            }
+        }
+<span class="fc" id="L369">        return new Range(lowY, highY);</span>
+    }
+
+    /**
+     * Returns the smallest y-value in the series, ignoring any 
+     * {@code null} and {@code Double.NaN} values.  This method 
+     * returns {@code Double.NaN} if there is no smallest y-value (for 
+     * example, when the series is empty).
+     *
+     * @return The smallest y-value.
+     *
+     * @see #getMaxY()
+     *
+     * @since 1.0.14
+     */
+    public double getMinY() {
+<span class="fc" id="L385">        return this.minY;</span>
+    }
+
+    /**
+     * Returns the largest y-value in the series, ignoring any 
+     * {@code null} and {@code Double.NaN} values.  This method 
+     * returns {@code Double.NaN} if there is no largest y-value
+     * (for example, when the series is empty).
+     *
+     * @return The largest y-value.
+     *
+     * @see #getMinY()
+     *
+     * @since 1.0.14
+     */
+    public double getMaxY() {
+<span class="fc" id="L401">        return this.maxY;</span>
+    }
+
+    /**
+     * Returns the time period class for this series.
+     * &lt;p&gt;
+     * Only one time period class can be used within a single series (enforced).
+     * If you add a data item with a {@link Year} for the time period, then all
+     * subsequent data items must also have a {@link Year} for the time period.
+     *
+     * @return The time period class (may be {@code null} but only for
+     *     an empty series).
+     */
+    public Class getTimePeriodClass() {
+<span class="fc" id="L415">        return this.timePeriodClass;</span>
+    }
+
+    /**
+     * Returns a data item from the dataset.  Note that the returned object
+     * is a clone of the item in the series, so modifying it will have no 
+     * effect on the data series.
+     * 
+     * @param index  the item index.
+     * 
+     * @return The data item.
+     */
+    public TimeSeriesDataItem getDataItem(int index) {
+<span class="fc" id="L428">        TimeSeriesDataItem item = (TimeSeriesDataItem) this.data.get(index);</span>
+<span class="fc" id="L429">        return (TimeSeriesDataItem) item.clone();</span>
+    }
+
+    /**
+     * Returns the data item for a specific period.  Note that the returned
+     * object is a clone of the item in the series, so modifying it will have
+     * no effect on the data series.
+     *
+     * @param period  the period of interest ({@code null} not allowed).
+     *
+     * @return The data item matching the specified period (or
+     *         {@code null} if there is no match).
+     *
+     * @see #getDataItem(int)
+     */
+    public TimeSeriesDataItem getDataItem(RegularTimePeriod period) {
+<span class="fc" id="L445">        int index = getIndex(period);</span>
+<span class="pc bpc" id="L446" title="1 of 2 branches missed.">        if (index &gt;= 0) {</span>
+<span class="nc" id="L447">            return getDataItem(index);</span>
+        }
+<span class="fc" id="L449">        return null;</span>
+    }
+
+    /**
+     * Returns a data item for the series.  This method returns the object
+     * that is used for the underlying storage - you should not modify the
+     * contents of the returned value unless you know what you are doing.
+     *
+     * @param index  the item index (zero-based).
+     *
+     * @return The data item.
+     *
+     * @see #getDataItem(int)
+     *
+     * @since 1.0.14
+     */
+    TimeSeriesDataItem getRawDataItem(int index) {
+<span class="fc" id="L466">        return (TimeSeriesDataItem) this.data.get(index);</span>
+    }
+
+    /**
+     * Returns a data item for the series.  This method returns the object
+     * that is used for the underlying storage - you should not modify the
+     * contents of the returned value unless you know what you are doing.
+     *
+     * @param period  the item index (zero-based).
+     *
+     * @return The data item.
+     *
+     * @see #getDataItem(RegularTimePeriod)
+     *
+     * @since 1.0.14
+     */
+    TimeSeriesDataItem getRawDataItem(RegularTimePeriod period) {
+<span class="nc" id="L483">        int index = getIndex(period);</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">        if (index &gt;= 0) {</span>
+<span class="nc" id="L485">            return (TimeSeriesDataItem) this.data.get(index);</span>
+        }
+<span class="nc" id="L487">        return null;</span>
+    }
+
+    /**
+     * Returns the time period at the specified index.
+     *
+     * @param index  the index of the data item.
+     *
+     * @return The time period.
+     */
+    public RegularTimePeriod getTimePeriod(int index) {
+<span class="fc" id="L498">        return getRawDataItem(index).getPeriod();</span>
+    }
+
+    /**
+     * Returns a time period that would be the next in sequence on the end of
+     * the time series.
+     *
+     * @return The next time period.
+     */
+    public RegularTimePeriod getNextTimePeriod() {
+<span class="nc" id="L508">        RegularTimePeriod last = getTimePeriod(getItemCount() - 1);</span>
+<span class="nc" id="L509">        return last.next();</span>
+    }
+
+    /**
+     * Returns a collection of all the time periods in the time series.
+     *
+     * @return A collection of all the time periods.
+     */
+    public Collection getTimePeriods() {
+<span class="nc" id="L518">        Collection result = new java.util.ArrayList();</span>
+<span class="nc bnc" id="L519" title="All 2 branches missed.">        for (int i = 0; i &lt; getItemCount(); i++) {</span>
+<span class="nc" id="L520">            result.add(getTimePeriod(i));</span>
+        }
+<span class="nc" id="L522">        return result;</span>
+    }
+
+    /**
+     * Returns a collection of time periods in the specified series, but not in
+     * this series, and therefore unique to the specified series.
+     *
+     * @param series  the series to check against this one.
+     *
+     * @return The unique time periods.
+     */
+    public Collection getTimePeriodsUniqueToOtherSeries(TimeSeries&lt;S&gt; series) {
+<span class="nc" id="L534">        Collection result = new java.util.ArrayList();</span>
+<span class="nc bnc" id="L535" title="All 2 branches missed.">        for (int i = 0; i &lt; series.getItemCount(); i++) {</span>
+<span class="nc" id="L536">            RegularTimePeriod period = series.getTimePeriod(i);</span>
+<span class="nc" id="L537">            int index = getIndex(period);</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">            if (index &lt; 0) {</span>
+<span class="nc" id="L539">                result.add(period);</span>
+            }
+        }
+<span class="nc" id="L542">        return result;</span>
+    }
+
+    /**
+     * Returns the index for the item (if any) that corresponds to a time
+     * period.
+     *
+     * @param period  the time period ({@code null} not permitted).
+     *
+     * @return The index.
+     */
+    public int getIndex(RegularTimePeriod period) {
+<span class="fc" id="L554">        Args.nullNotPermitted(period, &quot;period&quot;);</span>
+<span class="fc" id="L555">        TimeSeriesDataItem dummy = new TimeSeriesDataItem(</span>
+              period, Integer.MIN_VALUE);
+<span class="fc" id="L557">        return Collections.binarySearch(this.data, dummy);</span>
+    }
+
+    /**
+     * Returns the value at the specified index.
+     *
+     * @param index  index of a value.
+     *
+     * @return The value (possibly {@code null}).
+     */
+    public Number getValue(int index) {
+<span class="fc" id="L568">        return getRawDataItem(index).getValue();</span>
+    }
+
+    /**
+     * Returns the value for a time period.  If there is no data item with the
+     * specified period, this method will return {@code null}.
+     *
+     * @param period  time period ({@code null} not permitted).
+     *
+     * @return The value (possibly {@code null}).
+     */
+    public Number getValue(RegularTimePeriod period) {
+<span class="fc" id="L580">        int index = getIndex(period);</span>
+<span class="fc bfc" id="L581" title="All 2 branches covered.">        if (index &gt;= 0) {</span>
+<span class="fc" id="L582">            return getValue(index);</span>
+        }
+<span class="fc" id="L584">        return null;</span>
+    }
+
+    /**
+     * Adds a data item to the series and sends a {@link SeriesChangeEvent} to
+     * all registered listeners.
+     *
+     * @param item  the (timeperiod, value) pair ({@code null} not permitted).
+     */
+    public void add(TimeSeriesDataItem item) {
+<span class="fc" id="L594">        add(item, true);</span>
+<span class="fc" id="L595">    }</span>
+
+    /**
+     * Adds a data item to the series and sends a {@link SeriesChangeEvent} to
+     * all registered listeners.
+     *
+     * @param item  the (timeperiod, value) pair ({@code null} not permitted).
+     * @param notify  notify listeners?
+     */
+    public void add(TimeSeriesDataItem item, boolean notify) {
+<span class="fc" id="L605">        Args.nullNotPermitted(item, &quot;item&quot;);</span>
+<span class="fc" id="L606">        item = (TimeSeriesDataItem) item.clone();</span>
+<span class="fc" id="L607">        Class c = item.getPeriod().getClass();</span>
+<span class="fc bfc" id="L608" title="All 2 branches covered.">        if (this.timePeriodClass == null) {</span>
+<span class="fc" id="L609">            this.timePeriodClass = c;</span>
+        }
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">        else if (!this.timePeriodClass.equals(c)) {</span>
+<span class="nc" id="L612">            StringBuilder b = new StringBuilder();</span>
+<span class="nc" id="L613">            b.append(&quot;You are trying to add data where the time period class &quot;);</span>
+<span class="nc" id="L614">            b.append(&quot;is &quot;);</span>
+<span class="nc" id="L615">            b.append(item.getPeriod().getClass().getName());</span>
+<span class="nc" id="L616">            b.append(&quot;, but the TimeSeries is expecting an instance of &quot;);</span>
+<span class="nc" id="L617">            b.append(this.timePeriodClass.getName());</span>
+<span class="nc" id="L618">            b.append(&quot;.&quot;);</span>
+<span class="nc" id="L619">            throw new SeriesException(b.toString());</span>
+        }
+
+        // make the change (if it's not a duplicate time period)...
+<span class="fc" id="L623">        boolean added = false;</span>
+<span class="fc" id="L624">        int count = getItemCount();</span>
+<span class="fc bfc" id="L625" title="All 2 branches covered.">        if (count == 0) {</span>
+<span class="fc" id="L626">            this.data.add(item);</span>
+<span class="fc" id="L627">            added = true;</span>
+        }
+        else {
+<span class="fc" id="L630">            RegularTimePeriod last = getTimePeriod(getItemCount() - 1);</span>
+<span class="fc bfc" id="L631" title="All 2 branches covered.">            if (item.getPeriod().compareTo(last) &gt; 0) {</span>
+<span class="fc" id="L632">                this.data.add(item);</span>
+<span class="fc" id="L633">                added = true;</span>
+            }
+            else {
+<span class="fc" id="L636">                int index = Collections.binarySearch(this.data, item);</span>
+<span class="pc bpc" id="L637" title="1 of 2 branches missed.">                if (index &lt; 0) {</span>
+<span class="fc" id="L638">                    this.data.add(-index - 1, item);</span>
+<span class="fc" id="L639">                    added = true;</span>
+                }
+                else {
+<span class="nc" id="L642">                    StringBuilder b = new StringBuilder();</span>
+<span class="nc" id="L643">                    b.append(&quot;You are attempting to add an observation for &quot;);</span>
+<span class="nc" id="L644">                    b.append(&quot;the time period &quot;);</span>
+<span class="nc" id="L645">                    b.append(item.getPeriod().toString());</span>
+<span class="nc" id="L646">                    b.append(&quot; but the series already contains an observation&quot;);</span>
+<span class="nc" id="L647">                    b.append(&quot; for that time period. Duplicates are not &quot;);</span>
+<span class="nc" id="L648">                    b.append(&quot;permitted.  Try using the addOrUpdate() method.&quot;);</span>
+<span class="nc" id="L649">                    throw new SeriesException(b.toString());</span>
+                }
+            }
+        }
+<span class="pc bpc" id="L653" title="1 of 2 branches missed.">        if (added) {</span>
+<span class="fc" id="L654">            updateBoundsForAddedItem(item);</span>
+            // check if this addition will exceed the maximum item count...
+<span class="fc bfc" id="L656" title="All 2 branches covered.">            if (getItemCount() &gt; this.maximumItemCount) {</span>
+<span class="fc" id="L657">                TimeSeriesDataItem d = (TimeSeriesDataItem) this.data.remove(0);</span>
+<span class="fc" id="L658">                updateBoundsForRemovedItem(d);</span>
+            }
+
+<span class="fc" id="L661">            removeAgedItems(false);  // remove old items if necessary, but</span>
+                                     // don't notify anyone, because that
+                                     // happens next anyway...
+<span class="pc bpc" id="L664" title="1 of 2 branches missed.">            if (notify) {</span>
+<span class="fc" id="L665">                fireSeriesChanged();</span>
+            }
+        }
+
+<span class="fc" id="L669">    }</span>
+
+    /**
+     * Adds a new data item to the series and sends a {@link SeriesChangeEvent}
+     * to all registered listeners.
+     *
+     * @param period  the time period ({@code null} not permitted).
+     * @param value  the value.
+     */
+    public void add(RegularTimePeriod period, double value) {
+        // defer argument checking...
+<span class="fc" id="L680">        add(period, value, true);</span>
+<span class="fc" id="L681">    }</span>
+
+    /**
+     * Adds a new data item to the series and sends a {@link SeriesChangeEvent}
+     * to all registered listeners.
+     *
+     * @param period  the time period ({@code null} not permitted).
+     * @param value  the value.
+     * @param notify  notify listeners?
+     */
+    public void add(RegularTimePeriod period, double value, boolean notify) {
+        // defer argument checking...
+<span class="fc" id="L693">        TimeSeriesDataItem item = new TimeSeriesDataItem(period, value);</span>
+<span class="fc" id="L694">        add(item, notify);</span>
+<span class="fc" id="L695">    }</span>
+
+    /**
+     * Adds a new data item to the series and sends
+     * a {@link org.jfree.data.general.SeriesChangeEvent} to all registered
+     * listeners.
+     *
+     * @param period  the time period ({@code null} not permitted).
+     * @param value  the value ({@code null} permitted).
+     */
+    public void add(RegularTimePeriod period, Number value) {
+        // defer argument checking...
+<span class="fc" id="L707">        add(period, value, true);</span>
+<span class="fc" id="L708">    }</span>
+
+    /**
+     * Adds a new data item to the series and sends a {@link SeriesChangeEvent}
+     * to all registered listeners.
+     *
+     * @param period  the time period ({@code null} not permitted).
+     * @param value  the value ({@code null} permitted).
+     * @param notify  notify listeners?
+     */
+    public void add(RegularTimePeriod period, Number value, boolean notify) {
+        // defer argument checking...
+<span class="fc" id="L720">        TimeSeriesDataItem item = new TimeSeriesDataItem(period, value);</span>
+<span class="fc" id="L721">        add(item, notify);</span>
+<span class="fc" id="L722">    }</span>
+
+    /**
+     * Updates (changes) the value for a time period.  Throws a
+     * {@link SeriesException} if the period does not exist.
+     *
+     * @param period  the period ({@code null} not permitted).
+     * @param value  the value.
+     * 
+     * @since 1.0.14
+     */
+    public void update(RegularTimePeriod period, double value) {
+<span class="fc" id="L734">      update(period, new Double(value));</span>
+<span class="fc" id="L735">    }</span>
+
+    /**
+     * Updates (changes) the value for a time period.  Throws a
+     * {@link SeriesException} if the period does not exist.
+     *
+     * @param period  the period ({@code null} not permitted).
+     * @param value  the value ({@code null} permitted).
+     */
+    public void update(RegularTimePeriod period, Number value) {
+<span class="fc" id="L745">        TimeSeriesDataItem temp = new TimeSeriesDataItem(period, value);</span>
+<span class="fc" id="L746">        int index = Collections.binarySearch(this.data, temp);</span>
+<span class="pc bpc" id="L747" title="1 of 2 branches missed.">        if (index &lt; 0) {</span>
+<span class="nc" id="L748">            throw new SeriesException(&quot;There is no existing value for the &quot;</span>
+                    + &quot;specified 'period'.&quot;);
+        }
+<span class="fc" id="L751">        update(index, value);</span>
+<span class="fc" id="L752">    }</span>
+
+    /**
+     * Updates (changes) the value of a data item.
+     *
+     * @param index  the index of the data item.
+     * @param value  the new value ({@code null} permitted).
+     */
+    public void update(int index, Number value) {
+<span class="fc" id="L761">        TimeSeriesDataItem item = (TimeSeriesDataItem) this.data.get(index);</span>
+<span class="fc" id="L762">        boolean iterate = false;</span>
+<span class="fc" id="L763">        Number oldYN = item.getValue();</span>
+<span class="pc bpc" id="L764" title="1 of 2 branches missed.">        if (oldYN != null) {</span>
+<span class="fc" id="L765">            double oldY = oldYN.doubleValue();</span>
+<span class="pc bpc" id="L766" title="1 of 2 branches missed.">            if (!Double.isNaN(oldY)) {</span>
+<span class="pc bpc" id="L767" title="1 of 4 branches missed.">                iterate = oldY &lt;= this.minY || oldY &gt;= this.maxY;</span>
+            }
+        }
+<span class="fc" id="L770">        item.setValue(value);</span>
+<span class="pc bpc" id="L771" title="1 of 2 branches missed.">        if (iterate) {</span>
+<span class="fc" id="L772">            updateMinMaxYByIteration();</span>
+        }
+<span class="nc bnc" id="L774" title="All 2 branches missed.">        else if (value != null) {</span>
+<span class="nc" id="L775">            double yy = value.doubleValue();</span>
+<span class="nc" id="L776">            this.minY = minIgnoreNaN(this.minY, yy);</span>
+<span class="nc" id="L777">            this.maxY = maxIgnoreNaN(this.maxY, yy);</span>
+        }
+<span class="fc" id="L779">        fireSeriesChanged();</span>
+<span class="fc" id="L780">    }</span>
+
+    /**
+     * Adds or updates data from one series to another.  Returns another series
+     * containing the values that were overwritten.
+     *
+     * @param series  the series to merge with this.
+     *
+     * @return A series containing the values that were overwritten.
+     */
+    public TimeSeries&lt;S&gt; addAndOrUpdate(TimeSeries&lt;S&gt; series) {
+<span class="fc" id="L791">        TimeSeries&lt;S&gt; overwritten = new TimeSeries&lt;&gt;(getKey());</span>
+<span class="fc bfc" id="L792" title="All 2 branches covered.">        for (int i = 0; i &lt; series.getItemCount(); i++) {</span>
+<span class="fc" id="L793">            TimeSeriesDataItem item = series.getRawDataItem(i);</span>
+<span class="fc" id="L794">            TimeSeriesDataItem oldItem = addOrUpdate(item.getPeriod(),</span>
+<span class="fc" id="L795">                    item.getValue());</span>
+<span class="pc bpc" id="L796" title="1 of 2 branches missed.">            if (oldItem != null) {</span>
+<span class="fc" id="L797">                overwritten.add(oldItem);</span>
+            }
+        }
+<span class="fc" id="L800">        return overwritten;</span>
+    }
+
+    /**
+     * Adds or updates an item in the times series and sends a
+     * {@link SeriesChangeEvent} to all registered listeners.
+     *
+     * @param period  the time period to add/update ({@code null} not
+     *                permitted).
+     * @param value  the new value.
+     *
+     * @return A copy of the overwritten data item, or {@code null} if no
+     *         item was overwritten.
+     */
+    public TimeSeriesDataItem addOrUpdate(RegularTimePeriod period,
+                                          double value) {
+<span class="fc" id="L816">        return addOrUpdate(period, new Double(value));</span>
+    }
+
+    /**
+     * Adds or updates an item in the times series and sends a
+     * {@link SeriesChangeEvent} to all registered listeners.
+     *
+     * @param period  the time period to add/update ({@code null} not
+     *                permitted).
+     * @param value  the new value ({@code null} permitted).
+     *
+     * @return A copy of the overwritten data item, or {@code null} if no
+     *         item was overwritten.
+     */
+    public TimeSeriesDataItem addOrUpdate(RegularTimePeriod period,
+            Number value) {
+<span class="fc" id="L832">        return addOrUpdate(new TimeSeriesDataItem(period, value));</span>
+    }
+
+    /**
+     * Adds or updates an item in the times series and sends a
+     * {@link SeriesChangeEvent} to all registered listeners.
+     *
+     * @param item  the data item ({@code null} not permitted).
+     *
+     * @return A copy of the overwritten data item, or {@code null} if no
+     *         item was overwritten.
+     *
+     * @since 1.0.14
+     */
+    public TimeSeriesDataItem addOrUpdate(TimeSeriesDataItem item) {
+
+<span class="fc" id="L848">        Args.nullNotPermitted(item, &quot;item&quot;);</span>
+<span class="fc" id="L849">        Class periodClass = item.getPeriod().getClass();</span>
+<span class="fc bfc" id="L850" title="All 2 branches covered.">        if (this.timePeriodClass == null) {</span>
+<span class="fc" id="L851">            this.timePeriodClass = periodClass;</span>
+        }
+<span class="fc bfc" id="L853" title="All 2 branches covered.">        else if (!this.timePeriodClass.equals(periodClass)) {</span>
+<span class="fc" id="L854">            String msg = &quot;You are trying to add data where the time &quot;</span>
+<span class="fc" id="L855">                    + &quot;period class is &quot; + periodClass.getName()</span>
+                    + &quot;, but the TimeSeries is expecting an instance of &quot;
+<span class="fc" id="L857">                    + this.timePeriodClass.getName() + &quot;.&quot;;</span>
+<span class="fc" id="L858">            throw new SeriesException(msg);</span>
+        }
+<span class="fc" id="L860">        TimeSeriesDataItem overwritten = null;</span>
+<span class="fc" id="L861">        int index = Collections.binarySearch(this.data, item);</span>
+<span class="fc bfc" id="L862" title="All 2 branches covered.">        if (index &gt;= 0) {</span>
+<span class="fc" id="L863">            TimeSeriesDataItem existing</span>
+<span class="fc" id="L864">                    = (TimeSeriesDataItem) this.data.get(index);</span>
+<span class="fc" id="L865">            overwritten = (TimeSeriesDataItem) existing.clone();</span>
+            // figure out if we need to iterate through all the y-values
+            // to find the revised minY / maxY
+<span class="fc" id="L868">            boolean iterate = false;</span>
+<span class="fc" id="L869">            Number oldYN = existing.getValue();</span>
+<span class="fc bfc" id="L870" title="All 2 branches covered.">            double oldY = oldYN != null ? oldYN.doubleValue() : Double.NaN;</span>
+<span class="fc bfc" id="L871" title="All 2 branches covered.">            if (!Double.isNaN(oldY)) {</span>
+<span class="fc bfc" id="L872" title="All 4 branches covered.">                iterate = oldY &lt;= this.minY || oldY &gt;= this.maxY;</span>
+            }
+<span class="fc" id="L874">            existing.setValue(item.getValue());</span>
+<span class="fc bfc" id="L875" title="All 2 branches covered.">            if (iterate) {</span>
+<span class="fc" id="L876">                updateMinMaxYByIteration();</span>
+            }
+<span class="pc bpc" id="L878" title="1 of 2 branches missed.">            else if (item.getValue() != null) {</span>
+<span class="fc" id="L879">                double yy = item.getValue().doubleValue();</span>
+<span class="fc" id="L880">                this.minY = minIgnoreNaN(this.minY, yy);</span>
+<span class="fc" id="L881">                this.maxY = maxIgnoreNaN(this.maxY, yy);</span>
+            }
+<span class="fc" id="L883">        }</span>
+        else {
+<span class="fc" id="L885">            item = (TimeSeriesDataItem) item.clone();</span>
+<span class="fc" id="L886">            this.data.add(-index - 1, item);</span>
+<span class="fc" id="L887">            updateBoundsForAddedItem(item);</span>
+
+            // check if this addition will exceed the maximum item count...
+<span class="fc bfc" id="L890" title="All 2 branches covered.">            if (getItemCount() &gt; this.maximumItemCount) {</span>
+<span class="fc" id="L891">                TimeSeriesDataItem d = (TimeSeriesDataItem) this.data.remove(0);</span>
+<span class="fc" id="L892">                updateBoundsForRemovedItem(d);</span>
+            }
+        }
+<span class="fc" id="L895">        removeAgedItems(false);  // remove old items if necessary, but</span>
+                                 // don't notify anyone, because that
+                                 // happens next anyway...
+<span class="fc" id="L898">        fireSeriesChanged();</span>
+<span class="fc" id="L899">        return overwritten;</span>
+
+    }
+
+    /**
+     * Age items in the series.  Ensure that the timespan from the youngest to
+     * the oldest record in the series does not exceed maximumItemAge time
+     * periods.  Oldest items will be removed if required.
+     *
+     * @param notify  controls whether or not a {@link SeriesChangeEvent} is
+     *                sent to registered listeners IF any items are removed.
+     */
+    public void removeAgedItems(boolean notify) {
+        // check if there are any values earlier than specified by the history
+        // count...
+<span class="fc bfc" id="L914" title="All 2 branches covered.">        if (getItemCount() &gt; 1) {</span>
+<span class="fc" id="L915">            long latest = getTimePeriod(getItemCount() - 1).getSerialIndex();</span>
+<span class="fc" id="L916">            boolean removed = false;</span>
+<span class="fc bfc" id="L917" title="All 2 branches covered.">            while ((latest - getTimePeriod(0).getSerialIndex())</span>
+                    &gt; this.maximumItemAge) {
+<span class="fc" id="L919">                this.data.remove(0);</span>
+<span class="fc" id="L920">                removed = true;</span>
+            }
+<span class="fc bfc" id="L922" title="All 2 branches covered.">            if (removed) {</span>
+<span class="fc" id="L923">                updateMinMaxYByIteration();</span>
+<span class="fc bfc" id="L924" title="All 2 branches covered.">                if (notify) {</span>
+<span class="fc" id="L925">                    fireSeriesChanged();</span>
+                }
+            }
+        }
+<span class="fc" id="L929">    }</span>
+
+    /**
+     * Age items in the series.  Ensure that the timespan from the supplied
+     * time to the oldest record in the series does not exceed history count.
+     * oldest items will be removed if required.
+     *
+     * @param latest  the time to be compared against when aging data
+     *     (specified in milliseconds).
+     * @param notify  controls whether or not a {@link SeriesChangeEvent} is
+     *                sent to registered listeners IF any items are removed.
+     */
+    public void removeAgedItems(long latest, boolean notify) {
+<span class="fc bfc" id="L942" title="All 2 branches covered.">        if (this.data.isEmpty()) {</span>
+<span class="fc" id="L943">            return;  // nothing to do</span>
+        }
+        // find the serial index of the period specified by 'latest'
+<span class="fc" id="L946">        long index = Long.MAX_VALUE;</span>
+        try {
+<span class="fc" id="L948">            Method m = RegularTimePeriod.class.getDeclaredMethod(</span>
+                    &quot;createInstance&quot;, new Class[] {Class.class, Date.class,
+                    TimeZone.class, Locale.class});
+<span class="fc" id="L951">            RegularTimePeriod newest = (RegularTimePeriod) m.invoke(</span>
+                    this.timePeriodClass, new Object[] {this.timePeriodClass,
+<span class="fc" id="L953">                            new Date(latest), TimeZone.getDefault(), Locale.getDefault()});</span>
+<span class="fc" id="L954">            index = newest.getSerialIndex();</span>
+        }
+<span class="nc" id="L956">        catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L957">            throw new RuntimeException(e);</span>
+        }
+<span class="nc" id="L959">        catch (IllegalAccessException e) {</span>
+<span class="nc" id="L960">            throw new RuntimeException(e);</span>
+        }
+<span class="nc" id="L962">        catch (InvocationTargetException e) {</span>
+<span class="nc" id="L963">            throw new RuntimeException(e);</span>
+<span class="fc" id="L964">        }</span>
+
+        // check if there are any values earlier than specified by the history
+        // count...
+<span class="fc" id="L968">        boolean removed = false;</span>
+<span class="fc bfc" id="L969" title="All 2 branches covered.">        while (getItemCount() &gt; 0 &amp;&amp; (index</span>
+<span class="fc bfc" id="L970" title="All 2 branches covered.">                - getTimePeriod(0).getSerialIndex()) &gt; this.maximumItemAge) {</span>
+<span class="fc" id="L971">            this.data.remove(0);</span>
+<span class="fc" id="L972">            removed = true;</span>
+        }
+<span class="fc bfc" id="L974" title="All 2 branches covered.">        if (removed) {</span>
+<span class="fc" id="L975">            updateMinMaxYByIteration();</span>
+<span class="pc bpc" id="L976" title="1 of 2 branches missed.">            if (notify) {</span>
+<span class="fc" id="L977">                fireSeriesChanged();</span>
+            }
+        }
+<span class="fc" id="L980">    }</span>
+
+    /**
+     * Removes all data items from the series and sends a
+     * {@link SeriesChangeEvent} to all registered listeners.
+     */
+    public void clear() {
+<span class="pc bpc" id="L987" title="1 of 2 branches missed.">        if (this.data.size() &gt; 0) {</span>
+<span class="fc" id="L988">            this.data.clear();</span>
+<span class="fc" id="L989">            this.timePeriodClass = null;</span>
+<span class="fc" id="L990">            this.minY = Double.NaN;</span>
+<span class="fc" id="L991">            this.maxY = Double.NaN;</span>
+<span class="fc" id="L992">            fireSeriesChanged();</span>
+        }
+<span class="fc" id="L994">    }</span>
+
+    /**
+     * Deletes the data item for the given time period and sends a
+     * {@link SeriesChangeEvent} to all registered listeners.  If there is no
+     * item with the specified time period, this method does nothing.
+     *
+     * @param period  the period of the item to delete ({@code null} not
+     *                permitted).
+     */
+    public void delete(RegularTimePeriod period) {
+<span class="fc" id="L1005">        int index = getIndex(period);</span>
+<span class="fc bfc" id="L1006" title="All 2 branches covered.">        if (index &gt;= 0) {</span>
+<span class="fc" id="L1007">            TimeSeriesDataItem item = (TimeSeriesDataItem) this.data.remove(</span>
+                    index);
+<span class="fc" id="L1009">            updateBoundsForRemovedItem(item);</span>
+<span class="pc bpc" id="L1010" title="1 of 2 branches missed.">            if (this.data.isEmpty()) {</span>
+<span class="nc" id="L1011">                this.timePeriodClass = null;</span>
+            }
+<span class="fc" id="L1013">            fireSeriesChanged();</span>
+        }
+<span class="fc" id="L1015">    }</span>
+
+    /**
+     * Deletes data from start until end index (end inclusive).
+     *
+     * @param start  the index of the first period to delete.
+     * @param end  the index of the last period to delete.
+     */
+    public void delete(int start, int end) {
+<span class="fc" id="L1024">        delete(start, end, true);</span>
+<span class="fc" id="L1025">    }</span>
+
+    /**
+     * Deletes data from start until end index (end inclusive).
+     *
+     * @param start  the index of the first period to delete.
+     * @param end  the index of the last period to delete.
+     * @param notify  notify listeners?
+     *
+     * @since 1.0.14
+     */
+    public void delete(int start, int end, boolean notify) {
+<span class="pc bpc" id="L1037" title="1 of 2 branches missed.">        if (end &lt; start) {</span>
+<span class="nc" id="L1038">            throw new IllegalArgumentException(&quot;Requires start &lt;= end.&quot;);</span>
+        }
+<span class="fc bfc" id="L1040" title="All 2 branches covered.">        for (int i = 0; i &lt;= (end - start); i++) {</span>
+<span class="fc" id="L1041">            this.data.remove(start);</span>
+        }
+<span class="fc" id="L1043">        updateMinMaxYByIteration();</span>
+<span class="pc bpc" id="L1044" title="1 of 2 branches missed.">        if (this.data.isEmpty()) {</span>
+<span class="nc" id="L1045">            this.timePeriodClass = null;</span>
+        }
+<span class="pc bpc" id="L1047" title="1 of 2 branches missed.">        if (notify) {</span>
+<span class="fc" id="L1048">            fireSeriesChanged();</span>
+        }
+<span class="fc" id="L1050">    }</span>
+
+    /**
+     * Returns a clone of the time series.
+     * &lt;P&gt;
+     * Notes:
+     * &lt;ul&gt;
+     *   &lt;li&gt;no need to clone the domain and range descriptions, since String
+     *     object is immutable;&lt;/li&gt;
+     *   &lt;li&gt;we pass over to the more general method clone(start, end).&lt;/li&gt;
+     * &lt;/ul&gt;
+     *
+     * @return A clone of the time series.
+     *
+     * @throws CloneNotSupportedException not thrown by this class, but
+     *         subclasses may differ.
+     */
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+<span class="fc" id="L1069">        TimeSeries&lt;S&gt; clone = (TimeSeries) super.clone();</span>
+<span class="fc" id="L1070">        clone.data = (List) ObjectUtils.deepClone(this.data);</span>
+<span class="fc" id="L1071">        return clone;</span>
+    }
+
+    /**
+     * Creates a new timeseries by copying a subset of the data in this time
+     * series.
+     *
+     * @param start  the index of the first time period to copy.
+     * @param end  the index of the last time period to copy.
+     *
+     * @return A series containing a copy of this times series from start until
+     *         end.
+     *
+     * @throws CloneNotSupportedException if there is a cloning problem.
+     */
+    public TimeSeries&lt;S&gt; createCopy(int start, int end)
+            throws CloneNotSupportedException {
+<span class="fc bfc" id="L1088" title="All 2 branches covered.">        if (start &lt; 0) {</span>
+<span class="fc" id="L1089">            throw new IllegalArgumentException(&quot;Requires start &gt;= 0.&quot;);</span>
+        }
+<span class="fc bfc" id="L1091" title="All 2 branches covered.">        if (end &lt; start) {</span>
+<span class="fc" id="L1092">            throw new IllegalArgumentException(&quot;Requires start &lt;= end.&quot;);</span>
+        }
+<span class="fc" id="L1094">        TimeSeries&lt;S&gt; copy = (TimeSeries) super.clone();</span>
+<span class="fc" id="L1095">        copy.minY = Double.NaN;</span>
+<span class="fc" id="L1096">        copy.maxY = Double.NaN;</span>
+<span class="fc" id="L1097">        copy.data = new java.util.ArrayList();</span>
+<span class="fc bfc" id="L1098" title="All 2 branches covered.">        if (this.data.size() &gt; 0) {</span>
+<span class="fc bfc" id="L1099" title="All 2 branches covered.">            for (int index = start; index &lt;= end; index++) {</span>
+<span class="fc" id="L1100">                TimeSeriesDataItem item</span>
+<span class="fc" id="L1101">                        = (TimeSeriesDataItem) this.data.get(index);</span>
+<span class="fc" id="L1102">                TimeSeriesDataItem clone = (TimeSeriesDataItem) item.clone();</span>
+                try {
+<span class="fc" id="L1104">                    copy.add(clone);</span>
+                }
+<span class="nc" id="L1106">                catch (SeriesException e) {</span>
+<span class="nc" id="L1107">                    throw new RuntimeException(e);</span>
+<span class="fc" id="L1108">                }</span>
+            }
+        }
+<span class="fc" id="L1111">        return copy;</span>
+    }
+
+    /**
+     * Creates a new timeseries by copying a subset of the data in this time
+     * series.
+     *
+     * @param start  the first time period to copy ({@code null} not
+     *         permitted).
+     * @param end  the last time period to copy ({@code null} not permitted).
+     *
+     * @return A time series containing a copy of this time series from start
+     *         until end.
+     *
+     * @throws CloneNotSupportedException if there is a cloning problem.
+     */
+    public TimeSeries&lt;S&gt; createCopy(RegularTimePeriod start, RegularTimePeriod end)
+        throws CloneNotSupportedException {
+
+<span class="fc" id="L1130">        Args.nullNotPermitted(start, &quot;start&quot;);</span>
+<span class="fc" id="L1131">        Args.nullNotPermitted(end, &quot;end&quot;);</span>
+<span class="pc bpc" id="L1132" title="1 of 2 branches missed.">        if (start.compareTo(end) &gt; 0) {</span>
+<span class="nc" id="L1133">            throw new IllegalArgumentException(</span>
+                    &quot;Requires start on or before end.&quot;);
+        }
+<span class="fc" id="L1136">        boolean emptyRange = false;</span>
+<span class="fc" id="L1137">        int startIndex = getIndex(start);</span>
+<span class="fc bfc" id="L1138" title="All 2 branches covered.">        if (startIndex &lt; 0) {</span>
+<span class="fc" id="L1139">            startIndex = -(startIndex + 1);</span>
+<span class="fc bfc" id="L1140" title="All 2 branches covered.">            if (startIndex == this.data.size()) {</span>
+<span class="fc" id="L1141">                emptyRange = true;  // start is after last data item</span>
+            }
+        }
+<span class="fc" id="L1144">        int endIndex = getIndex(end);</span>
+<span class="fc bfc" id="L1145" title="All 2 branches covered.">        if (endIndex &lt; 0) {             // end period is not in original series</span>
+<span class="fc" id="L1146">            endIndex = -(endIndex + 1); // this is first item AFTER end period</span>
+<span class="fc" id="L1147">            endIndex = endIndex - 1;    // so this is last item BEFORE end</span>
+        }
+<span class="fc bfc" id="L1149" title="All 4 branches covered.">        if ((endIndex &lt; 0)  || (endIndex &lt; startIndex)) {</span>
+<span class="fc" id="L1150">            emptyRange = true;</span>
+        }
+<span class="fc bfc" id="L1152" title="All 2 branches covered.">        if (emptyRange) {</span>
+<span class="fc" id="L1153">            TimeSeries&lt;S&gt; copy = (TimeSeries) super.clone();</span>
+<span class="fc" id="L1154">            copy.data = new java.util.ArrayList();</span>
+<span class="fc" id="L1155">            return copy;</span>
+        }
+<span class="fc" id="L1157">        return createCopy(startIndex, endIndex);</span>
+    }
+
+    /**
+     * Tests the series for equality with an arbitrary object.
+     *
+     * @param obj  the object to test against ({@code null} permitted).
+     *
+     * @return A boolean.
+     */
+    @Override
+    public boolean equals(Object obj) {
+<span class="fc bfc" id="L1169" title="All 2 branches covered.">        if (obj == this) {</span>
+<span class="fc" id="L1170">            return true;</span>
+        }
+<span class="pc bpc" id="L1172" title="1 of 2 branches missed.">        if (!(obj instanceof TimeSeries)) {</span>
+<span class="nc" id="L1173">            return false;</span>
+        }
+<span class="fc" id="L1175">        TimeSeries&lt;S&gt; that = (TimeSeries) obj;</span>
+<span class="pc bpc" id="L1176" title="1 of 2 branches missed.">        if (!ObjectUtils.equal(getDomainDescription(),</span>
+<span class="fc" id="L1177">                that.getDomainDescription())) {</span>
+<span class="nc" id="L1178">            return false;</span>
+        }
+<span class="pc bpc" id="L1180" title="1 of 2 branches missed.">        if (!ObjectUtils.equal(getRangeDescription(),</span>
+<span class="fc" id="L1181">                that.getRangeDescription())) {</span>
+<span class="nc" id="L1182">            return false;</span>
+        }
+<span class="fc bfc" id="L1184" title="All 2 branches covered.">        if (!ObjectUtils.equal(this.timePeriodClass,</span>
+                that.timePeriodClass)) {
+<span class="fc" id="L1186">            return false;</span>
+        }
+<span class="fc bfc" id="L1188" title="All 2 branches covered.">        if (getMaximumItemAge() != that.getMaximumItemAge()) {</span>
+<span class="fc" id="L1189">            return false;</span>
+        }
+<span class="fc bfc" id="L1191" title="All 2 branches covered.">        if (getMaximumItemCount() != that.getMaximumItemCount()) {</span>
+<span class="fc" id="L1192">            return false;</span>
+        }
+<span class="fc" id="L1194">        int count = getItemCount();</span>
+<span class="pc bpc" id="L1195" title="1 of 2 branches missed.">        if (count != that.getItemCount()) {</span>
+<span class="nc" id="L1196">            return false;</span>
+        }
+<span class="fc bfc" id="L1198" title="All 2 branches covered.">        if (!ObjectUtils.equal(this.data, that.data)) {</span>
+<span class="fc" id="L1199">            return false;</span>
+        }
+<span class="fc" id="L1201">        return super.equals(obj);</span>
+    }
+
+    /**
+     * Returns a hash code value for the object.
+     *
+     * @return The hashcode
+     */
+    @Override
+    public int hashCode() {
+<span class="fc" id="L1211">        int result = super.hashCode();</span>
+<span class="pc bpc" id="L1212" title="1 of 2 branches missed.">        result = 29 * result + (this.domain != null ? this.domain.hashCode()</span>
+<span class="pc" id="L1213">                : 0);</span>
+<span class="pc bpc" id="L1214" title="1 of 2 branches missed.">        result = 29 * result + (this.range != null ? this.range.hashCode() : 0);</span>
+<span class="fc bfc" id="L1215" title="All 2 branches covered.">        result = 29 * result + (this.timePeriodClass != null</span>
+<span class="fc" id="L1216">                ? this.timePeriodClass.hashCode() : 0);</span>
+        // it is too slow to look at every data item, so let's just look at
+        // the first, middle and last items...
+<span class="fc" id="L1219">        int count = getItemCount();</span>
+<span class="fc bfc" id="L1220" title="All 2 branches covered.">        if (count &gt; 0) {</span>
+<span class="fc" id="L1221">            TimeSeriesDataItem item = getRawDataItem(0);</span>
+<span class="fc" id="L1222">            result = 29 * result + item.hashCode();</span>
+        }
+<span class="fc bfc" id="L1224" title="All 2 branches covered.">        if (count &gt; 1) {</span>
+<span class="fc" id="L1225">            TimeSeriesDataItem item = getRawDataItem(count - 1);</span>
+<span class="fc" id="L1226">            result = 29 * result + item.hashCode();</span>
+        }
+<span class="fc bfc" id="L1228" title="All 2 branches covered.">        if (count &gt; 2) {</span>
+<span class="fc" id="L1229">            TimeSeriesDataItem item = getRawDataItem(count / 2);</span>
+<span class="fc" id="L1230">            result = 29 * result + item.hashCode();</span>
+        }
+<span class="fc" id="L1232">        result = 29 * result + this.maximumItemCount;</span>
+<span class="fc" id="L1233">        result = 29 * result + (int) this.maximumItemAge;</span>
+<span class="fc" id="L1234">        return result;</span>
+    }
+
+    /**
+     * Updates the cached values for the minimum and maximum data values.
+     *
+     * @param item  the item added ({@code null} not permitted).
+     *
+     * @since 1.0.14
+     */
+    private void updateBoundsForAddedItem(TimeSeriesDataItem item) {
+<span class="fc" id="L1245">        Number yN = item.getValue();</span>
+<span class="fc bfc" id="L1246" title="All 2 branches covered.">        if (item.getValue() != null) {</span>
+<span class="fc" id="L1247">            double y = yN.doubleValue();</span>
+<span class="fc" id="L1248">            this.minY = minIgnoreNaN(this.minY, y);</span>
+<span class="fc" id="L1249">            this.maxY = maxIgnoreNaN(this.maxY, y);</span>
+        }
+<span class="fc" id="L1251">    }</span>
+    
+    /**
+     * Updates the cached values for the minimum and maximum data values on
+     * the basis that the specified item has just been removed.
+     *
+     * @param item  the item added ({@code null} not permitted).
+     *
+     * @since 1.0.14
+     */
+    private void updateBoundsForRemovedItem(TimeSeriesDataItem item) {
+<span class="fc" id="L1262">        Number yN = item.getValue();</span>
+<span class="pc bpc" id="L1263" title="1 of 2 branches missed.">        if (yN != null) {</span>
+<span class="fc" id="L1264">            double y = yN.doubleValue();</span>
+<span class="pc bpc" id="L1265" title="1 of 2 branches missed.">            if (!Double.isNaN(y)) {</span>
+<span class="pc bpc" id="L1266" title="1 of 4 branches missed.">                if (y &lt;= this.minY || y &gt;= this.maxY) {</span>
+<span class="fc" id="L1267">                    updateMinMaxYByIteration();</span>
+                }
+            }
+        }
+<span class="fc" id="L1271">    }</span>
+
+    /**
+     * Finds the bounds of the x and y values for the series, by iterating
+     * through all the data items.
+     *
+     * @since 1.0.14
+     */
+    private void updateMinMaxYByIteration() {
+<span class="fc" id="L1280">        this.minY = Double.NaN;</span>
+<span class="fc" id="L1281">        this.maxY = Double.NaN;</span>
+<span class="fc" id="L1282">        Iterator iterator = this.data.iterator();</span>
+<span class="fc bfc" id="L1283" title="All 2 branches covered.">        while (iterator.hasNext()) {</span>
+<span class="fc" id="L1284">            TimeSeriesDataItem item = (TimeSeriesDataItem) iterator.next();</span>
+<span class="fc" id="L1285">            updateBoundsForAddedItem(item);</span>
+<span class="fc" id="L1286">        }</span>
+<span class="fc" id="L1287">    }</span>
+
+    /**
+     * A function to find the minimum of two values, but ignoring any
+     * Double.NaN values.
+     *
+     * @param a  the first value.
+     * @param b  the second value.
+     *
+     * @return The minimum of the two values.
+     */
+    private double minIgnoreNaN(double a, double b) {
+<span class="fc bfc" id="L1299" title="All 2 branches covered.">        if (Double.isNaN(a)) {</span>
+<span class="fc" id="L1300">            return b;</span>
+        }
+<span class="fc bfc" id="L1302" title="All 2 branches covered.">        if (Double.isNaN(b)) {</span>
+<span class="fc" id="L1303">            return a;</span>
+        }
+<span class="fc" id="L1305">        return Math.min(a, b);</span>
+    }
+
+    /**
+     * A function to find the maximum of two values, but ignoring any
+     * Double.NaN values.
+     *
+     * @param a  the first value.
+     * @param b  the second value.
+     *
+     * @return The maximum of the two values.
+     */
+    private double maxIgnoreNaN(double a, double b) {
+<span class="fc bfc" id="L1318" title="All 2 branches covered.">        if (Double.isNaN(a)) {</span>
+<span class="fc" id="L1319">            return b;</span>
+        }
+<span class="fc bfc" id="L1321" title="All 2 branches covered.">        if (Double.isNaN(b)) {</span>
+<span class="fc" id="L1322">            return a;</span>
+        }
+        else {
+<span class="fc" id="L1325">            return Math.max(a, b);</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

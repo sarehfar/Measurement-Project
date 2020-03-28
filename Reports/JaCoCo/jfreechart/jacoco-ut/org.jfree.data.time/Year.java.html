@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Year.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JFreeChart</a> &gt; <a href="index.source.html" class="el_package">org.jfree.data.time</a> &gt; <span class="el_source">Year.java</span></div><h1>Year.java</h1><pre class="source lang-java linenums">/* ===========================================================
+ * JFreeChart : a free chart library for the Java(tm) platform
+ * ===========================================================
+ *
+ * (C) Copyright 2000-2020, by Object Refinery Limited and Contributors.
+ *
+ * Project Info:  http://www.jfree.org/jfreechart/index.html
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ * USA.
+ *
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates. 
+ * Other names may be trademarks of their respective owners.]
+ *
+ * ---------
+ * Year.java
+ * ---------
+ * (C) Copyright 2001-2020, by Object Refinery Limited.
+ *
+ * Original Author:  David Gilbert (for Object Refinery Limited);
+ * Contributor(s):   -;
+ *
+ */
+
+package org.jfree.data.time;
+
+import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+/**
+ * Represents a year in the range -9999 to 9999.  This class is immutable,
+ * which is a requirement for all {@link RegularTimePeriod} subclasses.
+ */
+public class Year extends RegularTimePeriod implements Serializable {
+
+    /**
+     * The minimum year value.
+     *
+     * @since 1.0.11
+     */
+    public static final int MINIMUM_YEAR = -9999;
+
+    /**
+     * The maximum year value.
+     *
+     * @since 1.0.11
+     */
+    public static final int MAXIMUM_YEAR = 9999;
+
+    /** For serialization. */
+    private static final long serialVersionUID = -7659990929736074836L;
+
+    /** The year. */
+    private short year;
+
+    /** The first millisecond. */
+    private long firstMillisecond;
+
+    /** The last millisecond. */
+    private long lastMillisecond;
+
+    /**
+     * Creates a new {@code Year}, based on the current system date/time.
+     */
+    public Year() {
+<span class="fc" id="L81">        this(new Date());</span>
+<span class="fc" id="L82">    }</span>
+
+    /**
+     * Creates a time period representing a single year.
+     *
+     * @param year  the year.
+     */
+<span class="fc" id="L89">    public Year(int year) {</span>
+<span class="pc bpc" id="L90" title="2 of 4 branches missed.">        if ((year &lt; Year.MINIMUM_YEAR) || (year &gt; Year.MAXIMUM_YEAR)) {</span>
+<span class="nc" id="L91">            throw new IllegalArgumentException(</span>
+                &quot;Year constructor: year (&quot; + year + &quot;) outside valid range.&quot;);
+        }
+<span class="fc" id="L94">        this.year = (short) year;</span>
+<span class="fc" id="L95">        peg(Calendar.getInstance());</span>
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * Creates a new {@code Year}, based on a particular instant in time,
+     * using the default time zone.
+     *
+     * @param time  the time ({@code null} not permitted).
+     *
+     * @see #Year(Date, TimeZone, Locale)
+     */
+    public Year(Date time) {
+<span class="fc" id="L107">        this(time, TimeZone.getDefault(), Locale.getDefault());</span>
+<span class="fc" id="L108">    }</span>
+
+    /**
+     * Creates a new {@code Year} instance, for the specified time zone
+     * and locale.
+     *
+     * @param time  the current time ({@code null} not permitted).
+     * @param zone  the time zone.
+     * @param locale  the locale.
+     *
+     * @since 1.0.12
+     */
+<span class="fc" id="L120">    public Year(Date time, TimeZone zone, Locale locale) {</span>
+<span class="fc" id="L121">        Calendar calendar = Calendar.getInstance(zone, locale);</span>
+<span class="fc" id="L122">        calendar.setTime(time);</span>
+<span class="fc" id="L123">        this.year = (short) calendar.get(Calendar.YEAR);</span>
+<span class="fc" id="L124">        peg(calendar);</span>
+<span class="fc" id="L125">    }</span>
+
+    /**
+     * Returns the year.
+     *
+     * @return The year.
+     */
+    public int getYear() {
+<span class="fc" id="L133">        return this.year;</span>
+    }
+
+    /**
+     * Returns the first millisecond of the year.  This will be determined
+     * relative to the time zone specified in the constructor, or in the
+     * calendar instance passed in the most recent call to the
+     * {@link #peg(Calendar)} method.
+     *
+     * @return The first millisecond of the year.
+     *
+     * @see #getLastMillisecond()
+     */
+    @Override
+    public long getFirstMillisecond() {
+<span class="fc" id="L148">        return this.firstMillisecond;</span>
+    }
+
+    /**
+     * Returns the last millisecond of the year.  This will be
+     * determined relative to the time zone specified in the constructor, or
+     * in the calendar instance passed in the most recent call to the
+     * {@link #peg(Calendar)} method.
+     *
+     * @return The last millisecond of the year.
+     *
+     * @see #getFirstMillisecond()
+     */
+    @Override
+    public long getLastMillisecond() {
+<span class="fc" id="L163">        return this.lastMillisecond;</span>
+    }
+
+    /**
+     * Recalculates the start date/time and end date/time for this time period
+     * relative to the supplied calendar (which incorporates a time zone).
+     *
+     * @param calendar  the calendar ({@code null} not permitted).
+     *
+     * @since 1.0.3
+     */
+    @Override
+    public void peg(Calendar calendar) {
+<span class="fc" id="L176">        this.firstMillisecond = getFirstMillisecond(calendar);</span>
+<span class="fc" id="L177">        this.lastMillisecond = getLastMillisecond(calendar);</span>
+<span class="fc" id="L178">    }</span>
+
+    /**
+     * Returns the year preceding this one.
+     *
+     * @return The year preceding this one (or {@code null} if the
+     *         current year is -9999).
+     */
+    @Override
+    public RegularTimePeriod previous() {
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        if (this.year &gt; Year.MINIMUM_YEAR) {</span>
+<span class="fc" id="L189">            return new Year(this.year - 1);</span>
+        }
+        else {
+<span class="fc" id="L192">            return null;</span>
+        }
+    }
+
+    /**
+     * Returns the year following this one.
+     *
+     * @return The year following this one (or {@code null} if the current
+     *         year is 9999).
+     */
+    @Override
+    public RegularTimePeriod next() {
+<span class="fc bfc" id="L204" title="All 2 branches covered.">        if (this.year &lt; Year.MAXIMUM_YEAR) {</span>
+<span class="fc" id="L205">            return new Year(this.year + 1);</span>
+        }
+        else {
+<span class="fc" id="L208">            return null;</span>
+        }
+    }
+
+    /**
+     * Returns a serial index number for the year.
+     * &lt;P&gt;
+     * The implementation simply returns the year number (e.g. 2002).
+     *
+     * @return The serial index number.
+     */
+    @Override
+    public long getSerialIndex() {
+<span class="fc" id="L221">        return this.year;</span>
+    }
+
+    /**
+     * Returns the first millisecond of the year, evaluated using the supplied
+     * calendar (which determines the time zone).
+     *
+     * @param calendar  the calendar ({@code null} not permitted).
+     *
+     * @return The first millisecond of the year.
+     *
+     * @throws NullPointerException if {@code calendar} is
+     *     {@code null}.
+     */
+    @Override
+    public long getFirstMillisecond(Calendar calendar) {
+<span class="fc" id="L237">        calendar.set(this.year, Calendar.JANUARY, 1, 0, 0, 0);</span>
+<span class="fc" id="L238">        calendar.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L239">        return calendar.getTimeInMillis();</span>
+    }
+
+    /**
+     * Returns the last millisecond of the year, evaluated using the supplied
+     * calendar (which determines the time zone).
+     *
+     * @param calendar  the calendar ({@code null} not permitted).
+     *
+     * @return The last millisecond of the year.
+     *
+     * @throws NullPointerException if {@code calendar} is
+     *     {@code null}.
+     */
+    @Override
+    public long getLastMillisecond(Calendar calendar) {
+<span class="fc" id="L255">        calendar.set(this.year, Calendar.DECEMBER, 31, 23, 59, 59);</span>
+<span class="fc" id="L256">        calendar.set(Calendar.MILLISECOND, 999);</span>
+<span class="fc" id="L257">        return calendar.getTimeInMillis();</span>
+    }
+
+    /**
+     * Tests the equality of this {@code Year} object to an arbitrary
+     * object.  Returns {@code true} if the target is a {@code Year}
+     * instance representing the same year as this object.  In all other cases,
+     * returns {@code false}.
+     *
+     * @param obj  the object ({@code null} permitted).
+     *
+     * @return {@code true} if the year of this and the object are the
+     *         same.
+     */
+    @Override
+    public boolean equals(Object obj) {
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        if (obj == this) {</span>
+<span class="fc" id="L274">            return true;</span>
+        }
+<span class="fc bfc" id="L276" title="All 2 branches covered.">        if (!(obj instanceof Year)) {</span>
+<span class="fc" id="L277">            return false;</span>
+        }
+<span class="fc" id="L279">        Year that = (Year) obj;</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">        return (this.year == that.year);</span>
+    }
+
+    /**
+     * Returns a hash code for this object instance.  The approach described by
+     * Joshua Bloch in &quot;Effective Java&quot; has been used here:
+     * &lt;p&gt;
+     * {@code http://developer.java.sun.com/developer/Books/effectivejava
+     *     /Chapter3.pdf}
+     *
+     * @return A hash code.
+     */
+    @Override
+    public int hashCode() {
+<span class="fc" id="L294">        int result = 17;</span>
+<span class="fc" id="L295">        int c = this.year;</span>
+<span class="fc" id="L296">        result = 37 * result + c;</span>
+<span class="fc" id="L297">        return result;</span>
+    }
+
+    /**
+     * Returns an integer indicating the order of this {@code Year} object
+     * relative to the specified object:
+     *
+     * negative == before, zero == same, positive == after.
+     *
+     * @param o1  the object to compare.
+     *
+     * @return negative == before, zero == same, positive == after.
+     */
+    @Override
+    public int compareTo(Object o1) {
+
+        int result;
+
+        // CASE 1 : Comparing to another Year object
+        // -----------------------------------------
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">        if (o1 instanceof Year) {</span>
+<span class="fc" id="L318">            Year y = (Year) o1;</span>
+<span class="fc" id="L319">            result = this.year - y.getYear();</span>
+<span class="fc" id="L320">        }</span>
+
+        // CASE 2 : Comparing to another TimePeriod object
+        // -----------------------------------------------
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        else if (o1 instanceof RegularTimePeriod) {</span>
+            // more difficult case - evaluate later...
+<span class="nc" id="L326">            result = 0;</span>
+        }
+
+        // CASE 3 : Comparing to a non-TimePeriod object
+        // ---------------------------------------------
+        else {
+            // consider time periods to be ordered after general objects
+<span class="nc" id="L333">            result = 1;</span>
+        }
+
+<span class="fc" id="L336">        return result;</span>
+
+    }
+
+    /**
+     * Returns a string representing the year..
+     *
+     * @return A string representing the year.
+     */
+    @Override
+    public String toString() {
+<span class="nc" id="L347">        return Integer.toString(this.year);</span>
+    }
+
+    /**
+     * Parses the string argument as a year.
+     * &lt;P&gt;
+     * The string format is YYYY.
+     *
+     * @param s  a string representing the year.
+     *
+     * @return {@code null} if the string is not parseable, the year
+     *         otherwise.
+     */
+    public static Year parseYear(String s) {
+
+        // parse the string...
+        int y;
+        try {
+<span class="fc" id="L365">            y = Integer.parseInt(s.trim());</span>
+        }
+<span class="fc" id="L367">        catch (NumberFormatException e) {</span>
+<span class="fc" id="L368">            throw new TimePeriodFormatException(&quot;Cannot parse string.&quot;);</span>
+<span class="fc" id="L369">        }</span>
+
+        // create the year...
+        try {
+<span class="fc" id="L373">            return new Year(y);</span>
+        }
+<span class="nc" id="L375">        catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L376">            throw new TimePeriodFormatException(&quot;Year outside valid range.&quot;);</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

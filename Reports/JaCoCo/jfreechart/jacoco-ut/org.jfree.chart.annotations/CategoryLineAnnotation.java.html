@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoryLineAnnotation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JFreeChart</a> &gt; <a href="index.source.html" class="el_package">org.jfree.chart.annotations</a> &gt; <span class="el_source">CategoryLineAnnotation.java</span></div><h1>CategoryLineAnnotation.java</h1><pre class="source lang-java linenums">/* ===========================================================
+ * JFreeChart : a free chart library for the Java(tm) platform
+ * ===========================================================
+ *
+ * (C) Copyright 2000-2020, by Object Refinery Limited and Contributors.
+ *
+ * Project Info:  http://www.jfree.org/jfreechart/index.html
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ * USA.
+ *
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates. 
+ * Other names may be trademarks of their respective owners.]
+ *
+ * ---------------------------
+ * CategoryLineAnnotation.java
+ * ---------------------------
+ * (C) Copyright 2005-2020, by Object Refinery Limited.
+ *
+ * Original Author:  David Gilbert (for Object Refinery Limited);
+ * Contributor(s):   Peter Kolb (patch 2809117);
+ *
+ */
+
+package org.jfree.chart.annotations;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Stroke;
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+import org.jfree.chart.HashUtils;
+import org.jfree.chart.axis.CategoryAnchor;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.event.AnnotationChangeEvent;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.util.ObjectUtils;
+import org.jfree.chart.util.PaintUtils;
+import org.jfree.chart.util.Args;
+import org.jfree.chart.util.PublicCloneable;
+import org.jfree.chart.util.SerialUtils;
+import org.jfree.data.category.CategoryDataset;
+
+/**
+ * A line annotation that can be placed on a {@link CategoryPlot}.
+ */
+public class CategoryLineAnnotation extends AbstractAnnotation 
+        implements CategoryAnnotation, Cloneable, PublicCloneable,
+        Serializable {
+
+    /** For serialization. */
+    static final long serialVersionUID = 3477740483341587984L;
+
+    /** The category for the start of the line. */
+    private Comparable category1;
+
+    /** The value for the start of the line. */
+    private double value1;
+
+    /** The category for the end of the line. */
+    private Comparable category2;
+
+    /** The value for the end of the line. */
+    private double value2;
+
+    /** The line color. */
+<span class="fc" id="L89">    private transient Paint paint = Color.BLACK;</span>
+
+    /** The line stroke. */
+<span class="fc" id="L92">    private transient Stroke stroke = new BasicStroke(1.0f);</span>
+
+    /**
+     * Creates a new annotation that draws a line between (category1, value1)
+     * and (category2, value2).
+     *
+     * @param category1  the category ({@code null} not permitted).
+     * @param value1  the value.
+     * @param category2  the category ({@code null} not permitted).
+     * @param value2  the value.
+     * @param paint  the line color ({@code null} not permitted).
+     * @param stroke  the line stroke ({@code null} not permitted).
+     */
+    public CategoryLineAnnotation(Comparable category1, double value1,
+                                  Comparable category2, double value2,
+                                  Paint paint, Stroke stroke) {
+<span class="fc" id="L108">        super();</span>
+<span class="fc" id="L109">        Args.nullNotPermitted(category1, &quot;category1&quot;);</span>
+<span class="fc" id="L110">        Args.nullNotPermitted(category2, &quot;category2&quot;);</span>
+<span class="fc" id="L111">        Args.nullNotPermitted(paint, &quot;paint&quot;);</span>
+<span class="fc" id="L112">        Args.nullNotPermitted(stroke, &quot;stroke&quot;);</span>
+<span class="fc" id="L113">        this.category1 = category1;</span>
+<span class="fc" id="L114">        this.value1 = value1;</span>
+<span class="fc" id="L115">        this.category2 = category2;</span>
+<span class="fc" id="L116">        this.value2 = value2;</span>
+<span class="fc" id="L117">        this.paint = paint;</span>
+<span class="fc" id="L118">        this.stroke = stroke;</span>
+<span class="fc" id="L119">    }</span>
+
+    /**
+     * Returns the category for the start of the line.
+     *
+     * @return The category for the start of the line (never {@code null}).
+     *
+     * @see #setCategory1(Comparable)
+     */
+    public Comparable getCategory1() {
+<span class="fc" id="L129">        return this.category1;</span>
+    }
+
+    /**
+     * Sets the category for the start of the line and sends an
+     * {@link AnnotationChangeEvent} to all registered listeners.
+     *
+     * @param category  the category ({@code null} not permitted).
+     *
+     * @see #getCategory1()
+     */
+    public void setCategory1(Comparable category) {
+<span class="fc" id="L141">        Args.nullNotPermitted(category, &quot;category&quot;);</span>
+<span class="fc" id="L142">        this.category1 = category;</span>
+<span class="fc" id="L143">        fireAnnotationChanged();</span>
+<span class="fc" id="L144">    }</span>
+
+    /**
+     * Returns the y-value for the start of the line.
+     *
+     * @return The y-value for the start of the line.
+     *
+     * @see #setValue1(double)
+     */
+    public double getValue1() {
+<span class="fc" id="L154">        return this.value1;</span>
+    }
+
+    /**
+     * Sets the y-value for the start of the line and sends an
+     * {@link AnnotationChangeEvent} to all registered listeners.
+     *
+     * @param value  the value.
+     *
+     * @see #getValue1()
+     */
+    public void setValue1(double value) {
+<span class="fc" id="L166">        this.value1 = value;</span>
+<span class="fc" id="L167">        fireAnnotationChanged();</span>
+<span class="fc" id="L168">    }</span>
+
+    /**
+     * Returns the category for the end of the line.
+     *
+     * @return The category for the end of the line (never {@code null}).
+     *
+     * @see #setCategory2(Comparable)
+     */
+    public Comparable getCategory2() {
+<span class="fc" id="L178">        return this.category2;</span>
+    }
+
+    /**
+     * Sets the category for the end of the line and sends an
+     * {@link AnnotationChangeEvent} to all registered listeners.
+     *
+     * @param category  the category ({@code null} not permitted).
+     *
+     * @see #getCategory2()
+     */
+    public void setCategory2(Comparable category) {
+<span class="fc" id="L190">        Args.nullNotPermitted(category, &quot;category&quot;);</span>
+<span class="fc" id="L191">        this.category2 = category;</span>
+<span class="fc" id="L192">        fireAnnotationChanged();</span>
+<span class="fc" id="L193">    }</span>
+
+    /**
+     * Returns the y-value for the end of the line.
+     *
+     * @return The y-value for the end of the line.
+     *
+     * @see #setValue2(double)
+     */
+    public double getValue2() {
+<span class="fc" id="L203">        return this.value2;</span>
+    }
+
+    /**
+     * Sets the y-value for the end of the line and sends an
+     * {@link AnnotationChangeEvent} to all registered listeners.
+     *
+     * @param value  the value.
+     *
+     * @see #getValue2()
+     */
+    public void setValue2(double value) {
+<span class="fc" id="L215">        this.value2 = value;</span>
+<span class="fc" id="L216">        fireAnnotationChanged();</span>
+<span class="fc" id="L217">    }</span>
+
+    /**
+     * Returns the paint used to draw the connecting line.
+     *
+     * @return The paint (never {@code null}).
+     *
+     * @see #setPaint(Paint)
+     */
+    public Paint getPaint() {
+<span class="nc" id="L227">        return this.paint;</span>
+    }
+
+    /**
+     * Sets the paint used to draw the connecting line and sends an
+     * {@link AnnotationChangeEvent} to all registered listeners.
+     *
+     * @param paint  the paint ({@code null} not permitted).
+     *
+     * @see #getPaint()
+     */
+    public void setPaint(Paint paint) {
+<span class="fc" id="L239">        Args.nullNotPermitted(paint, &quot;paint&quot;);</span>
+<span class="fc" id="L240">        this.paint = paint;</span>
+<span class="fc" id="L241">        fireAnnotationChanged();</span>
+<span class="fc" id="L242">    }</span>
+
+    /**
+     * Returns the stroke used to draw the connecting line.
+     *
+     * @return The stroke (never {@code null}).
+     *
+     * @see #setStroke(Stroke)
+     */
+    public Stroke getStroke() {
+<span class="nc" id="L252">        return this.stroke;</span>
+    }
+
+    /**
+     * Sets the stroke used to draw the connecting line and sends an
+     * {@link AnnotationChangeEvent} to all registered listeners.
+     *
+     * @param stroke  the stroke ({@code null} not permitted).
+     *
+     * @see #getStroke()
+     */
+    public void setStroke(Stroke stroke) {
+<span class="fc" id="L264">        Args.nullNotPermitted(stroke, &quot;stroke&quot;);</span>
+<span class="fc" id="L265">        this.stroke = stroke;</span>
+<span class="fc" id="L266">        fireAnnotationChanged();</span>
+<span class="fc" id="L267">    }</span>
+
+    /**
+     * Draws the annotation.
+     *
+     * @param g2  the graphics device.
+     * @param plot  the plot.
+     * @param dataArea  the data area.
+     * @param domainAxis  the domain axis.
+     * @param rangeAxis  the range axis.
+     */
+    @Override
+    public void draw(Graphics2D g2, CategoryPlot plot, Rectangle2D dataArea,
+                     CategoryAxis domainAxis, ValueAxis rangeAxis) {
+
+<span class="nc" id="L282">        CategoryDataset dataset = plot.getDataset();</span>
+<span class="nc" id="L283">        int catIndex1 = dataset.getColumnIndex(this.category1);</span>
+<span class="nc" id="L284">        int catIndex2 = dataset.getColumnIndex(this.category2);</span>
+<span class="nc" id="L285">        int catCount = dataset.getColumnCount();</span>
+
+<span class="nc" id="L287">        double lineX1 = 0.0f;</span>
+<span class="nc" id="L288">        double lineY1 = 0.0f;</span>
+<span class="nc" id="L289">        double lineX2 = 0.0f;</span>
+<span class="nc" id="L290">        double lineY2 = 0.0f;</span>
+<span class="nc" id="L291">        PlotOrientation orientation = plot.getOrientation();</span>
+<span class="nc" id="L292">        RectangleEdge domainEdge = Plot.resolveDomainAxisLocation(</span>
+<span class="nc" id="L293">            plot.getDomainAxisLocation(), orientation);</span>
+<span class="nc" id="L294">        RectangleEdge rangeEdge = Plot.resolveRangeAxisLocation(</span>
+<span class="nc" id="L295">            plot.getRangeAxisLocation(), orientation);</span>
+
+<span class="nc bnc" id="L297" title="All 2 branches missed.">        if (orientation == PlotOrientation.HORIZONTAL) {</span>
+<span class="nc" id="L298">            lineY1 = domainAxis.getCategoryJava2DCoordinate(</span>
+                CategoryAnchor.MIDDLE, catIndex1, catCount, dataArea,
+                domainEdge);
+<span class="nc" id="L301">            lineX1 = rangeAxis.valueToJava2D(this.value1, dataArea, rangeEdge);</span>
+<span class="nc" id="L302">            lineY2 = domainAxis.getCategoryJava2DCoordinate(</span>
+                CategoryAnchor.MIDDLE, catIndex2, catCount, dataArea,
+                domainEdge);
+<span class="nc" id="L305">            lineX2 = rangeAxis.valueToJava2D(this.value2, dataArea, rangeEdge);</span>
+        }
+<span class="nc bnc" id="L307" title="All 2 branches missed.">        else if (orientation == PlotOrientation.VERTICAL) {</span>
+<span class="nc" id="L308">            lineX1 = domainAxis.getCategoryJava2DCoordinate(</span>
+                CategoryAnchor.MIDDLE, catIndex1, catCount, dataArea,
+                domainEdge);
+<span class="nc" id="L311">            lineY1 = rangeAxis.valueToJava2D(this.value1, dataArea, rangeEdge);</span>
+<span class="nc" id="L312">            lineX2 = domainAxis.getCategoryJava2DCoordinate(</span>
+                CategoryAnchor.MIDDLE, catIndex2, catCount, dataArea,
+                domainEdge);
+<span class="nc" id="L315">            lineY2 = rangeAxis.valueToJava2D(this.value2, dataArea, rangeEdge);</span>
+        }
+<span class="nc" id="L317">        g2.setPaint(this.paint);</span>
+<span class="nc" id="L318">        g2.setStroke(this.stroke);</span>
+<span class="nc" id="L319">        g2.drawLine((int) lineX1, (int) lineY1, (int) lineX2, (int) lineY2);</span>
+<span class="nc" id="L320">    }</span>
+
+    /**
+     * Tests this object for equality with another.
+     *
+     * @param obj  the object ({@code null} permitted).
+     *
+     * @return {@code true} or {@code false}.
+     */
+    @Override
+    public boolean equals(Object obj) {
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">        if (obj == this) {</span>
+<span class="nc" id="L332">            return true;</span>
+        }
+<span class="pc bpc" id="L334" title="1 of 2 branches missed.">        if (!(obj instanceof CategoryLineAnnotation)) {</span>
+<span class="nc" id="L335">            return false;</span>
+        }
+<span class="fc" id="L337">        CategoryLineAnnotation that = (CategoryLineAnnotation) obj;</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">        if (!this.category1.equals(that.getCategory1())) {</span>
+<span class="fc" id="L339">            return false;</span>
+        }
+<span class="fc bfc" id="L341" title="All 2 branches covered.">        if (this.value1 != that.getValue1()) {</span>
+<span class="fc" id="L342">            return false;</span>
+        }
+<span class="fc bfc" id="L344" title="All 2 branches covered.">        if (!this.category2.equals(that.getCategory2())) {</span>
+<span class="fc" id="L345">            return false;</span>
+        }
+<span class="fc bfc" id="L347" title="All 2 branches covered.">        if (this.value2 != that.getValue2()) {</span>
+<span class="fc" id="L348">            return false;</span>
+        }
+<span class="fc bfc" id="L350" title="All 2 branches covered.">        if (!PaintUtils.equal(this.paint, that.paint)) {</span>
+<span class="fc" id="L351">            return false;</span>
+        }
+<span class="fc bfc" id="L353" title="All 2 branches covered.">        if (!ObjectUtils.equal(this.stroke, that.stroke)) {</span>
+<span class="fc" id="L354">            return false;</span>
+        }
+<span class="fc" id="L356">        return true;</span>
+    }
+
+    /**
+     * Returns a hash code for this instance.
+     *
+     * @return A hash code.
+     */
+    @Override
+    public int hashCode() {
+<span class="fc" id="L366">        int result = 193;</span>
+<span class="fc" id="L367">        result = 37 * result + this.category1.hashCode();</span>
+<span class="fc" id="L368">        long temp = Double.doubleToLongBits(this.value1);</span>
+<span class="fc" id="L369">        result = 37 * result + (int) (temp ^ (temp &gt;&gt;&gt; 32));</span>
+<span class="fc" id="L370">        result = 37 * result + this.category2.hashCode();</span>
+<span class="fc" id="L371">        temp = Double.doubleToLongBits(this.value2);</span>
+<span class="fc" id="L372">        result = 37 * result + (int) (temp ^ (temp &gt;&gt;&gt; 32));</span>
+<span class="fc" id="L373">        result = 37 * result + HashUtils.hashCodeForPaint(this.paint);</span>
+<span class="fc" id="L374">        result = 37 * result + this.stroke.hashCode();</span>
+<span class="fc" id="L375">        return result;</span>
+    }
+
+    /**
+     * Returns a clone of the annotation.
+     *
+     * @return A clone.
+     *
+     * @throws CloneNotSupportedException  this class will not throw this
+     *         exception, but subclasses (if any) might.
+     */
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+<span class="fc" id="L388">        return super.clone();</span>
+    }
+
+    /**
+     * Provides serialization support.
+     *
+     * @param stream  the output stream.
+     *
+     * @throws IOException if there is an I/O error.
+     */
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+<span class="fc" id="L399">        stream.defaultWriteObject();</span>
+<span class="fc" id="L400">        SerialUtils.writePaint(this.paint, stream);</span>
+<span class="fc" id="L401">        SerialUtils.writeStroke(this.stroke, stream);</span>
+<span class="fc" id="L402">    }</span>
+
+    /**
+     * Provides serialization support.
+     *
+     * @param stream  the input stream.
+     *
+     * @throws IOException  if there is an I/O error.
+     * @throws ClassNotFoundException  if there is a classpath problem.
+     */
+    private void readObject(ObjectInputStream stream)
+        throws IOException, ClassNotFoundException {
+<span class="fc" id="L414">        stream.defaultReadObject();</span>
+<span class="fc" id="L415">        this.paint = SerialUtils.readPaint(stream);</span>
+<span class="fc" id="L416">        this.stroke = SerialUtils.readStroke(stream);</span>
+<span class="fc" id="L417">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

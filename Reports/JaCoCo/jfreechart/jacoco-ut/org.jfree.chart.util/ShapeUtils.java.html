@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShapeUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JFreeChart</a> &gt; <a href="index.source.html" class="el_package">org.jfree.chart.util</a> &gt; <span class="el_source">ShapeUtils.java</span></div><h1>ShapeUtils.java</h1><pre class="source lang-java linenums">/* ===========================================================
+ * JFreeChart : a free chart library for the Java(tm) platform
+ * ===========================================================
+ *
+ * (C) Copyright 2000-2020, by Object Refinery Limited and Contributors.
+ *
+ * Project Info:  http://www.jfree.org/jfreechart/index.html
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ * USA.
+ *
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates. 
+ * Other names may be trademarks of their respective owners.]
+ *
+ * ---------------
+ * ShapeUtils.java
+ * ---------------
+ * (C) Copyright 2000-2020, by Object Refinery Limited and Contributors.
+ *
+ * Original Author:  David Gilbert (for Object Refinery Limited);
+ * Contributors:     -;
+ */
+
+package org.jfree.chart.util;
+
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
+import org.jfree.chart.ui.RectangleAnchor;
+
+/**
+ * Utility methods for {@link Shape} objects.
+ */
+public class ShapeUtils {
+
+    /**
+     * Prevents instantiation.
+     */
+    private ShapeUtils() {
+    }
+
+    /**
+     * Returns a clone of the specified shape, or {@code null}.  At the
+     * current time, this method supports cloning for instances of
+     * {@code Line2D}, {@code RectangularShape}, {@code Area}
+     * and {@code GeneralPath}.
+     * &lt;p&gt;
+     * {@code RectangularShape} includes {@code Arc2D},
+     * {@code Ellipse2D}, {@code Rectangle2D},
+     * {@code RoundRectangle2D}.
+     *
+     * @param shape  the shape to clone ({@code null} permitted,
+     *               returns {@code null}).
+     *
+     * @return A clone or {@code null}.
+     */
+    public static Shape clone(Shape shape) {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (shape instanceof Cloneable) {</span>
+            try {
+<span class="fc" id="L81">                return (Shape) ObjectUtils.clone(shape);</span>
+            }
+<span class="nc" id="L83">            catch (CloneNotSupportedException cnse) {</span>
+            }
+        }
+<span class="fc" id="L86">        final Shape result = null;</span>
+<span class="fc" id="L87">        return result;</span>
+    }
+
+    /**
+     * Tests two shapes for equality.  If both shapes are {@code null},
+     * this method will return {@code true}.
+     * &lt;p&gt;
+     * In the current implementation, the following shapes are supported:
+     * {@code Ellipse2D}, {@code Line2D} and {@code Rectangle2D}
+     * (implicit).
+     *
+     * @param s1  the first shape ({@code null} permitted).
+     * @param s2  the second shape ({@code null} permitted).
+     *
+     * @return A boolean.
+     */
+    public static boolean equal(Shape s1, Shape s2) {
+<span class="fc bfc" id="L104" title="All 4 branches covered.">        if (s1 instanceof Line2D &amp;&amp; s2 instanceof Line2D) {</span>
+<span class="fc" id="L105">            return equal((Line2D) s1, (Line2D) s2);</span>
+        }
+<span class="fc bfc" id="L107" title="All 4 branches covered.">        else if (s1 instanceof Ellipse2D &amp;&amp; s2 instanceof Ellipse2D) {</span>
+<span class="fc" id="L108">            return equal((Ellipse2D) s1, (Ellipse2D) s2);</span>
+        }
+<span class="pc bpc" id="L110" title="3 of 4 branches missed.">        else if (s1 instanceof Arc2D &amp;&amp; s2 instanceof Arc2D) {</span>
+<span class="nc" id="L111">            return equal((Arc2D) s1, (Arc2D) s2);</span>
+        }
+<span class="pc bpc" id="L113" title="1 of 4 branches missed.">        else if (s1 instanceof Polygon &amp;&amp; s2 instanceof Polygon) {</span>
+<span class="fc" id="L114">            return equal((Polygon) s1, (Polygon) s2);</span>
+        }
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">        else if (s1 instanceof GeneralPath &amp;&amp; s2 instanceof GeneralPath) {</span>
+<span class="fc" id="L117">            return equal((GeneralPath) s1, (GeneralPath) s2);</span>
+        }
+        else {
+            // this will handle Rectangle2D...
+<span class="fc" id="L121">            return ObjectUtils.equal(s1, s2);</span>
+        }
+    }
+
+    /**
+     * Compares two lines are returns {@code true} if they are equal or
+     * both {@code null}.
+     *
+     * @param l1  the first line ({@code null} permitted).
+     * @param l2  the second line ({@code null} permitted).
+     *
+     * @return A boolean.
+     */
+    public static boolean equal(Line2D l1, Line2D l2) {
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (l1 == null) {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            return (l2 == null);</span>
+        }
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (l2 == null) {</span>
+<span class="nc" id="L139">            return false;</span>
+        }
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (!l1.getP1().equals(l2.getP1())) {</span>
+<span class="fc" id="L142">            return false;</span>
+        }
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (!l1.getP2().equals(l2.getP2())) {</span>
+<span class="nc" id="L145">            return false;</span>
+        }
+<span class="fc" id="L147">        return true;</span>
+    }
+
+    /**
+     * Compares two ellipses and returns {@code true} if they are equal or
+     * both {@code null}.
+     *
+     * @param e1  the first ellipse ({@code null} permitted).
+     * @param e2  the second ellipse ({@code null} permitted).
+     *
+     * @return A boolean.
+     */
+    public static boolean equal(Ellipse2D e1, Ellipse2D e2) {
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (e1 == null) {</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">            return (e2 == null);</span>
+        }
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (e2 == null) {</span>
+<span class="nc" id="L164">            return false;</span>
+        }
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (!e1.getFrame().equals(e2.getFrame())) {</span>
+<span class="nc" id="L167">            return false;</span>
+        }
+<span class="fc" id="L169">        return true;</span>
+    }
+
+    /**
+     * Compares two arcs and returns {@code true} if they are equal or
+     * both {@code null}.
+     *
+     * @param a1  the first arc ({@code null} permitted).
+     * @param a2  the second arc ({@code null} permitted).
+     *
+     * @return A boolean.
+     */
+    public static boolean equal(Arc2D a1, Arc2D a2) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (a1 == null) {</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            return (a2 == null);</span>
+        }
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (a2 == null) {</span>
+<span class="nc" id="L186">            return false;</span>
+        }
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if (!a1.getFrame().equals(a2.getFrame())) {</span>
+<span class="nc" id="L189">            return false;</span>
+        }
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (a1.getAngleStart() != a2.getAngleStart()) {</span>
+<span class="nc" id="L192">            return false;</span>
+        }
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (a1.getAngleExtent() != a2.getAngleExtent()) {</span>
+<span class="nc" id="L195">            return false;</span>
+        }
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (a1.getArcType() != a2.getArcType()) {</span>
+<span class="nc" id="L198">            return false;</span>
+        }
+<span class="nc" id="L200">        return true;</span>
+    }
+
+    /**
+     * Tests two polygons for equality.  If both are {@code null} this
+     * method returns {@code true}.
+     *
+     * @param p1  polygon 1 ({@code null} permitted).
+     * @param p2  polygon 2 ({@code null} permitted).
+     *
+     * @return A boolean.
+     */
+    public static boolean equal(Polygon p1, Polygon p2) {
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (p1 == null) {</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">            return (p2 == null);</span>
+        }
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">        if (p2 == null) {</span>
+<span class="nc" id="L217">            return false;</span>
+        }
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (p1.npoints != p2.npoints) {</span>
+<span class="nc" id="L220">            return false;</span>
+        }
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">        if (!Arrays.equals(p1.xpoints, p2.xpoints)) {</span>
+<span class="nc" id="L223">            return false;</span>
+        }
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">        if (!Arrays.equals(p1.ypoints, p2.ypoints)) {</span>
+<span class="nc" id="L226">            return false;</span>
+        }
+<span class="fc" id="L228">        return true;</span>
+    }
+
+    /**
+     * Tests two polygons for equality.  If both are {@code null} this
+     * method returns {@code true}.
+     *
+     * @param p1  path 1 ({@code null} permitted).
+     * @param p2  path 2 ({@code null} permitted).
+     *
+     * @return A boolean.
+     */
+    public static boolean equal(GeneralPath p1, GeneralPath p2) {
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">        if (p1 == null) {</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            return (p2 == null);</span>
+        }
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        if (p2 == null) {</span>
+<span class="nc" id="L245">            return false;</span>
+        }
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">        if (p1.getWindingRule() != p2.getWindingRule()) {</span>
+<span class="nc" id="L248">            return false;</span>
+        }
+<span class="fc" id="L250">        PathIterator iterator1 = p1.getPathIterator(null);</span>
+<span class="fc" id="L251">        PathIterator iterator2 = p2.getPathIterator(null);</span>
+<span class="fc" id="L252">        double[] d1 = new double[6];</span>
+<span class="fc" id="L253">        double[] d2 = new double[6];</span>
+<span class="pc bpc" id="L254" title="3 of 4 branches missed.">        boolean done = iterator1.isDone() &amp;&amp; iterator2.isDone();</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        while (!done) {</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">            if (iterator1.isDone() != iterator2.isDone()) {</span>
+<span class="nc" id="L257">                return false;</span>
+            }
+<span class="fc" id="L259">            int seg1 = iterator1.currentSegment(d1);</span>
+<span class="fc" id="L260">            int seg2 = iterator2.currentSegment(d2);</span>
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">            if (seg1 != seg2) {</span>
+<span class="nc" id="L262">                return false;</span>
+            }
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">            if (!Arrays.equals(d1, d2)) {</span>
+<span class="nc" id="L265">                return false;</span>
+            }
+<span class="fc" id="L267">            iterator1.next();</span>
+<span class="fc" id="L268">            iterator2.next();</span>
+<span class="pc bpc" id="L269" title="1 of 4 branches missed.">            done = iterator1.isDone() &amp;&amp; iterator2.isDone();</span>
+<span class="fc" id="L270">        }</span>
+<span class="fc" id="L271">        return true;</span>
+    }
+
+    /**
+     * Creates and returns a translated shape.
+     *
+     * @param shape  the shape ({@code null} not permitted).
+     * @param transX  the x translation (in Java2D space).
+     * @param transY  the y translation (in Java2D space).
+     *
+     * @return The translated shape.
+     */
+    public static Shape createTranslatedShape(Shape shape, double transX,
+            double transY) {
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">        if (shape == null) {</span>
+<span class="nc" id="L286">            throw new IllegalArgumentException(&quot;Null 'shape' argument.&quot;);</span>
+        }
+<span class="fc" id="L288">        final AffineTransform transform = AffineTransform.getTranslateInstance(</span>
+                transX, transY);
+<span class="fc" id="L290">        return transform.createTransformedShape(shape);</span>
+    }
+
+    /**
+     * Translates a shape to a new location such that the anchor point
+     * (relative to the rectangular bounds of the shape) aligns with the
+     * specified (x, y) coordinate in Java2D space.
+     *
+     * @param shape  the shape ({@code null} not permitted).
+     * @param anchor  the anchor ({@code null} not permitted).
+     * @param locationX  the x-coordinate (in Java2D space).
+     * @param locationY  the y-coordinate (in Java2D space).
+     *
+     * @return A new and translated shape.
+     */
+    public static Shape createTranslatedShape(Shape shape, 
+            RectangleAnchor anchor, double locationX, double locationY) {
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">        if (shape == null) {</span>
+<span class="nc" id="L308">            throw new IllegalArgumentException(&quot;Null 'shape' argument.&quot;);</span>
+        }
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">        if (anchor == null) {</span>
+<span class="nc" id="L311">            throw new IllegalArgumentException(&quot;Null 'anchor' argument.&quot;);</span>
+        }
+<span class="fc" id="L313">        Point2D anchorPoint = anchor.getAnchorPoint(shape.getBounds2D());</span>
+<span class="fc" id="L314">        final AffineTransform transform = AffineTransform.getTranslateInstance(</span>
+<span class="fc" id="L315">                locationX - anchorPoint.getX(), locationY - anchorPoint.getY());</span>
+<span class="fc" id="L316">        return transform.createTransformedShape(shape);</span>
+    }
+
+    /**
+     * Rotates a shape about the specified coordinates.
+     *
+     * @param base  the shape ({@code null} permitted, returns
+     *              {@code null}).
+     * @param angle  the angle (in radians).
+     * @param x  the x coordinate for the rotation point (in Java2D space).
+     * @param y  the y coordinate for the rotation point (in Java2D space).
+     *
+     * @return the rotated shape.
+     */
+    public static Shape rotateShape(Shape base, double angle, float x, float y) {
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">        if (base == null) {</span>
+<span class="nc" id="L332">            return null;</span>
+        }
+<span class="fc" id="L334">        final AffineTransform rotate = AffineTransform.getRotateInstance(</span>
+                angle, x, y);
+<span class="fc" id="L336">        final Shape result = rotate.createTransformedShape(base);</span>
+<span class="fc" id="L337">        return result;</span>
+    }
+
+    /**
+     * Draws a shape with the specified rotation about {@code (x, y)}.
+     *
+     * @param g2  the graphics device ({@code null} not permitted).
+     * @param shape  the shape ({@code null} not permitted).
+     * @param angle  the angle (in radians).
+     * @param x  the x coordinate for the rotation point.
+     * @param y  the y coordinate for the rotation point.
+     */
+    public static void drawRotatedShape(Graphics2D g2, Shape shape, double angle,
+            float x, float y) {
+
+<span class="nc" id="L352">        AffineTransform saved = g2.getTransform();</span>
+<span class="nc" id="L353">        AffineTransform rotate = AffineTransform.getRotateInstance(angle, x, y);</span>
+<span class="nc" id="L354">        g2.transform(rotate);</span>
+<span class="nc" id="L355">        g2.draw(shape);</span>
+<span class="nc" id="L356">        g2.setTransform(saved);</span>
+
+<span class="nc" id="L358">    }</span>
+
+    /** A useful constant used internally. */
+<span class="fc" id="L361">    private static final float SQRT2 = (float) Math.pow(2.0, 0.5);</span>
+
+    /**
+     * Creates a diagonal cross shape.
+     *
+     * @param l  the length of each 'arm'.
+     * @param t  the thickness.
+     *
+     * @return A diagonal cross shape.
+     */
+    public static Shape createDiagonalCross(float l, float t) {
+<span class="nc" id="L372">        final GeneralPath p0 = new GeneralPath();</span>
+<span class="nc" id="L373">        p0.moveTo(-l - t, -l + t);</span>
+<span class="nc" id="L374">        p0.lineTo(-l + t, -l - t);</span>
+<span class="nc" id="L375">        p0.lineTo(0.0f, -t * SQRT2);</span>
+<span class="nc" id="L376">        p0.lineTo(l - t, -l - t);</span>
+<span class="nc" id="L377">        p0.lineTo(l + t, -l + t);</span>
+<span class="nc" id="L378">        p0.lineTo(t * SQRT2, 0.0f);</span>
+<span class="nc" id="L379">        p0.lineTo(l + t, l - t);</span>
+<span class="nc" id="L380">        p0.lineTo(l - t, l + t);</span>
+<span class="nc" id="L381">        p0.lineTo(0.0f, t * SQRT2);</span>
+<span class="nc" id="L382">        p0.lineTo(-l + t, l + t);</span>
+<span class="nc" id="L383">        p0.lineTo(-l - t, l - t);</span>
+<span class="nc" id="L384">        p0.lineTo(-t * SQRT2, 0.0f);</span>
+<span class="nc" id="L385">        p0.closePath();</span>
+<span class="nc" id="L386">        return p0;</span>
+    }
+
+    /**
+     * Creates a diagonal cross shape.
+     *
+     * @param l  the length of each 'arm'.
+     * @param t  the thickness.
+     *
+     * @return A diagonal cross shape.
+     */
+    public static Shape createRegularCross(float l, float t) {
+<span class="nc" id="L398">        final GeneralPath p0 = new GeneralPath();</span>
+<span class="nc" id="L399">        p0.moveTo(-l, t);</span>
+<span class="nc" id="L400">        p0.lineTo(-t, t);</span>
+<span class="nc" id="L401">        p0.lineTo(-t, l);</span>
+<span class="nc" id="L402">        p0.lineTo(t, l);</span>
+<span class="nc" id="L403">        p0.lineTo(t, t);</span>
+<span class="nc" id="L404">        p0.lineTo(l, t);</span>
+<span class="nc" id="L405">        p0.lineTo(l, -t);</span>
+<span class="nc" id="L406">        p0.lineTo(t, -t);</span>
+<span class="nc" id="L407">        p0.lineTo(t, -l);</span>
+<span class="nc" id="L408">        p0.lineTo(-t, -l);</span>
+<span class="nc" id="L409">        p0.lineTo(-t, -t);</span>
+<span class="nc" id="L410">        p0.lineTo(-l, -t);</span>
+<span class="nc" id="L411">        p0.closePath();</span>
+<span class="nc" id="L412">        return p0;</span>
+    }
+
+    /**
+     * Creates a diamond shape.
+     *
+     * @param s  the size factor (equal to half the height of the diamond).
+     *
+     * @return A diamond shape.
+     */
+    public static Shape createDiamond(float s) {
+<span class="nc" id="L423">        final GeneralPath p0 = new GeneralPath();</span>
+<span class="nc" id="L424">        p0.moveTo(0.0f, -s);</span>
+<span class="nc" id="L425">        p0.lineTo(s, 0.0f);</span>
+<span class="nc" id="L426">        p0.lineTo(0.0f, s);</span>
+<span class="nc" id="L427">        p0.lineTo(-s, 0.0f);</span>
+<span class="nc" id="L428">        p0.closePath();</span>
+<span class="nc" id="L429">        return p0;</span>
+    }
+
+    /**
+     * Creates a triangle shape that points upwards.
+     *
+     * @param s  the size factor (equal to half the height of the triangle).
+     *
+     * @return A triangle shape.
+     */
+    public static Shape createUpTriangle(float s) {
+<span class="nc" id="L440">        final GeneralPath p0 = new GeneralPath();</span>
+<span class="nc" id="L441">        p0.moveTo(0.0f, -s);</span>
+<span class="nc" id="L442">        p0.lineTo(s, s);</span>
+<span class="nc" id="L443">        p0.lineTo(-s, s);</span>
+<span class="nc" id="L444">        p0.closePath();</span>
+<span class="nc" id="L445">        return p0;</span>
+    }
+
+    /**
+     * Creates a triangle shape that points downwards.
+     *
+     * @param s  the size factor (equal to half the height of the triangle).
+     *
+     * @return A triangle shape.
+     */
+    public static Shape createDownTriangle(float s) {
+<span class="nc" id="L456">        final GeneralPath p0 = new GeneralPath();</span>
+<span class="nc" id="L457">        p0.moveTo(0.0f, s);</span>
+<span class="nc" id="L458">        p0.lineTo(s, -s);</span>
+<span class="nc" id="L459">        p0.lineTo(-s, -s);</span>
+<span class="nc" id="L460">        p0.closePath();</span>
+<span class="nc" id="L461">        return p0;</span>
+    }
+
+    /**
+     * Creates a region surrounding a line segment by 'widening' the line
+     * segment.  A typical use for this method is the creation of a
+     * 'clickable' region for a line that is displayed on-screen.
+     *
+     * @param line  the line ({@code null} not permitted).
+     * @param width  the width of the region.
+     *
+     * @return A region that surrounds the line.
+     */
+    public static Shape createLineRegion(Line2D line, float width) {
+<span class="nc" id="L475">        final GeneralPath result = new GeneralPath();</span>
+<span class="nc" id="L476">        final float x1 = (float) line.getX1();</span>
+<span class="nc" id="L477">        final float x2 = (float) line.getX2();</span>
+<span class="nc" id="L478">        final float y1 = (float) line.getY1();</span>
+<span class="nc" id="L479">        final float y2 = (float) line.getY2();</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">        if ((x2 - x1) != 0.0) {</span>
+<span class="nc" id="L481">            final double theta = Math.atan((y2 - y1) / (x2 - x1));</span>
+<span class="nc" id="L482">            final float dx = (float) Math.sin(theta) * width;</span>
+<span class="nc" id="L483">            final float dy = (float) Math.cos(theta) * width;</span>
+<span class="nc" id="L484">            result.moveTo(x1 - dx, y1 + dy);</span>
+<span class="nc" id="L485">            result.lineTo(x1 + dx, y1 - dy);</span>
+<span class="nc" id="L486">            result.lineTo(x2 + dx, y2 - dy);</span>
+<span class="nc" id="L487">            result.lineTo(x2 - dx, y2 + dy);</span>
+<span class="nc" id="L488">            result.closePath();</span>
+<span class="nc" id="L489">        }</span>
+        else {
+            // special case, vertical line
+<span class="nc" id="L492">            result.moveTo(x1 - width / 2.0f, y1);</span>
+<span class="nc" id="L493">            result.lineTo(x1 + width / 2.0f, y1);</span>
+<span class="nc" id="L494">            result.lineTo(x2 + width / 2.0f, y2);</span>
+<span class="nc" id="L495">            result.lineTo(x2 - width / 2.0f, y2);</span>
+<span class="nc" id="L496">            result.closePath();</span>
+        }
+<span class="nc" id="L498">        return result;</span>
+    }
+
+    /**
+     * Returns a point based on (x, y) but constrained to be within the bounds
+     * of a given rectangle.
+     *
+     * @param x  the x-coordinate.
+     * @param y  the y-coordinate.
+     * @param area  the constraining rectangle ({@code null} not
+     *              permitted).
+     *
+     * @return A point within the rectangle.
+     *
+     * @throws NullPointerException if {@code area} is {@code null}.
+     */
+    public static Point2D getPointInRectangle(double x, double y,
+            Rectangle2D area) {
+
+<span class="nc" id="L517">        x = Math.max(area.getMinX(), Math.min(x, area.getMaxX()));</span>
+<span class="nc" id="L518">        y = Math.max(area.getMinY(), Math.min(y, area.getMaxY()));</span>
+<span class="nc" id="L519">        return new Point2D.Double(x, y);</span>
+
+    }
+
+    /**
+     * Checks, whether the given rectangle1 fully contains rectangle 2
+     * (even if rectangle 2 has a height or width of zero!).
+     *
+     * @param rect1  the first rectangle.
+     * @param rect2  the second rectangle.
+     *
+     * @return A boolean.
+     */
+    public static boolean contains(Rectangle2D rect1, Rectangle2D rect2) {
+
+<span class="nc" id="L534">        final double x0 = rect1.getX();</span>
+<span class="nc" id="L535">        final double y0 = rect1.getY();</span>
+<span class="nc" id="L536">        final double x = rect2.getX();</span>
+<span class="nc" id="L537">        final double y = rect2.getY();</span>
+<span class="nc" id="L538">        final double w = rect2.getWidth();</span>
+<span class="nc" id="L539">        final double h = rect2.getHeight();</span>
+
+<span class="nc bnc" id="L541" title="All 4 branches missed.">        return ((x &gt;= x0) &amp;&amp; (y &gt;= y0)</span>
+<span class="nc bnc" id="L542" title="All 2 branches missed.">                &amp;&amp; ((x + w) &lt;= (x0 + rect1.getWidth()))</span>
+<span class="nc bnc" id="L543" title="All 2 branches missed.">                &amp;&amp; ((y + h) &lt;= (y0 + rect1.getHeight())));</span>
+
+    }
+
+    /**
+     * Checks, whether the given rectangle1 fully contains rectangle 2
+     * (even if rectangle 2 has a height or width of zero!).
+     *
+     * @param rect1  the first rectangle.
+     * @param rect2  the second rectangle.
+     *
+     * @return A boolean.
+     */
+    public static boolean intersects(Rectangle2D rect1, Rectangle2D rect2) {
+
+<span class="nc" id="L558">      final double x0 = rect1.getX();</span>
+<span class="nc" id="L559">      final double y0 = rect1.getY();</span>
+
+<span class="nc" id="L561">      final double x = rect2.getX();</span>
+<span class="nc" id="L562">      final double width = rect2.getWidth();</span>
+<span class="nc" id="L563">      final double y = rect2.getY();</span>
+<span class="nc" id="L564">      final double height = rect2.getHeight();</span>
+<span class="nc bnc" id="L565" title="All 6 branches missed.">      return (x + width &gt;= x0 &amp;&amp; y + height &gt;= y0 &amp;&amp; x &lt;= x0 + rect1.getWidth()</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">              &amp;&amp; y &lt;= y0 + rect1.getHeight());</span>
+    }
+    
+    /**
+     * Returns {@code true} if the specified point (x, y) falls within or
+     * on the boundary of the specified rectangle.
+     *
+     * @param rect  the rectangle ({@code null} not permitted).
+     * @param x  the x-coordinate.
+     * @param y  the y-coordinate.
+     *
+     * @return A boolean.
+     */
+    public static boolean isPointInRect(Rectangle2D rect, double x, double y) {
+<span class="pc bpc" id="L580" title="2 of 4 branches missed.">        return (x &gt;= rect.getMinX() &amp;&amp; x &lt;= rect.getMaxX()</span>
+<span class="pc bnc" id="L581" title="All 4 branches missed.">                &amp;&amp; y &gt;= rect.getMinY() &amp;&amp; y &lt;= rect.getMaxY());</span>
+    }
+ 
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
