@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Xhtml5Parser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: XHTML5 Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.xhtml5</a> &gt; <span class="el_source">Xhtml5Parser.java</span></div><h1>Xhtml5Parser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.xhtml5;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.text.html.HTML.Attribute;
+
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.macro.manager.MacroNotFoundException;
+import org.apache.maven.doxia.macro.MacroRequest;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.parser.Xhtml5BaseParser;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParser;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
+/**
+ * Parse an xhtml model and emit events into a Doxia Sink.
+ */
+@Component( role = Parser.class, hint = &quot;xhtml5&quot; )
+<span class="fc" id="L48">public class Xhtml5Parser</span>
+    extends Xhtml5BaseParser
+    implements Xhtml5Markup
+{
+    /**
+     * The role hint for the {@link Xhtml5Parser} Plexus component.
+     */
+    public static final String ROLE_HINT = &quot;xhtml5&quot;;
+
+    /** For boxed verbatim. */
+    private boolean boxed;
+
+    /** Empty elements don't write a closing tag. */
+    private boolean isEmptyElement;
+
+    /**
+     * The source content of the input reader. Used to pass into macros.
+     */
+    private String sourceContent;
+
+    /** {@inheritDoc} */
+    protected void handleStartTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc" id="L72">        isEmptyElement = parser.isEmptyElementTag();</span>
+
+<span class="fc" id="L74">        SinkEventAttributeSet attribs = getAttributesFromParser( parser );</span>
+
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if ( parser.getName().equals( HTML.toString() ) )</span>
+        {
+            //Do nothing
+<span class="fc" id="L79">            return;</span>
+        }
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        else if ( parser.getName().equals( HEAD.toString() ) )</span>
+        {
+<span class="fc" id="L83">            sink.head( attribs );</span>
+        }
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        else if ( parser.getName().equals( TITLE.toString() ) )</span>
+        {
+<span class="fc" id="L87">            sink.title( attribs );</span>
+        }
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        else if ( parser.getName().equals( META.toString() ) )</span>
+        {
+<span class="fc" id="L91">            String name = parser.getAttributeValue( null, Attribute.NAME.toString() );</span>
+<span class="fc" id="L92">            String content = parser.getAttributeValue( null, Attribute.CONTENT.toString() );</span>
+
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if ( &quot;author&quot;.equals( name ) )</span>
+            {
+<span class="fc" id="L96">                sink.author( null );</span>
+
+<span class="fc" id="L98">                sink.text( content );</span>
+
+<span class="fc" id="L100">                sink.author_();</span>
+            }
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            else if ( &quot;date&quot;.equals( name ) )</span>
+            {
+<span class="fc" id="L104">                sink.date( null );</span>
+
+<span class="fc" id="L106">                sink.text( content );</span>
+
+<span class="fc" id="L108">                sink.date_();</span>
+            }
+            else
+            {
+<span class="fc" id="L112">                sink.unknown( &quot;meta&quot;, new Object[] { TAG_TYPE_SIMPLE }, attribs );</span>
+            }
+<span class="fc" id="L114">        }</span>
+        /*
+         * The ADDRESS element may be used by authors to supply contact information
+         * for a model or a major part of a model such as a form. This element
+         *  often appears at the beginning or end of a model.
+         */
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        else if ( parser.getName().equals( ADDRESS.toString() ) )</span>
+        {
+<span class="nc" id="L122">            sink.address( attribs );</span>
+        }
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        else if ( parser.getName().equals( BODY.toString() ) )</span>
+        {
+<span class="fc" id="L126">            sink.body( attribs );</span>
+        }
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        else if ( parser.getName().equals( DIV.toString() ) )</span>
+        {
+<span class="fc" id="L130">            String divclass = parser.getAttributeValue( null, Attribute.CLASS.toString() );</span>
+
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            if ( &quot;source&quot;.equals( divclass ) )</span>
+            {
+<span class="fc" id="L134">                this.boxed = true;</span>
+            }
+
+<span class="fc" id="L137">            baseStartTag( parser, sink ); // pick up other divs</span>
+<span class="fc" id="L138">        }</span>
+        /*
+         * The PRE element tells visual user agents that the enclosed text is
+         * &quot;preformatted&quot;. When handling preformatted text, visual user agents:
+         * - May leave white space intact.
+         * - May render text with a fixed-pitch font.
+         * - May disable automatic word wrap.
+         * - Must not disable bidirectional processing.
+         * Non-visual user agents are not required to respect extra white space
+         * in the content of a PRE element.
+         */
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        else if ( parser.getName().equals( PRE.toString() ) )</span>
+        {
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            if ( boxed )</span>
+            {
+<span class="fc" id="L153">                attribs.addAttributes( SinkEventAttributeSet.BOXED );</span>
+            }
+
+<span class="fc" id="L156">            verbatim();</span>
+
+<span class="fc" id="L158">            sink.verbatim( attribs );</span>
+        }
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        else if ( !baseStartTag( parser, sink ) )</span>
+        {
+<span class="fc bfc" id="L162" title="All 2 branches covered.">            if ( isEmptyElement )</span>
+            {
+<span class="fc" id="L164">                handleUnknown( parser, sink, TAG_TYPE_SIMPLE );</span>
+            }
+            else
+            {
+<span class="fc" id="L168">                handleUnknown( parser, sink, TAG_TYPE_START );</span>
+            }
+
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">            if ( getLog().isDebugEnabled() )</span>
+            {
+<span class="nc" id="L173">                String position = &quot;[&quot; + parser.getLineNumber() + &quot;:&quot;</span>
+<span class="nc" id="L174">                    + parser.getColumnNumber() + &quot;]&quot;;</span>
+<span class="nc" id="L175">                String tag = &quot;&lt;&quot; + parser.getName() + &quot;&gt;&quot;;</span>
+
+<span class="nc" id="L177">                getLog().debug( &quot;Unrecognized xhtml5 tag: &quot; + tag + &quot; at &quot; + position );</span>
+            }
+        }
+<span class="fc" id="L180">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleEndTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        if ( parser.getName().equals( HTML.toString() ) )</span>
+        {
+            //Do nothing
+<span class="fc" id="L189">            return;</span>
+        }
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        else if ( parser.getName().equals( HEAD.toString() ) )</span>
+        {
+<span class="fc" id="L193">            sink.head_();</span>
+        }
+<span class="fc bfc" id="L195" title="All 2 branches covered.">        else if ( parser.getName().equals( TITLE.toString() ) )</span>
+        {
+<span class="fc" id="L197">            sink.title_();</span>
+        }
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        else if ( parser.getName().equals( BODY.toString() ) )</span>
+        {
+<span class="fc" id="L201">            consecutiveSections( 0, sink, null );</span>
+
+<span class="fc" id="L203">            sink.body_();</span>
+        }
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        else if ( parser.getName().equals( ADDRESS.toString() ) )</span>
+        {
+<span class="nc" id="L207">            sink.address_();</span>
+        }
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        else if ( parser.getName().equals( DIV.toString() ) )</span>
+        {
+<span class="fc" id="L211">            this.boxed = false;</span>
+<span class="fc" id="L212">            baseEndTag( parser, sink );</span>
+        }
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        else if ( !baseEndTag( parser, sink ) )</span>
+        {
+<span class="fc bfc" id="L216" title="All 2 branches covered.">            if ( !isEmptyElement )</span>
+            {
+<span class="fc" id="L218">                handleUnknown( parser, sink, TAG_TYPE_END );</span>
+            }
+        }
+
+<span class="fc" id="L222">        isEmptyElement = false;</span>
+<span class="fc" id="L223">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    protected void handleComment( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L230">        String text = getText( parser ).trim();</span>
+
+<span class="fc bfc" id="L232" title="All 4 branches covered.">        if ( text.startsWith( &quot;MACRO&quot; ) &amp;&amp; !isSecondParsing() )</span>
+        {
+<span class="fc" id="L234">            processMacro( text, sink );</span>
+        }
+        else
+        {
+<span class="fc" id="L238">            super.handleComment( parser, sink );</span>
+        }
+<span class="fc" id="L240">    }</span>
+
+    /** process macro embedded in XHTML commment */
+    private void processMacro( String text, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L246">        String s = text.substring( text.indexOf( '{' ) + 1, text.indexOf( '}' ) );</span>
+<span class="fc" id="L247">        s = escapeForMacro( s );</span>
+<span class="fc" id="L248">        String[] params = StringUtils.split( s, &quot;|&quot; );</span>
+<span class="fc" id="L249">        String macroName = params[0];</span>
+
+<span class="fc" id="L251">        Map&lt;String, Object&gt; parameters = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        for ( int i = 1; i &lt; params.length; i++ )</span>
+        {
+<span class="fc" id="L254">            String[] param = StringUtils.split( params[i], &quot;=&quot; );</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">            if ( param.length == 1 )</span>
+            {
+<span class="nc" id="L257">                throw new XmlPullParserException( &quot;Missing 'key=value' pair for macro parameter: &quot; + params[i] );</span>
+            }
+
+<span class="fc" id="L260">            String key = unescapeForMacro( param[0] );</span>
+<span class="fc" id="L261">            String value = unescapeForMacro( param[1] );</span>
+<span class="fc" id="L262">            parameters.put( key, value );</span>
+        }
+
+<span class="fc" id="L265">        MacroRequest request = new MacroRequest( sourceContent, new Xhtml5Parser(), parameters, getBasedir() );</span>
+
+        try
+        {
+<span class="fc" id="L269">            executeMacro( macroName, request, sink );</span>
+        }
+<span class="nc" id="L271">        catch ( MacroExecutionException e )</span>
+        {
+<span class="nc" id="L273">            throw new XmlPullParserException( &quot;Unable to execute macro in the document: &quot; + macroName );</span>
+        }
+<span class="nc" id="L275">        catch ( MacroNotFoundException me )</span>
+        {
+<span class="nc" id="L277">            throw new XmlPullParserException( &quot;Macro not found: &quot; + macroName );</span>
+<span class="fc" id="L278">        }</span>
+<span class="fc" id="L279">    }</span>
+
+    /**
+     * escapeForMacro
+     *
+     * @param s String
+     * @return String
+     */
+    private String escapeForMacro( String s )
+    {
+<span class="pc bpc" id="L289" title="2 of 4 branches missed.">        if ( s == null || s.length() &lt; 1 )</span>
+        {
+<span class="nc" id="L291">            return s;</span>
+        }
+
+<span class="fc" id="L294">        String result = s;</span>
+
+        // use some outrageously out-of-place chars for text
+        // (these are device control one/two in unicode)
+<span class="fc" id="L298">        result = StringUtils.replace( result, &quot;\\=&quot;, &quot;\u0011&quot; );</span>
+<span class="fc" id="L299">        result = StringUtils.replace( result, &quot;\\|&quot;, &quot;\u0012&quot; );</span>
+
+<span class="fc" id="L301">        return result;</span>
+    }
+
+    /**
+     * unescapeForMacro
+     *
+     * @param s String
+     * @return String
+     */
+    private String unescapeForMacro( String s )
+    {
+<span class="pc bpc" id="L312" title="2 of 4 branches missed.">        if ( s == null || s.length() &lt; 1 )</span>
+        {
+<span class="nc" id="L314">            return s;</span>
+        }
+
+<span class="fc" id="L317">        String result = s;</span>
+
+<span class="fc" id="L319">        result = StringUtils.replace( result, &quot;\u0011&quot;, &quot;=&quot; );</span>
+<span class="fc" id="L320">        result = StringUtils.replace( result, &quot;\u0012&quot;, &quot;|&quot; );</span>
+
+<span class="fc" id="L322">        return result;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void init()
+    {
+<span class="fc" id="L330">        super.init();</span>
+
+<span class="fc" id="L332">        this.boxed = false;</span>
+<span class="fc" id="L333">        this.isEmptyElement = false;</span>
+<span class="fc" id="L334">    }</span>
+
+    /** {@inheritDoc} */
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L340">        this.sourceContent = null;</span>
+
+        try
+        {
+<span class="fc" id="L344">            StringWriter contentWriter = new StringWriter();</span>
+<span class="fc" id="L345">            IOUtil.copy( source, contentWriter );</span>
+<span class="fc" id="L346">            sourceContent = contentWriter.toString();</span>
+        }
+<span class="nc" id="L348">        catch ( IOException ex )</span>
+        {
+<span class="nc" id="L350">            throw new ParseException( &quot;Error reading the input source: &quot; + ex.getMessage(), ex );</span>
+        }
+        finally
+        {
+<span class="fc" id="L354">            IOUtil.close( source );</span>
+        }
+
+        try
+        {
+<span class="fc" id="L359">            super.parse( new StringReader( sourceContent ), sink );</span>
+        }
+        finally
+        {
+<span class="fc" id="L363">            this.sourceContent = null;</span>
+        }
+<span class="fc" id="L365">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

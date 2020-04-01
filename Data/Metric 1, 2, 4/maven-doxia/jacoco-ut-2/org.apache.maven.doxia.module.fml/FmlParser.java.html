@@ -1,0 +1,743 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FmlParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: FML Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.fml</a> &gt; <span class="el_source">FmlParser.java</span></div><h1>FmlParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.fml;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.swing.text.html.HTML.Attribute;
+
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.macro.MacroRequest;
+import org.apache.maven.doxia.macro.manager.MacroNotFoundException;
+import org.apache.maven.doxia.module.fml.model.Faq;
+import org.apache.maven.doxia.module.fml.model.Faqs;
+import org.apache.maven.doxia.module.fml.model.Part;
+import org.apache.maven.doxia.parser.AbstractXmlParser;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.sink.impl.XhtmlBaseSink;
+import org.apache.maven.doxia.util.DoxiaUtils;
+import org.apache.maven.doxia.util.HtmlTools;
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParser;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
+/**
+ * Parse a fml model and emit events into the specified doxia Sink.
+ *
+ * @author &lt;a href=&quot;mailto:evenisse@codehaus.org&quot;&gt;Emmanuel Venisse&lt;/a&gt;
+ * @author ltheussl
+ * @since 1.0
+ */
+@Component( role = Parser.class, hint = &quot;fml&quot; )
+<span class="fc" id="L62">public class FmlParser</span>
+    extends AbstractXmlParser
+    implements FmlMarkup
+{
+    /** Collect a faqs model. */
+    private Faqs faqs;
+
+    /** Collect a part. */
+    private Part currentPart;
+
+    /** Collect a single faq. */
+    private Faq currentFaq;
+
+    /** Used to collect text events. */
+    private StringBuilder buffer;
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    private Map&lt;String, Set&lt;String&gt;&gt; warnMessages;
+
+    /** The source content of the input reader. Used to pass into macros. */
+    private String sourceContent;
+
+    /** A macro name. */
+    private String macroName;
+
+    /** The macro parameters. */
+<span class="fc" id="L89">    private Map&lt;String, Object&gt; macroParameters = new HashMap&lt;&gt;();</span>
+
+    /** {@inheritDoc} */
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L95">        this.faqs = null;</span>
+<span class="fc" id="L96">        this.sourceContent = null;</span>
+<span class="fc" id="L97">        init();</span>
+
+        try
+        {
+<span class="fc" id="L101">            StringWriter contentWriter = new StringWriter();</span>
+<span class="fc" id="L102">            IOUtil.copy( source, contentWriter );</span>
+<span class="fc" id="L103">            sourceContent = contentWriter.toString();</span>
+        }
+<span class="nc" id="L105">        catch ( IOException ex )</span>
+        {
+<span class="nc" id="L107">            throw new ParseException( &quot;Error reading the input source: &quot; + ex.getMessage(), ex );</span>
+        }
+        finally
+        {
+<span class="fc" id="L111">            IOUtil.close( source );</span>
+        }
+
+        try
+        {
+<span class="fc" id="L116">            Reader tmp = new StringReader( sourceContent );</span>
+
+<span class="fc" id="L118">            this.faqs = new Faqs();</span>
+
+            // this populates faqs
+<span class="fc" id="L121">            super.parse( tmp, sink );</span>
+
+<span class="fc" id="L123">            writeFaqs( sink );</span>
+        }
+        finally
+        {
+<span class="fc" id="L127">            logWarnings();</span>
+
+<span class="fc" id="L129">            this.faqs = null;</span>
+<span class="fc" id="L130">            this.sourceContent = null;</span>
+<span class="fc" id="L131">            setSecondParsing( false );</span>
+<span class="fc" id="L132">            init();</span>
+        }
+<span class="fc" id="L134">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleStartTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if ( parser.getName().equals( FAQS_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L142">            String title = parser.getAttributeValue( null, &quot;title&quot; );</span>
+
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">            if ( title != null )</span>
+            {
+<span class="fc" id="L146">                faqs.setTitle( title );</span>
+            }
+
+<span class="fc" id="L149">            String toplink = parser.getAttributeValue( null, &quot;toplink&quot; );</span>
+
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">            if ( toplink != null )</span>
+            {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                if ( toplink.equalsIgnoreCase( &quot;true&quot; ) )</span>
+                {
+<span class="nc" id="L155">                    faqs.setToplink( true );</span>
+                }
+                else
+                {
+<span class="nc" id="L159">                    faqs.setToplink( false );</span>
+                }
+            }
+<span class="fc" id="L162">        }</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        else if ( parser.getName().equals( PART_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L165">            currentPart = new Part();</span>
+
+<span class="fc" id="L167">            currentPart.setId( parser.getAttributeValue( null, Attribute.ID.toString() ) );</span>
+
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">            if ( currentPart.getId() == null )</span>
+            {
+<span class="nc" id="L171">                throw new XmlPullParserException( &quot;id attribute required for &lt;part&gt; at: (&quot;</span>
+<span class="nc" id="L172">                    + parser.getLineNumber() + &quot;:&quot; + parser.getColumnNumber() + &quot;)&quot; );</span>
+            }
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">            else if ( !DoxiaUtils.isValidId( currentPart.getId() ) )</span>
+            {
+<span class="nc" id="L176">                String linkAnchor = DoxiaUtils.encodeId( currentPart.getId(), true );</span>
+
+<span class="nc" id="L178">                String msg = &quot;Modified invalid link: '&quot; + currentPart.getId() + &quot;' to '&quot; + linkAnchor + &quot;'&quot;;</span>
+<span class="nc" id="L179">                logMessage( &quot;modifiedLink&quot;, msg );</span>
+
+<span class="nc" id="L181">                currentPart.setId( linkAnchor );</span>
+<span class="nc" id="L182">            }</span>
+        }
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        else if ( parser.getName().equals( TITLE.toString() ) )</span>
+        {
+<span class="fc" id="L186">            buffer = new StringBuilder();</span>
+<span class="fc" id="L187">            buffer.append( LESS_THAN ).append( parser.getName() ).append( GREATER_THAN );</span>
+        }
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        else if ( parser.getName().equals( FAQ_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L191">            currentFaq = new Faq();</span>
+
+<span class="fc" id="L193">            currentFaq.setId( parser.getAttributeValue( null, Attribute.ID.toString() ) );</span>
+
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">            if ( currentFaq.getId() == null )</span>
+            {
+<span class="nc" id="L197">                throw new XmlPullParserException( &quot;id attribute required for &lt;faq&gt; at: (&quot;</span>
+<span class="nc" id="L198">                    + parser.getLineNumber() + &quot;:&quot; + parser.getColumnNumber() + &quot;)&quot; );</span>
+            }
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            else if ( !DoxiaUtils.isValidId( currentFaq.getId() ) )</span>
+            {
+<span class="nc" id="L202">                String linkAnchor = DoxiaUtils.encodeId( currentFaq.getId(), true );</span>
+
+<span class="nc" id="L204">                String msg = &quot;Modified invalid link: '&quot; + currentFaq.getId() + &quot;' to '&quot; + linkAnchor + &quot;'&quot;;</span>
+<span class="nc" id="L205">                logMessage( &quot;modifiedLink&quot;, msg );</span>
+
+<span class="nc" id="L207">                currentFaq.setId( linkAnchor );</span>
+<span class="nc" id="L208">            }</span>
+        }
+<span class="fc bfc" id="L210" title="All 2 branches covered.">        else if ( parser.getName().equals( QUESTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L212">            buffer = new StringBuilder();</span>
+<span class="fc" id="L213">            buffer.append( LESS_THAN ).append( parser.getName() ).append( GREATER_THAN );</span>
+        }
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        else if ( parser.getName().equals( ANSWER_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L217">            buffer = new StringBuilder();</span>
+<span class="fc" id="L218">            buffer.append( LESS_THAN ).append( parser.getName() ).append( GREATER_THAN );</span>
+
+        }
+
+        // ----------------------------------------------------------------------
+        // Macro
+        // ----------------------------------------------------------------------
+
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        else if ( parser.getName().equals( MACRO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L228">            handleMacroStart( parser );</span>
+        }
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        else if ( parser.getName().equals( PARAM.toString() ) )</span>
+        {
+<span class="fc" id="L232">            handleParamStart( parser, sink );</span>
+        }
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">        else if ( buffer != null )</span>
+        {
+<span class="fc" id="L236">            buffer.append( LESS_THAN ).append( parser.getName() );</span>
+
+<span class="fc" id="L238">            int count = parser.getAttributeCount();</span>
+
+<span class="fc bfc" id="L240" title="All 2 branches covered.">            for ( int i = 0; i &lt; count; i++ )</span>
+            {
+<span class="fc" id="L242">                buffer.append( SPACE ).append( parser.getAttributeName( i ) );</span>
+
+<span class="fc" id="L244">                buffer.append( EQUAL ).append( QUOTE );</span>
+
+                // TODO: why are attribute values HTML-encoded?
+<span class="fc" id="L247">                buffer.append( HtmlTools.escapeHTML( parser.getAttributeValue( i ) ) );</span>
+
+<span class="fc" id="L249">                buffer.append( QUOTE );</span>
+            }
+
+<span class="fc" id="L252">            buffer.append( GREATER_THAN );</span>
+        }
+<span class="fc" id="L254">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleEndTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        if ( parser.getName().equals( FAQS_TAG.toString() ) )</span>
+        {
+            // Do nothing
+<span class="fc" id="L263">            return;</span>
+        }
+<span class="fc bfc" id="L265" title="All 2 branches covered.">        else if ( parser.getName().equals( PART_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L267">            faqs.addPart( currentPart );</span>
+
+<span class="fc" id="L269">            currentPart = null;</span>
+        }
+<span class="fc bfc" id="L271" title="All 2 branches covered.">        else if ( parser.getName().equals( FAQ_TAG.toString() ) )</span>
+        {
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">            if ( currentPart == null )</span>
+            {
+<span class="nc" id="L275">                throw new XmlPullParserException( &quot;Missing &lt;part&gt;  at: (&quot;</span>
+<span class="nc" id="L276">                    + parser.getLineNumber() + &quot;:&quot; + parser.getColumnNumber() + &quot;)&quot; );</span>
+            }
+
+<span class="fc" id="L279">            currentPart.addFaq( currentFaq );</span>
+
+<span class="fc" id="L281">            currentFaq = null;</span>
+        }
+<span class="fc bfc" id="L283" title="All 2 branches covered.">        else if ( parser.getName().equals( QUESTION_TAG.toString() ) )</span>
+        {
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">            if ( currentFaq == null )</span>
+            {
+<span class="nc" id="L287">                throw new XmlPullParserException( &quot;Missing &lt;faq&gt; at: (&quot;</span>
+<span class="nc" id="L288">                    + parser.getLineNumber() + &quot;:&quot; + parser.getColumnNumber() + &quot;)&quot; );</span>
+            }
+
+<span class="fc" id="L291">            buffer.append( LESS_THAN ).append( SLASH ).append( parser.getName() ).append( GREATER_THAN );</span>
+
+<span class="fc" id="L293">            currentFaq.setQuestion( buffer.toString() );</span>
+
+<span class="fc" id="L295">            buffer = null;</span>
+        }
+<span class="fc bfc" id="L297" title="All 2 branches covered.">        else if ( parser.getName().equals( ANSWER_TAG.toString() ) )</span>
+        {
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">            if ( currentFaq == null )</span>
+            {
+<span class="nc" id="L301">                throw new XmlPullParserException( &quot;Missing &lt;faq&gt; at: (&quot;</span>
+<span class="nc" id="L302">                    + parser.getLineNumber() + &quot;:&quot; + parser.getColumnNumber() + &quot;)&quot; );</span>
+            }
+
+<span class="fc" id="L305">            buffer.append( LESS_THAN ).append( SLASH ).append( parser.getName() ).append( GREATER_THAN );</span>
+
+<span class="fc" id="L307">            currentFaq.setAnswer( buffer.toString() );</span>
+
+<span class="fc" id="L309">            buffer = null;</span>
+        }
+<span class="fc bfc" id="L311" title="All 2 branches covered.">        else if ( parser.getName().equals( TITLE.toString() ) )</span>
+        {
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">            if ( currentPart == null )</span>
+            {
+<span class="nc" id="L315">                throw new XmlPullParserException( &quot;Missing &lt;part&gt; at: (&quot;</span>
+<span class="nc" id="L316">                    + parser.getLineNumber() + &quot;:&quot; + parser.getColumnNumber() + &quot;)&quot; );</span>
+            }
+
+<span class="fc" id="L319">            buffer.append( LESS_THAN ).append( SLASH ).append( parser.getName() ).append( GREATER_THAN );</span>
+
+<span class="fc" id="L321">            currentPart.setTitle( buffer.toString() );</span>
+
+<span class="fc" id="L323">            buffer = null;</span>
+        }
+
+        // ----------------------------------------------------------------------
+        // Macro
+        // ----------------------------------------------------------------------
+
+<span class="fc bfc" id="L330" title="All 2 branches covered.">        else if ( parser.getName().equals( MACRO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L332">            handleMacroEnd( buffer );</span>
+        }
+<span class="fc bfc" id="L334" title="All 2 branches covered.">        else if ( parser.getName().equals( PARAM.toString() ) )</span>
+        {
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">            if ( !StringUtils.isNotEmpty( macroName ) )</span>
+            {
+<span class="nc" id="L338">                handleUnknown( parser, sink, TAG_TYPE_END );</span>
+            }
+        }
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">        else if ( buffer != null )</span>
+        {
+<span class="pc bpc" id="L343" title="1 of 4 branches missed.">            if ( buffer.length() &gt; 0 &amp;&amp; buffer.charAt( buffer.length() - 1 ) == SPACE )</span>
+            {
+<span class="fc" id="L345">                buffer.deleteCharAt( buffer.length() - 1 );</span>
+            }
+
+<span class="fc" id="L348">            buffer.append( LESS_THAN ).append( SLASH ).append( parser.getName() ).append( GREATER_THAN );</span>
+        }
+<span class="fc" id="L350">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleText( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc bfc" id="L356" title="All 2 branches covered.">        if ( buffer != null )</span>
+        {
+<span class="fc" id="L358">            buffer.append( parser.getText() );</span>
+        }
+        // only significant text content in fml files is in &lt;question&gt;, &lt;answer&gt; or &lt;title&gt;
+<span class="fc" id="L361">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleCdsect( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L367">        String cdSection = parser.getText();</span>
+
+<span class="pc bpc" id="L369" title="1 of 2 branches missed.">        if ( buffer != null )</span>
+        {
+<span class="fc" id="L371">            buffer.append( LESS_THAN ).append( BANG ).append( LEFT_SQUARE_BRACKET ).append( CDATA )</span>
+<span class="fc" id="L372">                    .append( LEFT_SQUARE_BRACKET ).append( cdSection ).append( RIGHT_SQUARE_BRACKET )</span>
+<span class="fc" id="L373">                    .append( RIGHT_SQUARE_BRACKET ).append( GREATER_THAN );</span>
+        }
+        else
+        {
+<span class="nc" id="L377">            sink.text( cdSection );</span>
+        }
+<span class="fc" id="L379">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleComment( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L385">        String comment = parser.getText();</span>
+
+<span class="pc bpc" id="L387" title="1 of 2 branches missed.">        if ( buffer != null )</span>
+        {
+<span class="nc" id="L389">            buffer.append( LESS_THAN ).append( BANG ).append( MINUS ).append( MINUS )</span>
+<span class="nc" id="L390">                    .append( comment ).append( MINUS ).append( MINUS ).append( GREATER_THAN );</span>
+        }
+        else
+        {
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">            if ( isEmitComments() )</span>
+            {
+<span class="fc" id="L396">                sink.comment( comment );</span>
+            }
+        }
+<span class="fc" id="L399">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleEntity( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="pc bpc" id="L405" title="1 of 2 branches missed.">        if ( buffer != null )</span>
+        {
+<span class="pc bpc" id="L407" title="1 of 2 branches missed.">            if ( parser.getText() != null )</span>
+            {
+<span class="fc" id="L409">                String text = parser.getText();</span>
+
+                // parser.getText() returns the entity replacement text
+                // (&amp;lt; -&gt; &lt;), need to re-escape them
+<span class="fc bfc" id="L413" title="All 2 branches covered.">                if ( text.length() == 1 )</span>
+                {
+<span class="fc" id="L415">                    text = HtmlTools.escapeHTML( text );</span>
+                }
+
+<span class="fc" id="L418">                buffer.append( text );</span>
+<span class="fc" id="L419">            }</span>
+        }
+        else
+        {
+<span class="nc" id="L423">            super.handleEntity( parser, sink );</span>
+        }
+<span class="fc" id="L425">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void init()
+    {
+<span class="fc" id="L432">        super.init();</span>
+
+<span class="fc" id="L434">        this.currentFaq = null;</span>
+<span class="fc" id="L435">        this.currentPart = null;</span>
+<span class="fc" id="L436">        this.buffer = null;</span>
+<span class="fc" id="L437">        this.warnMessages = null;</span>
+<span class="fc" id="L438">        this.macroName = null;</span>
+<span class="fc" id="L439">        this.macroParameters = null;</span>
+<span class="fc" id="L440">    }</span>
+
+    /**
+     * TODO import from XdocParser, probably need to be generic.
+     *
+     * @param parser not null
+     * @throws MacroExecutionException if any
+     */
+    private void handleMacroStart( XmlPullParser parser )
+            throws MacroExecutionException
+    {
+<span class="pc bpc" id="L451" title="1 of 2 branches missed.">        if ( !isSecondParsing() )</span>
+        {
+<span class="fc" id="L453">            macroName = parser.getAttributeValue( null, Attribute.NAME.toString() );</span>
+
+<span class="pc bpc" id="L455" title="1 of 2 branches missed.">            if ( macroParameters == null )</span>
+            {
+<span class="fc" id="L457">                macroParameters = new HashMap&lt;&gt;();</span>
+            }
+
+<span class="pc bpc" id="L460" title="1 of 2 branches missed.">            if ( StringUtils.isEmpty( macroName ) )</span>
+            {
+<span class="nc" id="L462">                throw new MacroExecutionException( &quot;The '&quot; + Attribute.NAME.toString()</span>
+<span class="nc" id="L463">                        + &quot;' attribute for the '&quot; + MACRO_TAG.toString() + &quot;' tag is required.&quot; );</span>
+            }
+        }
+<span class="fc" id="L466">    }</span>
+
+    /**
+     * TODO import from XdocParser, probably need to be generic.
+     *
+     * @param buffer not null
+     * @throws MacroExecutionException if any
+     */
+    private void handleMacroEnd( StringBuilder buffer )
+            throws MacroExecutionException
+    {
+<span class="pc bpc" id="L477" title="1 of 2 branches missed.">        if ( !isSecondParsing() )</span>
+        {
+<span class="pc bpc" id="L479" title="1 of 2 branches missed.">            if ( StringUtils.isNotEmpty( macroName ) )</span>
+            {
+<span class="fc" id="L481">                MacroRequest request =</span>
+<span class="fc" id="L482">                    new MacroRequest( sourceContent, new FmlParser(), macroParameters, getBasedir() );</span>
+
+                try
+                {
+<span class="fc" id="L486">                    StringWriter sw = new StringWriter();</span>
+<span class="fc" id="L487">                    XhtmlBaseSink sink = new XhtmlBaseSink( sw );</span>
+<span class="fc" id="L488">                    executeMacro( macroName, request, sink );</span>
+<span class="fc" id="L489">                    sink.close();</span>
+<span class="fc" id="L490">                    buffer.append( sw.toString() );</span>
+                }
+<span class="nc" id="L492">                catch ( MacroNotFoundException me )</span>
+                {
+<span class="nc" id="L494">                    throw new MacroExecutionException( &quot;Macro not found: &quot; + macroName, me );</span>
+<span class="fc" id="L495">                }</span>
+            }
+        }
+
+        // Reinit macro
+<span class="fc" id="L500">        macroName = null;</span>
+<span class="fc" id="L501">        macroParameters = null;</span>
+<span class="fc" id="L502">    }</span>
+
+    /**
+     * TODO import from XdocParser, probably need to be generic.
+     *
+     * @param parser not null
+     * @param sink not null
+     * @throws MacroExecutionException if any
+     */
+    private void handleParamStart( XmlPullParser parser, Sink sink )
+            throws MacroExecutionException
+    {
+<span class="pc bpc" id="L514" title="1 of 2 branches missed.">        if ( !isSecondParsing() )</span>
+        {
+<span class="pc bpc" id="L516" title="1 of 2 branches missed.">            if ( StringUtils.isNotEmpty( macroName ) )</span>
+            {
+<span class="fc" id="L518">                String paramName = parser.getAttributeValue( null, Attribute.NAME.toString() );</span>
+<span class="fc" id="L519">                String paramValue = parser.getAttributeValue( null,</span>
+<span class="fc" id="L520">                        Attribute.VALUE.toString() );</span>
+
+<span class="pc bpc" id="L522" title="2 of 4 branches missed.">                if ( StringUtils.isEmpty( paramName ) || StringUtils.isEmpty( paramValue ) )</span>
+                {
+<span class="nc" id="L524">                    throw new MacroExecutionException( &quot;'&quot; + Attribute.NAME.toString()</span>
+<span class="nc" id="L525">                            + &quot;' and '&quot; + Attribute.VALUE.toString() + &quot;' attributes for the '&quot; + PARAM.toString()</span>
+<span class="nc" id="L526">                            + &quot;' tag are required inside the '&quot; + MACRO_TAG.toString() + &quot;' tag.&quot; );</span>
+                }
+
+<span class="fc" id="L529">                macroParameters.put( paramName, paramValue );</span>
+<span class="fc" id="L530">            }</span>
+            else
+            {
+                // param tag from non-macro object, see MSITE-288
+<span class="nc" id="L534">                handleUnknown( parser, sink, TAG_TYPE_START );</span>
+            }
+        }
+<span class="fc" id="L537">    }</span>
+
+    /**
+     * Writes the faqs to the specified sink.
+     *
+     * @param sink The sink to consume the event.
+     * @throws ParseException if something goes wrong.
+     */
+    private void writeFaqs( Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L548">        FmlContentParser xdocParser = new FmlContentParser();</span>
+<span class="fc" id="L549">        xdocParser.enableLogging( getLog() );</span>
+
+<span class="fc" id="L551">        sink.head();</span>
+<span class="fc" id="L552">        sink.title();</span>
+<span class="fc" id="L553">        sink.text( faqs.getTitle() );</span>
+<span class="fc" id="L554">        sink.title_();</span>
+<span class="fc" id="L555">        sink.head_();</span>
+
+<span class="fc" id="L557">        sink.body();</span>
+<span class="fc" id="L558">        sink.section1();</span>
+<span class="fc" id="L559">        sink.sectionTitle1();</span>
+<span class="fc" id="L560">        sink.anchor( &quot;top&quot; );</span>
+<span class="fc" id="L561">        sink.text( faqs.getTitle() );</span>
+<span class="fc" id="L562">        sink.anchor_();</span>
+<span class="fc" id="L563">        sink.sectionTitle1_();</span>
+
+        // ----------------------------------------------------------------------
+        // Write summary
+        // ----------------------------------------------------------------------
+
+<span class="fc bfc" id="L569" title="All 2 branches covered.">        for ( Part part : faqs.getParts() )</span>
+        {
+<span class="pc bpc" id="L571" title="1 of 2 branches missed.">            if ( StringUtils.isNotEmpty( part.getTitle() ) )</span>
+            {
+<span class="fc" id="L573">                sink.paragraph();</span>
+<span class="fc" id="L574">                sink.inline( SinkEventAttributeSet.Semantics.BOLD );</span>
+<span class="fc" id="L575">                xdocParser.parse( part.getTitle(), sink );</span>
+<span class="fc" id="L576">                sink.inline_();</span>
+<span class="fc" id="L577">                sink.paragraph_();</span>
+            }
+
+<span class="fc" id="L580">            sink.numberedList( Sink.NUMBERING_DECIMAL );</span>
+
+<span class="fc bfc" id="L582" title="All 2 branches covered.">            for ( Faq faq : part.getFaqs() )</span>
+            {
+<span class="fc" id="L584">                sink.numberedListItem();</span>
+<span class="fc" id="L585">                sink.link( &quot;#&quot; + faq.getId() );</span>
+
+<span class="pc bpc" id="L587" title="1 of 2 branches missed.">                if ( StringUtils.isNotEmpty( faq.getQuestion() ) )</span>
+                {
+<span class="fc" id="L589">                    xdocParser.parse( faq.getQuestion(), sink );</span>
+                }
+                else
+                {
+<span class="nc" id="L593">                    throw new ParseException( &quot;Missing &lt;question&gt; for FAQ '&quot; + faq.getId() + &quot;'&quot; );</span>
+                }
+
+<span class="fc" id="L596">                sink.link_();</span>
+<span class="fc" id="L597">                sink.numberedListItem_();</span>
+<span class="fc" id="L598">            }</span>
+
+<span class="fc" id="L600">            sink.numberedList_();</span>
+<span class="fc" id="L601">        }</span>
+
+<span class="fc" id="L603">        sink.section1_();</span>
+
+        // ----------------------------------------------------------------------
+        // Write content
+        // ----------------------------------------------------------------------
+
+<span class="fc bfc" id="L609" title="All 2 branches covered.">        for ( Part part : faqs.getParts() )</span>
+        {
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">            if ( StringUtils.isNotEmpty( part.getTitle() ) )</span>
+            {
+<span class="fc" id="L613">                sink.section1();</span>
+
+<span class="fc" id="L615">                sink.sectionTitle1();</span>
+<span class="fc" id="L616">                xdocParser.parse( part.getTitle(), sink );</span>
+<span class="fc" id="L617">                sink.sectionTitle1_();</span>
+            }
+
+<span class="fc" id="L620">            sink.definitionList();</span>
+
+<span class="fc bfc" id="L622" title="All 2 branches covered.">            for ( Iterator&lt;Faq&gt; faqIterator = part.getFaqs().iterator(); faqIterator.hasNext(); )</span>
+            {
+<span class="fc" id="L624">                Faq faq = faqIterator.next();</span>
+
+<span class="fc" id="L626">                sink.definedTerm();</span>
+<span class="fc" id="L627">                sink.anchor( faq.getId() );</span>
+
+<span class="pc bpc" id="L629" title="1 of 2 branches missed.">                if ( StringUtils.isNotEmpty( faq.getQuestion() ) )</span>
+                {
+<span class="fc" id="L631">                    xdocParser.parse( faq.getQuestion(), sink );</span>
+                }
+                else
+                {
+<span class="nc" id="L635">                    throw new ParseException( &quot;Missing &lt;question&gt; for FAQ '&quot; + faq.getId() + &quot;'&quot; );</span>
+                }
+
+<span class="fc" id="L638">                sink.anchor_();</span>
+<span class="fc" id="L639">                sink.definedTerm_();</span>
+
+<span class="fc" id="L641">                sink.definition();</span>
+
+<span class="pc bpc" id="L643" title="1 of 2 branches missed.">                if ( StringUtils.isNotEmpty( faq.getAnswer() ) )</span>
+                {
+<span class="fc" id="L645">                    xdocParser.parse( faq.getAnswer(), sink );</span>
+                }
+                else
+                {
+<span class="nc" id="L649">                    throw new ParseException( &quot;Missing &lt;answer&gt; for FAQ '&quot; + faq.getId() + &quot;'&quot; );</span>
+                }
+
+<span class="pc bpc" id="L652" title="1 of 2 branches missed.">                if ( faqs.isToplink() )</span>
+                {
+<span class="fc" id="L654">                    writeTopLink( sink );</span>
+                }
+
+<span class="fc bfc" id="L657" title="All 2 branches covered.">                if ( faqIterator.hasNext() )</span>
+                {
+<span class="fc" id="L659">                    sink.horizontalRule();</span>
+                }
+
+<span class="fc" id="L662">                sink.definition_();</span>
+<span class="fc" id="L663">            }</span>
+
+<span class="fc" id="L665">            sink.definitionList_();</span>
+
+<span class="pc bpc" id="L667" title="1 of 2 branches missed.">            if ( StringUtils.isNotEmpty( part.getTitle() ) )</span>
+            {
+<span class="fc" id="L669">                sink.section1_();</span>
+            }
+<span class="fc" id="L671">        }</span>
+
+<span class="fc" id="L673">        sink.body_();</span>
+<span class="fc" id="L674">    }</span>
+
+    /**
+     * Writes a toplink element.
+     *
+     * @param sink The sink to consume the event.
+     */
+    private void writeTopLink( Sink sink )
+    {
+<span class="fc" id="L683">        SinkEventAttributeSet atts = new SinkEventAttributeSet();</span>
+<span class="fc" id="L684">        atts.addAttribute( SinkEventAttributeSet.ALIGN, &quot;right&quot; );</span>
+<span class="fc" id="L685">        sink.paragraph( atts );</span>
+<span class="fc" id="L686">        sink.link( &quot;#top&quot; );</span>
+<span class="fc" id="L687">        sink.text( &quot;[top]&quot; );</span>
+<span class="fc" id="L688">        sink.link_();</span>
+<span class="fc" id="L689">        sink.paragraph_();</span>
+<span class="fc" id="L690">    }</span>
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #parse(Reader, Sink)
+     * @since 1.1.1
+     */
+    private void logMessage( String key, String msg )
+    {
+<span class="nc" id="L702">        msg = &quot;[FML Parser] &quot; + msg;</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L705">            getLog().debug( msg );</span>
+
+<span class="nc" id="L707">            return;</span>
+        }
+
+<span class="nc bnc" id="L710" title="All 2 branches missed.">        if ( warnMessages == null )</span>
+        {
+<span class="nc" id="L712">            warnMessages = new HashMap&lt;&gt;();</span>
+        }
+
+<span class="nc" id="L715">        Set&lt;String&gt; set = warnMessages.get( key );</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">        if ( set == null )</span>
+        {
+<span class="nc" id="L718">            set = new TreeSet&lt;&gt;();</span>
+        }
+<span class="nc" id="L720">        set.add( msg );</span>
+<span class="nc" id="L721">        warnMessages.put( key, set );</span>
+<span class="nc" id="L722">    }</span>
+
+    /**
+     * @since 1.1.1
+     */
+    private void logWarnings()
+    {
+<span class="pc bpc" id="L729" title="4 of 6 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null &amp;&amp; !isSecondParsing() )</span>
+        {
+<span class="nc bnc" id="L731" title="All 2 branches missed.">            for ( Map.Entry&lt;String, Set&lt;String&gt;&gt; entry : this.warnMessages.entrySet() )</span>
+            {
+<span class="nc bnc" id="L733" title="All 2 branches missed.">                for ( String msg : entry.getValue() )</span>
+                {
+<span class="nc" id="L735">                    getLog().warn( msg );</span>
+<span class="nc" id="L736">                }</span>
+<span class="nc" id="L737">            }</span>
+
+<span class="nc" id="L739">            this.warnMessages = null;</span>
+        }
+<span class="fc" id="L741">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

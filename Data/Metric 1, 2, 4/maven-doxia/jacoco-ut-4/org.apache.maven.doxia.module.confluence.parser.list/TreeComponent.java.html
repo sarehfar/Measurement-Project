@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TreeComponent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Confluence Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.confluence.parser.list</a> &gt; <span class="el_source">TreeComponent.java</span></div><h1>TreeComponent.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.confluence.parser.list;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.List;
+import java.util.ArrayList;
+
+/**
+ * TreeComponent
+ *
+ * @author &lt;a href=&quot;mailto:jason@maven.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ */
+class TreeComponent
+{
+<span class="fc" id="L32">    private static final String EOL = System.getProperty( &quot;line.separator&quot; );</span>
+
+<span class="fc" id="L34">    private List&lt;TreeComponent&gt; children = new ArrayList&lt;&gt;();</span>
+
+    private String text;
+
+    private TreeComponent father;
+
+    private int type;
+
+    TreeComponent( TreeComponent father, String text, int type )
+<span class="fc" id="L43">    {</span>
+<span class="fc" id="L44">        this.text = text;</span>
+<span class="fc" id="L45">        this.father = father;</span>
+<span class="fc" id="L46">        this.type = type;</span>
+<span class="fc" id="L47">    }</span>
+
+    List&lt;TreeComponent&gt; getChildren()
+    {
+<span class="fc" id="L51">        return children;</span>
+    }
+
+    TreeComponent addChildren( String t, int ttype )
+    {
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if ( t == null )</span>
+        {
+<span class="nc" id="L58">            throw new IllegalArgumentException( &quot;argument is null&quot; );</span>
+        }
+
+<span class="fc" id="L61">        TreeComponent ret = new TreeComponent( this, t, ttype );</span>
+
+<span class="fc" id="L63">        children.add( ret );</span>
+
+<span class="fc" id="L65">        return ret;</span>
+    }
+
+    TreeComponent getFather()
+    {
+<span class="fc" id="L70">        return father;</span>
+    }
+
+    int getDepth()
+    {
+<span class="fc" id="L75">        int ret = 0;</span>
+
+<span class="fc" id="L77">        TreeComponent c = this;</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        while ( ( c = c.getFather() ) != null )</span>
+        {
+<span class="fc" id="L81">            ret++;</span>
+        }
+
+<span class="fc" id="L84">        return ret;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public String toString()
+    {
+<span class="nc" id="L94">        return toString( &quot;&quot; );</span>
+    }
+
+    String toString( String indent )
+    {
+<span class="nc" id="L99">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if ( father != null )</span>
+        {
+<span class="nc" id="L103">            sb.append( indent );</span>
+<span class="nc" id="L104">            sb.append( &quot;- &quot; );</span>
+<span class="nc" id="L105">            sb.append( text );</span>
+<span class="nc" id="L106">            sb.append( EOL );</span>
+        }
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        for ( TreeComponent lc : children )</span>
+        {
+<span class="nc" id="L111">            sb.append( lc.toString( indent + &quot;   &quot; ) );</span>
+<span class="nc" id="L112">        }</span>
+
+<span class="nc" id="L114">        return sb.toString();</span>
+    }
+
+    String getText()
+    {
+<span class="fc" id="L119">        return text;</span>
+    }
+
+    int getType()
+    {
+<span class="fc" id="L124">        return type;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

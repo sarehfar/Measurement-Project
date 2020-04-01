@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.codec.CharEncoding;
+import org.apache.commons.codec.Charsets;
 
 /**
  * Converts String to and from bytes using the encodings required by the Java specification. These encodings are
@@ -35,7 +36,7 @@ import org.apache.commons.codec.CharEncoding;
  * @see &lt;a href=&quot;http://download.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html&quot;&gt;Standard charsets&lt;/a&gt;
  * @since 1.4
  */
-<span class="fc" id="L38">public class StringUtils {</span>
+<span class="fc" id="L39">public class StringUtils {</span>
 
     /**
      * &lt;p&gt;
@@ -68,16 +69,16 @@ import org.apache.commons.codec.CharEncoding;
      * @since 1.10
      */
     public static boolean equals(final CharSequence cs1, final CharSequence cs2) {
-<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (cs1 == cs2) {</span>
-<span class="fc" id="L72">            return true;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (cs1 == cs2) {</span>
+<span class="fc" id="L73">            return true;</span>
         }
-<span class="fc bfc" id="L74" title="All 4 branches covered.">        if (cs1 == null || cs2 == null) {</span>
-<span class="fc" id="L75">            return false;</span>
+<span class="fc bfc" id="L75" title="All 4 branches covered.">        if (cs1 == null || cs2 == null) {</span>
+<span class="fc" id="L76">            return false;</span>
         }
-<span class="fc bfc" id="L77" title="All 4 branches covered.">        if (cs1 instanceof String &amp;&amp; cs2 instanceof String) {</span>
-<span class="fc" id="L78">            return cs1.equals(cs2);</span>
+<span class="fc bfc" id="L78" title="All 4 branches covered.">        if (cs1 instanceof String &amp;&amp; cs2 instanceof String) {</span>
+<span class="fc" id="L79">            return cs1.equals(cs2);</span>
         }
-<span class="fc bfc" id="L80" title="All 4 branches covered.">        return cs1.length() == cs2.length() &amp;&amp; CharSequenceUtils.regionMatches(cs1, false, 0, cs2, 0, cs1.length());</span>
+<span class="fc bfc" id="L81" title="All 4 branches covered.">        return cs1.length() == cs2.length() &amp;&amp; CharSequenceUtils.regionMatches(cs1, false, 0, cs2, 0, cs1.length());</span>
     }
 
     /**
@@ -90,10 +91,10 @@ import org.apache.commons.codec.CharEncoding;
      * @return the encoded bytes
      */
     private static byte[] getBytes(final String string, final Charset charset) {
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (string == null) {</span>
-<span class="fc" id="L94">            return null;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (string == null) {</span>
+<span class="fc" id="L95">            return null;</span>
         }
-<span class="fc" id="L96">        return string.getBytes(charset);</span>
+<span class="fc" id="L97">        return string.getBytes(charset);</span>
     }
 
     /**
@@ -106,10 +107,10 @@ import org.apache.commons.codec.CharEncoding;
      * @return the encoded bytes
      */
     private static ByteBuffer getByteBuffer(final String string, final Charset charset) {
-<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (string == null) {</span>
-<span class="fc" id="L110">            return null;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (string == null) {</span>
+<span class="fc" id="L111">            return null;</span>
         }
-<span class="fc" id="L112">        return ByteBuffer.wrap(string.getBytes(charset));</span>
+<span class="fc" id="L113">        return ByteBuffer.wrap(string.getBytes(charset));</span>
     }
 
     /**
@@ -127,7 +128,7 @@ import org.apache.commons.codec.CharEncoding;
      * @since 1.11
      */
     public static ByteBuffer getByteBufferUtf8(final String string) {
-<span class="fc" id="L130">        return getByteBuffer(string, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L131">        return getByteBuffer(string, StandardCharsets.UTF_8);</span>
     }
 
     /**
@@ -145,7 +146,7 @@ import org.apache.commons.codec.CharEncoding;
      * @see #getBytesUnchecked(String, String)
      */
     public static byte[] getBytesIso8859_1(final String string) {
-<span class="fc" id="L148">        return getBytes(string, StandardCharsets.ISO_8859_1);</span>
+<span class="fc" id="L149">        return getBytes(string, StandardCharsets.ISO_8859_1);</span>
     }
 
 
@@ -169,13 +170,13 @@ import org.apache.commons.codec.CharEncoding;
      * @see String#getBytes(String)
      */
     public static byte[] getBytesUnchecked(final String string, final String charsetName) {
-<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (string == null) {</span>
-<span class="fc" id="L173">            return null;</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (string == null) {</span>
+<span class="fc" id="L174">            return null;</span>
         }
         try {
-<span class="fc" id="L176">            return string.getBytes(charsetName);</span>
-<span class="fc" id="L177">        } catch (final UnsupportedEncodingException e) {</span>
-<span class="fc" id="L178">            throw StringUtils.newIllegalStateException(charsetName, e);</span>
+<span class="fc" id="L177">            return string.getBytes(charsetName);</span>
+<span class="fc" id="L178">        } catch (final UnsupportedEncodingException e) {</span>
+<span class="fc" id="L179">            throw StringUtils.newIllegalStateException(charsetName, e);</span>
         }
     }
 
@@ -194,7 +195,7 @@ import org.apache.commons.codec.CharEncoding;
      * @see #getBytesUnchecked(String, String)
      */
     public static byte[] getBytesUsAscii(final String string) {
-<span class="fc" id="L197">        return getBytes(string, StandardCharsets.US_ASCII);</span>
+<span class="fc" id="L198">        return getBytes(string, StandardCharsets.US_ASCII);</span>
     }
 
     /**
@@ -212,7 +213,7 @@ import org.apache.commons.codec.CharEncoding;
      * @see #getBytesUnchecked(String, String)
      */
     public static byte[] getBytesUtf16(final String string) {
-<span class="fc" id="L215">        return getBytes(string, StandardCharsets.UTF_16);</span>
+<span class="fc" id="L216">        return getBytes(string, StandardCharsets.UTF_16);</span>
     }
 
     /**
@@ -230,7 +231,7 @@ import org.apache.commons.codec.CharEncoding;
      * @see #getBytesUnchecked(String, String)
      */
     public static byte[] getBytesUtf16Be(final String string) {
-<span class="fc" id="L233">        return getBytes(string, StandardCharsets.UTF_16BE);</span>
+<span class="fc" id="L234">        return getBytes(string, StandardCharsets.UTF_16BE);</span>
     }
 
     /**
@@ -248,7 +249,7 @@ import org.apache.commons.codec.CharEncoding;
      * @see #getBytesUnchecked(String, String)
      */
     public static byte[] getBytesUtf16Le(final String string) {
-<span class="fc" id="L251">        return getBytes(string, StandardCharsets.UTF_16LE);</span>
+<span class="fc" id="L252">        return getBytes(string, StandardCharsets.UTF_16LE);</span>
     }
 
     /**
@@ -266,12 +267,12 @@ import org.apache.commons.codec.CharEncoding;
      * @see #getBytesUnchecked(String, String)
      */
     public static byte[] getBytesUtf8(final String string) {
-<span class="fc" id="L269">        return getBytes(string, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L270">        return getBytes(string, StandardCharsets.UTF_8);</span>
     }
 
     private static IllegalStateException newIllegalStateException(final String charsetName,
                                                                   final UnsupportedEncodingException e) {
-<span class="fc" id="L274">        return new IllegalStateException(charsetName + &quot;: &quot; + e);</span>
+<span class="fc" id="L275">        return new IllegalStateException(charsetName + &quot;: &quot; + e);</span>
     }
 
     /**
@@ -287,7 +288,7 @@ import org.apache.commons.codec.CharEncoding;
      *             Thrown if charset is {@code null}
      */
     private static String newString(final byte[] bytes, final Charset charset) {
-<span class="fc bfc" id="L290" title="All 2 branches covered.">        return bytes == null ? null : new String(bytes, charset);</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        return bytes == null ? null : new String(bytes, charset);</span>
     }
 
     /**
@@ -310,13 +311,13 @@ import org.apache.commons.codec.CharEncoding;
      * @see String#String(byte[], String)
      */
     public static String newString(final byte[] bytes, final String charsetName) {
-<span class="fc bfc" id="L313" title="All 2 branches covered.">        if (bytes == null) {</span>
-<span class="fc" id="L314">            return null;</span>
+<span class="fc bfc" id="L314" title="All 2 branches covered.">        if (bytes == null) {</span>
+<span class="fc" id="L315">            return null;</span>
         }
         try {
-<span class="fc" id="L317">            return new String(bytes, charsetName);</span>
-<span class="fc" id="L318">        } catch (final UnsupportedEncodingException e) {</span>
-<span class="fc" id="L319">            throw StringUtils.newIllegalStateException(charsetName, e);</span>
+<span class="fc" id="L318">            return new String(bytes, charsetName);</span>
+<span class="fc" id="L319">        } catch (final UnsupportedEncodingException e) {</span>
+<span class="fc" id="L320">            throw StringUtils.newIllegalStateException(charsetName, e);</span>
         }
     }
 
@@ -333,7 +334,7 @@ import org.apache.commons.codec.CharEncoding;
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
     public static String newStringIso8859_1(final byte[] bytes) {
-<span class="fc" id="L336">        return newString(bytes, StandardCharsets.ISO_8859_1);</span>
+<span class="fc" id="L337">        return newString(bytes, StandardCharsets.ISO_8859_1);</span>
     }
 
     /**
@@ -349,7 +350,7 @@ import org.apache.commons.codec.CharEncoding;
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
     public static String newStringUsAscii(final byte[] bytes) {
-<span class="fc" id="L352">        return newString(bytes, StandardCharsets.US_ASCII);</span>
+<span class="fc" id="L353">        return newString(bytes, StandardCharsets.US_ASCII);</span>
     }
 
     /**
@@ -365,7 +366,7 @@ import org.apache.commons.codec.CharEncoding;
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
     public static String newStringUtf16(final byte[] bytes) {
-<span class="fc" id="L368">        return newString(bytes, StandardCharsets.UTF_16);</span>
+<span class="fc" id="L369">        return newString(bytes, StandardCharsets.UTF_16);</span>
     }
 
     /**
@@ -381,7 +382,7 @@ import org.apache.commons.codec.CharEncoding;
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
     public static String newStringUtf16Be(final byte[] bytes) {
-<span class="fc" id="L384">        return newString(bytes, StandardCharsets.UTF_16BE);</span>
+<span class="fc" id="L385">        return newString(bytes, StandardCharsets.UTF_16BE);</span>
     }
 
     /**
@@ -397,7 +398,7 @@ import org.apache.commons.codec.CharEncoding;
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
     public static String newStringUtf16Le(final byte[] bytes) {
-<span class="fc" id="L400">        return newString(bytes, StandardCharsets.UTF_16LE);</span>
+<span class="fc" id="L401">        return newString(bytes, StandardCharsets.UTF_16LE);</span>
     }
 
     /**
@@ -413,8 +414,8 @@ import org.apache.commons.codec.CharEncoding;
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
     public static String newStringUtf8(final byte[] bytes) {
-<span class="fc" id="L416">        return newString(bytes, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L417">        return newString(bytes, StandardCharsets.UTF_8);</span>
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

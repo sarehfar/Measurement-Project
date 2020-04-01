@@ -91,7 +91,7 @@ public class PhoneticEngine {
         public void append(final CharSequence str) {
 <span class="fc bfc" id="L92" title="All 2 branches covered.">            for (final Rule.Phoneme ph : this.phonemes) {</span>
 <span class="fc" id="L93">                ph.append(str);</span>
-            }
+<span class="fc" id="L94">            }</span>
 <span class="fc" id="L95">        }</span>
 
         /**
@@ -118,8 +118,8 @@ public class PhoneticEngine {
                             }
                         }
                     }
-                }
-            }
+<span class="fc" id="L121">                }</span>
+<span class="fc" id="L122">            }</span>
 
 <span class="fc" id="L124">            this.phonemes.clear();</span>
 <span class="fc" id="L125">            this.phonemes.addAll(newPhonemes);</span>
@@ -149,7 +149,7 @@ public class PhoneticEngine {
 <span class="fc" id="L149">                    sb.append(&quot;|&quot;);</span>
                 }
 <span class="fc" id="L151">                sb.append(ph.getPhonemeText());</span>
-            }
+<span class="fc" id="L152">            }</span>
 
 <span class="fc" id="L154">            return sb.toString();</span>
         }
@@ -176,8 +176,8 @@ public class PhoneticEngine {
         private final int maxPhonemes;
         private boolean found;
 
-<span class="fc" id="L179">        public RulesApplication(final Map&lt;String, List&lt;Rule&gt;&gt; finalRules, final CharSequence input,</span>
-                                final PhonemeBuilder phonemeBuilder, final int i, final int maxPhonemes) {
+        public RulesApplication(final Map&lt;String, List&lt;Rule&gt;&gt; finalRules, final CharSequence input,
+<span class="fc" id="L180">                                final PhonemeBuilder phonemeBuilder, final int i, final int maxPhonemes) {</span>
 <span class="fc" id="L181">            Objects.requireNonNull(finalRules, &quot;finalRules&quot;);</span>
 <span class="fc" id="L182">            this.finalRules = finalRules;</span>
 <span class="fc" id="L183">            this.phonemeBuilder = phonemeBuilder;</span>
@@ -214,7 +214,7 @@ public class PhoneticEngine {
 <span class="fc" id="L214">                        this.found = true;</span>
 <span class="fc" id="L215">                        break;</span>
                     }
-                }
+<span class="fc" id="L217">                }</span>
             }
 
 <span class="fc bfc" id="L220" title="All 2 branches covered.">            if (!this.found) {</span>
@@ -239,12 +239,12 @@ public class PhoneticEngine {
 <span class="fc" id="L239">        NAME_PREFIXES.put(NameType.SEPHARDIC,</span>
 <span class="fc" id="L240">                Collections.unmodifiableSet(</span>
 <span class="fc" id="L241">                        new HashSet&lt;&gt;(Arrays.asList(&quot;al&quot;, &quot;el&quot;, &quot;da&quot;, &quot;dal&quot;, &quot;de&quot;, &quot;del&quot;, &quot;dela&quot;, &quot;de la&quot;,</span>
-<span class="fc" id="L242">                                                          &quot;della&quot;, &quot;des&quot;, &quot;di&quot;, &quot;do&quot;, &quot;dos&quot;, &quot;du&quot;, &quot;van&quot;, &quot;von&quot;))));</span>
+                                                          &quot;della&quot;, &quot;des&quot;, &quot;di&quot;, &quot;do&quot;, &quot;dos&quot;, &quot;du&quot;, &quot;van&quot;, &quot;von&quot;))));
 <span class="fc" id="L243">        NAME_PREFIXES.put(NameType.GENERIC,</span>
 <span class="fc" id="L244">                Collections.unmodifiableSet(</span>
 <span class="fc" id="L245">                        new HashSet&lt;&gt;(Arrays.asList(&quot;da&quot;, &quot;dal&quot;, &quot;de&quot;, &quot;del&quot;, &quot;dela&quot;, &quot;de la&quot;, &quot;della&quot;,</span>
-<span class="fc" id="L246">                                                          &quot;des&quot;, &quot;di&quot;, &quot;do&quot;, &quot;dos&quot;, &quot;du&quot;, &quot;van&quot;, &quot;von&quot;))));</span>
-    }
+                                                          &quot;des&quot;, &quot;di&quot;, &quot;do&quot;, &quot;dos&quot;, &quot;du&quot;, &quot;van&quot;, &quot;von&quot;))));
+<span class="fc" id="L247">    }</span>
 
     /**
      * Joins some strings with an internal separator.
@@ -265,7 +265,7 @@ public class PhoneticEngine {
 <span class="fc" id="L265">        return sb.toString();</span>
     }
 
-<span class="fc" id="L268">    private static final int DEFAULT_MAX_PHONEMES = 20;</span>
+    private static final int DEFAULT_MAX_PHONEMES = 20;
 
     private final Lang lang;
 
@@ -304,8 +304,8 @@ public class PhoneticEngine {
      *            the maximum number of phonemes that will be handled
      * @since 1.7
      */
-<span class="fc" id="L307">    public PhoneticEngine(final NameType nameType, final RuleType ruleType, final boolean concat,</span>
-                          final int maxPhonemes) {
+    public PhoneticEngine(final NameType nameType, final RuleType ruleType, final boolean concat,
+<span class="fc" id="L308">                          final int maxPhonemes) {</span>
 <span class="fc bfc" id="L309" title="All 2 branches covered.">        if (ruleType == RuleType.RULES) {</span>
 <span class="fc" id="L310">            throw new IllegalArgumentException(&quot;ruleType must not be &quot; + RuleType.RULES);</span>
         }
@@ -332,7 +332,7 @@ public class PhoneticEngine {
         }
 
 <span class="fc" id="L334">        final Map&lt;Rule.Phoneme, Rule.Phoneme&gt; phonemes =</span>
-<span class="fc" id="L335">            new TreeMap&lt;&gt;(Rule.Phoneme.COMPARATOR);</span>
+            new TreeMap&lt;&gt;(Rule.Phoneme.COMPARATOR);
 
 <span class="fc bfc" id="L337" title="All 2 branches covered.">        for (final Rule.Phoneme phoneme : phonemeBuilder.getPhonemes()) {</span>
 <span class="fc" id="L338">            PhonemeBuilder subBuilder = PhonemeBuilder.empty(phoneme.getLanguages());</span>
@@ -350,7 +350,7 @@ public class PhoneticEngine {
                 }
 
 <span class="fc" id="L352">                i = rulesApplication.getI();</span>
-            }
+<span class="fc" id="L353">            }</span>
 
             // the phonemes map orders the phonemes only based on their text, but ignores the language set
             // when adding new phonemes, check for equal phonemes and merge their language set, otherwise
@@ -363,8 +363,8 @@ public class PhoneticEngine {
 <span class="fc" id="L363">                } else {</span>
 <span class="fc" id="L364">                    phonemes.put(newPhoneme, newPhoneme);</span>
                 }
-            }
-        }
+<span class="fc" id="L366">            }</span>
+<span class="fc" id="L367">        }</span>
 
 <span class="fc" id="L369">        return new PhonemeBuilder(phonemes.keySet());</span>
     }
@@ -416,7 +416,7 @@ public class PhoneticEngine {
 <span class="fc" id="L416">                    final String combined = l + remainder; // input with prefix without space</span>
 <span class="fc" id="L417">                    return &quot;(&quot; + encode(remainder) + &quot;)-(&quot; + encode(combined) + &quot;)&quot;;</span>
                 }
-            }
+<span class="fc" id="L419">            }</span>
         }
 
 <span class="fc" id="L422">        final List&lt;String&gt; words = Arrays.asList(input.split(&quot;\\s+&quot;));</span>
@@ -429,7 +429,7 @@ public class PhoneticEngine {
 <span class="fc" id="L429">                final String[] parts = aWord.split(&quot;'&quot;);</span>
 <span class="fc" id="L430">                final String lastPart = parts[parts.length - 1];</span>
 <span class="fc" id="L431">                words2.add(lastPart);</span>
-            }
+<span class="fc" id="L432">            }</span>
 <span class="fc" id="L433">            words2.removeAll(NAME_PREFIXES.get(this.nameType));</span>
 <span class="fc" id="L434">            break;</span>
         case ASHKENAZI:
@@ -449,12 +449,12 @@ public class PhoneticEngine {
 <span class="pc bpc" id="L449" title="1 of 2 branches missed.">        } else if (words2.size() == 1) {</span>
             // not a multi-word name
 <span class="fc" id="L451">            input = words.iterator().next();</span>
-<span class="fc" id="L452">        } else {</span>
+        } else {
             // encode each word in a multi-word name separately (normally used for approx matches)
 <span class="nc" id="L454">            final StringBuilder result = new StringBuilder();</span>
 <span class="nc bnc" id="L455" title="All 2 branches missed.">            for (final String word : words2) {</span>
 <span class="nc" id="L456">                result.append(&quot;-&quot;).append(encode(word));</span>
-            }
+<span class="nc" id="L457">            }</span>
             // return the result without the leading &quot;-&quot;
 <span class="nc" id="L459">            return result.substring(1);</span>
         }
@@ -467,7 +467,7 @@ public class PhoneticEngine {
 <span class="fc" id="L467">                    new RulesApplication(rules, input, phonemeBuilder, i, maxPhonemes).invoke();</span>
 <span class="fc" id="L468">            i = rulesApplication.getI();</span>
 <span class="fc" id="L469">            phonemeBuilder = rulesApplication.getPhonemeBuilder();</span>
-        }
+<span class="fc" id="L470">        }</span>
 
         // Apply the general rules
 <span class="fc" id="L473">        phonemeBuilder = applyFinalRules(phonemeBuilder, finalRules1);</span>
@@ -523,4 +523,4 @@ public class PhoneticEngine {
 <span class="fc" id="L523">        return this.maxPhonemes;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SinkEventAttributeSet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.sink.impl</a> &gt; <span class="el_source">SinkEventAttributeSet.java</span></div><h1>SinkEventAttributeSet.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.sink.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.swing.text.AttributeSet;
+
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+
+/**
+ * Implementation of MutableAttributeSet using a LinkedHashMap.
+ *
+ * @author ltheussl
+ * @since 1.1
+ */
+public class SinkEventAttributeSet
+    implements SinkEventAttributes, Cloneable
+{
+    /**
+     * An unmodifiable attribute set containing only an underline attribute.
+     */
+    public static final SinkEventAttributes UNDERLINE;
+
+    /**
+     * An unmodifiable attribute set containing only an overline attribute.
+     */
+    public static final SinkEventAttributes OVERLINE;
+
+    /**
+     * An unmodifiable attribute set containing only a linethrough attribute.
+     */
+    public static final SinkEventAttributes LINETHROUGH;
+
+    /**
+     * An unmodifiable attribute set containing only a boxed attribute.
+     */
+    public static final SinkEventAttributes BOXED;
+
+    /**
+     * An unmodifiable attribute set containing only a bold attribute.
+     */
+    public static final SinkEventAttributes BOLD;
+
+    /**
+     * An unmodifiable attribute set containing only an italic attribute.
+     */
+    public static final SinkEventAttributes ITALIC;
+
+    /**
+     * An unmodifiable attribute set containing only a monospaced attribute.
+     */
+    public static final SinkEventAttributes MONOSPACED;
+
+    /**
+     * An unmodifiable attribute set containing only a left attribute.
+     */
+    public static final SinkEventAttributes LEFT;
+
+    /**
+     * An unmodifiable attribute set containing only a right attribute.
+     */
+    public static final SinkEventAttributes RIGHT;
+
+    /**
+     * An unmodifiable attribute set containing only a center attribute.
+     */
+    public static final SinkEventAttributes CENTER;
+
+    /**
+     * An unmodifiable attribute set containing only a justify attribute.
+     */
+    public static final SinkEventAttributes JUSTIFY;
+
+
+    static
+    {
+<span class="fc" id="L98">        UNDERLINE = new SinkEventAttributeSet( DECORATION, &quot;underline&quot; ).unmodifiable();</span>
+<span class="fc" id="L99">        OVERLINE = new SinkEventAttributeSet( DECORATION, &quot;overline&quot; ).unmodifiable();</span>
+<span class="fc" id="L100">        LINETHROUGH = new SinkEventAttributeSet( DECORATION, &quot;line-through&quot; ).unmodifiable();</span>
+<span class="fc" id="L101">        BOXED = new SinkEventAttributeSet( DECORATION, &quot;boxed&quot; ).unmodifiable();</span>
+
+<span class="fc" id="L103">        BOLD = new SinkEventAttributeSet( STYLE, &quot;bold&quot; ).unmodifiable();</span>
+<span class="fc" id="L104">        ITALIC = new SinkEventAttributeSet( STYLE, &quot;italic&quot; ).unmodifiable();</span>
+<span class="fc" id="L105">        MONOSPACED = new SinkEventAttributeSet( STYLE, &quot;monospaced&quot; ).unmodifiable();</span>
+
+<span class="fc" id="L107">        LEFT = new SinkEventAttributeSet( ALIGN, &quot;left&quot; ).unmodifiable();</span>
+<span class="fc" id="L108">        RIGHT = new SinkEventAttributeSet( ALIGN, &quot;right&quot; ).unmodifiable();</span>
+<span class="fc" id="L109">        CENTER = new SinkEventAttributeSet( ALIGN, &quot;center&quot; ).unmodifiable();</span>
+<span class="fc" id="L110">        JUSTIFY = new SinkEventAttributeSet( ALIGN, &quot;justify&quot; ).unmodifiable();</span>
+<span class="fc" id="L111">    }</span>
+
+    private Map&lt;String, Object&gt; attribs;
+
+    private AttributeSet resolveParent;
+
+    /**
+     * Constructs a new, empty SinkEventAttributeSet with default size 5.
+     */
+    public SinkEventAttributeSet()
+    {
+<span class="fc" id="L122">        this( 5 );</span>
+<span class="fc" id="L123">    }</span>
+
+    /**
+     * Constructs a new, empty SinkEventAttributeSet with the specified initial size.
+     *
+     * @param size the initial number of attribs.
+     */
+    public SinkEventAttributeSet( int size )
+<span class="fc" id="L131">    {</span>
+<span class="fc" id="L132">        attribs = new LinkedHashMap&lt;&gt;( size );</span>
+<span class="fc" id="L133">    }</span>
+
+    /**
+     * Constructs a new SinkEventAttributeSet with the attribute name-value
+     * mappings as given by the specified String array.
+     *
+     * @param attributes the specified String array. If the length of this array
+     * is not an even number, an IllegalArgumentException is thrown.
+     */
+    public SinkEventAttributeSet( String... attributes )
+<span class="fc" id="L143">    {</span>
+<span class="fc" id="L144">        int n = attributes.length;</span>
+
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        if ( ( n % 2 ) != 0 )</span>
+        {
+<span class="fc" id="L148">            throw new IllegalArgumentException( &quot;Missing attribute!&quot; );</span>
+        }
+
+<span class="fc" id="L151">        attribs = new LinkedHashMap&lt;&gt;( n / 2 );</span>
+
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        for ( int i = 0; i &lt; n; i += 2 )</span>
+        {
+<span class="fc" id="L155">            attribs.put( attributes[i], attributes[i + 1] );</span>
+        }
+<span class="fc" id="L157">    }</span>
+
+    /**
+     * Constructs a new SinkEventAttributeSet with the same attribute name-value
+     * mappings as in the specified AttributeSet.
+     *
+     * @param attributes the specified AttributeSet.
+     */
+    public SinkEventAttributeSet( AttributeSet attributes )
+<span class="fc" id="L166">    {</span>
+<span class="fc" id="L167">        attribs = new LinkedHashMap&lt;&gt;( attributes.getAttributeCount() );</span>
+
+<span class="fc" id="L169">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L173">            Object name = names.nextElement();</span>
+
+<span class="fc" id="L175">            attribs.put( name.toString(), attributes.getAttribute( name ) );</span>
+<span class="fc" id="L176">        }</span>
+<span class="fc" id="L177">    }</span>
+
+    /**
+     * Replace this AttributeSet by an unmodifiable view of itself.
+     * Any subsequent attempt to add, remove or modify the underlying mapping
+     * will result in an UnsupportedOperationException.
+     *
+     * @return an unmodifiable view of this AttributeSet.
+     * @since 1.1.1
+     */
+    public SinkEventAttributeSet unmodifiable()
+    {
+<span class="fc" id="L189">        this.attribs = Collections.unmodifiableMap( attribs );</span>
+
+<span class="fc" id="L191">        return this;</span>
+    }
+
+    /**
+     * Checks whether the set of attribs is empty.
+     *
+     * @return true if the set is empty.
+     */
+    public boolean isEmpty()
+    {
+<span class="fc" id="L201">        return attribs.isEmpty();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a int.
+     */
+    public int getAttributeCount()
+    {
+<span class="fc" id="L211">        return attribs.size();</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean isDefined( Object attrName )
+    {
+<span class="fc" id="L217">        return attribs.containsKey( attrName );</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean isEqual( AttributeSet attr )
+    {
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        return ( ( getAttributeCount() == attr.getAttributeCount() )</span>
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">                &amp;&amp; containsAttributes( attr ) );</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a {@link javax.swing.text.AttributeSet} object.
+     */
+    public AttributeSet copyAttributes()
+    {
+<span class="fc" id="L234">        return ( (AttributeSet) clone() );</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a {@link java.util.Enumeration} object.
+     */
+    public Enumeration&lt;String&gt; getAttributeNames()
+    {
+<span class="fc" id="L244">        return Collections.enumeration( attribs.keySet() );</span>
+    }
+
+    /** {@inheritDoc} */
+    public Object getAttribute( Object key  )
+    {
+<span class="fc" id="L250">        Object value = attribs.get( key  );</span>
+
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if ( value == null )</span>
+        {
+<span class="fc" id="L254">            AttributeSet parent = getResolveParent();</span>
+
+<span class="fc bfc" id="L256" title="All 2 branches covered.">            if ( parent != null )</span>
+            {
+<span class="fc" id="L258">                value = parent.getAttribute( key  );</span>
+            }
+        }
+
+<span class="fc" id="L262">        return value;</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean containsAttribute( Object name, Object value )
+    {
+<span class="fc" id="L268">        return value.equals( getAttribute( name ) );</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean containsAttributes( AttributeSet attributes )
+    {
+<span class="fc" id="L274">        boolean result = true;</span>
+
+<span class="fc" id="L276">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L278" title="All 4 branches covered.">        while ( result &amp;&amp; names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L280">            Object name = names.nextElement();</span>
+<span class="fc" id="L281">            result = attributes.getAttribute( name ).equals( getAttribute( name ) );</span>
+<span class="fc" id="L282">        }</span>
+
+<span class="fc" id="L284">        return result;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Adds an attribute with the given name and value.
+     */
+    public void addAttribute( Object name, Object value )
+    {
+<span class="fc" id="L294">        attribs.put( name.toString(), value );</span>
+<span class="fc" id="L295">    }</span>
+
+    /** {@inheritDoc} */
+    public void addAttributes( AttributeSet attributes  )
+    {
+<span class="fc bfc" id="L300" title="All 4 branches covered.">        if ( attributes == null || attributes.getAttributeCount() == 0 )</span>
+        {
+<span class="fc" id="L302">            return;</span>
+        }
+
+<span class="fc" id="L305">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L309">            Object name = names.nextElement();</span>
+
+<span class="fc" id="L311">            addAttribute( name, attributes.getAttribute( name ) );</span>
+<span class="fc" id="L312">        }</span>
+<span class="fc" id="L313">    }</span>
+
+    /** {@inheritDoc} */
+    public void removeAttribute( Object name )
+    {
+<span class="fc" id="L318">        attribs.remove( name );</span>
+<span class="fc" id="L319">    }</span>
+
+    /** {@inheritDoc} */
+    public void removeAttributes( Enumeration&lt;?&gt; names )
+    {
+<span class="fc bfc" id="L324" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L326">            removeAttribute( names.nextElement() );</span>
+        }
+<span class="fc" id="L328">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param attributes a {@link javax.swing.text.AttributeSet} object.
+     */
+    public void removeAttributes( AttributeSet attributes  )
+    {
+<span class="fc bfc" id="L337" title="All 2 branches covered.">        if ( attributes == null )</span>
+        {
+<span class="fc" id="L339">            return;</span>
+        }
+<span class="fc bfc" id="L341" title="All 2 branches covered.">        else if ( attributes == this )</span>
+        {
+<span class="fc" id="L343">            attribs.clear();</span>
+        }
+        else
+        {
+<span class="fc" id="L347">            Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L349" title="All 2 branches covered.">            while ( names.hasMoreElements() )</span>
+            {
+<span class="fc" id="L351">                Object name = names.nextElement();</span>
+<span class="fc" id="L352">                Object value = attributes.getAttribute( name );</span>
+
+<span class="fc bfc" id="L354" title="All 2 branches covered.">                if ( value.equals( getAttribute( name ) ) )</span>
+                {
+<span class="fc" id="L356">                    removeAttribute( name );</span>
+                }
+<span class="fc" id="L358">            }</span>
+        }
+<span class="fc" id="L360">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a {@link javax.swing.text.AttributeSet} object.
+     */
+    public AttributeSet getResolveParent()
+    {
+<span class="fc" id="L369">        return this.resolveParent;</span>
+    }
+
+    /** {@inheritDoc} */
+    public void setResolveParent( AttributeSet parent )
+    {
+<span class="fc" id="L375">        this.resolveParent = parent;</span>
+<span class="fc" id="L376">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public Object clone()
+    {
+<span class="fc" id="L382">        SinkEventAttributeSet attr = new SinkEventAttributeSet( attribs.size() );</span>
+<span class="fc" id="L383">        attr.attribs = new LinkedHashMap&lt;&gt;( attribs );</span>
+
+<span class="fc bfc" id="L385" title="All 2 branches covered.">        if ( resolveParent != null )</span>
+        {
+<span class="fc" id="L387">            attr.resolveParent = resolveParent.copyAttributes();</span>
+        }
+
+<span class="fc" id="L390">        return attr;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode()
+    {
+<span class="fc bfc" id="L397" title="All 2 branches covered.">        final int parentHash = ( resolveParent == null ? 0 : resolveParent.hashCode() );</span>
+
+<span class="fc" id="L399">        return attribs.hashCode() + parentHash;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals( Object obj )
+    {
+<span class="fc bfc" id="L406" title="All 2 branches covered.">        if ( this == obj )</span>
+        {
+<span class="fc" id="L408">            return true;</span>
+        }
+
+<span class="fc bfc" id="L411" title="All 2 branches covered.">        if ( obj instanceof SinkEventAttributeSet )</span>
+        {
+<span class="fc" id="L413">            return isEqual( (SinkEventAttributeSet) obj  );</span>
+        }
+
+<span class="fc" id="L416">        return false;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString()
+    {
+<span class="fc" id="L423">        StringBuilder s = new StringBuilder();</span>
+<span class="fc" id="L424">        Enumeration&lt;String&gt; names = getAttributeNames();</span>
+
+<span class="fc bfc" id="L426" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L428">            String key = names.nextElement();</span>
+<span class="fc" id="L429">            String value = getAttribute( key ).toString();</span>
+
+<span class="fc" id="L431">            s.append( ' ' ).append( key ).append( '=' ).append( value );</span>
+<span class="fc" id="L432">        }</span>
+
+<span class="fc" id="L434">        return s.toString();</span>
+    }
+
+    /**
+     * Attribute sets for the semantic attribute.
+     */
+<span class="nc" id="L440">    public static class Semantics</span>
+    {
+        /**
+         * An unmodifiable attribute set containing only an emphasis attribute.
+         */
+        public static final SinkEventAttributes EMPHASIS;
+
+        /**
+         * An unmodifiable attribute set containing only a strong attribute.
+         */
+        public static final SinkEventAttributes STRONG;
+
+        /**
+         * An unmodifiable attribute set containing only a small attribute.
+         */
+        public static final SinkEventAttributes SMALL;
+
+        /**
+         * An unmodifiable attribute set containing only a line-through attribute.
+         */
+        public static final SinkEventAttributes LINE_THROUGH;
+
+        /**
+         * An unmodifiable attribute set containing only a citation attribute.
+         */
+        public static final SinkEventAttributes CITATION;
+
+        /**
+         * An unmodifiable attribute set containing only a quote attribute.
+         */
+        public static final SinkEventAttributes QUOTE;
+
+        /**
+         * An unmodifiable attribute set containing only a definition attribute.
+         */
+        public static final SinkEventAttributes DEFINITION;
+
+        /**
+         * An unmodifiable attribute set containing only an abbreviation attribute.
+         */
+        public static final SinkEventAttributes ABBREVIATION;
+
+        /**
+         * An unmodifiable attribute set containing only an italic attribute.
+         */
+        public static final SinkEventAttributes ITALIC;
+
+        /**
+         * An unmodifiable attribute set containing only a bold attribute.
+         */
+        public static final SinkEventAttributes BOLD;
+
+        /**
+         * An unmodifiable attribute set containing only a monospaced attribute.
+         */
+        public static final SinkEventAttributes MONOSPACED;
+
+        /**
+         * An unmodifiable attribute set containing only a code attribute.
+         */
+        public static final SinkEventAttributes CODE;
+
+        /**
+         * An unmodifiable attribute set containing only a variable attribute.
+         */
+        public static final SinkEventAttributes VARIABLE;
+
+        /**
+         * An unmodifiable attribute set containing only a sample attribute.
+         */
+        public static final SinkEventAttributes SAMPLE;
+
+        /**
+         * An unmodifiable attribute set containing only a keyboard attribute.
+         */
+        public static final SinkEventAttributes KEYBOARD;
+
+        /**
+         * An unmodifiable attribute set containing only a superscript attribute.
+         */
+        public static final SinkEventAttributes SUPERSCRIPT;
+
+        /**
+         * An unmodifiable attribute set containing only a subscript attribute.
+         */
+        public static final SinkEventAttributes SUBSCRIPT;
+
+        /**
+         * An unmodifiable attribute set containing only an annotation attribute.
+         */
+        public static final SinkEventAttributes ANNOTATION;
+
+        /**
+         * An unmodifiable attribute set containing only a highlight attribute.
+         */
+        public static final SinkEventAttributes HIGHLIGHT;
+
+        /**
+         * An unmodifiable attribute set containing only a ruby attribute.
+         */
+        public static final SinkEventAttributes RUBY;
+
+        /**
+         * An unmodifiable attribute set containing only a rubyBase attribute.
+         */
+        public static final SinkEventAttributes RUBY_BASE;
+
+        /**
+         * An unmodifiable attribute set containing only a rubyText attribute.
+         */
+        public static final SinkEventAttributes RUBY_TEXT;
+
+        /**
+         * An unmodifiable attribute set containing only a rubyTextContainer attribute.
+         */
+        public static final SinkEventAttributes RUBY_TEXT_CONTAINER;
+
+        /**
+         * An unmodifiable attribute set containing only a rubyParentheses attribute.
+         */
+        public static final SinkEventAttributes RUBY_PARANTHESES;
+
+        /**
+         * An unmodifiable attribute set containing only a bidirectionalIsolation attribute.
+         */
+        public static final SinkEventAttributes BIDIRECTIONAL_ISOLATION;
+
+        /**
+         * An unmodifiable attribute set containing only a bidirectionalOverride attribute.
+         */
+        public static final SinkEventAttributes BIDIRECTIONAL_OVERRIDE;
+
+        /**
+         * An unmodifiable attribute set containing only a phrase attribute.
+         */
+        public static final SinkEventAttributes PHRASE;
+
+        /**
+         * An unmodifiable attribute set containing only an insert attribute.
+         */
+        public static final SinkEventAttributes INSERT;
+
+        /**
+         * An unmodifiable attribute set containing only a delete attribute.
+         */
+        public static final SinkEventAttributes DELETE;
+
+        static
+        {
+<span class="fc" id="L589">            EMPHASIS = new SinkEventAttributeSet( SEMANTICS, &quot;emphasis&quot; ).unmodifiable();</span>
+<span class="fc" id="L590">            STRONG = new SinkEventAttributeSet( SEMANTICS, &quot;strong&quot; ).unmodifiable();</span>
+<span class="fc" id="L591">            SMALL = new SinkEventAttributeSet( SEMANTICS, &quot;small&quot; ).unmodifiable();</span>
+<span class="fc" id="L592">            LINE_THROUGH = new SinkEventAttributeSet( SEMANTICS, &quot;line-through&quot; ).unmodifiable();</span>
+<span class="fc" id="L593">            CITATION = new SinkEventAttributeSet( SEMANTICS, &quot;citation&quot; ).unmodifiable();</span>
+<span class="fc" id="L594">            QUOTE = new SinkEventAttributeSet( SEMANTICS, &quot;quote&quot; ).unmodifiable();</span>
+<span class="fc" id="L595">            DEFINITION = new SinkEventAttributeSet( SEMANTICS, &quot;definition&quot; ).unmodifiable();</span>
+<span class="fc" id="L596">            ABBREVIATION = new SinkEventAttributeSet( SEMANTICS, &quot;abbreviation&quot; ).unmodifiable();</span>
+<span class="fc" id="L597">            ITALIC = new SinkEventAttributeSet( SEMANTICS, &quot;italic&quot; ).unmodifiable();</span>
+<span class="fc" id="L598">            BOLD = new SinkEventAttributeSet( SEMANTICS, &quot;bold&quot; ).unmodifiable();</span>
+<span class="fc" id="L599">            MONOSPACED = new SinkEventAttributeSet( SEMANTICS, &quot;monospaced&quot; ).unmodifiable();</span>
+<span class="fc" id="L600">            CODE = new SinkEventAttributeSet( SEMANTICS, &quot;code&quot; ).unmodifiable();</span>
+<span class="fc" id="L601">            VARIABLE = new SinkEventAttributeSet( SEMANTICS, &quot;variable&quot; ).unmodifiable();</span>
+<span class="fc" id="L602">            SAMPLE = new SinkEventAttributeSet( SEMANTICS, &quot;sample&quot; ).unmodifiable();</span>
+<span class="fc" id="L603">            KEYBOARD = new SinkEventAttributeSet( SEMANTICS, &quot;keyboard&quot; ).unmodifiable();</span>
+<span class="fc" id="L604">            SUPERSCRIPT = new SinkEventAttributeSet( SEMANTICS, &quot;superscript&quot; ).unmodifiable();</span>
+<span class="fc" id="L605">            SUBSCRIPT = new SinkEventAttributeSet( SEMANTICS, &quot;subscript&quot; ).unmodifiable();</span>
+<span class="fc" id="L606">            ANNOTATION = new SinkEventAttributeSet( SEMANTICS, &quot;annotation&quot; ).unmodifiable();</span>
+<span class="fc" id="L607">            HIGHLIGHT = new SinkEventAttributeSet( SEMANTICS, &quot;highlight&quot; ).unmodifiable();</span>
+<span class="fc" id="L608">            RUBY = new SinkEventAttributeSet( SEMANTICS, &quot;ruby&quot; ).unmodifiable();</span>
+<span class="fc" id="L609">            RUBY_BASE = new SinkEventAttributeSet( SEMANTICS, &quot;rubyBase&quot; ).unmodifiable();</span>
+<span class="fc" id="L610">            RUBY_TEXT = new SinkEventAttributeSet( SEMANTICS, &quot;rubyText&quot; ).unmodifiable();</span>
+<span class="fc" id="L611">            RUBY_TEXT_CONTAINER = new SinkEventAttributeSet( SEMANTICS, &quot;rubyTextContainer&quot; ).unmodifiable();</span>
+<span class="fc" id="L612">            RUBY_PARANTHESES = new SinkEventAttributeSet( SEMANTICS, &quot;rubyParentheses&quot; ).unmodifiable();</span>
+<span class="fc" id="L613">            BIDIRECTIONAL_ISOLATION = new SinkEventAttributeSet( SEMANTICS, &quot;bidirectionalIsolation&quot; ).unmodifiable();</span>
+<span class="fc" id="L614">            BIDIRECTIONAL_OVERRIDE = new SinkEventAttributeSet( SEMANTICS, &quot;bidirectionalOverride&quot; ).unmodifiable();</span>
+<span class="fc" id="L615">            PHRASE = new SinkEventAttributeSet( SEMANTICS, &quot;phrase&quot; ).unmodifiable();</span>
+<span class="fc" id="L616">            INSERT = new SinkEventAttributeSet( SEMANTICS, &quot;insert&quot; ).unmodifiable();</span>
+<span class="fc" id="L617">            DELETE = new SinkEventAttributeSet( SEMANTICS, &quot;delete&quot; ).unmodifiable();</span>
+<span class="fc" id="L618">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

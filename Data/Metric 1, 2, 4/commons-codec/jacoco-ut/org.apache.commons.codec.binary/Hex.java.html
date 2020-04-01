@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.codec.BinaryDecoder;
 import org.apache.commons.codec.BinaryEncoder;
 import org.apache.commons.codec.CharEncoding;
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
 
@@ -42,7 +43,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      *
      * @since 1.7
      */
-<span class="fc" id="L45">    public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;</span>
+<span class="fc" id="L46">    public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;</span>
 
     /**
      * Default charset name is {@link CharEncoding#UTF_8}
@@ -54,14 +55,14 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
     /**
      * Used to build output as Hex
      */
-<span class="fc" id="L57">    private static final char[] DIGITS_LOWER = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',</span>
-<span class="fc" id="L58">            'e', 'f' };</span>
+<span class="fc" id="L58">    private static final char[] DIGITS_LOWER = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',</span>
+            'e', 'f' };
 
     /**
      * Used to build output as Hex
      */
-<span class="fc" id="L63">    private static final char[] DIGITS_UPPER = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',</span>
-<span class="fc" id="L64">            'E', 'F' };</span>
+<span class="fc" id="L64">    private static final char[] DIGITS_UPPER = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',</span>
+            'E', 'F' };
 
     /**
      * Converts a String representing hexadecimal values into an array of bytes of those same values. The returned array
@@ -74,7 +75,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public static byte[] decodeHex(final String data) throws DecoderException {
-<span class="fc" id="L77">        return decodeHex(data.toCharArray());</span>
+<span class="fc" id="L78">        return decodeHex(data.toCharArray());</span>
     }
 
     /**
@@ -88,24 +89,24 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      */
     public static byte[] decodeHex(final char[] data) throws DecoderException {
 
-<span class="fc" id="L91">        final int len = data.length;</span>
+<span class="fc" id="L92">        final int len = data.length;</span>
 
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        if ((len &amp; 0x01) != 0) {</span>
-<span class="fc" id="L94">            throw new DecoderException(&quot;Odd number of characters.&quot;);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if ((len &amp; 0x01) != 0) {</span>
+<span class="fc" id="L95">            throw new DecoderException(&quot;Odd number of characters.&quot;);</span>
         }
 
-<span class="fc" id="L97">        final byte[] out = new byte[len &gt;&gt; 1];</span>
+<span class="fc" id="L98">        final byte[] out = new byte[len &gt;&gt; 1];</span>
 
         // two characters form the hex value.
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (int i = 0, j = 0; j &lt; len; i++) {</span>
-<span class="fc" id="L101">            int f = toDigit(data[j], j) &lt;&lt; 4;</span>
-<span class="fc" id="L102">            j++;</span>
-<span class="fc" id="L103">            f = f | toDigit(data[j], j);</span>
-<span class="fc" id="L104">            j++;</span>
-<span class="fc" id="L105">            out[i] = (byte) (f &amp; 0xFF);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        for (int i = 0, j = 0; j &lt; len; i++) {</span>
+<span class="fc" id="L102">            int f = toDigit(data[j], j) &lt;&lt; 4;</span>
+<span class="fc" id="L103">            j++;</span>
+<span class="fc" id="L104">            f = f | toDigit(data[j], j);</span>
+<span class="fc" id="L105">            j++;</span>
+<span class="fc" id="L106">            out[i] = (byte) (f &amp; 0xFF);</span>
         }
 
-<span class="fc" id="L108">        return out;</span>
+<span class="fc" id="L109">        return out;</span>
     }
 
     /**
@@ -117,7 +118,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @return A char[] containing lower-case hexadecimal characters
      */
     public static char[] encodeHex(final byte[] data) {
-<span class="fc" id="L120">        return encodeHex(data, true);</span>
+<span class="fc" id="L121">        return encodeHex(data, true);</span>
     }
 
     /**
@@ -133,7 +134,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public static char[] encodeHex(final ByteBuffer data) {
-<span class="fc" id="L136">        return encodeHex(data, true);</span>
+<span class="fc" id="L137">        return encodeHex(data, true);</span>
     }
 
     /**
@@ -147,7 +148,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.4
      */
     public static char[] encodeHex(final byte[] data, final boolean toLowerCase) {
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        return encodeHex(data, toLowerCase ? DIGITS_LOWER : DIGITS_UPPER);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        return encodeHex(data, toLowerCase ? DIGITS_LOWER : DIGITS_UPPER);</span>
     }
 
     /**
@@ -164,7 +165,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public static char[] encodeHex(final ByteBuffer data, final boolean toLowerCase) {
-<span class="fc bfc" id="L167" title="All 2 branches covered.">        return encodeHex(data, toLowerCase ? DIGITS_LOWER : DIGITS_UPPER);</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        return encodeHex(data, toLowerCase ? DIGITS_LOWER : DIGITS_UPPER);</span>
     }
 
     /**
@@ -179,14 +180,14 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.4
      */
     protected static char[] encodeHex(final byte[] data, final char[] toDigits) {
-<span class="fc" id="L182">        final int l = data.length;</span>
-<span class="fc" id="L183">        final char[] out = new char[l &lt;&lt; 1];</span>
+<span class="fc" id="L183">        final int l = data.length;</span>
+<span class="fc" id="L184">        final char[] out = new char[l &lt;&lt; 1];</span>
         // two characters form the hex value.
-<span class="fc bfc" id="L185" title="All 2 branches covered.">        for (int i = 0, j = 0; i &lt; l; i++) {</span>
-<span class="fc" id="L186">            out[j++] = toDigits[(0xF0 &amp; data[i]) &gt;&gt;&gt; 4];</span>
-<span class="fc" id="L187">            out[j++] = toDigits[0x0F &amp; data[i]];</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        for (int i = 0, j = 0; i &lt; l; i++) {</span>
+<span class="fc" id="L187">            out[j++] = toDigits[(0xF0 &amp; data[i]) &gt;&gt;&gt; 4];</span>
+<span class="fc" id="L188">            out[j++] = toDigits[0x0F &amp; data[i]];</span>
         }
-<span class="fc" id="L189">        return out;</span>
+<span class="fc" id="L190">        return out;</span>
     }
 
     /**
@@ -204,7 +205,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     protected static char[] encodeHex(final ByteBuffer byteBuffer, final char[] toDigits) {
-<span class="fc" id="L207">        return encodeHex(toByteArray(byteBuffer), toDigits);</span>
+<span class="fc" id="L208">        return encodeHex(toByteArray(byteBuffer), toDigits);</span>
     }
 
     /**
@@ -216,7 +217,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.4
      */
     public static String encodeHexString(final byte[] data) {
-<span class="fc" id="L219">        return new String(encodeHex(data));</span>
+<span class="fc" id="L220">        return new String(encodeHex(data));</span>
     }
 
     /**
@@ -229,7 +230,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public static String encodeHexString(final byte[] data, final boolean toLowerCase) {
-<span class="fc" id="L232">        return new String(encodeHex(data, toLowerCase));</span>
+<span class="fc" id="L233">        return new String(encodeHex(data, toLowerCase));</span>
     }
 
     /**
@@ -244,7 +245,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public static String encodeHexString(final ByteBuffer data) {
-<span class="fc" id="L247">        return new String(encodeHex(data));</span>
+<span class="fc" id="L248">        return new String(encodeHex(data));</span>
     }
 
     /**
@@ -260,30 +261,30 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public static String encodeHexString(final ByteBuffer data, final boolean toLowerCase) {
-<span class="fc" id="L263">        return new String(encodeHex(data, toLowerCase));</span>
+<span class="fc" id="L264">        return new String(encodeHex(data, toLowerCase));</span>
     }
 
     /**
-     * Convert the byte buffer to a byte array. All bytes identified by
+     * Convert the byte buffer to a a byte array. All bytes identified by
      * {@link ByteBuffer#remaining()} will be used.
      *
      * @param byteBuffer the byte buffer
      * @return the byte[]
      */
     private static byte[] toByteArray(final ByteBuffer byteBuffer) {
-<span class="fc" id="L274">        final int remaining = byteBuffer.remaining();</span>
+<span class="fc" id="L275">        final int remaining = byteBuffer.remaining();</span>
         // Use the underlying buffer if possible
-<span class="fc bfc" id="L276" title="All 2 branches covered.">        if (byteBuffer.hasArray()) {</span>
-<span class="fc" id="L277">            final byte[] byteArray = byteBuffer.array();</span>
-<span class="fc bfc" id="L278" title="All 2 branches covered.">            if (remaining == byteArray.length) {</span>
-<span class="fc" id="L279">                byteBuffer.position(remaining);</span>
-<span class="fc" id="L280">                return byteArray;</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">        if (byteBuffer.hasArray()) {</span>
+<span class="fc" id="L278">            final byte[] byteArray = byteBuffer.array();</span>
+<span class="fc bfc" id="L279" title="All 2 branches covered.">            if (remaining == byteArray.length) {</span>
+<span class="fc" id="L280">                byteBuffer.position(remaining);</span>
+<span class="fc" id="L281">                return byteArray;</span>
             }
         }
         // Copy the bytes
-<span class="fc" id="L284">        final byte[] byteArray = new byte[remaining];</span>
-<span class="fc" id="L285">        byteBuffer.get(byteArray);</span>
-<span class="fc" id="L286">        return byteArray;</span>
+<span class="fc" id="L285">        final byte[] byteArray = new byte[remaining];</span>
+<span class="fc" id="L286">        byteBuffer.get(byteArray);</span>
+<span class="fc" id="L287">        return byteArray;</span>
     }
 
     /**
@@ -295,11 +296,11 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @throws DecoderException Thrown if ch is an illegal hex character
      */
     protected static int toDigit(final char ch, final int index) throws DecoderException {
-<span class="fc" id="L298">        final int digit = Character.digit(ch, 16);</span>
-<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (digit == -1) {</span>
-<span class="fc" id="L300">            throw new DecoderException(&quot;Illegal hexadecimal character &quot; + ch + &quot; at index &quot; + index);</span>
+<span class="fc" id="L299">        final int digit = Character.digit(ch, 16);</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">        if (digit == -1) {</span>
+<span class="fc" id="L301">            throw new DecoderException(&quot;Illegal hexadecimal character &quot; + ch + &quot; at index &quot; + index);</span>
         }
-<span class="fc" id="L302">        return digit;</span>
+<span class="fc" id="L303">        return digit;</span>
     }
 
     private final Charset charset;
@@ -307,10 +308,10 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
     /**
      * Creates a new codec with the default charset name {@link #DEFAULT_CHARSET}
      */
-<span class="fc" id="L310">    public Hex() {</span>
+<span class="fc" id="L311">    public Hex() {</span>
         // use default encoding
-<span class="fc" id="L312">        this.charset = DEFAULT_CHARSET;</span>
-<span class="fc" id="L313">    }</span>
+<span class="fc" id="L313">        this.charset = DEFAULT_CHARSET;</span>
+<span class="fc" id="L314">    }</span>
 
     /**
      * Creates a new codec with the given Charset.
@@ -318,9 +319,9 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @param charset the charset.
      * @since 1.7
      */
-<span class="fc" id="L321">    public Hex(final Charset charset) {</span>
-<span class="fc" id="L322">        this.charset = charset;</span>
-<span class="fc" id="L323">    }</span>
+<span class="fc" id="L322">    public Hex(final Charset charset) {</span>
+<span class="fc" id="L323">        this.charset = charset;</span>
+<span class="fc" id="L324">    }</span>
 
     /**
      * Creates a new codec with the given charset name.
@@ -331,8 +332,8 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.7 throws UnsupportedCharsetException if the named charset is unavailable
      */
     public Hex(final String charsetName) {
-<span class="fc" id="L334">        this(Charset.forName(charsetName));</span>
-<span class="fc" id="L335">    }</span>
+<span class="fc" id="L335">        this(Charset.forName(charsetName));</span>
+<span class="fc" id="L336">    }</span>
 
     /**
      * Converts an array of character bytes representing hexadecimal values into an array of bytes of those same values.
@@ -346,7 +347,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      */
     @Override
     public byte[] decode(final byte[] array) throws DecoderException {
-<span class="fc" id="L349">        return decodeHex(new String(array, getCharset()).toCharArray());</span>
+<span class="fc" id="L350">        return decodeHex(new String(array, getCharset()).toCharArray());</span>
     }
 
     /**
@@ -364,7 +365,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public byte[] decode(final ByteBuffer buffer) throws DecoderException {
-<span class="fc" id="L367">        return decodeHex(new String(toByteArray(buffer), getCharset()).toCharArray());</span>
+<span class="fc" id="L368">        return decodeHex(new String(toByteArray(buffer), getCharset()).toCharArray());</span>
     }
 
     /**
@@ -380,17 +381,17 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      */
     @Override
     public Object decode(final Object object) throws DecoderException {
-<span class="fc bfc" id="L383" title="All 2 branches covered.">        if (object instanceof String) {</span>
-<span class="fc" id="L384">            return decode(((String) object).toCharArray());</span>
-<span class="fc bfc" id="L385" title="All 2 branches covered.">        } else if (object instanceof byte[]) {</span>
-<span class="fc" id="L386">            return decode((byte[]) object);</span>
-<span class="fc bfc" id="L387" title="All 2 branches covered.">        } else if (object instanceof ByteBuffer) {</span>
-<span class="fc" id="L388">            return decode((ByteBuffer) object);</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">        if (object instanceof String) {</span>
+<span class="fc" id="L385">            return decode(((String) object).toCharArray());</span>
+<span class="fc bfc" id="L386" title="All 2 branches covered.">        } else if (object instanceof byte[]) {</span>
+<span class="fc" id="L387">            return decode((byte[]) object);</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">        } else if (object instanceof ByteBuffer) {</span>
+<span class="fc" id="L389">            return decode((ByteBuffer) object);</span>
         } else {
             try {
-<span class="fc" id="L391">                return decodeHex((char[]) object);</span>
-<span class="fc" id="L392">            } catch (final ClassCastException e) {</span>
-<span class="fc" id="L393">                throw new DecoderException(e.getMessage(), e);</span>
+<span class="fc" id="L392">                return decodeHex((char[]) object);</span>
+<span class="fc" id="L393">            } catch (final ClassCastException e) {</span>
+<span class="fc" id="L394">                throw new DecoderException(e.getMessage(), e);</span>
             }
         }
     }
@@ -411,7 +412,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      */
     @Override
     public byte[] encode(final byte[] array) {
-<span class="fc" id="L414">        return encodeHexString(array).getBytes(this.getCharset());</span>
+<span class="fc" id="L415">        return encodeHexString(array).getBytes(this.getCharset());</span>
     }
 
     /**
@@ -431,7 +432,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.11
      */
     public byte[] encode(final ByteBuffer array) {
-<span class="fc" id="L434">        return encodeHexString(array).getBytes(this.getCharset());</span>
+<span class="fc" id="L435">        return encodeHexString(array).getBytes(this.getCharset());</span>
     }
 
     /**
@@ -451,18 +452,18 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
     @Override
     public Object encode(final Object object) throws EncoderException {
         byte[] byteArray;
-<span class="fc bfc" id="L454" title="All 2 branches covered.">        if (object instanceof String) {</span>
-<span class="fc" id="L455">            byteArray = ((String) object).getBytes(this.getCharset());</span>
-<span class="fc bfc" id="L456" title="All 2 branches covered.">        } else if (object instanceof ByteBuffer) {</span>
-<span class="fc" id="L457">            byteArray = toByteArray((ByteBuffer) object);</span>
-<span class="fc" id="L458">        } else {</span>
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        if (object instanceof String) {</span>
+<span class="fc" id="L456">            byteArray = ((String) object).getBytes(this.getCharset());</span>
+<span class="fc bfc" id="L457" title="All 2 branches covered.">        } else if (object instanceof ByteBuffer) {</span>
+<span class="fc" id="L458">            byteArray = toByteArray((ByteBuffer) object);</span>
+        } else {
             try {
-<span class="fc" id="L460">                byteArray = (byte[]) object;</span>
-<span class="fc" id="L461">            } catch (final ClassCastException e) {</span>
-<span class="fc" id="L462">                throw new EncoderException(e.getMessage(), e);</span>
-            }
+<span class="fc" id="L461">                byteArray = (byte[]) object;</span>
+<span class="fc" id="L462">            } catch (final ClassCastException e) {</span>
+<span class="fc" id="L463">                throw new EncoderException(e.getMessage(), e);</span>
+<span class="fc" id="L464">            }</span>
         }
-<span class="fc" id="L465">        return encodeHex(byteArray);</span>
+<span class="fc" id="L466">        return encodeHex(byteArray);</span>
     }
 
     /**
@@ -472,7 +473,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.7
      */
     public Charset getCharset() {
-<span class="fc" id="L475">        return this.charset;</span>
+<span class="fc" id="L476">        return this.charset;</span>
     }
 
     /**
@@ -482,7 +483,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      * @since 1.4
      */
     public String getCharsetName() {
-<span class="fc" id="L485">        return this.charset.name();</span>
+<span class="fc" id="L486">        return this.charset.name();</span>
     }
 
     /**
@@ -492,7 +493,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
      */
     @Override
     public String toString() {
-<span class="fc" id="L495">        return super.toString() + &quot;[charsetName=&quot; + this.charset + &quot;]&quot;;</span>
+<span class="fc" id="L496">        return super.toString() + &quot;[charsetName=&quot; + this.charset + &quot;]&quot;;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ITextHeader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: iText Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.itext</a> &gt; <span class="el_source">ITextHeader.java</span></div><h1>ITextHeader.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.itext;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+import java.util.Date;
+
+/**
+ * Header object containing meta-informations.
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ */
+public class ITextHeader
+{
+    private String title;
+
+    private StringBuilder authors;
+
+    private Date date;
+
+    /**
+     * Default constructor
+     */
+    public ITextHeader()
+<span class="fc" id="L44">    {</span>
+        // nop
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Add a title to the Document
+     *
+     * @param title1 the title.
+     */
+    public final void setTitle( String title1 )
+    {
+<span class="fc" id="L55">        this.title = title1;</span>
+<span class="fc" id="L56">    }</span>
+
+    /**
+     * Get the title
+     *
+     * @return title as String
+     */
+    public String getTitle()
+    {
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if ( this.title == null )</span>
+        {
+<span class="nc" id="L67">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L70">        return this.title;</span>
+    }
+
+    /**
+     * Add a new author
+     *
+     * @param author the author.
+     */
+    public void addAuthor( String author )
+    {
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if ( this.authors == null )</span>
+        {
+<span class="fc" id="L82">            this.authors = new StringBuilder();</span>
+        }
+        else
+        {
+<span class="nc" id="L86">            this.authors.append( &quot;, &quot; );</span>
+        }
+
+<span class="fc" id="L89">        this.authors.append( author );</span>
+<span class="fc" id="L90">    }</span>
+
+    /**
+     * Get the authors
+     *
+     * @return the authors as String
+     */
+    public String getAuthors()
+    {
+<span class="pc bpc" id="L99" title="2 of 4 branches missed.">        if ( ( this.authors == null ) || ( this.authors.length() == 0 ) )</span>
+        {
+<span class="nc" id="L101">            return System.getProperty( &quot;user.name&quot; );</span>
+        }
+
+<span class="fc" id="L104">        return this.authors.toString();</span>
+    }
+
+    /**
+     * Add a date to the document
+     *
+     * @param date1 a date as String
+     */
+    public void setDate( String date1 )
+    {
+        try
+        {
+<span class="nc" id="L116">            this.date = new SimpleDateFormat().parse( date1 );</span>
+        }
+<span class="fc" id="L118">        catch ( ParseException e )</span>
+        {
+<span class="fc" id="L120">            this.date = new Date();</span>
+<span class="nc" id="L121">        }</span>
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * Get the date of the document
+     *
+     * @return the date as String
+     */
+    public String getDate()
+    {
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if ( this.date == null )</span>
+        {
+<span class="nc" id="L133">            return new Date( System.currentTimeMillis() ).toString();</span>
+        }
+
+<span class="fc" id="L136">        return this.date.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

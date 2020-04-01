@@ -17,6 +17,9 @@
 
 package org.apache.commons.codec.digest;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.codec.binary.StringUtils;
 
 /**
@@ -121,7 +124,7 @@ public final class MurmurHash3 {
      * @see #hash32x86(byte[], int, int, int)
      */
     public static int hash32(final long data1, final long data2) {
-<span class="fc" id="L124">        return hash32(data1, data2, DEFAULT_SEED);</span>
+<span class="fc" id="L127">        return hash32(data1, data2, DEFAULT_SEED);</span>
     }
 
     /**
@@ -143,17 +146,17 @@ public final class MurmurHash3 {
      * @see #hash32x86(byte[], int, int, int)
      */
     public static int hash32(final long data1, final long data2, final int seed) {
-<span class="fc" id="L146">        int hash = seed;</span>
-<span class="fc" id="L147">        final long r0 = Long.reverseBytes(data1);</span>
-<span class="fc" id="L148">        final long r1 = Long.reverseBytes(data2);</span>
+<span class="fc" id="L149">        int hash = seed;</span>
+<span class="fc" id="L150">        final long r0 = Long.reverseBytes(data1);</span>
+<span class="fc" id="L151">        final long r1 = Long.reverseBytes(data2);</span>
 
-<span class="fc" id="L150">        hash = mix32((int) r0, hash);</span>
-<span class="fc" id="L151">        hash = mix32((int) (r0 &gt;&gt;&gt; 32), hash);</span>
-<span class="fc" id="L152">        hash = mix32((int) (r1), hash);</span>
-<span class="fc" id="L153">        hash = mix32((int) (r1 &gt;&gt;&gt; 32), hash);</span>
+<span class="fc" id="L153">        hash = mix32((int) r0, hash);</span>
+<span class="fc" id="L154">        hash = mix32((int) (r0 &gt;&gt;&gt; 32), hash);</span>
+<span class="fc" id="L155">        hash = mix32((int) (r1), hash);</span>
+<span class="fc" id="L156">        hash = mix32((int) (r1 &gt;&gt;&gt; 32), hash);</span>
 
-<span class="fc" id="L155">        hash ^= LONG_BYTES * 2;</span>
-<span class="fc" id="L156">        return fmix32(hash);</span>
+<span class="fc" id="L158">        hash ^= LONG_BYTES * 2;</span>
+<span class="fc" id="L159">        return fmix32(hash);</span>
     }
 
     /**
@@ -173,7 +176,7 @@ public final class MurmurHash3 {
      * @see #hash32x86(byte[], int, int, int)
      */
     public static int hash32(final long data) {
-<span class="fc" id="L176">        return hash32(data, DEFAULT_SEED);</span>
+<span class="fc" id="L179">        return hash32(data, DEFAULT_SEED);</span>
     }
 
     /**
@@ -193,14 +196,14 @@ public final class MurmurHash3 {
      * @see #hash32x86(byte[], int, int, int)
      */
     public static int hash32(final long data, final int seed) {
-<span class="fc" id="L196">        int hash = seed;</span>
-<span class="fc" id="L197">        final long r0 = Long.reverseBytes(data);</span>
+<span class="fc" id="L199">        int hash = seed;</span>
+<span class="fc" id="L200">        final long r0 = Long.reverseBytes(data);</span>
 
-<span class="fc" id="L199">        hash = mix32((int) r0, hash);</span>
-<span class="fc" id="L200">        hash = mix32((int) (r0 &gt;&gt;&gt; 32), hash);</span>
+<span class="fc" id="L202">        hash = mix32((int) r0, hash);</span>
+<span class="fc" id="L203">        hash = mix32((int) (r0 &gt;&gt;&gt; 32), hash);</span>
 
-<span class="fc" id="L202">        hash ^= LONG_BYTES;</span>
-<span class="fc" id="L203">        return fmix32(hash);</span>
+<span class="fc" id="L205">        hash ^= LONG_BYTES;</span>
+<span class="fc" id="L206">        return fmix32(hash);</span>
     }
 
     /**
@@ -224,7 +227,7 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static int hash32(final byte[] data) {
-<span class="fc" id="L227">        return hash32(data, 0, data.length, DEFAULT_SEED);</span>
+<span class="fc" id="L230">        return hash32(data, 0, data.length, DEFAULT_SEED);</span>
     }
 
     /**
@@ -254,8 +257,8 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static int hash32(final String data) {
-<span class="fc" id="L257">        final byte[] bytes = StringUtils.getBytesUtf8(data);</span>
-<span class="fc" id="L258">        return hash32(bytes, 0, bytes.length, DEFAULT_SEED);</span>
+<span class="fc" id="L260">        final byte[] bytes = StringUtils.getBytesUtf8(data);</span>
+<span class="fc" id="L261">        return hash32(bytes, 0, bytes.length, DEFAULT_SEED);</span>
     }
 
     /**
@@ -280,7 +283,7 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static int hash32(final byte[] data, final int length) {
-<span class="fc" id="L283">        return hash32(data, length, DEFAULT_SEED);</span>
+<span class="fc" id="L286">        return hash32(data, length, DEFAULT_SEED);</span>
     }
 
     /**
@@ -305,7 +308,7 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static int hash32(final byte[] data, final int length, final int seed) {
-<span class="fc" id="L308">        return hash32(data, 0, length, seed);</span>
+<span class="fc" id="L311">        return hash32(data, 0, length, seed);</span>
     }
 
     /**
@@ -327,39 +330,39 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static int hash32(final byte[] data, final int offset, final int length, final int seed) {
-<span class="fc" id="L330">        int hash = seed;</span>
-<span class="fc" id="L331">        final int nblocks = length &gt;&gt; 2;</span>
+<span class="fc" id="L333">        int hash = seed;</span>
+<span class="fc" id="L334">        final int nblocks = length &gt;&gt; 2;</span>
 
         // body
-<span class="fc bfc" id="L334" title="All 2 branches covered.">        for (int i = 0; i &lt; nblocks; i++) {</span>
-<span class="fc" id="L335">            final int index = offset + (i &lt;&lt; 2);</span>
-<span class="fc" id="L336">            final int k = getLittleEndianInt(data, index);</span>
-<span class="fc" id="L337">            hash = mix32(k, hash);</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">        for (int i = 0; i &lt; nblocks; i++) {</span>
+<span class="fc" id="L338">            final int index = offset + (i &lt;&lt; 2);</span>
+<span class="fc" id="L339">            final int k = getLittleEndianInt(data, index);</span>
+<span class="fc" id="L340">            hash = mix32(k, hash);</span>
         }
 
         // tail
         // ************
         // Note: This fails to apply masking using 0xff to the 3 remaining bytes.
         // ************
-<span class="fc" id="L344">        final int index = offset + (nblocks &lt;&lt; 2);</span>
-<span class="fc" id="L345">        int k1 = 0;</span>
-<span class="fc bfc" id="L346" title="All 4 branches covered.">        switch (offset + length - index) {</span>
+<span class="fc" id="L347">        final int index = offset + (nblocks &lt;&lt; 2);</span>
+<span class="fc" id="L348">        int k1 = 0;</span>
+<span class="fc bfc" id="L349" title="All 4 branches covered.">        switch (offset + length - index) {</span>
         case 3:
-<span class="fc" id="L348">            k1 ^= data[index + 2] &lt;&lt; 16;</span>
+<span class="fc" id="L351">            k1 ^= data[index + 2] &lt;&lt; 16;</span>
         case 2:
-<span class="fc" id="L350">            k1 ^= data[index + 1] &lt;&lt; 8;</span>
+<span class="fc" id="L353">            k1 ^= data[index + 1] &lt;&lt; 8;</span>
         case 1:
-<span class="fc" id="L352">            k1 ^= data[index];</span>
+<span class="fc" id="L355">            k1 ^= data[index];</span>
 
             // mix functions
-<span class="fc" id="L355">            k1 *= C1_32;</span>
-<span class="fc" id="L356">            k1 = Integer.rotateLeft(k1, R1_32);</span>
-<span class="fc" id="L357">            k1 *= C2_32;</span>
-<span class="fc" id="L358">            hash ^= k1;</span>
-<span class="fc" id="L359">        }</span>
+<span class="fc" id="L358">            k1 *= C1_32;</span>
+<span class="fc" id="L359">            k1 = Integer.rotateLeft(k1, R1_32);</span>
+<span class="fc" id="L360">            k1 *= C2_32;</span>
+<span class="fc" id="L361">            hash ^= k1;</span>
+        }
 
-<span class="fc" id="L361">        hash ^= length;</span>
-<span class="fc" id="L362">        return fmix32(hash);</span>
+<span class="fc" id="L364">        hash ^= length;</span>
+<span class="fc" id="L365">        return fmix32(hash);</span>
     }
 
     /**
@@ -378,7 +381,7 @@ public final class MurmurHash3 {
      * @since 1.14
      */
     public static int hash32x86(final byte[] data) {
-<span class="fc" id="L381">        return hash32x86(data, 0, data.length, 0);</span>
+<span class="fc" id="L384">        return hash32x86(data, 0, data.length, 0);</span>
     }
 
     /**
@@ -395,36 +398,36 @@ public final class MurmurHash3 {
      * @since 1.14
      */
     public static int hash32x86(final byte[] data, final int offset, final int length, final int seed) {
-<span class="fc" id="L398">        int hash = seed;</span>
-<span class="fc" id="L399">        final int nblocks = length &gt;&gt; 2;</span>
+<span class="fc" id="L401">        int hash = seed;</span>
+<span class="fc" id="L402">        final int nblocks = length &gt;&gt; 2;</span>
 
         // body
-<span class="fc bfc" id="L402" title="All 2 branches covered.">        for (int i = 0; i &lt; nblocks; i++) {</span>
-<span class="fc" id="L403">            final int index = offset + (i &lt;&lt; 2);</span>
-<span class="fc" id="L404">            final int k = getLittleEndianInt(data, index);</span>
-<span class="fc" id="L405">            hash = mix32(k, hash);</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">        for (int i = 0; i &lt; nblocks; i++) {</span>
+<span class="fc" id="L406">            final int index = offset + (i &lt;&lt; 2);</span>
+<span class="fc" id="L407">            final int k = getLittleEndianInt(data, index);</span>
+<span class="fc" id="L408">            hash = mix32(k, hash);</span>
         }
 
         // tail
-<span class="fc" id="L409">        final int index = offset + (nblocks &lt;&lt; 2);</span>
-<span class="fc" id="L410">        int k1 = 0;</span>
-<span class="fc bfc" id="L411" title="All 4 branches covered.">        switch (offset + length - index) {</span>
+<span class="fc" id="L412">        final int index = offset + (nblocks &lt;&lt; 2);</span>
+<span class="fc" id="L413">        int k1 = 0;</span>
+<span class="fc bfc" id="L414" title="All 4 branches covered.">        switch (offset + length - index) {</span>
         case 3:
-<span class="fc" id="L413">            k1 ^= (data[index + 2] &amp; 0xff) &lt;&lt; 16;</span>
+<span class="fc" id="L416">            k1 ^= (data[index + 2] &amp; 0xff) &lt;&lt; 16;</span>
         case 2:
-<span class="fc" id="L415">            k1 ^= (data[index + 1] &amp; 0xff) &lt;&lt; 8;</span>
+<span class="fc" id="L418">            k1 ^= (data[index + 1] &amp; 0xff) &lt;&lt; 8;</span>
         case 1:
-<span class="fc" id="L417">            k1 ^= (data[index] &amp; 0xff);</span>
+<span class="fc" id="L420">            k1 ^= (data[index] &amp; 0xff);</span>
 
             // mix functions
-<span class="fc" id="L420">            k1 *= C1_32;</span>
-<span class="fc" id="L421">            k1 = Integer.rotateLeft(k1, R1_32);</span>
-<span class="fc" id="L422">            k1 *= C2_32;</span>
-<span class="fc" id="L423">            hash ^= k1;</span>
-<span class="fc" id="L424">        }</span>
+<span class="fc" id="L423">            k1 *= C1_32;</span>
+<span class="fc" id="L424">            k1 = Integer.rotateLeft(k1, R1_32);</span>
+<span class="fc" id="L425">            k1 *= C2_32;</span>
+<span class="fc" id="L426">            hash ^= k1;</span>
+        }
 
-<span class="fc" id="L426">        hash ^= length;</span>
-<span class="fc" id="L427">        return fmix32(hash);</span>
+<span class="fc" id="L429">        hash ^= length;</span>
+<span class="fc" id="L430">        return fmix32(hash);</span>
     }
 
     /**
@@ -458,19 +461,19 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static long hash64(final long data) {
-<span class="fc" id="L461">        long hash = DEFAULT_SEED;</span>
-<span class="fc" id="L462">        long k = Long.reverseBytes(data);</span>
-<span class="fc" id="L463">        final int length = LONG_BYTES;</span>
+<span class="fc" id="L464">        long hash = DEFAULT_SEED;</span>
+<span class="fc" id="L465">        long k = Long.reverseBytes(data);</span>
+<span class="fc" id="L466">        final int length = LONG_BYTES;</span>
         // mix functions
-<span class="fc" id="L465">        k *= C1;</span>
-<span class="fc" id="L466">        k = Long.rotateLeft(k, R1);</span>
-<span class="fc" id="L467">        k *= C2;</span>
-<span class="fc" id="L468">        hash ^= k;</span>
-<span class="fc" id="L469">        hash = Long.rotateLeft(hash, R2) * M + N1;</span>
+<span class="fc" id="L468">        k *= C1;</span>
+<span class="fc" id="L469">        k = Long.rotateLeft(k, R1);</span>
+<span class="fc" id="L470">        k *= C2;</span>
+<span class="fc" id="L471">        hash ^= k;</span>
+<span class="fc" id="L472">        hash = Long.rotateLeft(hash, R2) * M + N1;</span>
         // finalization
-<span class="fc" id="L471">        hash ^= length;</span>
-<span class="fc" id="L472">        hash = fmix64(hash);</span>
-<span class="fc" id="L473">        return hash;</span>
+<span class="fc" id="L474">        hash ^= length;</span>
+<span class="fc" id="L475">        hash = fmix64(hash);</span>
+<span class="fc" id="L476">        return hash;</span>
     }
 
     /**
@@ -504,17 +507,17 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static long hash64(final int data) {
-<span class="fc" id="L507">        long k1 = Integer.reverseBytes(data) &amp; (-1L &gt;&gt;&gt; 32);</span>
-<span class="fc" id="L508">        final int length = INTEGER_BYTES;</span>
-<span class="fc" id="L509">        long hash = DEFAULT_SEED;</span>
-<span class="fc" id="L510">        k1 *= C1;</span>
-<span class="fc" id="L511">        k1 = Long.rotateLeft(k1, R1);</span>
-<span class="fc" id="L512">        k1 *= C2;</span>
-<span class="fc" id="L513">        hash ^= k1;</span>
+<span class="fc" id="L510">        long k1 = Integer.reverseBytes(data) &amp; (-1L &gt;&gt;&gt; 32);</span>
+<span class="fc" id="L511">        final int length = INTEGER_BYTES;</span>
+<span class="fc" id="L512">        long hash = DEFAULT_SEED;</span>
+<span class="fc" id="L513">        k1 *= C1;</span>
+<span class="fc" id="L514">        k1 = Long.rotateLeft(k1, R1);</span>
+<span class="fc" id="L515">        k1 *= C2;</span>
+<span class="fc" id="L516">        hash ^= k1;</span>
         // finalization
-<span class="fc" id="L515">        hash ^= length;</span>
-<span class="fc" id="L516">        hash = fmix64(hash);</span>
-<span class="fc" id="L517">        return hash;</span>
+<span class="fc" id="L518">        hash ^= length;</span>
+<span class="fc" id="L519">        hash = fmix64(hash);</span>
+<span class="fc" id="L520">        return hash;</span>
     }
 
     /**
@@ -548,19 +551,19 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static long hash64(final short data) {
-<span class="fc" id="L551">        long hash = DEFAULT_SEED;</span>
-<span class="fc" id="L552">        long k1 = 0;</span>
-<span class="fc" id="L553">        k1 ^= ((long) data &amp; 0xff) &lt;&lt; 8;</span>
-<span class="fc" id="L554">        k1 ^= ((long) ((data &amp; 0xFF00) &gt;&gt; 8) &amp; 0xff);</span>
-<span class="fc" id="L555">        k1 *= C1;</span>
-<span class="fc" id="L556">        k1 = Long.rotateLeft(k1, R1);</span>
-<span class="fc" id="L557">        k1 *= C2;</span>
-<span class="fc" id="L558">        hash ^= k1;</span>
+<span class="fc" id="L554">        long hash = DEFAULT_SEED;</span>
+<span class="fc" id="L555">        long k1 = 0;</span>
+<span class="fc" id="L556">        k1 ^= ((long) data &amp; 0xff) &lt;&lt; 8;</span>
+<span class="fc" id="L557">        k1 ^= ((long) ((data &amp; 0xFF00) &gt;&gt; 8) &amp; 0xff);</span>
+<span class="fc" id="L558">        k1 *= C1;</span>
+<span class="fc" id="L559">        k1 = Long.rotateLeft(k1, R1);</span>
+<span class="fc" id="L560">        k1 *= C2;</span>
+<span class="fc" id="L561">        hash ^= k1;</span>
 
         // finalization
-<span class="fc" id="L561">        hash ^= SHORT_BYTES;</span>
-<span class="fc" id="L562">        hash = fmix64(hash);</span>
-<span class="fc" id="L563">        return hash;</span>
+<span class="fc" id="L564">        hash ^= SHORT_BYTES;</span>
+<span class="fc" id="L565">        hash = fmix64(hash);</span>
+<span class="fc" id="L566">        return hash;</span>
     }
 
     /**
@@ -592,7 +595,7 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static long hash64(final byte[] data) {
-<span class="fc" id="L595">        return hash64(data, 0, data.length, DEFAULT_SEED);</span>
+<span class="fc" id="L598">        return hash64(data, 0, data.length, DEFAULT_SEED);</span>
     }
 
     /**
@@ -625,7 +628,7 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static long hash64(final byte[] data, final int offset, final int length) {
-<span class="fc" id="L628">        return hash64(data, offset, length, DEFAULT_SEED);</span>
+<span class="fc" id="L631">        return hash64(data, offset, length, DEFAULT_SEED);</span>
     }
 
     /**
@@ -661,51 +664,51 @@ public final class MurmurHash3 {
         // ************
         // Note: This fails to apply masking using 0xffffffffL to the seed.
         // ************
-<span class="fc" id="L664">        long hash = seed;</span>
-<span class="fc" id="L665">        final int nblocks = length &gt;&gt; 3;</span>
+<span class="fc" id="L667">        long hash = seed;</span>
+<span class="fc" id="L668">        final int nblocks = length &gt;&gt; 3;</span>
 
         // body
-<span class="fc bfc" id="L668" title="All 2 branches covered.">        for (int i = 0; i &lt; nblocks; i++) {</span>
-<span class="fc" id="L669">            final int index = offset + (i &lt;&lt; 3);</span>
-<span class="fc" id="L670">            long k = getLittleEndianLong(data, index);</span>
+<span class="fc bfc" id="L671" title="All 2 branches covered.">        for (int i = 0; i &lt; nblocks; i++) {</span>
+<span class="fc" id="L672">            final int index = offset + (i &lt;&lt; 3);</span>
+<span class="fc" id="L673">            long k = getLittleEndianLong(data, index);</span>
 
             // mix functions
-<span class="fc" id="L673">            k *= C1;</span>
-<span class="fc" id="L674">            k = Long.rotateLeft(k, R1);</span>
-<span class="fc" id="L675">            k *= C2;</span>
-<span class="fc" id="L676">            hash ^= k;</span>
-<span class="fc" id="L677">            hash = Long.rotateLeft(hash, R2) * M + N1;</span>
+<span class="fc" id="L676">            k *= C1;</span>
+<span class="fc" id="L677">            k = Long.rotateLeft(k, R1);</span>
+<span class="fc" id="L678">            k *= C2;</span>
+<span class="fc" id="L679">            hash ^= k;</span>
+<span class="fc" id="L680">            hash = Long.rotateLeft(hash, R2) * M + N1;</span>
         }
 
         // tail
-<span class="fc" id="L681">        long k1 = 0;</span>
-<span class="fc" id="L682">        final int index = offset + (nblocks &lt;&lt; 3);</span>
-<span class="fc bfc" id="L683" title="All 8 branches covered.">        switch (offset + length - index) {</span>
+<span class="fc" id="L684">        long k1 = 0;</span>
+<span class="fc" id="L685">        final int index = offset + (nblocks &lt;&lt; 3);</span>
+<span class="fc bfc" id="L686" title="All 8 branches covered.">        switch (offset + length - index) {</span>
         case 7:
-<span class="fc" id="L685">            k1 ^= ((long) data[index + 6] &amp; 0xff) &lt;&lt; 48;</span>
+<span class="fc" id="L688">            k1 ^= ((long) data[index + 6] &amp; 0xff) &lt;&lt; 48;</span>
         case 6:
-<span class="fc" id="L687">            k1 ^= ((long) data[index + 5] &amp; 0xff) &lt;&lt; 40;</span>
+<span class="fc" id="L690">            k1 ^= ((long) data[index + 5] &amp; 0xff) &lt;&lt; 40;</span>
         case 5:
-<span class="fc" id="L689">            k1 ^= ((long) data[index + 4] &amp; 0xff) &lt;&lt; 32;</span>
+<span class="fc" id="L692">            k1 ^= ((long) data[index + 4] &amp; 0xff) &lt;&lt; 32;</span>
         case 4:
-<span class="fc" id="L691">            k1 ^= ((long) data[index + 3] &amp; 0xff) &lt;&lt; 24;</span>
+<span class="fc" id="L694">            k1 ^= ((long) data[index + 3] &amp; 0xff) &lt;&lt; 24;</span>
         case 3:
-<span class="fc" id="L693">            k1 ^= ((long) data[index + 2] &amp; 0xff) &lt;&lt; 16;</span>
+<span class="fc" id="L696">            k1 ^= ((long) data[index + 2] &amp; 0xff) &lt;&lt; 16;</span>
         case 2:
-<span class="fc" id="L695">            k1 ^= ((long) data[index + 1] &amp; 0xff) &lt;&lt; 8;</span>
+<span class="fc" id="L698">            k1 ^= ((long) data[index + 1] &amp; 0xff) &lt;&lt; 8;</span>
         case 1:
-<span class="fc" id="L697">            k1 ^= ((long) data[index] &amp; 0xff);</span>
-<span class="fc" id="L698">            k1 *= C1;</span>
-<span class="fc" id="L699">            k1 = Long.rotateLeft(k1, R1);</span>
-<span class="fc" id="L700">            k1 *= C2;</span>
-<span class="fc" id="L701">            hash ^= k1;</span>
-<span class="fc" id="L702">        }</span>
+<span class="fc" id="L700">            k1 ^= ((long) data[index] &amp; 0xff);</span>
+<span class="fc" id="L701">            k1 *= C1;</span>
+<span class="fc" id="L702">            k1 = Long.rotateLeft(k1, R1);</span>
+<span class="fc" id="L703">            k1 *= C2;</span>
+<span class="fc" id="L704">            hash ^= k1;</span>
+        }
 
         // finalization
-<span class="fc" id="L705">        hash ^= length;</span>
-<span class="fc" id="L706">        hash = fmix64(hash);</span>
+<span class="fc" id="L708">        hash ^= length;</span>
+<span class="fc" id="L709">        hash = fmix64(hash);</span>
 
-<span class="fc" id="L708">        return hash;</span>
+<span class="fc" id="L711">        return hash;</span>
     }
 
     /**
@@ -726,7 +729,7 @@ public final class MurmurHash3 {
      * @see #hash128(byte[], int, int, int)
      */
     public static long[] hash128(final byte[] data) {
-<span class="fc" id="L729">        return hash128(data, 0, data.length, DEFAULT_SEED);</span>
+<span class="fc" id="L732">        return hash128(data, 0, data.length, DEFAULT_SEED);</span>
     }
 
     /**
@@ -745,7 +748,7 @@ public final class MurmurHash3 {
      * @since 1.14
      */
     public static long[] hash128x64(final byte[] data) {
-<span class="fc" id="L748">        return hash128x64(data, 0, data.length, 0);</span>
+<span class="fc" id="L751">        return hash128x64(data, 0, data.length, 0);</span>
     }
 
     /**
@@ -774,8 +777,8 @@ public final class MurmurHash3 {
      */
     @Deprecated
     public static long[] hash128(final String data) {
-<span class="fc" id="L777">        final byte[] bytes = StringUtils.getBytesUtf8(data);</span>
-<span class="fc" id="L778">        return hash128(bytes, 0, bytes.length, DEFAULT_SEED);</span>
+<span class="fc" id="L780">        final byte[] bytes = StringUtils.getBytesUtf8(data);</span>
+<span class="fc" id="L781">        return hash128(bytes, 0, bytes.length, DEFAULT_SEED);</span>
     }
 
     /**
@@ -797,12 +800,9 @@ public final class MurmurHash3 {
     @Deprecated
     public static long[] hash128(final byte[] data, final int offset, final int length, final int seed) {
         // ************
-        // Note: This deliberately fails to apply masking using 0xffffffffL to the seed
-        // to maintain behavioural compatibility with the original version.
-        // The implicit conversion to a long will extend a negative sign
-        // bit through the upper 32-bits of the long seed. These should be zero.
+        // Note: This fails to apply masking using 0xffffffffL to the seed.
         // ************
-<span class="fc" id="L805">        return hash128x64Internal(data, offset, length, seed);</span>
+<span class="fc" id="L805">        return hash128x64(data, offset, length, seed);</span>
     }
 
     /**
@@ -820,7 +820,7 @@ public final class MurmurHash3 {
      */
     public static long[] hash128x64(final byte[] data, final int offset, final int length, final int seed) {
         // Use an unsigned 32-bit integer as the seed
-<span class="fc" id="L823">        return hash128x64Internal(data, offset, length, seed &amp; 0xffffffffL);</span>
+<span class="fc" id="L823">        return hash128x64(data, offset, length, seed &amp; 0xffffffffL);</span>
     }
 
     /**
@@ -835,7 +835,7 @@ public final class MurmurHash3 {
      * @param seed The initial seed value
      * @return The 128-bit hash (2 longs)
      */
-    private static long[] hash128x64Internal(final byte[] data, final int offset, final int length, final long seed) {
+    private static long[] hash128x64(final byte[] data, final int offset, final int length, final long seed) {
 <span class="fc" id="L839">        long h1 = seed;</span>
 <span class="fc" id="L840">        long h2 = seed;</span>
 <span class="fc" id="L841">        final int nblocks = length &gt;&gt; 4;</span>
@@ -909,7 +909,7 @@ public final class MurmurHash3 {
 <span class="fc" id="L909">            k1 = Long.rotateLeft(k1, R1);</span>
 <span class="fc" id="L910">            k1 *= C2;</span>
 <span class="fc" id="L911">            h1 ^= k1;</span>
-<span class="fc" id="L912">        }</span>
+        }
 
         // finalization
 <span class="fc" id="L915">        h1 ^= length;</span>
@@ -936,13 +936,13 @@ public final class MurmurHash3 {
      */
     private static long getLittleEndianLong(final byte[] data, final int index) {
 <span class="fc" id="L938">        return (((long) data[index    ] &amp; 0xff)      ) |</span>
-<span class="fc" id="L939">               (((long) data[index + 1] &amp; 0xff) &lt;&lt;  8) |</span>
-<span class="fc" id="L940">               (((long) data[index + 2] &amp; 0xff) &lt;&lt; 16) |</span>
-<span class="fc" id="L941">               (((long) data[index + 3] &amp; 0xff) &lt;&lt; 24) |</span>
-<span class="fc" id="L942">               (((long) data[index + 4] &amp; 0xff) &lt;&lt; 32) |</span>
-<span class="fc" id="L943">               (((long) data[index + 5] &amp; 0xff) &lt;&lt; 40) |</span>
-<span class="fc" id="L944">               (((long) data[index + 6] &amp; 0xff) &lt;&lt; 48) |</span>
-<span class="fc" id="L945">               (((long) data[index + 7] &amp; 0xff) &lt;&lt; 56);</span>
+               (((long) data[index + 1] &amp; 0xff) &lt;&lt;  8) |
+               (((long) data[index + 2] &amp; 0xff) &lt;&lt; 16) |
+               (((long) data[index + 3] &amp; 0xff) &lt;&lt; 24) |
+               (((long) data[index + 4] &amp; 0xff) &lt;&lt; 32) |
+               (((long) data[index + 5] &amp; 0xff) &lt;&lt; 40) |
+               (((long) data[index + 6] &amp; 0xff) &lt;&lt; 48) |
+               (((long) data[index + 7] &amp; 0xff) &lt;&lt; 56);
     }
 
     /**
@@ -954,9 +954,9 @@ public final class MurmurHash3 {
      */
     private static int getLittleEndianInt(final byte[] data, final int index) {
 <span class="fc" id="L956">        return ((data[index    ] &amp; 0xff)      ) |</span>
-<span class="fc" id="L957">               ((data[index + 1] &amp; 0xff) &lt;&lt;  8) |</span>
-<span class="fc" id="L958">               ((data[index + 2] &amp; 0xff) &lt;&lt; 16) |</span>
-<span class="fc" id="L959">               ((data[index + 3] &amp; 0xff) &lt;&lt; 24);</span>
+               ((data[index + 1] &amp; 0xff) &lt;&lt;  8) |
+               ((data[index + 2] &amp; 0xff) &lt;&lt; 16) |
+               ((data[index + 3] &amp; 0xff) &lt;&lt; 24);
     }
 
     /**
@@ -1159,7 +1159,7 @@ public final class MurmurHash3 {
 <span class="fc" id="L1159">                k1 = Integer.rotateLeft(k1, R1_32);</span>
 <span class="fc" id="L1160">                k1 *= C2_32;</span>
 <span class="fc" id="L1161">                result ^= k1;</span>
-<span class="fc" id="L1162">            }</span>
+            }
 
             // finalization
 <span class="fc" id="L1165">            result ^= totalLen;</span>
@@ -1228,7 +1228,7 @@ public final class MurmurHash3 {
 <span class="fc" id="L1228">                k1 = Integer.rotateLeft(k1, R1_32);</span>
 <span class="fc" id="L1229">                k1 *= C2_32;</span>
 <span class="fc" id="L1230">                result ^= k1;</span>
-<span class="fc" id="L1231">            }</span>
+            }
 
             // finalization
 <span class="fc" id="L1234">            result ^= totalLen;</span>
@@ -1236,4 +1236,4 @@ public final class MurmurHash3 {
         }
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

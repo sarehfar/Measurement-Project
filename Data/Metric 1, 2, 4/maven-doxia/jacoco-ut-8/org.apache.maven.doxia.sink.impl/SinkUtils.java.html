@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SinkUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.sink.impl</a> &gt; <span class="el_source">SinkUtils.java</span></div><h1>SinkUtils.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.sink.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.Enumeration;
+import java.util.Arrays;
+
+import javax.swing.text.AttributeSet;
+import javax.swing.text.MutableAttributeSet;
+
+import org.apache.maven.doxia.markup.Markup;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+
+/**
+ * Collection of common utility methods for sinks.
+ *
+ * @author ltheussl
+ * @since 1.1
+ */
+public class SinkUtils
+{
+
+    /** Do not instantiate. */
+    private SinkUtils()
+    {
+        // Utility class
+    }
+
+    /**
+     * The set of base attributes.
+     */
+<span class="fc" id="L49">    public static final String[] SINK_BASE_ATTRIBUTES =</span>
+    {
+        SinkEventAttributes.CLASS, SinkEventAttributes.ID, SinkEventAttributes.LANG,
+        SinkEventAttributes.STYLE, SinkEventAttributes.TITLE
+    };
+
+    /**
+     * The attributes that are supported for the br tag.
+     */
+<span class="fc" id="L58">    public static final String[] SINK_BR_ATTRIBUTES =</span>
+    {
+        SinkEventAttributes.CLASS, SinkEventAttributes.ID,
+        SinkEventAttributes.STYLE, SinkEventAttributes.TITLE
+    };
+
+    /**
+     * The attributes that are supported for the &amp;lt;img&amp;gt; tag.
+     */
+    public static final String[] SINK_IMG_ATTRIBUTES;
+
+    /**
+     * The attributes that are supported for the section tags, like &amp;lt;p&amp;gt;, &amp;lt;h2&amp;gt;, &amp;lt;div&amp;gt;.
+     */
+    public static final String[] SINK_SECTION_ATTRIBUTES;
+
+    /**
+     * The attributes that are supported for the &amp;lt;div&amp;gt; and &amp;lt;pre&amp;gt; tags.
+     */
+    public static final String[] SINK_VERBATIM_ATTRIBUTES;
+
+    /**
+     * The attributes that are supported for the &amp;lt;hr&amp;gt; tag.
+     */
+    public static final String[] SINK_HR_ATTRIBUTES;
+
+    /**
+     * The attributes that are supported for the &amp;lt;a&amp;gt; tag.
+     */
+    public static final String[] SINK_LINK_ATTRIBUTES;
+
+    /**
+     * The attributes that are supported for the &amp;lt;table&amp;gt; tag.
+     */
+    public static final String[] SINK_TABLE_ATTRIBUTES;
+
+    /**
+     * The attributes that are supported for the &amp;lt;td&amp;gt; and &amp;lt;th&amp;gt; tags.
+     */
+    public static final String[] SINK_TD_ATTRIBUTES;
+
+    /**
+     * The attributes that are supported for the &amp;lt;tr&amp;gt; tag.
+     */
+    public static final String[] SINK_TR_ATTRIBUTES;
+
+<span class="fc" id="L104">    private static final String[] IMG_ATTRIBUTES =</span>
+    {
+        SinkEventAttributes.ALIGN, SinkEventAttributes.ALT, SinkEventAttributes.BORDER,
+        SinkEventAttributes.HEIGHT, SinkEventAttributes.HSPACE, SinkEventAttributes.ISMAP,
+        SinkEventAttributes.SRC, SinkEventAttributes.USEMAP, SinkEventAttributes.VSPACE,
+        SinkEventAttributes.WIDTH
+    };
+
+<span class="fc" id="L112">    private static final String[] HR_ATTRIBUTES =</span>
+    {
+        SinkEventAttributes.ALIGN, SinkEventAttributes.NOSHADE, SinkEventAttributes.SIZE,
+        SinkEventAttributes.WIDTH
+    };
+
+<span class="fc" id="L118">    private static final String[] LINK_ATTRIBUTES =</span>
+    {
+        SinkEventAttributes.CHARSET, SinkEventAttributes.COORDS, SinkEventAttributes.HREF,
+        SinkEventAttributes.HREFLANG, SinkEventAttributes.REL, SinkEventAttributes.REV,
+        SinkEventAttributes.SHAPE, SinkEventAttributes.TARGET, SinkEventAttributes.TYPE
+    };
+
+<span class="fc" id="L125">    private static final String[] TABLE_ATTRIBUTES =</span>
+    {
+        SinkEventAttributes.ALIGN, SinkEventAttributes.BGCOLOR, SinkEventAttributes.BORDER,
+        SinkEventAttributes.CELLPADDING, SinkEventAttributes.CELLSPACING, SinkEventAttributes.FRAME,
+        SinkEventAttributes.RULES, SinkEventAttributes.SUMMARY, SinkEventAttributes.WIDTH
+    };
+
+<span class="fc" id="L132">    private static final String[] TABLE_CELL_ATTRIBUTES =</span>
+    {
+        SinkEventAttributes.ABBRV, SinkEventAttributes.ALIGN, SinkEventAttributes.AXIS,
+        SinkEventAttributes.BGCOLOR, SinkEventAttributes.COLSPAN, SinkEventAttributes.HEADERS,
+        SinkEventAttributes.HEIGHT, SinkEventAttributes.NOWRAP, SinkEventAttributes.ROWSPAN,
+        SinkEventAttributes.SCOPE, SinkEventAttributes.VALIGN, SinkEventAttributes.WIDTH
+    };
+
+    static
+    {
+<span class="fc" id="L142">        SINK_IMG_ATTRIBUTES = join( SINK_BASE_ATTRIBUTES, IMG_ATTRIBUTES );</span>
+<span class="fc" id="L143">        SINK_SECTION_ATTRIBUTES =</span>
+<span class="fc" id="L144">                join( SINK_BASE_ATTRIBUTES, new String[] {SinkEventAttributes.ALIGN} );</span>
+<span class="fc" id="L145">        SINK_VERBATIM_ATTRIBUTES =</span>
+<span class="fc" id="L146">                join( SINK_BASE_ATTRIBUTES,</span>
+                new String[] {SinkEventAttributes.ALIGN, SinkEventAttributes.DECORATION, SinkEventAttributes.WIDTH} );
+<span class="fc" id="L148">        SINK_HR_ATTRIBUTES = join( SINK_BASE_ATTRIBUTES, HR_ATTRIBUTES );</span>
+<span class="fc" id="L149">        SINK_LINK_ATTRIBUTES = join( SINK_BASE_ATTRIBUTES, LINK_ATTRIBUTES );</span>
+<span class="fc" id="L150">        SINK_TABLE_ATTRIBUTES = join( SINK_BASE_ATTRIBUTES, TABLE_ATTRIBUTES );</span>
+<span class="fc" id="L151">        SINK_TR_ATTRIBUTES =</span>
+<span class="fc" id="L152">                join( SINK_BASE_ATTRIBUTES,</span>
+                new String[] {SinkEventAttributes.ALIGN, SinkEventAttributes.BGCOLOR, SinkEventAttributes.VALIGN} );
+<span class="fc" id="L154">        SINK_TD_ATTRIBUTES = join( SINK_BASE_ATTRIBUTES, TABLE_CELL_ATTRIBUTES );</span>
+<span class="fc" id="L155">    }</span>
+
+    private static String[] join( String[] a, String[] b )
+    {
+<span class="fc" id="L159">        String[] temp = new String[a.length + b.length];</span>
+<span class="fc" id="L160">        System.arraycopy( a, 0, temp, 0, a.length );</span>
+<span class="fc" id="L161">        System.arraycopy( b, 0, temp, a.length, b.length );</span>
+
+<span class="fc" id="L163">        Arrays.sort( temp ); // necessary for binary searches in filterAttributes()</span>
+
+<span class="fc" id="L165">        return temp;</span>
+    }
+
+    /**
+     * Utility method to get an AttributeSet as a String.
+     * The resulting String is in the form ' name1=&quot;value1&quot; name2=&quot;value2&quot; ...',
+     * ie it can be appended directly to an xml start tag. Attribute values that are itself
+     * AttributeSets are ignored unless the Attribute name is SinkEventAttributeSet.STYLE,
+     * in which case they are written as outlined at
+     * {@link org.apache.maven.doxia.sink.SinkEventAttributes#STYLE SinkEventAttributes.STYLE}.
+     * All other keys and values are written as Strings.
+     *
+     * @param att The AttributeSet. May be null, in which case an empty String is returned.
+     * @return the AttributeSet as a String in a form that can be appended to an xml start tag.
+     */
+    public static String getAttributeString( AttributeSet att )
+    {
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        if ( att == null )</span>
+        {
+<span class="fc" id="L184">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L187">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="fc" id="L189">        Enumeration&lt;?&gt; names = att.getAttributeNames();</span>
+
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L193">            Object key = names.nextElement();</span>
+<span class="fc" id="L194">            Object value = att.getAttribute( key );</span>
+
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            if ( value instanceof AttributeSet )</span>
+            {
+                // Other AttributeSets are ignored
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">                if ( SinkEventAttributes.STYLE.equals( key.toString() ) )</span>
+                {
+<span class="fc" id="L201">                    sb.append( Markup.SPACE ).append( key.toString() ).append( Markup.EQUAL )</span>
+<span class="fc" id="L202">                        .append( Markup.QUOTE ).append( asCssString( (AttributeSet) value ) )</span>
+<span class="fc" id="L203">                        .append( Markup.QUOTE );</span>
+                }
+            }
+            else
+            {
+<span class="fc" id="L208">                sb.append( Markup.SPACE ).append( key.toString() ).append( Markup.EQUAL )</span>
+<span class="fc" id="L209">                    .append( Markup.QUOTE ).append( value.toString() ).append( Markup.QUOTE );</span>
+            }
+<span class="fc" id="L211">        }</span>
+
+<span class="fc" id="L213">        return sb.toString();</span>
+    }
+
+    private static String asCssString( AttributeSet att )
+    {
+<span class="fc" id="L218">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="fc" id="L220">        Enumeration&lt;?&gt; names = att.getAttributeNames();</span>
+
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L224">            Object key = names.nextElement();</span>
+<span class="fc" id="L225">            Object value = att.getAttribute( key );</span>
+
+            // don't go recursive
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">            if ( !( value instanceof AttributeSet ) )</span>
+            {
+<span class="fc" id="L230">                sb.append( key.toString() ).append( Markup.COLON )</span>
+<span class="fc" id="L231">                    .append( Markup.SPACE ).append( value.toString() );</span>
+
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                if ( names.hasMoreElements() )</span>
+                {
+<span class="fc" id="L235">                    sb.append( Markup.SEMICOLON ).append( Markup.SPACE );</span>
+                }
+            }
+<span class="fc" id="L238">        }</span>
+
+<span class="fc" id="L240">        return sb.toString();</span>
+    }
+
+    /**
+     * Filters the given AttributeSet.
+     * Removes all attributes whose name (key) is not contained in the sorted array valids.
+     *
+     * @param attributes The AttributeSet to filter. The String values of Attribute names
+     * are compared to the elements of the valids array.
+     * @param valids a sorted array of attribute names that are to be kept in the resulting AttributeSet.
+     *      &lt;b&gt;Note:&lt;/b&gt; a binary search is employed, so the array has to be sorted for correct results.
+     * @return A filtered MutableAttributeSet object. Returns null if the input AttributeSet is null.
+     *      If the array of valids is either null or empty, an empty AttributeSet is returned.
+     */
+    public static MutableAttributeSet filterAttributes( AttributeSet attributes, String[] valids )
+    {
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if ( attributes == null )</span>
+        {
+<span class="fc" id="L258">            return null;</span>
+        }
+
+<span class="fc bfc" id="L261" title="All 4 branches covered.">        if ( valids == null || valids.length == 0 )</span>
+        {
+<span class="fc" id="L263">            return new SinkEventAttributeSet( 0 );</span>
+        }
+
+<span class="fc" id="L266">        MutableAttributeSet atts = new SinkEventAttributeSet( attributes.getAttributeCount() );</span>
+
+<span class="fc" id="L268">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L272">            String key = names.nextElement().toString();</span>
+
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            if ( Arrays.binarySearch( valids, key ) &gt;= 0 )</span>
+            {
+<span class="fc" id="L276">                atts.addAttribute( key, attributes.getAttribute( key ) );</span>
+            }
+<span class="fc" id="L278">        }</span>
+
+<span class="fc" id="L280">        return atts;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

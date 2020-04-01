@@ -45,13 +45,13 @@ public class DoubleMetaphone implements StringEncoder {
      * Prefixes when present which are not pronounced
      */
 <span class="fc" id="L47">    private static final String[] SILENT_START =</span>
-<span class="fc" id="L48">        { &quot;GN&quot;, &quot;KN&quot;, &quot;PN&quot;, &quot;WR&quot;, &quot;PS&quot; };</span>
+        { &quot;GN&quot;, &quot;KN&quot;, &quot;PN&quot;, &quot;WR&quot;, &quot;PS&quot; };
 <span class="fc" id="L49">    private static final String[] L_R_N_M_B_H_F_V_W_SPACE =</span>
-<span class="fc" id="L50">        { &quot;L&quot;, &quot;R&quot;, &quot;N&quot;, &quot;M&quot;, &quot;B&quot;, &quot;H&quot;, &quot;F&quot;, &quot;V&quot;, &quot;W&quot;, &quot; &quot; };</span>
+        { &quot;L&quot;, &quot;R&quot;, &quot;N&quot;, &quot;M&quot;, &quot;B&quot;, &quot;H&quot;, &quot;F&quot;, &quot;V&quot;, &quot;W&quot;, &quot; &quot; };
 <span class="fc" id="L51">    private static final String[] ES_EP_EB_EL_EY_IB_IL_IN_IE_EI_ER =</span>
-<span class="fc" id="L52">        { &quot;ES&quot;, &quot;EP&quot;, &quot;EB&quot;, &quot;EL&quot;, &quot;EY&quot;, &quot;IB&quot;, &quot;IL&quot;, &quot;IN&quot;, &quot;IE&quot;, &quot;EI&quot;, &quot;ER&quot; };</span>
+        { &quot;ES&quot;, &quot;EP&quot;, &quot;EB&quot;, &quot;EL&quot;, &quot;EY&quot;, &quot;IB&quot;, &quot;IL&quot;, &quot;IN&quot;, &quot;IE&quot;, &quot;EI&quot;, &quot;ER&quot; };
 <span class="fc" id="L53">    private static final String[] L_T_K_S_N_M_B_Z =</span>
-<span class="fc" id="L54">        { &quot;L&quot;, &quot;T&quot;, &quot;K&quot;, &quot;S&quot;, &quot;N&quot;, &quot;M&quot;, &quot;B&quot;, &quot;Z&quot; };</span>
+        { &quot;L&quot;, &quot;T&quot;, &quot;K&quot;, &quot;S&quot;, &quot;N&quot;, &quot;M&quot;, &quot;B&quot;, &quot;Z&quot; };
 
     /**
      * Maximum length of an encoding, default is 4
@@ -182,7 +182,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc" id="L182">                break;</span>
             default:
 <span class="fc" id="L184">                index++;</span>
-                break;
+<span class="fc" id="L185">                break;</span>
             }
         }
 
@@ -293,8 +293,8 @@ public class DoubleMetaphone implements StringEncoder {
             //-- &quot;focaccia&quot; --//
 <span class="fc" id="L294">            result.append('X');</span>
 <span class="fc" id="L295">            index += 3;</span>
-<span class="fc bfc" id="L296" title="All 2 branches covered.">        } else if (contains(value, index, 2, &quot;CC&quot;) &amp;&amp;</span>
-<span class="fc bfc" id="L297" title="All 4 branches covered.">                   !(index == 1 &amp;&amp; charAt(value, 0) == 'M')) {</span>
+<span class="fc bfc" id="L296" title="All 4 branches covered.">        } else if (contains(value, index, 2, &quot;CC&quot;) &amp;&amp;</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">                   !(index == 1 &amp;&amp; charAt(value, 0) == 'M')) {</span>
             //-- double &quot;cc&quot; but not &quot;McClelland&quot; --//
 <span class="fc" id="L299">            return handleCC(value, result, index);</span>
 <span class="fc bfc" id="L300" title="All 2 branches covered.">        } else if (contains(value, index, 2, &quot;CK&quot;, &quot;CG&quot;, &quot;CQ&quot;)) {</span>
@@ -304,11 +304,11 @@ public class DoubleMetaphone implements StringEncoder {
             //-- Italian vs. English --//
 <span class="fc bfc" id="L305" title="All 2 branches covered.">            if (contains(value, index, 3, &quot;CIO&quot;, &quot;CIE&quot;, &quot;CIA&quot;)) {</span>
 <span class="fc" id="L306">                result.append('S', 'X');</span>
-<span class="fc" id="L307">            } else {</span>
+            } else {
 <span class="fc" id="L308">                result.append('S');</span>
             }
 <span class="fc" id="L310">            index += 2;</span>
-<span class="fc" id="L311">        } else {</span>
+        } else {
 <span class="fc" id="L312">            result.append('K');</span>
 <span class="fc bfc" id="L313" title="All 2 branches covered.">            if (contains(value, index + 1, 2, &quot; C&quot;, &quot; Q&quot;, &quot; G&quot;)) {</span>
                 //-- Mac Caffrey, Mac Gregor --//
@@ -316,7 +316,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L316" title="All 2 branches covered.">            } else if (contains(value, index + 1, 1, &quot;C&quot;, &quot;K&quot;, &quot;Q&quot;) &amp;&amp;</span>
 <span class="pc bpc" id="L317" title="1 of 2 branches missed.">                       !contains(value, index + 1, 2, &quot;CE&quot;, &quot;CI&quot;)) {</span>
 <span class="fc" id="L318">                index += 2;</span>
-<span class="fc" id="L319">            } else {</span>
+            } else {
 <span class="fc" id="L320">                index++;</span>
             }
         }
@@ -335,12 +335,12 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L335" title="All 2 branches covered.">                contains(value, index - 1, 5, &quot;UCCEE&quot;, &quot;UCCES&quot;)) {</span>
                 //-- &quot;accident&quot;, &quot;accede&quot;, &quot;succeed&quot; --//
 <span class="fc" id="L337">                result.append(&quot;KS&quot;);</span>
-<span class="fc" id="L338">            } else {</span>
+            } else {
                 //-- &quot;bacci&quot;, &quot;bertucci&quot;, other Italian --//
 <span class="fc" id="L340">                result.append('X');</span>
             }
 <span class="fc" id="L342">            index += 3;</span>
-<span class="fc" id="L343">        } else {    // Pierce's rule</span>
+        } else {    // Pierce's rule
 <span class="fc" id="L344">            result.append('K');</span>
 <span class="fc" id="L345">            index += 2;</span>
         }
@@ -367,10 +367,10 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L367" title="All 2 branches covered.">            if (index &gt; 0) {</span>
 <span class="fc bfc" id="L368" title="All 2 branches covered.">                if (contains(value, 0, 2, &quot;MC&quot;)) {</span>
 <span class="fc" id="L369">                    result.append('K');</span>
-<span class="fc" id="L370">                } else {</span>
+                } else {
 <span class="fc" id="L371">                    result.append('X', 'K');</span>
                 }
-<span class="fc" id="L373">            } else {</span>
+            } else {
 <span class="fc" id="L374">                result.append('X');</span>
             }
 <span class="fc" id="L376">            return index + 2;</span>
@@ -387,14 +387,14 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc" id="L387">                result.append('J');</span>
 <span class="fc" id="L388">                index += 3;</span>
                 //-- &quot;Edgar&quot; --//
-<span class="fc" id="L390">            } else {</span>
+            } else {
 <span class="fc" id="L391">                result.append(&quot;TK&quot;);</span>
 <span class="fc" id="L392">                index += 2;</span>
             }
 <span class="fc bfc" id="L394" title="All 2 branches covered.">        } else if (contains(value, index, 2, &quot;DT&quot;, &quot;DD&quot;)) {</span>
 <span class="fc" id="L395">            result.append('T');</span>
 <span class="fc" id="L396">            index += 2;</span>
-<span class="fc" id="L397">        } else {</span>
+        } else {
 <span class="fc" id="L398">            result.append('T');</span>
 <span class="fc" id="L399">            index++;</span>
         }
@@ -411,10 +411,10 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L411" title="All 2 branches covered.">        } else if (charAt(value, index + 1) == 'N') {</span>
 <span class="pc bpc" id="L412" title="5 of 6 branches missed.">            if (index == 1 &amp;&amp; isVowel(charAt(value, 0)) &amp;&amp; !slavoGermanic) {</span>
 <span class="nc" id="L413">                result.append(&quot;KN&quot;, &quot;N&quot;);</span>
-<span class="pc bfc" id="L414" title="All 2 branches covered.">            } else if (!contains(value, index + 2, 2, &quot;EY&quot;) &amp;&amp;</span>
+<span class="fc bfc" id="L414" title="All 2 branches covered.">            } else if (!contains(value, index + 2, 2, &quot;EY&quot;) &amp;&amp;</span>
 <span class="pc bpc" id="L415" title="1 of 4 branches missed.">                       charAt(value, index + 1) != 'Y' &amp;&amp; !slavoGermanic) {</span>
 <span class="fc" id="L416">                result.append(&quot;N&quot;, &quot;KN&quot;);</span>
-<span class="fc" id="L417">            } else {</span>
+            } else {
 <span class="fc" id="L418">                result.append(&quot;KN&quot;);</span>
             }
 <span class="fc" id="L420">            index = index + 2;</span>
@@ -445,14 +445,14 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc" id="L445">                result.append('K');</span>
 <span class="fc bfc" id="L446" title="All 2 branches covered.">            } else if (contains(value, index + 1, 3, &quot;IER&quot;)) {</span>
 <span class="fc" id="L447">                result.append('J');</span>
-<span class="fc" id="L448">            } else {</span>
+            } else {
 <span class="fc" id="L449">                result.append('J', 'K');</span>
             }
 <span class="fc" id="L451">            index += 2;</span>
 <span class="fc bfc" id="L452" title="All 2 branches covered.">        } else if (charAt(value, index + 1) == 'G') {</span>
 <span class="fc" id="L453">            index += 2;</span>
 <span class="fc" id="L454">            result.append('K');</span>
-<span class="fc" id="L455">        } else {</span>
+        } else {
 <span class="fc" id="L456">            index++;</span>
 <span class="fc" id="L457">            result.append('K');</span>
         }
@@ -469,16 +469,16 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L469" title="All 2 branches covered.">        } else if (index == 0) {</span>
 <span class="fc bfc" id="L470" title="All 2 branches covered.">            if (charAt(value, index + 2) == 'I') {</span>
 <span class="fc" id="L471">                result.append('J');</span>
-<span class="fc" id="L472">            } else {</span>
+            } else {
 <span class="fc" id="L473">                result.append('K');</span>
             }
 <span class="fc" id="L475">            index += 2;</span>
-<span class="fc bfc" id="L476" title="All 4 branches covered.">        } else if ((index &gt; 1 &amp;&amp; contains(value, index - 2, 1, &quot;B&quot;, &quot;H&quot;, &quot;D&quot;)) ||</span>
+<span class="fc bfc" id="L476" title="All 6 branches covered.">        } else if ((index &gt; 1 &amp;&amp; contains(value, index - 2, 1, &quot;B&quot;, &quot;H&quot;, &quot;D&quot;)) ||</span>
 <span class="fc bfc" id="L477" title="All 4 branches covered.">                   (index &gt; 2 &amp;&amp; contains(value, index - 3, 1, &quot;B&quot;, &quot;H&quot;, &quot;D&quot;)) ||</span>
-<span class="fc bfc" id="L478" title="All 4 branches covered.">                   (index &gt; 3 &amp;&amp; contains(value, index - 4, 1, &quot;B&quot;, &quot;H&quot;))) {</span>
+<span class="fc bfc" id="L478" title="All 2 branches covered.">                   (index &gt; 3 &amp;&amp; contains(value, index - 4, 1, &quot;B&quot;, &quot;H&quot;))) {</span>
             //-- Parker's rule (with some further refinements) - &quot;hugh&quot;
 <span class="fc" id="L480">            index += 2;</span>
-<span class="fc" id="L481">        } else {</span>
+        } else {
 <span class="fc bfc" id="L482" title="All 4 branches covered.">            if (index &gt; 2 &amp;&amp; charAt(value, index - 1) == 'U' &amp;&amp;</span>
 <span class="fc bfc" id="L483" title="All 2 branches covered.">                contains(value, index - 3, 1, &quot;C&quot;, &quot;G&quot;, &quot;L&quot;, &quot;R&quot;, &quot;T&quot;)) {</span>
                 //-- &quot;laugh&quot;, &quot;McLaughlin&quot;, &quot;cough&quot;, &quot;gough&quot;, &quot;rough&quot;, &quot;tough&quot;
@@ -501,7 +501,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc" id="L501">            result.append('H');</span>
 <span class="fc" id="L502">            index += 2;</span>
             //-- also takes car of &quot;HH&quot; --//
-<span class="fc" id="L504">        } else {</span>
+        } else {
 <span class="fc" id="L505">            index++;</span>
         }
 <span class="fc" id="L507">        return index;</span>
@@ -517,11 +517,11 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="pc bpc" id="L517" title="1 of 4 branches missed.">                if ((index == 0 &amp;&amp; (charAt(value, index + 4) == ' ') ||</span>
 <span class="fc bfc" id="L518" title="All 4 branches covered.">                     value.length() == 4) || contains(value, 0, 4, &quot;SAN &quot;)) {</span>
 <span class="fc" id="L519">                    result.append('H');</span>
-<span class="fc" id="L520">                } else {</span>
+                } else {
 <span class="fc" id="L521">                    result.append('J', 'H');</span>
                 }
 <span class="fc" id="L523">                index++;</span>
-<span class="fc" id="L524">            } else {</span>
+            } else {
 <span class="pc bpc" id="L525" title="1 of 4 branches missed.">                if (index == 0 &amp;&amp; !contains(value, index, 4, &quot;JOSE&quot;)) {</span>
 <span class="fc" id="L526">                    result.append('J', 'A');</span>
 <span class="pc bpc" id="L527" title="1 of 4 branches missed.">                } else if (isVowel(charAt(value, index - 1)) &amp;&amp; !slavoGermanic &amp;&amp;</span>
@@ -536,7 +536,7 @@ public class DoubleMetaphone implements StringEncoder {
 
 <span class="pc bpc" id="L537" title="1 of 2 branches missed.">                if (charAt(value, index + 1) == 'J') {</span>
 <span class="nc" id="L538">                    index += 2;</span>
-<span class="nc" id="L539">                } else {</span>
+                } else {
 <span class="fc" id="L540">                    index++;</span>
                 }
             }
@@ -550,11 +550,11 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L550" title="All 2 branches covered.">        if (charAt(value, index + 1) == 'L') {</span>
 <span class="fc bfc" id="L551" title="All 2 branches covered.">            if (conditionL0(value, index)) {</span>
 <span class="fc" id="L552">                result.appendPrimary('L');</span>
-<span class="fc" id="L553">            } else {</span>
+            } else {
 <span class="fc" id="L554">                result.append('L');</span>
             }
 <span class="fc" id="L556">            index += 2;</span>
-<span class="fc" id="L557">        } else {</span>
+        } else {
 <span class="fc" id="L558">            index++;</span>
 <span class="fc" id="L559">            result.append('L');</span>
         }
@@ -568,7 +568,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L568" title="All 2 branches covered.">        if (charAt(value, index + 1) == 'H') {</span>
 <span class="fc" id="L569">            result.append('F');</span>
 <span class="fc" id="L570">            index += 2;</span>
-<span class="fc" id="L571">        } else {</span>
+        } else {
 <span class="fc" id="L572">            result.append('P');</span>
 <span class="fc bfc" id="L573" title="All 2 branches covered.">            index = contains(value, index + 1, 1, &quot;P&quot;, &quot;B&quot;) ? index + 2 : index + 1;</span>
         }
@@ -584,7 +584,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L584" title="All 2 branches covered.">            contains(value, index - 2, 2, &quot;IE&quot;) &amp;&amp;</span>
 <span class="fc bfc" id="L585" title="All 2 branches covered.">            !contains(value, index - 4, 2, &quot;ME&quot;, &quot;MA&quot;)) {</span>
 <span class="fc" id="L586">            result.appendAlternate('R');</span>
-<span class="fc" id="L587">        } else {</span>
+        } else {
 <span class="fc" id="L588">            result.append('R');</span>
         }
 <span class="fc bfc" id="L590" title="All 2 branches covered.">        return charAt(value, index + 1) == 'R' ? index + 2 : index + 1;</span>
@@ -606,7 +606,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L606" title="All 2 branches covered.">            if (contains(value, index + 1, 4, &quot;HEIM&quot;, &quot;HOEK&quot;, &quot;HOLM&quot;, &quot;HOLZ&quot;)) {</span>
                 //-- germanic --//
 <span class="fc" id="L608">                result.append('S');</span>
-<span class="fc" id="L609">            } else {</span>
+            } else {
 <span class="fc" id="L610">                result.append('X');</span>
             }
 <span class="fc" id="L612">            index += 2;</span>
@@ -614,7 +614,7 @@ public class DoubleMetaphone implements StringEncoder {
             //-- Italian and Armenian --//
 <span class="pc bpc" id="L615" title="1 of 2 branches missed.">            if (slavoGermanic) {</span>
 <span class="nc" id="L616">                result.append('S');</span>
-<span class="nc" id="L617">            } else {</span>
+            } else {
 <span class="fc" id="L618">                result.append('S', 'X');</span>
             }
 <span class="fc" id="L620">            index += 3;</span>
@@ -628,11 +628,11 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="pc bpc" id="L628" title="1 of 2 branches missed.">            index = contains(value, index + 1, 1, &quot;Z&quot;) ? index + 2 : index + 1;</span>
 <span class="fc bfc" id="L629" title="All 2 branches covered.">        } else if (contains(value, index, 2, &quot;SC&quot;)) {</span>
 <span class="fc" id="L630">            index = handleSC(value, result, index);</span>
-<span class="fc" id="L631">        } else {</span>
+        } else {
 <span class="fc bfc" id="L632" title="All 4 branches covered.">            if (index == value.length() - 1 &amp;&amp; contains(value, index - 2, 2, &quot;AI&quot;, &quot;OI&quot;)) {</span>
                 //-- french e.g. &quot;resnais&quot;, &quot;artois&quot; --//
 <span class="fc" id="L634">                result.appendAlternate('S');</span>
-<span class="fc" id="L635">            } else {</span>
+            } else {
 <span class="fc" id="L636">                result.append('S');</span>
             }
 <span class="fc bfc" id="L638" title="All 2 branches covered.">            index = contains(value, index + 1, 1, &quot;S&quot;, &quot;Z&quot;) ? index + 2 : index + 1;</span>
@@ -651,19 +651,19 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L651" title="All 2 branches covered.">                if (contains(value, index + 3, 2, &quot;ER&quot;, &quot;EN&quot;)) {</span>
                     //-- &quot;schermerhorn&quot;, &quot;schenker&quot; --//
 <span class="fc" id="L653">                    result.append(&quot;X&quot;, &quot;SK&quot;);</span>
-<span class="fc" id="L654">                } else {</span>
+                } else {
 <span class="fc" id="L655">                    result.append(&quot;SK&quot;);</span>
                 }
-<span class="fc" id="L657">            } else {</span>
+            } else {
 <span class="fc bfc" id="L658" title="All 6 branches covered.">                if (index == 0 &amp;&amp; !isVowel(charAt(value, 3)) &amp;&amp; charAt(value, 3) != 'W') {</span>
 <span class="fc" id="L659">                    result.append('X', 'S');</span>
-<span class="fc" id="L660">                } else {</span>
+                } else {
 <span class="fc" id="L661">                    result.append('X');</span>
                 }
             }
 <span class="fc bfc" id="L664" title="All 2 branches covered.">        } else if (contains(value, index + 2, 1, &quot;I&quot;, &quot;E&quot;, &quot;Y&quot;)) {</span>
 <span class="fc" id="L665">            result.append('S');</span>
-<span class="fc" id="L666">        } else {</span>
+        } else {
 <span class="fc" id="L667">            result.append(&quot;SK&quot;);</span>
         }
 <span class="fc" id="L669">        return index + 3;</span>
@@ -685,11 +685,11 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="pc bpc" id="L685" title="1 of 2 branches missed.">                contains(value, 0, 4, &quot;VAN &quot;, &quot;VON &quot;) ||</span>
 <span class="pc bpc" id="L686" title="1 of 2 branches missed.">                contains(value, 0, 3, &quot;SCH&quot;)) {</span>
 <span class="fc" id="L687">                result.append('T');</span>
-<span class="fc" id="L688">            } else {</span>
+            } else {
 <span class="fc" id="L689">                result.append('0', 'T');</span>
             }
 <span class="fc" id="L691">            index += 2;</span>
-<span class="fc" id="L692">        } else {</span>
+        } else {
 <span class="fc" id="L693">            result.append('T');</span>
 <span class="fc bfc" id="L694" title="All 2 branches covered.">            index = contains(value, index + 1, 1, &quot;T&quot;, &quot;D&quot;) ? index + 2 : index + 1;</span>
         }
@@ -704,13 +704,13 @@ public class DoubleMetaphone implements StringEncoder {
             //-- can also be in middle of word --//
 <span class="fc" id="L705">            result.append('R');</span>
 <span class="fc" id="L706">            index += 2;</span>
-<span class="fc" id="L707">        } else {</span>
+        } else {
 <span class="fc bfc" id="L708" title="All 4 branches covered.">            if (index == 0 &amp;&amp; (isVowel(charAt(value, index + 1)) ||</span>
 <span class="pc bpc" id="L709" title="1 of 2 branches missed.">                               contains(value, index, 2, &quot;WH&quot;))) {</span>
 <span class="fc bfc" id="L710" title="All 2 branches covered.">                if (isVowel(charAt(value, index + 1))) {</span>
                     //-- Wasserman should match Vasserman --//
 <span class="fc" id="L712">                    result.append('A', 'F');</span>
-<span class="fc" id="L713">                } else {</span>
+                } else {
                     //-- need Uomo to match Womo --//
 <span class="fc" id="L715">                    result.append('A');</span>
                 }
@@ -725,7 +725,7 @@ public class DoubleMetaphone implements StringEncoder {
                 //-- Polish e.g. &quot;filipowicz&quot; --//
 <span class="fc" id="L726">                result.append(&quot;TS&quot;, &quot;FX&quot;);</span>
 <span class="fc" id="L727">                index += 4;</span>
-<span class="fc" id="L728">            } else {</span>
+            } else {
 <span class="fc" id="L729">                index++;</span>
             }
         }
@@ -739,7 +739,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc bfc" id="L739" title="All 2 branches covered.">        if (index == 0) {</span>
 <span class="fc" id="L740">            result.append('S');</span>
 <span class="fc" id="L741">            index++;</span>
-<span class="fc" id="L742">        } else {</span>
+        } else {
 <span class="fc bfc" id="L743" title="All 2 branches covered.">            if (!((index == value.length() - 1) &amp;&amp;</span>
 <span class="fc bfc" id="L744" title="All 2 branches covered.">                  (contains(value, index - 3, 3, &quot;IAU&quot;, &quot;EAU&quot;) ||</span>
 <span class="fc bfc" id="L745" title="All 2 branches covered.">                   contains(value, index - 2, 2, &quot;AU&quot;, &quot;OU&quot;)))) {</span>
@@ -760,11 +760,11 @@ public class DoubleMetaphone implements StringEncoder {
             //-- Chinese pinyin e.g. &quot;zhao&quot; or Angelina &quot;Zhang&quot; --//
 <span class="fc" id="L761">            result.append('J');</span>
 <span class="fc" id="L762">            index += 2;</span>
-<span class="fc" id="L763">        } else {</span>
-<span class="fc bfc" id="L764" title="All 2 branches covered.">            if (contains(value, index + 1, 2, &quot;ZO&quot;, &quot;ZI&quot;, &quot;ZA&quot;) ||</span>
-<span class="pc bpc" id="L765" title="1 of 6 branches missed.">                (slavoGermanic &amp;&amp; (index &gt; 0 &amp;&amp; charAt(value, index - 1) != 'T'))) {</span>
+        } else {
+<span class="pc bpc" id="L764" title="1 of 6 branches missed.">            if (contains(value, index + 1, 2, &quot;ZO&quot;, &quot;ZI&quot;, &quot;ZA&quot;) ||</span>
+<span class="fc bfc" id="L765" title="All 2 branches covered.">                (slavoGermanic &amp;&amp; (index &gt; 0 &amp;&amp; charAt(value, index - 1) != 'T'))) {</span>
 <span class="fc" id="L766">                result.append(&quot;S&quot;, &quot;TS&quot;);</span>
-<span class="fc" id="L767">            } else {</span>
+            } else {
 <span class="fc" id="L768">                result.append('S');</span>
             }
 <span class="fc bfc" id="L770" title="All 2 branches covered.">            index = charAt(value, index + 1) == 'Z' ? index + 2 : index + 1;</span>
@@ -854,8 +854,8 @@ public class DoubleMetaphone implements StringEncoder {
      * of slavo-germanic origin if it contians any of 'W', 'K', 'CZ', or 'WITZ'.
      */
     private boolean isSlavoGermanic(final String value) {
-<span class="pc bpc" id="L857" title="1 of 6 branches missed.">        return value.indexOf('W') &gt; -1 || value.indexOf('K') &gt; -1 ||</span>
-<span class="fc bfc" id="L858" title="All 2 branches covered.">            value.indexOf(&quot;CZ&quot;) &gt; -1 || value.indexOf(&quot;WITZ&quot;) &gt; -1;</span>
+<span class="fc bfc" id="L857" title="All 4 branches covered.">        return value.indexOf('W') &gt; -1 || value.indexOf('K') &gt; -1 ||</span>
+<span class="pc bpc" id="L858" title="1 of 4 branches missed.">            value.indexOf(&quot;CZ&quot;) &gt; -1 || value.indexOf(&quot;WITZ&quot;) &gt; -1;</span>
     }
 
     /**
@@ -978,7 +978,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc" id="L978">            final int addChars = this.maxLength - this.primary.length();</span>
 <span class="fc bfc" id="L979" title="All 2 branches covered.">            if (value.length() &lt;= addChars) {</span>
 <span class="fc" id="L980">                this.primary.append(value);</span>
-<span class="fc" id="L981">            } else {</span>
+            } else {
 <span class="fc" id="L982">                this.primary.append(value.substring(0, addChars));</span>
             }
 <span class="fc" id="L984">        }</span>
@@ -987,7 +987,7 @@ public class DoubleMetaphone implements StringEncoder {
 <span class="fc" id="L987">            final int addChars = this.maxLength - this.alternate.length();</span>
 <span class="fc bfc" id="L988" title="All 2 branches covered.">            if (value.length() &lt;= addChars) {</span>
 <span class="fc" id="L989">                this.alternate.append(value);</span>
-<span class="fc" id="L990">            } else {</span>
+            } else {
 <span class="fc" id="L991">                this.alternate.append(value.substring(0, addChars));</span>
             }
 <span class="fc" id="L993">        }</span>
@@ -1001,9 +1001,9 @@ public class DoubleMetaphone implements StringEncoder {
         }
 
         public boolean isComplete() {
-<span class="fc bfc" id="L1004" title="All 4 branches covered.">            return this.primary.length() &gt;= this.maxLength &amp;&amp;</span>
-<span class="fc" id="L1005">                   this.alternate.length() &gt;= this.maxLength;</span>
+<span class="fc bfc" id="L1004" title="All 2 branches covered.">            return this.primary.length() &gt;= this.maxLength &amp;&amp;</span>
+<span class="fc bfc" id="L1005" title="All 2 branches covered.">                   this.alternate.length() &gt;= this.maxLength;</span>
         }
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

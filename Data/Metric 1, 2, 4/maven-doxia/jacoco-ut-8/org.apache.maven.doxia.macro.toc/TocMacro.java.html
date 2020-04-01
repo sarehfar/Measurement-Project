@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TocMacro.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.macro.toc</a> &gt; <span class="el_source">TocMacro.java</span></div><h1>TocMacro.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.macro.toc;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.StringReader;
+
+import org.apache.maven.doxia.index.IndexEntry;
+import org.apache.maven.doxia.index.IndexingSink;
+import org.apache.maven.doxia.macro.AbstractMacro;
+import org.apache.maven.doxia.macro.Macro;
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.macro.MacroRequest;
+import org.apache.maven.doxia.util.HtmlTools;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.sink.Sink;
+
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * Macro to display a &lt;code&gt;Table Of Content&lt;/code&gt; in a given &lt;code&gt;Sink&lt;/code&gt;.
+ * The input parameters for this macro are:
+ * &lt;dl&gt;
+ * &lt;dt&gt;section&lt;/dt&gt;
+ * &lt;dd&gt;Display a TOC for the specified section only, or all sections if 0.&lt;br&gt;
+ * Positive int, not mandatory, 0 by default.&lt;/dd&gt;
+ * &lt;dt&gt;fromDepth&lt;/dt&gt;
+ * &lt;dd&gt;Minimal depth of entries to display in the TOC.
+ * Sections are depth 1, sub-sections depth 2, etc.&lt;br&gt;
+ * Positive int, not mandatory, 0 by default.&lt;/dd&gt;
+ * &lt;dt&gt;toDepth&lt;/dt&gt;
+ * &lt;dd&gt;Maximum depth of entries to display in the TOC.&lt;br&gt;
+ * Positive int, not mandatory, 5 by default.&lt;/dd&gt;
+ * &lt;/dl&gt;
+ * For instance, in an APT file, you could write:
+ * &lt;dl&gt;
+ * &lt;dt&gt;%{toc|section=2|fromDepth=2|toDepth=3}&lt;/dt&gt;
+ * &lt;dd&gt;Display a TOC for the second section in the document, including all
+ * subsections (depth 2) and  sub-subsections (depth 3).&lt;/dd&gt;
+ * &lt;dt&gt;%{toc}&lt;/dt&gt;
+ * &lt;dd&gt;display a TOC with all section and subsections
+ * (similar to %{toc|section=0} )&lt;/dd&gt;
+ * &lt;/dl&gt;
+ * Moreover, you need to write APT link for section to allow anchor,
+ * for instance:
+ * &lt;pre&gt;
+ * * {SubSection 1}
+ * &lt;/pre&gt;
+ *
+ * Similarly, in an XDOC file, you could write:
+ * &lt;pre&gt;
+ * &amp;lt;macro name=&quot;toc&quot;&amp;gt;
+ *   &amp;lt;param name=&quot;section&quot; value=&quot;1&quot; /&amp;gt;
+ *   &amp;lt;param name=&quot;fromDepth&quot; value=&quot;1&quot; /&amp;gt;
+ *   &amp;lt;param name=&quot;toDepth&quot; value=&quot;2&quot; /&amp;gt;
+ * &amp;lt;/macro&amp;gt;
+ * &lt;/pre&gt;
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ */
+@Component( role = Macro.class, hint = &quot;toc&quot; )
+<span class="fc" id="L80">public class TocMacro</span>
+    extends AbstractMacro
+{
+    /** The section to display. */
+    private int section;
+
+    /** Start depth. */
+    private int fromDepth;
+
+    /** End depth. */
+    private int toDepth;
+
+    /** The default end depth. */
+    private static final int DEFAULT_DEPTH = 5;
+
+    /** {@inheritDoc} */
+    public void execute( Sink sink, MacroRequest request )
+        throws MacroExecutionException
+    {
+<span class="fc" id="L99">        String source = request.getSourceContent();</span>
+<span class="fc" id="L100">        Parser parser = request.getParser();</span>
+
+<span class="fc" id="L102">        section = getInt( request, &quot;section&quot;, 0 );</span>
+<span class="fc" id="L103">        fromDepth = getInt( request, &quot;fromDepth&quot;, 0 );</span>
+<span class="fc" id="L104">        toDepth = getInt( request, &quot;toDepth&quot;, DEFAULT_DEPTH );</span>
+
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if ( fromDepth &gt; toDepth )</span>
+        {
+<span class="nc" id="L108">            return;</span>
+        }
+
+<span class="fc" id="L111">        IndexEntry index = new IndexEntry( &quot;index&quot; );</span>
+<span class="fc" id="L112">        IndexingSink tocSink = new IndexingSink( index );</span>
+
+        try
+        {
+<span class="fc" id="L116">            parser.parse( new StringReader( source ), tocSink );</span>
+        }
+<span class="nc" id="L118">        catch ( ParseException e )</span>
+        {
+<span class="nc" id="L120">            throw new MacroExecutionException( &quot;ParseException: &quot; + e.getMessage(), e );</span>
+<span class="fc" id="L121">        }</span>
+
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if ( index.getChildEntries().size() &gt; 0 )</span>
+        {
+<span class="fc" id="L125">            sink.list( getAttributesFromMap( request.getParameters() ) );</span>
+
+<span class="fc" id="L127">            int i = 1;</span>
+
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            for ( IndexEntry sectionIndex : index.getChildEntries() )</span>
+            {
+<span class="fc bfc" id="L131" title="All 4 branches covered.">                if ( ( i == section ) || ( section == 0 ) )</span>
+                {
+<span class="fc" id="L133">                    writeSubSectionN( sink, sectionIndex, 1 );</span>
+                }
+
+<span class="fc" id="L136">                i++;</span>
+<span class="fc" id="L137">            }</span>
+
+<span class="fc" id="L139">            sink.list_();</span>
+        }
+<span class="fc" id="L141">    }</span>
+
+    /**
+     * @param sink The sink to write to.
+     * @param sectionIndex The section index.
+     * @param n The toc depth.
+     */
+    private void writeSubSectionN( Sink sink, IndexEntry sectionIndex, int n )
+    {
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if ( fromDepth &lt;= n )</span>
+        {
+<span class="fc" id="L152">            sink.listItem();</span>
+<span class="fc" id="L153">            sink.link( &quot;#&quot; + HtmlTools.encodeId( sectionIndex.getId() ) );</span>
+<span class="fc" id="L154">            sink.text( sectionIndex.getTitle() );</span>
+<span class="fc" id="L155">            sink.link_();</span>
+        }
+
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if ( toDepth &gt; n )</span>
+        {
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if ( sectionIndex.getChildEntries().size() &gt; 0 )</span>
+            {
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">                if ( fromDepth &lt;= n )</span>
+                {
+<span class="fc" id="L164">                    sink.list();</span>
+                }
+
+<span class="fc bfc" id="L167" title="All 2 branches covered.">                for ( IndexEntry subsectionIndex : sectionIndex.getChildEntries() )</span>
+                {
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                    if ( n == toDepth - 1 )</span>
+                    {
+<span class="fc" id="L171">                        sink.listItem();</span>
+<span class="fc" id="L172">                        sink.link( &quot;#&quot; + HtmlTools.encodeId( subsectionIndex.getId() ) );</span>
+<span class="fc" id="L173">                        sink.text( subsectionIndex.getTitle() );</span>
+<span class="fc" id="L174">                        sink.link_();</span>
+<span class="fc" id="L175">                        sink.listItem_();</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L179">                        writeSubSectionN( sink, subsectionIndex, n + 1 );</span>
+                    }
+<span class="fc" id="L181">                }</span>
+
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                if ( fromDepth &lt;= n )</span>
+                {
+<span class="fc" id="L185">                    sink.list_();</span>
+                }
+            }
+        }
+
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if ( fromDepth &lt;= n )</span>
+        {
+<span class="fc" id="L192">            sink.listItem_();</span>
+        }
+<span class="fc" id="L194">    }</span>
+
+    /**
+     * @param request The MacroRequest.
+     * @param parameter The parameter.
+     * @param defaultValue the default value.
+     * @return the int value of a parameter in the request.
+     * @throws MacroExecutionException if something goes wrong.
+     */
+    private static int getInt( MacroRequest request, String parameter, int defaultValue )
+        throws MacroExecutionException
+    {
+<span class="fc" id="L206">        String value = (String) request.getParameter( parameter );</span>
+
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        if ( StringUtils.isEmpty( value ) )</span>
+        {
+<span class="fc" id="L210">            return defaultValue;</span>
+        }
+
+        int i;
+
+        try
+        {
+<span class="fc" id="L217">            i = Integer.parseInt( value );</span>
+        }
+<span class="fc" id="L219">        catch ( NumberFormatException e )</span>
+        {
+<span class="fc" id="L221">            return defaultValue;</span>
+<span class="fc" id="L222">        }</span>
+
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">        if ( i &lt; 0 )</span>
+        {
+<span class="nc" id="L226">            throw new MacroExecutionException( &quot;The &quot; + parameter + &quot;=&quot; + i + &quot; should be positive.&quot; );</span>
+        }
+
+<span class="fc" id="L229">        return i;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

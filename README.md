@@ -7,7 +7,7 @@ SOEN6611
 <li><strong><a href="https://github.com/apache/commons-codec"><span style="font-weight: 400;">https://github.com/apache/commons-codec</span></a></strong></li>
 <li><strong><a href="https://github.com/apache/commons-collections"><span style="font-weight: 400;">https://github.com/apache/commons-collections</span></a></strong></li>
 <li><strong><a href="https://github.com/apache/commons-configuration"><span style="font-weight: 400;">https://github.com/apache/commons-configuration</span></a></strong></li>
-<li><strong><a href="https://github.com/jfree/jfreechart"><span style="font-weight: 400;">https://github.com/jfree/jfreechart</span></a></strong></li>
+<li><strong><a href="https://github.com/apache/maven-doxia"><span style="font-weight: 400;">https://github.com/apache/maven-doxia</span></a></strong></li>
 </ol>
 <p style="text-align: center;"><strong>Team G</strong></p>
 <table>

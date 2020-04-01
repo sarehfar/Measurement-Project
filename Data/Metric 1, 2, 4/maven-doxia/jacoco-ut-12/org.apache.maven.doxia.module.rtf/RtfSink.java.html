@@ -1,0 +1,2440 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RtfSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: RTF Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.rtf</a> &gt; <span class="el_source">RtfSink.java</span></div><h1>RtfSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.rtf;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.awt.Color;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+import java.util.Vector;
+
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.AbstractTextSink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+
+/**
+ * &lt;a href=&quot;http://en.wikipedia.org/wiki/Rich_Text_Format&quot;&gt;RTF&lt;/a&gt; Sink implementation.
+ *
+ * @since 1.0
+ */
+public class RtfSink
+    extends AbstractTextSink
+{
+    /** Paper width, 21 cm */
+    public static final double DEFAULT_PAPER_WIDTH = 21.;   /*cm*/
+
+    /** Paper height, 29.7 cm */
+    public static final double DEFAULT_PAPER_HEIGHT = 29.7; /*cm*/
+
+    /** Paper top margin, 2 cm */
+    public static final double DEFAULT_TOP_MARGIN = 2.;    /*cm*/
+
+    /** Paper bottom margin, 2 cm */
+    public static final double DEFAULT_BOTTOM_MARGIN = 2.; /*cm*/
+
+    /** Paper left margin, 2 cm */
+    public static final double DEFAULT_LEFT_MARGIN = 2.;   /*cm*/
+
+    /** Paper right margin, 2 cm */
+    public static final double DEFAULT_RIGHT_MARGIN = 2.;  /*cm*/
+
+    /** Font size, 10 pts */
+    public static final int DEFAULT_FONT_SIZE = 10; /*pts*/
+
+    /** Spacing, 10 pts */
+    public static final int DEFAULT_SPACING = 10;   /*pts*/
+
+    /** Resolution, 72 dpi */
+    public static final int DEFAULT_RESOLUTION = 72; /*dpi*/
+
+    /** Image format, bmp */
+    public static final String DEFAULT_IMAGE_FORMAT = &quot;bmp&quot;;
+
+    /** Image type, palette */
+    public static final String DEFAULT_IMAGE_TYPE = &quot;palette&quot;;
+
+    /** Data format, ascii */
+    public static final String DEFAULT_DATA_FORMAT = &quot;ascii&quot;;
+
+    /** Codepage, 1252 */
+    public static final int DEFAULT_CODE_PAGE = 1252;
+
+    /** Constant &lt;code&gt;DEFAULT_CHAR_SET=0&lt;/code&gt; */
+    public static final int DEFAULT_CHAR_SET = 0;
+
+    /** Constant &lt;code&gt;IMG_FORMAT_BMP=&quot;bmp&quot;&lt;/code&gt; */
+    public static final String IMG_FORMAT_BMP = &quot;bmp&quot;;
+
+    /** Constant &lt;code&gt;IMG_FORMAT_WMF=&quot;wmf&quot;&lt;/code&gt; */
+    public static final String IMG_FORMAT_WMF = &quot;wmf&quot;;
+
+    /** Constant &lt;code&gt;IMG_TYPE_PALETTE=&quot;palette&quot;&lt;/code&gt; */
+    public static final String IMG_TYPE_PALETTE = &quot;palette&quot;;
+
+    /** Constant &lt;code&gt;IMG_TYPE_RGB=&quot;rgb&quot;&lt;/code&gt; */
+    public static final String IMG_TYPE_RGB = &quot;rgb&quot;;
+
+    /** Constant &lt;code&gt;IMG_DATA_ASCII=&quot;ascii&quot;&lt;/code&gt; */
+    public static final String IMG_DATA_ASCII = &quot;ascii&quot;;
+
+    /** Constant &lt;code&gt;IMG_DATA_RAW=&quot;raw&quot;&lt;/code&gt; */
+    public static final String IMG_DATA_RAW = &quot;raw&quot;;
+
+    /** Constant &lt;code&gt;STYLE_ROMAN=0&lt;/code&gt; */
+    public static final int STYLE_ROMAN = 0;
+
+    /** Constant &lt;code&gt;STYLE_ITALIC=1&lt;/code&gt; */
+    public static final int STYLE_ITALIC = 1;
+
+    /** Constant &lt;code&gt;STYLE_BOLD=2&lt;/code&gt; */
+    public static final int STYLE_BOLD = 2;
+
+    /** Constant &lt;code&gt;STYLE_TYPEWRITER=3&lt;/code&gt; */
+    public static final int STYLE_TYPEWRITER = 3;
+
+    private static final int CONTEXT_UNDEFINED = 0;
+
+    private static final int CONTEXT_VERBATIM = 1;
+
+    private static final int CONTEXT_TABLE = 2;
+
+    private static final int UNIT_MILLIMETER = 1;
+
+    private static final int UNIT_CENTIMETER = 2;
+
+    private static final int UNIT_INCH = 3;
+
+    private static final int UNIT_PIXEL = 4;
+
+    private static final int LIST_INDENT = 300; /*twips*/
+
+    private static final String LIST_ITEM_HEADER = &quot;-  &quot;;
+
+    private static final int DEFINITION_INDENT = 300; /*twips*/
+
+    private static final int CELL_HORIZONTAL_PAD = 60; /*twips*/
+
+    private static final int CELL_VERTICAL_PAD = 20;   /*twips*/
+
+    private static final int BORDER_WIDTH = 15; /*twips*/
+
+<span class="fc" id="L152">    private double paperWidth = DEFAULT_PAPER_WIDTH;</span>
+
+<span class="fc" id="L154">    private double paperHeight = DEFAULT_PAPER_HEIGHT;</span>
+
+<span class="fc" id="L156">    private double topMargin = DEFAULT_TOP_MARGIN;</span>
+
+<span class="fc" id="L158">    private double bottomMargin = DEFAULT_BOTTOM_MARGIN;</span>
+
+<span class="fc" id="L160">    private double leftMargin = DEFAULT_LEFT_MARGIN;</span>
+
+<span class="fc" id="L162">    private double rightMargin = DEFAULT_RIGHT_MARGIN;</span>
+
+<span class="fc" id="L164">    protected int fontSize = DEFAULT_FONT_SIZE;</span>
+
+<span class="fc" id="L166">    private int resolution = DEFAULT_RESOLUTION;</span>
+
+<span class="fc" id="L168">    private String imageFormat = DEFAULT_IMAGE_FORMAT;</span>
+
+<span class="fc" id="L170">    private String imageType = DEFAULT_IMAGE_TYPE;</span>
+
+<span class="fc" id="L172">    private String imageDataFormat = DEFAULT_DATA_FORMAT;</span>
+
+<span class="fc" id="L174">    private boolean imageCompression = true;</span>
+
+<span class="fc" id="L176">    private int codePage = DEFAULT_CODE_PAGE;</span>
+
+<span class="fc" id="L178">    private int charSet = DEFAULT_CHAR_SET;</span>
+
+    private final Hashtable fontTable;
+
+    private Context context;
+
+    private Paragraph paragraph;
+
+    protected Indentation indentation;
+
+    protected Space space;
+
+    private int listItemIndent;
+
+    private final Vector numbering;
+
+    private final Vector itemNumber;
+
+<span class="fc" id="L196">    private int style = STYLE_ROMAN;</span>
+
+    private int sectionLevel;
+
+    private boolean emptyHeader;
+
+    private StringBuilder verbatim;
+
+    private boolean frame;
+
+    private Table table;
+
+    private Row row;
+
+    private Cell cell;
+
+    private Line line;
+
+    protected PrintWriter writer;
+
+    protected OutputStream stream; // for raw image data
+
+    /** Keep track of the closing tags for inline events. */
+<span class="fc" id="L219">    protected Stack&lt;List&lt;Integer&gt;&gt; inlineStack = new Stack&lt;&gt;();</span>
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    private Map warnMessages;
+
+    // -----------------------------------------------------------------------
+
+    /**
+     * &lt;p&gt;Constructor for RtfSink.&lt;/p&gt;
+     *
+     * @throws java.io.IOException if any.
+     */
+    protected RtfSink()
+        throws IOException
+    {
+<span class="nc" id="L235">        this( System.out );</span>
+<span class="nc" id="L236">    }</span>
+
+    /**
+     * &lt;p&gt;Constructor for RtfSink.&lt;/p&gt;
+     *
+     * @param output not null
+     * @throws java.io.IOException if any.
+     */
+    protected RtfSink( OutputStream output )
+        throws IOException
+    {
+<span class="fc" id="L247">        this( output, null );</span>
+<span class="fc" id="L248">    }</span>
+
+    /**
+     * &lt;p&gt;Constructor for RtfSink.&lt;/p&gt;
+     *
+     * @param output not null
+     * @param encoding a valid charset
+     * @throws java.io.IOException if any.
+     */
+    protected RtfSink( OutputStream output, String encoding )
+        throws IOException
+<span class="fc" id="L259">    {</span>
+<span class="fc" id="L260">        this.fontTable = new Hashtable();</span>
+<span class="fc" id="L261">        this.numbering = new Vector();</span>
+<span class="fc" id="L262">        this.itemNumber = new Vector();</span>
+
+        Writer w;
+<span class="fc" id="L265">        this.stream = new BufferedOutputStream( output );</span>
+        // TODO: encoding should be consistent with codePage
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">        if ( encoding != null )</span>
+        {
+<span class="nc" id="L269">            w = new OutputStreamWriter( stream, encoding );</span>
+        }
+        else
+        {
+<span class="fc" id="L273">            w = new OutputStreamWriter( stream );</span>
+        }
+<span class="fc" id="L275">        this.writer = new PrintWriter( new BufferedWriter( w ) );</span>
+
+<span class="fc" id="L277">        init();</span>
+<span class="fc" id="L278">    }</span>
+
+    /**
+     * setPaperSize.
+     *
+     * @param width in cm.
+     * @param height in cm.
+     */
+    public void setPaperSize( double width /*cm*/, double height /*cm*/ )
+    {
+<span class="nc" id="L288">        paperWidth = width;</span>
+<span class="nc" id="L289">        paperHeight = height;</span>
+<span class="nc" id="L290">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;topMargin&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param margin margin.
+     */
+    public void setTopMargin( double margin )
+    {
+<span class="nc" id="L299">        topMargin = margin;</span>
+<span class="nc" id="L300">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;bottomMargin&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param margin margin.
+     */
+    public void setBottomMargin( double margin )
+    {
+<span class="nc" id="L309">        bottomMargin = margin;</span>
+<span class="nc" id="L310">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;leftMargin&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param margin margin
+     */
+    public void setLeftMargin( double margin )
+    {
+<span class="nc" id="L319">        leftMargin = margin;</span>
+<span class="nc" id="L320">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;rightMargin&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param margin margin
+     */
+    public void setRightMargin( double margin )
+    {
+<span class="nc" id="L329">        rightMargin = margin;</span>
+<span class="nc" id="L330">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;fontSize&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param size in pts
+     */
+    public void setFontSize( int size /*pts*/ )
+    {
+<span class="nc" id="L339">        fontSize = size;</span>
+<span class="nc" id="L340">    }</span>
+
+    /**
+     * &lt;p&gt;setSpacing.&lt;/p&gt;
+     *
+     * @param spacing in pts.
+     */
+    public void setSpacing( int spacing /*pts*/ )
+    {
+<span class="nc" id="L349">        space.set( 20 * spacing );</span>
+<span class="nc" id="L350">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;resolution&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param resolution in dpi
+     */
+    public void setResolution( int resolution /*dpi*/ )
+    {
+<span class="nc" id="L359">        this.resolution = resolution;</span>
+<span class="nc" id="L360">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;imageFormat&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param format a {@link java.lang.String} object.
+     */
+    public void setImageFormat( String format )
+    {
+<span class="nc" id="L369">        imageFormat = format;</span>
+<span class="nc" id="L370">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;imageType&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param type a {@link java.lang.String} object.
+     */
+    public void setImageType( String type )
+    {
+<span class="nc" id="L379">        imageType = type;</span>
+<span class="nc" id="L380">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;imageDataFormat&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param format a {@link java.lang.String} object.
+     */
+    public void setImageDataFormat( String format )
+    {
+<span class="nc" id="L389">        imageDataFormat = format;</span>
+<span class="nc" id="L390">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;imageCompression&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param compression a boolean.
+     */
+    public void setImageCompression( boolean compression )
+    {
+<span class="nc" id="L399">        imageCompression = compression;</span>
+<span class="nc" id="L400">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;codePage&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param cp a int.
+     */
+    public void setCodePage( int cp )
+    {
+<span class="nc" id="L409">        codePage = cp;</span>
+<span class="nc" id="L410">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;charSet&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param cs a int.
+     */
+    public void setCharSet( int cs )
+    {
+<span class="nc" id="L419">        charSet = cs;</span>
+<span class="nc" id="L420">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void head()
+    {
+<span class="fc" id="L427">        init();</span>
+
+<span class="fc" id="L429">        writer.println( &quot;{\\rtf1\\ansi\\ansicpg&quot; + codePage + &quot;\\deff0&quot; );</span>
+
+<span class="fc" id="L431">        writer.println( &quot;{\\fonttbl&quot; );</span>
+<span class="fc" id="L432">        writer.println( &quot;{\\f0\\froman\\fcharset&quot; + charSet + &quot; Times;}&quot; );</span>
+<span class="fc" id="L433">        writer.println( &quot;{\\f1\\fmodern\\fcharset&quot; + charSet + &quot; Courier;}&quot; );</span>
+<span class="fc" id="L434">        writer.println( &quot;}&quot; );</span>
+
+<span class="fc" id="L436">        writer.println( &quot;{\\stylesheet&quot; );</span>
+<span class="fc bfc" id="L437" title="All 2 branches covered.">        for ( int level = 1; level &lt;= 5; ++level )</span>
+        {
+<span class="fc" id="L439">            writer.print( &quot;{\\s&quot; + styleNumber( level ) );</span>
+<span class="fc" id="L440">            writer.print( &quot;\\outlinelevel&quot; + level );</span>
+<span class="fc" id="L441">            writer.print( &quot; Section Title &quot; + level );</span>
+<span class="fc" id="L442">            writer.println( &quot;;}&quot; );</span>
+        }
+<span class="fc" id="L444">        writer.println( &quot;}&quot; );</span>
+
+<span class="fc" id="L446">        writer.println( &quot;\\paperw&quot; + toTwips( paperWidth, UNIT_CENTIMETER ) );</span>
+<span class="fc" id="L447">        writer.println( &quot;\\paperh&quot; + toTwips( paperHeight, UNIT_CENTIMETER ) );</span>
+<span class="fc" id="L448">        writer.println( &quot;\\margl&quot; + toTwips( leftMargin, UNIT_CENTIMETER ) );</span>
+<span class="fc" id="L449">        writer.println( &quot;\\margr&quot; + toTwips( rightMargin, UNIT_CENTIMETER ) );</span>
+<span class="fc" id="L450">        writer.println( &quot;\\margt&quot; + toTwips( topMargin, UNIT_CENTIMETER ) );</span>
+<span class="fc" id="L451">        writer.println( &quot;\\margb&quot; + toTwips( bottomMargin, UNIT_CENTIMETER ) );</span>
+
+<span class="fc" id="L453">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L454">        space.setNext( 0 );</span>
+
+<span class="fc" id="L456">        emptyHeader = true;</span>
+<span class="fc" id="L457">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void head_()
+    {
+<span class="fc" id="L464">        space.restore();</span>
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">        if ( emptyHeader )</span>
+        {
+<span class="nc" id="L467">            space.setNext( 0 );</span>
+        }
+        else
+        {
+<span class="fc" id="L471">            space.setNext( 2 * space.get() );</span>
+        }
+<span class="fc" id="L473">    }</span>
+
+    /**
+     * &lt;p&gt;toTwips.&lt;/p&gt;
+     *
+     * @param length a double.
+     * @param unit a int.
+     * @return a int.
+     */
+    protected int toTwips( double length, int unit )
+    {
+        double points;
+
+<span class="pc bpc" id="L486" title="2 of 4 branches missed.">        switch ( unit )</span>
+        {
+            case UNIT_MILLIMETER:
+<span class="nc" id="L489">                points = ( length / 25.4 ) * 72.;</span>
+<span class="nc" id="L490">                break;</span>
+            case UNIT_CENTIMETER:
+<span class="fc" id="L492">                points = ( length / 2.54 ) * 72.;</span>
+<span class="fc" id="L493">                break;</span>
+            case UNIT_INCH:
+<span class="nc" id="L495">                points = length * 72.;</span>
+<span class="nc" id="L496">                break;</span>
+            case UNIT_PIXEL:
+            default:
+<span class="fc" id="L499">                points = ( length / resolution ) * 72.;</span>
+                break;
+        }
+
+<span class="fc" id="L503">        return (int) Math.rint( points * 20. );</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void title()
+    {
+<span class="fc" id="L511">        Paragraph p = new Paragraph( STYLE_BOLD, fontSize + 6 );</span>
+<span class="fc" id="L512">        p.justification = Sink.JUSTIFY_CENTER;</span>
+<span class="fc" id="L513">        beginParagraph( p );</span>
+<span class="fc" id="L514">        emptyHeader = false;</span>
+<span class="fc" id="L515">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void title_()
+    {
+<span class="fc" id="L522">        endParagraph();</span>
+<span class="fc" id="L523">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void author()
+    {
+<span class="fc" id="L530">        Paragraph p = new Paragraph( STYLE_ROMAN, fontSize + 2 );</span>
+<span class="fc" id="L531">        p.justification = Sink.JUSTIFY_CENTER;</span>
+<span class="fc" id="L532">        beginParagraph( p );</span>
+<span class="fc" id="L533">        emptyHeader = false;</span>
+<span class="fc" id="L534">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void author_()
+    {
+<span class="fc" id="L541">        endParagraph();</span>
+<span class="fc" id="L542">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void date()
+    {
+<span class="fc" id="L549">        Paragraph p = new Paragraph( STYLE_ROMAN, fontSize );</span>
+<span class="fc" id="L550">        p.justification = Sink.JUSTIFY_CENTER;</span>
+<span class="fc" id="L551">        beginParagraph( p );</span>
+<span class="fc" id="L552">        emptyHeader = false;</span>
+<span class="fc" id="L553">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void date_()
+    {
+<span class="fc" id="L560">        endParagraph();</span>
+<span class="fc" id="L561">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void body()
+    {
+        // nop
+<span class="fc" id="L569">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void body_()
+    {
+<span class="fc" id="L576">        writer.println( &quot;}&quot; );</span>
+<span class="fc" id="L577">        writer.flush();</span>
+<span class="fc" id="L578">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section1()
+    {
+<span class="fc" id="L585">        sectionLevel = 1;</span>
+<span class="fc" id="L586">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section1_()
+    {
+        // nop
+<span class="fc" id="L594">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section2()
+    {
+<span class="fc" id="L601">        sectionLevel = 2;</span>
+<span class="fc" id="L602">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section2_()
+    {
+        // nop
+<span class="fc" id="L610">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section3()
+    {
+<span class="fc" id="L617">        sectionLevel = 3;</span>
+<span class="fc" id="L618">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section3_()
+    {
+        // nop
+<span class="fc" id="L626">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section4()
+    {
+<span class="fc" id="L633">        sectionLevel = 4;</span>
+<span class="fc" id="L634">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section4_()
+    {
+        // nop
+<span class="fc" id="L642">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section5()
+    {
+<span class="fc" id="L649">        sectionLevel = 5;</span>
+<span class="fc" id="L650">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section5_()
+    {
+        // nop
+<span class="fc" id="L658">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void sectionTitle()
+    {
+<span class="nc" id="L665">        int stl = STYLE_BOLD;</span>
+<span class="nc" id="L666">        int size = fontSize;</span>
+
+<span class="nc bnc" id="L668" title="All 6 branches missed.">        switch ( sectionLevel )</span>
+        {
+            case 1:
+<span class="nc" id="L671">                size = fontSize + 6;</span>
+<span class="nc" id="L672">                break;</span>
+            case 2:
+<span class="nc" id="L674">                size = fontSize + 4;</span>
+<span class="nc" id="L675">                break;</span>
+            case 3:
+<span class="nc" id="L677">                size = fontSize + 2;</span>
+<span class="nc" id="L678">                break;</span>
+            case 4:
+<span class="nc" id="L680">                break;</span>
+            case 5:
+<span class="nc" id="L682">                stl = STYLE_ROMAN;</span>
+<span class="nc" id="L683">                break;</span>
+            default:
+        }
+
+<span class="nc" id="L687">        Paragraph p = new Paragraph( stl, size );</span>
+<span class="nc" id="L688">        p.style = styleNumber( sectionLevel );</span>
+
+<span class="nc" id="L690">        beginParagraph( p );</span>
+<span class="nc" id="L691">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void sectionTitle_()
+    {
+<span class="nc" id="L698">        endParagraph();</span>
+<span class="nc" id="L699">    }</span>
+
+    private int styleNumber( int level )
+    {
+<span class="fc" id="L703">        return level;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void list()
+    {
+<span class="fc" id="L711">        indentation.add( LIST_INDENT );</span>
+<span class="fc" id="L712">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L713">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void list_()
+    {
+<span class="fc" id="L720">        indentation.restore();</span>
+<span class="fc" id="L721">        space.restore();</span>
+<span class="fc" id="L722">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void listItem()
+    {
+<span class="fc" id="L729">        Paragraph p = new Paragraph();</span>
+<span class="fc" id="L730">        p.leftIndent = indentation.get() + listItemIndent;</span>
+<span class="fc" id="L731">        p.firstLineIndent = ( -listItemIndent );</span>
+<span class="fc" id="L732">        beginParagraph( p );</span>
+
+<span class="fc" id="L734">        beginStyle( STYLE_BOLD );</span>
+<span class="fc" id="L735">        writer.println( LIST_ITEM_HEADER );</span>
+<span class="fc" id="L736">        endStyle();</span>
+
+<span class="fc" id="L738">        indentation.add( listItemIndent );</span>
+<span class="fc" id="L739">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L740">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void listItem_()
+    {
+<span class="fc" id="L747">        endParagraph();</span>
+
+<span class="fc" id="L749">        indentation.restore();</span>
+<span class="fc" id="L750">        space.restore();</span>
+<span class="fc" id="L751">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList( int numbering )
+    {
+<span class="fc" id="L756">        this.numbering.addElement( numbering );</span>
+<span class="fc" id="L757">        itemNumber.addElement( new Counter( 0 ) );</span>
+
+<span class="fc" id="L759">        indentation.add( LIST_INDENT );</span>
+<span class="fc" id="L760">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L761">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void numberedList_()
+    {
+<span class="fc" id="L768">        numbering.removeElementAt( numbering.size() - 1 );</span>
+<span class="fc" id="L769">        itemNumber.removeElementAt( itemNumber.size() - 1 );</span>
+
+<span class="fc" id="L771">        indentation.restore();</span>
+<span class="fc" id="L772">        space.restore();</span>
+<span class="fc" id="L773">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void numberedListItem()
+    {
+<span class="fc" id="L780">        ( (Counter) itemNumber.lastElement() ).increment();</span>
+
+<span class="fc" id="L782">        int indent = 0;</span>
+<span class="fc" id="L783">        String header = getItemHeader();</span>
+<span class="fc" id="L784">        Font font = getFont( STYLE_TYPEWRITER, fontSize );</span>
+<span class="pc bpc" id="L785" title="1 of 2 branches missed.">        if ( font != null )</span>
+        {
+<span class="fc" id="L787">            indent = textWidth( header, font );</span>
+        }
+
+<span class="fc" id="L790">        Paragraph p = new Paragraph();</span>
+<span class="fc" id="L791">        p.leftIndent = indentation.get() + indent;</span>
+<span class="fc" id="L792">        p.firstLineIndent = ( -indent );</span>
+<span class="fc" id="L793">        beginParagraph( p );</span>
+
+<span class="fc" id="L795">        beginStyle( STYLE_TYPEWRITER );</span>
+<span class="fc" id="L796">        writer.println( header );</span>
+<span class="fc" id="L797">        endStyle();</span>
+
+<span class="fc" id="L799">        indentation.add( indent );</span>
+<span class="fc" id="L800">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L801">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void numberedListItem_()
+    {
+<span class="fc" id="L808">        endParagraph();</span>
+
+<span class="fc" id="L810">        indentation.restore();</span>
+<span class="fc" id="L811">        space.restore();</span>
+<span class="fc" id="L812">    }</span>
+
+    private String getItemHeader()
+    {
+<span class="fc" id="L816">        int nmb = (Integer) this.numbering.lastElement();</span>
+<span class="fc" id="L817">        int iNmb = ( (Counter) this.itemNumber.lastElement() ).get();</span>
+<span class="fc" id="L818">        StringBuilder buf = new StringBuilder();</span>
+
+<span class="pc bpc" id="L820" title="3 of 5 branches missed.">        switch ( nmb )</span>
+        {
+            case Sink.NUMBERING_DECIMAL:
+            default:
+<span class="fc" id="L824">                buf.append( iNmb );</span>
+<span class="fc" id="L825">                buf.append( &quot;. &quot; );</span>
+<span class="fc bfc" id="L826" title="All 2 branches covered.">                while ( buf.length() &lt; 4 )</span>
+                {
+<span class="fc" id="L828">                    buf.append( ' ' );</span>
+                }
+                break;
+
+            case Sink.NUMBERING_LOWER_ALPHA:
+<span class="nc" id="L833">                buf.append( AlphaNumerals.toString( iNmb, true ) );</span>
+<span class="nc" id="L834">                buf.append( &quot;) &quot; );</span>
+<span class="nc" id="L835">                break;</span>
+
+            case Sink.NUMBERING_UPPER_ALPHA:
+<span class="fc" id="L838">                buf.append( AlphaNumerals.toString( iNmb, false ) );</span>
+<span class="fc" id="L839">                buf.append( &quot;. &quot; );</span>
+<span class="fc" id="L840">                break;</span>
+
+            case Sink.NUMBERING_LOWER_ROMAN:
+<span class="nc" id="L843">                buf.append( RomanNumerals.toString( iNmb, true ) );</span>
+<span class="nc" id="L844">                buf.append( &quot;) &quot; );</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">                while ( buf.length() &lt; 6 )</span>
+                {
+<span class="nc" id="L847">                    buf.append( ' ' );</span>
+                }
+                break;
+
+            case Sink.NUMBERING_UPPER_ROMAN:
+<span class="nc" id="L852">                buf.append( RomanNumerals.toString( iNmb, false ) );</span>
+<span class="nc" id="L853">                buf.append( &quot;. &quot; );</span>
+<span class="nc bnc" id="L854" title="All 2 branches missed.">                while ( buf.length() &lt; 6 )</span>
+                {
+<span class="nc" id="L856">                    buf.append( ' ' );</span>
+                }
+                break;
+        }
+
+<span class="fc" id="L861">        return buf.toString();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definitionList()
+    {
+<span class="fc" id="L869">        int next = space.getNext();</span>
+
+<span class="fc" id="L871">        indentation.add( LIST_INDENT );</span>
+<span class="fc" id="L872">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L873">        space.setNext( next );</span>
+<span class="fc" id="L874">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definitionList_()
+    {
+<span class="fc" id="L881">        indentation.restore();</span>
+<span class="fc" id="L882">        space.restore();</span>
+<span class="fc" id="L883">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definitionListItem()
+    {
+<span class="fc" id="L890">        int next = space.getNext();</span>
+<span class="fc" id="L891">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L892">        space.setNext( next );</span>
+<span class="fc" id="L893">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definitionListItem_()
+    {
+<span class="fc" id="L900">        space.restore();</span>
+<span class="fc" id="L901">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definedTerm()
+    {
+        // nop
+<span class="fc" id="L909">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definedTerm_()
+    {
+<span class="fc" id="L916">        endParagraph();</span>
+<span class="fc" id="L917">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definition()
+    {
+<span class="fc" id="L924">        int next = space.getNext();</span>
+
+<span class="fc" id="L926">        indentation.add( DEFINITION_INDENT );</span>
+<span class="fc" id="L927">        space.set( space.get() / 2 );</span>
+<span class="fc" id="L928">        space.setNext( next );</span>
+<span class="fc" id="L929">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definition_()
+    {
+<span class="fc" id="L936">        endParagraph();</span>
+
+<span class="fc" id="L938">        indentation.restore();</span>
+<span class="fc" id="L939">        space.restore();</span>
+<span class="fc" id="L940">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void table()
+    {
+        // nop
+<span class="fc" id="L948">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void table_()
+    {
+        // nop
+<span class="fc" id="L956">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRows( int[] justification, boolean grid )
+
+    {
+<span class="fc" id="L962">        table = new Table( justification, grid );</span>
+<span class="fc" id="L963">        context.set( CONTEXT_TABLE );</span>
+<span class="fc" id="L964">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableRows_()
+    {
+<span class="fc" id="L971">        boolean bb = false;</span>
+<span class="fc" id="L972">        boolean br = false;</span>
+
+<span class="fc" id="L974">        int offset = ( pageWidth() - ( table.width() + indentation.get() ) ) / 2;</span>
+<span class="fc" id="L975">        int x0 = indentation.get() + offset;</span>
+
+<span class="fc" id="L977">        space.skip();</span>
+
+<span class="fc bfc" id="L979" title="All 2 branches covered.">        for ( int i = 0; i &lt; table.rows.size(); ++i )</span>
+        {
+<span class="fc" id="L981">            Row r = (Row) table.rows.elementAt( i );</span>
+
+<span class="fc" id="L983">            writer.print( &quot;\\trowd&quot; );</span>
+<span class="fc" id="L984">            writer.print( &quot;\\trleft&quot; + x0 );</span>
+<span class="fc" id="L985">            writer.print( &quot;\\trgaph&quot; + CELL_HORIZONTAL_PAD );</span>
+<span class="fc" id="L986">            writer.println( &quot;\\trrh&quot; + r.height() );</span>
+
+<span class="fc bfc" id="L988" title="All 2 branches covered.">            if ( table.grid )</span>
+            {
+<span class="fc bfc" id="L990" title="All 2 branches covered.">                if ( i == ( table.rows.size() - 1 ) )</span>
+                {
+<span class="fc" id="L992">                    bb = true;</span>
+                }
+<span class="fc" id="L994">                br = false;</span>
+            }
+
+<span class="fc bfc" id="L997" title="All 2 branches covered.">            for ( int j = 0, x = x0; j &lt; table.numColumns; ++j )</span>
+            {
+<span class="fc bfc" id="L999" title="All 2 branches covered.">                if ( table.grid )</span>
+                {
+<span class="fc bfc" id="L1001" title="All 2 branches covered.">                    if ( j == ( table.numColumns - 1 ) )</span>
+                    {
+<span class="fc" id="L1003">                        br = true;</span>
+                    }
+<span class="fc" id="L1005">                    setBorder( true, bb, true, br );</span>
+<span class="fc" id="L1006">                    x += BORDER_WIDTH;</span>
+                }
+<span class="fc" id="L1008">                x += table.columnWidths[j];</span>
+<span class="fc" id="L1009">                writer.println( &quot;\\clvertalc\\cellx&quot; + x );</span>
+            }
+
+<span class="fc bfc" id="L1012" title="All 2 branches covered.">            for ( int j = 0; j &lt; table.numColumns; ++j )</span>
+            {
+<span class="pc bpc" id="L1014" title="1 of 2 branches missed.">                if ( j &gt;= r.cells.size() )</span>
+                {
+<span class="nc" id="L1016">                    break;</span>
+                }
+<span class="fc" id="L1018">                Cell c = (Cell) r.cells.elementAt( j );</span>
+
+<span class="fc" id="L1020">                writer.print( &quot;\\pard\\intbl&quot; );</span>
+<span class="fc" id="L1021">                setJustification( table.justification[j] );</span>
+<span class="fc" id="L1022">                writer.println( &quot;\\plain\\f0\\fs&quot; + ( 2 * fontSize ) );</span>
+
+<span class="fc bfc" id="L1024" title="All 2 branches covered.">                for ( int k = 0; k &lt; c.lines.size(); ++k )</span>
+                {
+<span class="fc bfc" id="L1026" title="All 2 branches covered.">                    if ( k &gt; 0 )</span>
+                    {
+<span class="fc" id="L1028">                        writer.println( &quot;\\line&quot; );</span>
+                    }
+<span class="fc" id="L1030">                    Line l = (Line) c.lines.elementAt( k );</span>
+
+<span class="fc bfc" id="L1032" title="All 2 branches covered.">                    for ( int n = 0; n &lt; l.items.size(); ++n )</span>
+                    {
+<span class="fc" id="L1034">                        Item item = (Item) l.items.elementAt( n );</span>
+<span class="fc" id="L1035">                        writer.print( &quot;{&quot; );</span>
+<span class="fc" id="L1036">                        setStyle( item.style );</span>
+<span class="fc" id="L1037">                        writer.println( escape( item.text ) );</span>
+<span class="fc" id="L1038">                        writer.println( &quot;}&quot; );</span>
+                    }
+                }
+
+<span class="fc" id="L1042">                writer.println( &quot;\\cell&quot; );</span>
+            }
+
+<span class="fc" id="L1045">            writer.println( &quot;\\row&quot; );</span>
+        }
+
+<span class="fc" id="L1048">        context.restore();</span>
+<span class="fc" id="L1049">    }</span>
+
+    private int pageWidth()
+    {
+<span class="fc" id="L1053">        double width = paperWidth - ( leftMargin + rightMargin );</span>
+<span class="fc" id="L1054">        return toTwips( width, UNIT_CENTIMETER );</span>
+    }
+
+    private void setBorder( boolean bt, boolean bb, boolean bl, boolean br )
+    {
+<span class="pc bpc" id="L1059" title="1 of 2 branches missed.">        if ( bt )</span>
+        {
+<span class="fc" id="L1061">            writer.println( &quot;\\clbrdrt\\brdrs\\brdrw&quot; + BORDER_WIDTH );</span>
+        }
+<span class="fc bfc" id="L1063" title="All 2 branches covered.">        if ( bb )</span>
+        {
+<span class="fc" id="L1065">            writer.println( &quot;\\clbrdrb\\brdrs\\brdrw&quot; + BORDER_WIDTH );</span>
+        }
+<span class="pc bpc" id="L1067" title="1 of 2 branches missed.">        if ( bl )</span>
+        {
+<span class="fc" id="L1069">            writer.println( &quot;\\clbrdrl\\brdrs\\brdrw&quot; + BORDER_WIDTH );</span>
+        }
+<span class="fc bfc" id="L1071" title="All 2 branches covered.">        if ( br )</span>
+        {
+<span class="fc" id="L1073">            writer.println( &quot;\\clbrdrr\\brdrs\\brdrw&quot; + BORDER_WIDTH );</span>
+        }
+<span class="fc" id="L1075">    }</span>
+
+    private void setJustification( int justification )
+    {
+<span class="fc bfc" id="L1079" title="All 3 branches covered.">        switch ( justification )</span>
+        {
+            case Sink.JUSTIFY_LEFT:
+            default:
+<span class="fc" id="L1083">                writer.println( &quot;\\ql&quot; );</span>
+<span class="fc" id="L1084">                break;</span>
+            case Sink.JUSTIFY_CENTER:
+<span class="fc" id="L1086">                writer.println( &quot;\\qc&quot; );</span>
+<span class="fc" id="L1087">                break;</span>
+            case Sink.JUSTIFY_RIGHT:
+<span class="fc" id="L1089">                writer.println( &quot;\\qr&quot; );</span>
+                break;
+        }
+<span class="fc" id="L1092">    }</span>
+
+    private void setStyle( int style )
+    {
+<span class="pc bpc" id="L1096" title="3 of 4 branches missed.">        switch ( style )</span>
+        {
+            case STYLE_ITALIC:
+<span class="nc" id="L1099">                writer.println( &quot;\\i&quot; );</span>
+<span class="nc" id="L1100">                break;</span>
+            case STYLE_BOLD:
+<span class="nc" id="L1102">                writer.println( &quot;\\b&quot; );</span>
+<span class="nc" id="L1103">                break;</span>
+            case STYLE_TYPEWRITER:
+<span class="nc" id="L1105">                writer.println( &quot;\\f1&quot; );</span>
+<span class="nc" id="L1106">                break;</span>
+            default:
+                break;
+        }
+<span class="fc" id="L1110">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableRow()
+    {
+<span class="fc" id="L1117">        row = new Row();</span>
+<span class="fc" id="L1118">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableRow_()
+    {
+<span class="fc" id="L1125">        table.add( row );</span>
+<span class="fc" id="L1126">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableHeaderCell()
+    {
+<span class="fc" id="L1133">        tableCell();</span>
+<span class="fc" id="L1134">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableHeaderCell_()
+    {
+<span class="fc" id="L1141">        tableCell_();</span>
+<span class="fc" id="L1142">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableCell()
+    {
+<span class="fc" id="L1149">        cell = new Cell();</span>
+<span class="fc" id="L1150">        line = new Line();</span>
+<span class="fc" id="L1151">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableCell_()
+    {
+<span class="fc" id="L1158">        cell.add( line );</span>
+<span class="fc" id="L1159">        row.add( cell );</span>
+<span class="fc" id="L1160">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableCaption()
+    {
+<span class="fc" id="L1167">        Paragraph p = new Paragraph();</span>
+<span class="fc" id="L1168">        p.justification = Sink.JUSTIFY_CENTER;</span>
+<span class="fc" id="L1169">        p.spaceBefore /= 2;</span>
+<span class="fc" id="L1170">        beginParagraph( p );</span>
+<span class="fc" id="L1171">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void tableCaption_()
+    {
+<span class="fc" id="L1178">        endParagraph();</span>
+<span class="fc" id="L1179">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void paragraph()
+    {
+<span class="fc bfc" id="L1186" title="All 2 branches covered.">        if ( paragraph == null )</span>
+        {
+<span class="fc" id="L1188">            beginParagraph( new Paragraph() );</span>
+        }
+<span class="fc" id="L1190">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void paragraph_()
+    {
+<span class="fc" id="L1197">        endParagraph();</span>
+<span class="fc" id="L1198">    }</span>
+
+    private void beginParagraph( Paragraph p )
+    {
+<span class="fc" id="L1202">        p.begin();</span>
+<span class="fc" id="L1203">        this.paragraph = p;</span>
+<span class="pc bpc" id="L1204" title="1 of 2 branches missed.">        if ( style != STYLE_ROMAN )</span>
+        {
+<span class="nc" id="L1206">            beginStyle( style );</span>
+        }
+<span class="fc" id="L1208">    }</span>
+
+    private void endParagraph()
+    {
+<span class="fc bfc" id="L1212" title="All 2 branches covered.">        if ( paragraph != null )</span>
+        {
+<span class="pc bpc" id="L1214" title="1 of 2 branches missed.">            if ( style != STYLE_ROMAN )</span>
+            {
+<span class="nc" id="L1216">                endStyle();</span>
+            }
+<span class="fc" id="L1218">            paragraph.end();</span>
+<span class="fc" id="L1219">            paragraph = null;</span>
+        }
+<span class="fc" id="L1221">    }</span>
+
+    /** {@inheritDoc} */
+    public void verbatim( boolean boxed )
+    {
+<span class="fc" id="L1226">        verbatim = new StringBuilder();</span>
+<span class="fc" id="L1227">        frame = boxed;</span>
+
+<span class="fc" id="L1229">        context.set( CONTEXT_VERBATIM );</span>
+<span class="fc" id="L1230">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void verbatim_()
+    {
+<span class="fc" id="L1237">        String text = verbatim.toString();</span>
+
+<span class="fc" id="L1239">        Paragraph p = new Paragraph();</span>
+<span class="fc" id="L1240">        p.fontStyle = STYLE_TYPEWRITER;</span>
+<span class="fc" id="L1241">        p.frame = frame;</span>
+
+<span class="fc" id="L1243">        beginParagraph( p );</span>
+
+<span class="fc" id="L1245">        StringTokenizer t = new StringTokenizer( text, EOL, true );</span>
+<span class="fc bfc" id="L1246" title="All 2 branches covered.">        while ( t.hasMoreTokens() )</span>
+        {
+<span class="fc" id="L1248">            String s = t.nextToken();</span>
+<span class="pc bpc" id="L1249" title="1 of 4 branches missed.">            if ( s.equals( EOL ) &amp;&amp; t.hasMoreTokens() )</span>
+            {
+<span class="fc" id="L1251">                writer.println( &quot;\\line&quot; );</span>
+            }
+            else
+            {
+<span class="fc" id="L1255">                writer.println( escape( s ) );</span>
+            }
+<span class="fc" id="L1257">        }</span>
+
+<span class="fc" id="L1259">        endParagraph();</span>
+
+<span class="fc" id="L1261">        context.restore();</span>
+<span class="fc" id="L1262">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figure()
+    {
+        // nop
+<span class="fc" id="L1270">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figure_()
+    {
+        // nop
+<span class="fc" id="L1278">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureGraphics( String name )
+    {
+<span class="fc" id="L1283">        Paragraph p = new Paragraph();</span>
+<span class="fc" id="L1284">        p.justification = Sink.JUSTIFY_CENTER;</span>
+<span class="fc" id="L1285">        beginParagraph( p );</span>
+
+        try
+        {
+<span class="fc" id="L1289">            writeImage( name );</span>
+        }
+<span class="nc" id="L1291">        catch ( Exception e )</span>
+        {
+<span class="nc" id="L1293">            getLog().error( e.getMessage(), e );</span>
+<span class="fc" id="L1294">        }</span>
+
+<span class="fc" id="L1296">        endParagraph();</span>
+<span class="fc" id="L1297">    }</span>
+
+    private void writeImage( String source )
+        throws Exception
+    {
+<span class="pc bpc" id="L1302" title="1 of 2 branches missed.">        if ( !source.toLowerCase().endsWith( &quot;.ppm&quot; ) )</span>
+        {
+            // TODO support more image types!
+<span class="fc" id="L1305">            String msg =</span>
+                &quot;Unsupported image type for image file: '&quot; + source + &quot;'. Only PPM image type is &quot;
+                    + &quot;currently supported.&quot;;
+<span class="fc" id="L1308">            logMessage( &quot;unsupportedImage&quot;, msg );</span>
+
+<span class="fc" id="L1310">            return;</span>
+        }
+
+        int bytesPerLine;
+<span class="nc" id="L1314">        PBMReader ppm = new PBMReader( source );</span>
+<span class="nc" id="L1315">        WMFWriter.Dib dib = new WMFWriter.Dib();</span>
+<span class="nc" id="L1316">        WMFWriter wmf = new WMFWriter();</span>
+
+<span class="nc" id="L1318">        int srcWidth = ppm.width();</span>
+<span class="nc" id="L1319">        int srcHeight = ppm.height();</span>
+
+<span class="nc" id="L1321">        dib.biWidth = srcWidth;</span>
+<span class="nc" id="L1322">        dib.biHeight = srcHeight;</span>
+<span class="nc" id="L1323">        dib.biXPelsPerMeter = (int) ( resolution * 100. / 2.54 );</span>
+<span class="nc" id="L1324">        dib.biYPelsPerMeter = dib.biXPelsPerMeter;</span>
+
+<span class="nc bnc" id="L1326" title="All 2 branches missed.">        if ( imageType.equals( IMG_TYPE_RGB ) )</span>
+        {
+<span class="nc" id="L1328">            dib.biBitCount = 24;</span>
+<span class="nc" id="L1329">            dib.biCompression = WMFWriter.Dib.BI_RGB; // no compression</span>
+
+<span class="nc" id="L1331">            bytesPerLine = 4 * ( ( 3 * srcWidth + 3 ) / 4 );</span>
+<span class="nc" id="L1332">            dib.bitmap = new byte[srcHeight * bytesPerLine];</span>
+
+<span class="nc" id="L1334">            byte[] l = new byte[3 * srcWidth];</span>
+<span class="nc bnc" id="L1335" title="All 2 branches missed.">            for ( int i = ( srcHeight - 1 ); i &gt;= 0; --i )</span>
+            {
+<span class="nc" id="L1337">                ppm.read( l, 0, l.length );</span>
+<span class="nc bnc" id="L1338" title="All 2 branches missed.">                for ( int j = 0, k = ( i * bytesPerLine ); j &lt; l.length; j += 3 )</span>
+                {
+                    // component order = BGR
+<span class="nc" id="L1341">                    dib.bitmap[k++] = l[j + 2];</span>
+<span class="nc" id="L1342">                    dib.bitmap[k++] = l[j + 1];</span>
+<span class="nc" id="L1343">                    dib.bitmap[k++] = l[j];</span>
+                }
+            }
+<span class="nc" id="L1346">        }</span>
+        else
+        {
+<span class="nc" id="L1349">            dib.biBitCount = 8;</span>
+
+<span class="nc" id="L1351">            bytesPerLine = 4 * ( ( srcWidth + 3 ) / 4 );</span>
+<span class="nc" id="L1352">            byte[] bitmap = new byte[srcHeight * bytesPerLine];</span>
+
+<span class="nc" id="L1354">            Vector colors = new Vector( 256 );</span>
+<span class="nc" id="L1355">            colors.addElement( Color.white );</span>
+<span class="nc" id="L1356">            colors.addElement( Color.black );</span>
+
+<span class="nc" id="L1358">            byte[] l = new byte[3 * srcWidth];</span>
+<span class="nc bnc" id="L1359" title="All 2 branches missed.">            for ( int i = ( srcHeight - 1 ); i &gt;= 0; --i )</span>
+            {
+<span class="nc" id="L1361">                ppm.read( l, 0, l.length );</span>
+<span class="nc bnc" id="L1362" title="All 2 branches missed.">                for ( int j = 0, k = ( i * bytesPerLine ); j &lt; l.length; )</span>
+                {
+<span class="nc" id="L1364">                    int r = (int) l[j++] &amp; 0xff;</span>
+<span class="nc" id="L1365">                    int g = (int) l[j++] &amp; 0xff;</span>
+<span class="nc" id="L1366">                    int b = (int) l[j++] &amp; 0xff;</span>
+<span class="nc" id="L1367">                    Color color = new Color( r, g, b );</span>
+<span class="nc" id="L1368">                    int index = colors.indexOf( color );</span>
+<span class="nc bnc" id="L1369" title="All 2 branches missed.">                    if ( index &lt; 0 )</span>
+                    {
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">                        if ( colors.size() &lt; colors.capacity() )</span>
+                        {
+<span class="nc" id="L1373">                            colors.addElement( color );</span>
+<span class="nc" id="L1374">                            index = colors.size() - 1;</span>
+                        }
+                        else
+                        {
+<span class="nc" id="L1378">                            index = 1;</span>
+                        }
+                    }
+<span class="nc" id="L1381">                    bitmap[k++] = (byte) index;</span>
+<span class="nc" id="L1382">                }</span>
+            }
+
+<span class="nc" id="L1385">            dib.biClrUsed = colors.size();</span>
+<span class="nc" id="L1386">            dib.biClrImportant = dib.biClrUsed;</span>
+<span class="nc" id="L1387">            dib.palette = new byte[4 * dib.biClrUsed];</span>
+<span class="nc bnc" id="L1388" title="All 2 branches missed.">            for ( int i = 0, j = 0; i &lt; dib.biClrUsed; ++i, ++j )</span>
+            {
+<span class="nc" id="L1390">                Color color = (Color) colors.elementAt( i );</span>
+<span class="nc" id="L1391">                dib.palette[j++] = (byte) color.getBlue();</span>
+<span class="nc" id="L1392">                dib.palette[j++] = (byte) color.getGreen();</span>
+<span class="nc" id="L1393">                dib.palette[j++] = (byte) color.getRed();</span>
+            }
+
+<span class="nc bnc" id="L1396" title="All 2 branches missed.">            if ( imageCompression )</span>
+            {
+<span class="nc" id="L1398">                dib.biCompression = WMFWriter.Dib.BI_RLE8;</span>
+<span class="nc" id="L1399">                dib.bitmap = new byte[bitmap.length + ( 2 * ( bitmap.length / 255 + 1 ) )];</span>
+<span class="nc" id="L1400">                dib.biSizeImage = WMFWriter.Dib.rlEncode8( bitmap, 0, bitmap.length, dib.bitmap, 0 );</span>
+            }
+            else
+            {
+<span class="nc" id="L1404">                dib.biCompression = WMFWriter.Dib.BI_RGB;</span>
+<span class="nc" id="L1405">                dib.bitmap = bitmap;</span>
+            }
+        }
+
+<span class="nc bnc" id="L1409" title="All 2 branches missed.">        if ( imageFormat.equals( IMG_FORMAT_WMF ) )</span>
+        {
+            int[] parameters;
+            WMFWriter.Record record;
+
+            /*
+             * See the libwmf library documentation
+             * (http://www.wvware.com/wmf_doc_index.html)
+             * for a description of WMF records.
+             */
+
+            // set mapping mode to MM_TEXT (logical unit = pixel)
+<span class="nc" id="L1421">            parameters = new int[1];</span>
+<span class="nc" id="L1422">            parameters[0] = 1;</span>
+<span class="nc" id="L1423">            record = new WMFWriter.Record( 0x0103, parameters );</span>
+<span class="nc" id="L1424">            wmf.add( record );</span>
+
+            // set window origin and dimensions
+<span class="nc" id="L1427">            parameters = new int[2];</span>
+<span class="nc" id="L1428">            record = new WMFWriter.Record( 0x020b, parameters );</span>
+<span class="nc" id="L1429">            wmf.add( record );</span>
+<span class="nc" id="L1430">            parameters = new int[2];</span>
+<span class="nc" id="L1431">            parameters[0] = srcHeight;</span>
+<span class="nc" id="L1432">            parameters[1] = srcWidth;</span>
+<span class="nc" id="L1433">            record = new WMFWriter.Record( 0x020c, parameters );</span>
+<span class="nc" id="L1434">            wmf.add( record );</span>
+
+<span class="nc" id="L1436">            parameters = new int[WMFWriter.DibBitBltRecord.P_COUNT];</span>
+            // raster operation = SRCCOPY (0x00cc0020)
+<span class="nc" id="L1438">            parameters[WMFWriter.DibBitBltRecord.P_ROP_H] = 0x00cc;</span>
+<span class="nc" id="L1439">            parameters[WMFWriter.DibBitBltRecord.P_ROP_L] = 0x0020;</span>
+<span class="nc" id="L1440">            parameters[WMFWriter.DibBitBltRecord.P_WIDTH] = srcWidth;</span>
+<span class="nc" id="L1441">            parameters[WMFWriter.DibBitBltRecord.P_HEIGHT] = srcHeight;</span>
+<span class="nc" id="L1442">            record = new WMFWriter.DibBitBltRecord( parameters, dib );</span>
+<span class="nc" id="L1443">            wmf.add( record );</span>
+        }
+
+<span class="nc bnc" id="L1446" title="All 2 branches missed.">        if ( imageFormat.equals( IMG_FORMAT_WMF ) )</span>
+        {
+<span class="nc" id="L1448">            writer.print( &quot;{\\pict\\wmetafile1&quot; );</span>
+<span class="nc" id="L1449">            writer.println( &quot;\\picbmp\\picbpp&quot; + dib.biBitCount );</span>
+        }
+        else
+        {
+<span class="nc" id="L1453">            writer.print( &quot;{\\pict\\dibitmap0\\wbmplanes1&quot; );</span>
+<span class="nc" id="L1454">            writer.print( &quot;\\wbmbitspixel&quot; + dib.biBitCount );</span>
+<span class="nc" id="L1455">            writer.println( &quot;\\wbmwidthbytes&quot; + bytesPerLine );</span>
+        }
+
+<span class="nc" id="L1458">        writer.print( &quot;\\picw&quot; + srcWidth );</span>
+<span class="nc" id="L1459">        writer.print( &quot;\\pich&quot; + srcHeight );</span>
+<span class="nc" id="L1460">        writer.print( &quot;\\picwgoal&quot; + toTwips( srcWidth, UNIT_PIXEL ) );</span>
+<span class="nc" id="L1461">        writer.println( &quot;\\pichgoal&quot; + toTwips( srcHeight, UNIT_PIXEL ) );</span>
+
+<span class="nc bnc" id="L1463" title="All 2 branches missed.">        if ( imageFormat.equals( IMG_FORMAT_WMF ) )</span>
+        {
+<span class="nc bnc" id="L1465" title="All 2 branches missed.">            if ( imageDataFormat.equals( IMG_DATA_RAW ) )</span>
+            {
+<span class="nc" id="L1467">                writer.print( &quot;\\bin&quot; + ( 2 * wmf.size() ) + &quot; &quot; );</span>
+<span class="nc" id="L1468">                writer.flush();</span>
+<span class="nc" id="L1469">                wmf.write( stream );</span>
+<span class="nc" id="L1470">                stream.flush();</span>
+            }
+            else
+            {
+<span class="nc" id="L1474">                wmf.print( writer );</span>
+            }
+        }
+        else
+        {
+<span class="nc bnc" id="L1479" title="All 2 branches missed.">            if ( imageDataFormat.equals( IMG_DATA_RAW ) )</span>
+            {
+<span class="nc" id="L1481">                writer.print( &quot;\\bin&quot; + ( 2 * dib.size() ) + &quot; &quot; );</span>
+<span class="nc" id="L1482">                writer.flush();</span>
+<span class="nc" id="L1483">                dib.write( stream );</span>
+<span class="nc" id="L1484">                stream.flush();</span>
+            }
+            else
+            {
+<span class="nc" id="L1488">                dib.print( writer );</span>
+            }
+        }
+
+<span class="nc" id="L1492">        writer.println( &quot;}&quot; );</span>
+<span class="nc" id="L1493">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figureCaption()
+    {
+<span class="fc" id="L1500">        Paragraph p = new Paragraph();</span>
+<span class="fc" id="L1501">        p.justification = Sink.JUSTIFY_CENTER;</span>
+<span class="fc" id="L1502">        p.spaceBefore /= 2;</span>
+<span class="fc" id="L1503">        beginParagraph( p );</span>
+<span class="fc" id="L1504">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figureCaption_()
+    {
+<span class="fc" id="L1511">        endParagraph();</span>
+<span class="fc" id="L1512">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void horizontalRule()
+    {
+<span class="fc" id="L1519">        writer.print( &quot;\\pard\\li&quot; + indentation.get() );</span>
+
+<span class="fc" id="L1521">        int skip = space.getNext();</span>
+<span class="pc bpc" id="L1522" title="1 of 2 branches missed.">        if ( skip &gt; 0 )</span>
+        {
+<span class="fc" id="L1524">            writer.print( &quot;\\sb&quot; + skip );</span>
+        }
+<span class="fc" id="L1526">        space.setNext( skip );</span>
+
+<span class="fc" id="L1528">        writer.print( &quot;\\brdrb\\brdrs\\brdrw&quot; + BORDER_WIDTH );</span>
+<span class="fc" id="L1529">        writer.println( &quot;\\plain\\fs1\\par&quot; );</span>
+<span class="fc" id="L1530">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void pageBreak()
+    {
+<span class="fc" id="L1537">        writer.println( &quot;\\page&quot; );</span>
+<span class="fc" id="L1538">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor( String name )
+    {
+        // nop
+<span class="fc" id="L1544">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void anchor_()
+    {
+        // nop
+<span class="fc" id="L1552">    }</span>
+
+    /** {@inheritDoc} */
+    public void link( String name )
+    {
+        // nop
+<span class="fc" id="L1558">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void link_()
+    {
+        // nop
+<span class="fc" id="L1566">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void inline()
+    {
+<span class="nc" id="L1573">        inline( null );</span>
+<span class="nc" id="L1574">    }</span>
+
+    /** {@inheritDoc} */
+    public void inline( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1579">        List&lt;Integer&gt; tags = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L1581" title="1 of 2 branches missed.">        if ( attributes != null )</span>
+        {
+
+<span class="fc bfc" id="L1584" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;italic&quot; ) )</span>
+            {
+<span class="fc" id="L1586">                tags.add( 0, this.style );</span>
+<span class="fc" id="L1587">                beginStyle( STYLE_ITALIC );</span>
+            }
+
+<span class="fc bfc" id="L1590" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;bold&quot; ) )</span>
+            {
+<span class="fc" id="L1592">                tags.add( 0, this.style );</span>
+<span class="fc" id="L1593">                beginStyle( STYLE_BOLD );</span>
+            }
+
+<span class="fc bfc" id="L1596" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;code&quot; ) )</span>
+            {
+<span class="fc" id="L1598">                tags.add( 0, this.style );</span>
+<span class="fc" id="L1599">                beginStyle( STYLE_TYPEWRITER );</span>
+            }
+
+        }
+
+<span class="fc" id="L1604">        inlineStack.push( tags );</span>
+<span class="fc" id="L1605">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void inline_()
+    {
+<span class="fc bfc" id="L1612" title="All 2 branches covered.">        for ( Integer style: inlineStack.pop() )</span>
+        {
+<span class="fc" id="L1614">            endStyle();</span>
+<span class="fc" id="L1615">            this.style = style;</span>
+<span class="fc" id="L1616">        }</span>
+<span class="fc" id="L1617">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void italic()
+    {
+<span class="fc" id="L1624">        inline( SinkEventAttributeSet.Semantics.ITALIC );</span>
+<span class="fc" id="L1625">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void italic_()
+    {
+<span class="fc" id="L1632">        inline_();</span>
+<span class="fc" id="L1633">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void bold()
+    {
+<span class="nc" id="L1640">        inline( SinkEventAttributeSet.Semantics.BOLD );</span>
+<span class="nc" id="L1641">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void bold_()
+    {
+<span class="nc" id="L1648">        inline_();</span>
+<span class="nc" id="L1649">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void monospaced()
+    {
+<span class="nc" id="L1656">        inline( SinkEventAttributeSet.Semantics.CODE );</span>
+<span class="nc" id="L1657">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void monospaced_()
+    {
+<span class="nc" id="L1664">        inline_();</span>
+<span class="nc" id="L1665">    }</span>
+
+    private void beginStyle( int style )
+    {
+<span class="fc" id="L1669">        this.style = style;</span>
+
+<span class="pc bpc" id="L1671" title="1 of 2 branches missed.">        switch ( context.get() )</span>
+        {
+            case CONTEXT_TABLE:
+<span class="nc" id="L1674">                break;</span>
+            default:
+<span class="pc bpc" id="L1676" title="1 of 2 branches missed.">                if ( paragraph != null )</span>
+                {
+<span class="pc bpc" id="L1678" title="1 of 4 branches missed.">                    switch ( style )</span>
+                    {
+                        case STYLE_ITALIC:
+<span class="fc" id="L1681">                            writer.println( &quot;{\\i&quot; );</span>
+<span class="fc" id="L1682">                            break;</span>
+                        case STYLE_BOLD:
+<span class="fc" id="L1684">                            writer.println( &quot;{\\b&quot; );</span>
+<span class="fc" id="L1685">                            break;</span>
+                        case STYLE_TYPEWRITER:
+<span class="fc" id="L1687">                            writer.println( &quot;{\\f1&quot; );</span>
+<span class="fc" id="L1688">                            break;</span>
+                        default:
+<span class="nc" id="L1690">                            writer.println( &quot;{&quot; );</span>
+                            break;
+                    }
+                }
+                break;
+        }
+<span class="fc" id="L1696">    }</span>
+
+    private void endStyle()
+    {
+<span class="fc" id="L1700">        style = STYLE_ROMAN;</span>
+
+<span class="pc bpc" id="L1702" title="1 of 2 branches missed.">        switch ( context.get() )</span>
+        {
+            case CONTEXT_TABLE:
+<span class="nc" id="L1705">                break;</span>
+            default:
+<span class="pc bpc" id="L1707" title="1 of 2 branches missed.">                if ( paragraph != null )</span>
+                {
+<span class="fc" id="L1709">                    writer.println( &quot;}&quot; );</span>
+                }
+                break;
+        }
+<span class="fc" id="L1713">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void lineBreak()
+    {
+<span class="fc bfc" id="L1720" title="All 2 branches covered.">        switch ( context.get() )</span>
+        {
+            case CONTEXT_TABLE:
+<span class="fc" id="L1723">                cell.add( line );</span>
+<span class="fc" id="L1724">                line = new Line();</span>
+<span class="fc" id="L1725">                break;</span>
+            default:
+<span class="fc" id="L1727">                writer.println( &quot;\\line&quot; );</span>
+                break;
+        }
+<span class="fc" id="L1730">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void nonBreakingSpace()
+    {
+<span class="pc bpc" id="L1737" title="1 of 2 branches missed.">        switch ( context.get() )</span>
+        {
+            case CONTEXT_TABLE:
+<span class="nc" id="L1740">                line.add( new Item( style, &quot; &quot; ) );</span>
+<span class="nc" id="L1741">                break;</span>
+            default:
+<span class="fc" id="L1743">                writer.println( &quot;\\~&quot; );</span>
+                break;
+        }
+<span class="fc" id="L1746">    }</span>
+
+    /** {@inheritDoc} */
+    public void text( String text )
+    {
+<span class="fc bfc" id="L1751" title="All 3 branches covered.">        switch ( context.get() )</span>
+        {
+            case CONTEXT_VERBATIM:
+<span class="fc" id="L1754">                verbatim.append( text );</span>
+<span class="fc" id="L1755">                break;</span>
+
+            case CONTEXT_TABLE:
+<span class="fc" id="L1758">                StringTokenizer t = new StringTokenizer( text, EOL, true );</span>
+<span class="fc bfc" id="L1759" title="All 2 branches covered.">                while ( t.hasMoreTokens() )</span>
+                {
+<span class="fc" id="L1761">                    String token = t.nextToken();</span>
+<span class="pc bpc" id="L1762" title="1 of 2 branches missed.">                    if ( token.equals( EOL ) )</span>
+                    {
+<span class="nc" id="L1764">                        cell.add( line );</span>
+<span class="nc" id="L1765">                        line = new Line();</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L1769">                        line.add( new Item( style, normalize( token ) ) );</span>
+                    }
+<span class="fc" id="L1771">                }</span>
+                break;
+
+            default:
+<span class="fc bfc" id="L1775" title="All 2 branches covered.">                if ( paragraph == null )</span>
+                {
+<span class="fc" id="L1777">                    beginParagraph( new Paragraph() );</span>
+                }
+<span class="fc" id="L1779">                writer.println( escape( normalize( text ) ) );</span>
+        }
+<span class="fc" id="L1781">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Unkown events just log a warning message but are ignored otherwise.
+     * @see org.apache.maven.doxia.sink.Sink#unknown(String,Object[],SinkEventAttributes)
+     */
+    public void unknown( String name, Object[] requiredParams, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L1791">        String msg = &quot;Unknown Sink event: '&quot; + name + &quot;', ignoring!&quot;;</span>
+<span class="nc" id="L1792">        logMessage( &quot;unknownEvent&quot;, msg );</span>
+<span class="nc" id="L1793">    }</span>
+
+    private static String normalize( String s )
+    {
+<span class="fc" id="L1797">        int length = s.length();</span>
+<span class="fc" id="L1798">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L1800" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L1802">            char c = s.charAt( i );</span>
+
+<span class="fc bfc" id="L1804" title="All 2 branches covered.">            if ( Character.isWhitespace( c ) )</span>
+            {
+<span class="pc bpc" id="L1806" title="1 of 4 branches missed.">                if ( buffer.length() == 0 || buffer.charAt( buffer.length() - 1 ) != ' ' )</span>
+                {
+<span class="fc" id="L1808">                    buffer.append( ' ' );</span>
+                }
+            }
+
+            else
+            {
+<span class="fc" id="L1814">                buffer.append( c );</span>
+            }
+        }
+
+<span class="fc" id="L1818">        return buffer.toString();</span>
+    }
+
+    private static String escape( String s )
+    {
+<span class="fc" id="L1823">        int length = s.length();</span>
+<span class="fc" id="L1824">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L1826" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L1828">            char c = s.charAt( i );</span>
+<span class="fc bfc" id="L1829" title="All 4 branches covered.">            switch ( c )</span>
+            {
+                case '\\':
+<span class="fc" id="L1832">                    buffer.append( &quot;\\\\&quot; );</span>
+<span class="fc" id="L1833">                    break;</span>
+                case '{':
+<span class="fc" id="L1835">                    buffer.append( &quot;\\{&quot; );</span>
+<span class="fc" id="L1836">                    break;</span>
+                case '}':
+<span class="fc" id="L1838">                    buffer.append( &quot;\\}&quot; );</span>
+<span class="fc" id="L1839">                    break;</span>
+                default:
+<span class="fc" id="L1841">                    buffer.append( c );</span>
+            }
+        }
+
+<span class="fc" id="L1845">        return buffer.toString();</span>
+    }
+
+    /**
+     * &lt;p&gt;getFont.&lt;/p&gt;
+     *
+     * @param style a int.
+     * @param size a int.
+     * @return a {@link org.apache.maven.doxia.module.rtf.Font} object.
+     */
+    protected Font getFont( int style, int size )
+    {
+<span class="fc" id="L1857">        Font font = null;</span>
+
+<span class="fc" id="L1859">        StringBuilder buf = new StringBuilder();</span>
+<span class="fc" id="L1860">        buf.append( style );</span>
+<span class="fc" id="L1861">        buf.append( size );</span>
+<span class="fc" id="L1862">        String key = buf.toString();</span>
+
+<span class="fc" id="L1864">        Object object = fontTable.get( key );</span>
+<span class="fc bfc" id="L1865" title="All 2 branches covered.">        if ( object == null )</span>
+        {
+            try
+            {
+<span class="fc" id="L1869">                font = new Font( style, size );</span>
+<span class="fc" id="L1870">                fontTable.put( key, font );</span>
+            }
+<span class="nc" id="L1872">            catch ( Exception e )</span>
+            {
+<span class="nc bnc" id="L1874" title="All 2 branches missed.">                if ( getLog().isDebugEnabled() )</span>
+                {
+<span class="nc" id="L1876">                    getLog().debug( e.getMessage(), e );</span>
+                }
+<span class="pc" id="L1878">            }</span>
+        }
+        else
+        {
+<span class="fc" id="L1882">            font = (Font) object;</span>
+        }
+
+<span class="fc" id="L1885">        return font;</span>
+    }
+
+    private static int textWidth( String text, Font font )
+    {
+<span class="fc" id="L1890">        int width = 0;</span>
+<span class="fc" id="L1891">        StringTokenizer t = new StringTokenizer( text, EOL );</span>
+
+<span class="fc bfc" id="L1893" title="All 2 branches covered.">        while ( t.hasMoreTokens() )</span>
+        {
+<span class="fc" id="L1895">            int w = font.textExtents( t.nextToken() ).width;</span>
+<span class="pc bpc" id="L1896" title="1 of 2 branches missed.">            if ( w &gt; width )</span>
+            {
+<span class="fc" id="L1898">                width = w;</span>
+            }
+<span class="fc" id="L1900">        }</span>
+
+<span class="fc" id="L1902">        return width;</span>
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public void flush()
+    {
+<span class="fc" id="L1911">        writer.flush();</span>
+<span class="fc" id="L1912">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void close()
+    {
+<span class="fc" id="L1919">        writer.close();</span>
+
+<span class="pc bpc" id="L1921" title="2 of 4 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null )</span>
+        {
+<span class="fc bfc" id="L1923" title="All 2 branches covered.">            for ( Object o1 : this.warnMessages.entrySet() )</span>
+            {
+<span class="fc" id="L1925">                Map.Entry entry = (Map.Entry) o1;</span>
+
+<span class="fc" id="L1927">                Set set = (Set) entry.getValue();</span>
+
+<span class="fc bfc" id="L1929" title="All 2 branches covered.">                for ( Object o : set )</span>
+                {
+<span class="fc" id="L1931">                    String msg = (String) o;</span>
+
+<span class="fc" id="L1933">                    getLog().warn( msg );</span>
+<span class="fc" id="L1934">                }</span>
+<span class="fc" id="L1935">            }</span>
+
+<span class="fc" id="L1937">            this.warnMessages = null;</span>
+        }
+
+<span class="fc" id="L1940">        init();</span>
+<span class="fc" id="L1941">    }</span>
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #close()
+     * @since 1.1.1
+     */
+    private void logMessage( String key, String msg )
+    {
+<span class="fc" id="L1953">        msg = &quot;[RTF Sink] &quot; + msg;</span>
+<span class="pc bpc" id="L1954" title="1 of 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L1956">            getLog().debug( msg );</span>
+
+<span class="nc" id="L1958">            return;</span>
+        }
+
+<span class="pc bpc" id="L1961" title="1 of 2 branches missed.">        if ( warnMessages == null )</span>
+        {
+<span class="fc" id="L1963">            warnMessages = new HashMap();</span>
+        }
+
+<span class="fc" id="L1966">        Set set = (Set) warnMessages.get( key );</span>
+<span class="pc bpc" id="L1967" title="1 of 2 branches missed.">        if ( set == null )</span>
+        {
+<span class="fc" id="L1969">            set = new TreeSet();</span>
+        }
+<span class="fc" id="L1971">        set.add( msg );</span>
+<span class="fc" id="L1972">        warnMessages.put( key, set );</span>
+<span class="fc" id="L1973">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void init()
+    {
+<span class="fc" id="L1980">        super.init();</span>
+
+<span class="fc" id="L1982">        this.fontTable.clear();</span>
+<span class="fc" id="L1983">        this.context = new Context();</span>
+<span class="fc" id="L1984">        this.paragraph = null;</span>
+<span class="fc" id="L1985">        this.indentation = new Indentation( 0 );</span>
+<span class="fc" id="L1986">        this.space = new Space( 20 * DEFAULT_SPACING );</span>
+<span class="fc" id="L1987">        Font font = getFont( STYLE_BOLD, fontSize );</span>
+<span class="pc bpc" id="L1988" title="1 of 2 branches missed.">        if ( font != null )</span>
+        {
+<span class="fc" id="L1990">            this.listItemIndent = textWidth( LIST_ITEM_HEADER, font );</span>
+        }
+<span class="fc" id="L1992">        this.numbering.clear();</span>
+<span class="fc" id="L1993">        this.itemNumber.clear();</span>
+<span class="fc" id="L1994">        this.style = STYLE_ROMAN;</span>
+<span class="fc" id="L1995">        this.sectionLevel = 0;</span>
+<span class="fc" id="L1996">        this.emptyHeader = false;</span>
+<span class="fc" id="L1997">        this.verbatim = null;</span>
+<span class="fc" id="L1998">        this.frame = false;</span>
+<span class="fc" id="L1999">        this.table = null;</span>
+<span class="fc" id="L2000">        this.row = null;</span>
+<span class="fc" id="L2001">        this.cell = null;</span>
+<span class="fc" id="L2002">        this.line = null;</span>
+<span class="fc" id="L2003">        this.warnMessages = null;</span>
+<span class="fc" id="L2004">    }</span>
+
+    // -----------------------------------------------------------------------
+
+    static class Counter
+    {
+        private int value;
+
+        Counter( int value )
+<span class="fc" id="L2013">        {</span>
+<span class="fc" id="L2014">            set( value );</span>
+<span class="fc" id="L2015">        }</span>
+
+        void set( int value )
+        {
+<span class="fc" id="L2019">            this.value = value;</span>
+<span class="fc" id="L2020">        }</span>
+
+        int get()
+        {
+<span class="fc" id="L2024">            return value;</span>
+        }
+
+        void increment()
+        {
+<span class="fc" id="L2029">            increment( 1 );</span>
+<span class="fc" id="L2030">        }</span>
+
+        void increment( int value )
+        {
+<span class="fc" id="L2034">            this.value += value;</span>
+<span class="fc" id="L2035">        }</span>
+    }
+
+<span class="fc" id="L2038">    static class Context</span>
+    {
+<span class="fc" id="L2040">        private int context = CONTEXT_UNDEFINED;</span>
+
+<span class="fc" id="L2042">        private Vector stack = new Vector();</span>
+
+        void set( int context )
+        {
+<span class="fc" id="L2046">            stack.addElement( this.context );</span>
+<span class="fc" id="L2047">            this.context = context;</span>
+<span class="fc" id="L2048">        }</span>
+
+        void restore()
+        {
+<span class="pc bpc" id="L2052" title="1 of 2 branches missed.">            if ( !stack.isEmpty() )</span>
+            {
+<span class="fc" id="L2054">                context = (Integer) stack.lastElement();</span>
+<span class="fc" id="L2055">                stack.removeElementAt( stack.size() - 1 );</span>
+            }
+<span class="fc" id="L2057">        }</span>
+
+        int get()
+        {
+<span class="fc" id="L2061">            return context;</span>
+        }
+    }
+
+    class Paragraph
+    {
+<span class="fc" id="L2067">        int style = 0;</span>
+
+<span class="fc" id="L2069">        int justification = Sink.JUSTIFY_LEFT;</span>
+
+<span class="fc" id="L2071">        int leftIndent = indentation.get();</span>
+
+<span class="fc" id="L2073">        int rightIndent = 0;</span>
+
+<span class="fc" id="L2075">        int firstLineIndent = 0;</span>
+
+<span class="fc" id="L2077">        int spaceBefore = space.getNext();</span>
+
+<span class="fc" id="L2079">        int spaceAfter = 0;</span>
+
+<span class="fc" id="L2081">        boolean frame = false;</span>
+
+<span class="fc" id="L2083">        int fontStyle = STYLE_ROMAN;</span>
+
+<span class="fc" id="L2085">        int fontSize = RtfSink.this.fontSize;</span>
+
+        Paragraph()
+<span class="fc" id="L2088">        {</span>
+            // nop
+<span class="fc" id="L2090">        }</span>
+
+        Paragraph( int style, int size )
+<span class="fc" id="L2093">        {</span>
+<span class="fc" id="L2094">            fontStyle = style;</span>
+<span class="fc" id="L2095">            fontSize = size;</span>
+<span class="fc" id="L2096">        }</span>
+
+        void begin()
+        {
+<span class="fc" id="L2100">            writer.print( &quot;\\pard&quot; );</span>
+<span class="pc bpc" id="L2101" title="1 of 2 branches missed.">            if ( style &gt; 0 )</span>
+            {
+<span class="nc" id="L2103">                writer.print( &quot;\\s&quot; + style );</span>
+            }
+<span class="pc bpc" id="L2105" title="1 of 3 branches missed.">            switch ( justification )</span>
+            {
+                case Sink.JUSTIFY_LEFT:
+                default:
+<span class="fc" id="L2109">                    break;</span>
+                case Sink.JUSTIFY_CENTER:
+<span class="fc" id="L2111">                    writer.print( &quot;\\qc&quot; );</span>
+<span class="fc" id="L2112">                    break;</span>
+                case Sink.JUSTIFY_RIGHT:
+<span class="nc" id="L2114">                    writer.print( &quot;\\qr&quot; );</span>
+                    break;
+            }
+<span class="fc bfc" id="L2117" title="All 2 branches covered.">            if ( leftIndent != 0 )</span>
+            {
+<span class="fc" id="L2119">                writer.print( &quot;\\li&quot; + leftIndent );</span>
+            }
+<span class="pc bpc" id="L2121" title="1 of 2 branches missed.">            if ( rightIndent != 0 )</span>
+            {
+<span class="nc" id="L2123">                writer.print( &quot;\\ri&quot; + rightIndent );</span>
+            }
+<span class="fc bfc" id="L2125" title="All 2 branches covered.">            if ( firstLineIndent != 0 )</span>
+            {
+<span class="fc" id="L2127">                writer.print( &quot;\\fi&quot; + firstLineIndent );</span>
+            }
+<span class="fc bfc" id="L2129" title="All 2 branches covered.">            if ( spaceBefore != 0 )</span>
+            {
+<span class="fc" id="L2131">                writer.print( &quot;\\sb&quot; + spaceBefore );</span>
+            }
+<span class="pc bpc" id="L2133" title="1 of 2 branches missed.">            if ( spaceAfter != 0 )</span>
+            {
+<span class="nc" id="L2135">                writer.print( &quot;\\sa&quot; + spaceAfter );</span>
+            }
+
+<span class="fc bfc" id="L2138" title="All 2 branches covered.">            if ( frame )</span>
+            {
+<span class="fc" id="L2140">                writer.print( &quot;\\box\\brdrs\\brdrw&quot; + BORDER_WIDTH );</span>
+            }
+
+<span class="fc" id="L2143">            writer.print( &quot;\\plain&quot; );</span>
+<span class="pc bpc" id="L2144" title="1 of 4 branches missed.">            switch ( fontStyle )</span>
+            {
+                case STYLE_ROMAN:
+                default:
+<span class="fc" id="L2148">                    writer.print( &quot;\\f0&quot; );</span>
+<span class="fc" id="L2149">                    break;</span>
+                case STYLE_ITALIC:
+<span class="nc" id="L2151">                    writer.print( &quot;\\f0\\i&quot; );</span>
+<span class="nc" id="L2152">                    break;</span>
+                case STYLE_BOLD:
+<span class="fc" id="L2154">                    writer.print( &quot;\\f0\\b&quot; );</span>
+<span class="fc" id="L2155">                    break;</span>
+                case STYLE_TYPEWRITER:
+<span class="fc" id="L2157">                    writer.print( &quot;\\f1&quot; );</span>
+                    break;
+            }
+<span class="fc" id="L2160">            writer.println( &quot;\\fs&quot; + ( 2 * fontSize ) );</span>
+<span class="fc" id="L2161">        }</span>
+
+        void end()
+        {
+<span class="fc" id="L2165">            writer.println( &quot;\\par&quot; );</span>
+<span class="fc" id="L2166">        }</span>
+    }
+
+    class Space
+    {
+        private int space;
+
+        private int next;
+
+<span class="fc" id="L2175">        private Vector stack = new Vector();</span>
+
+        Space( int space /*twips*/ )
+<span class="fc" id="L2178">        {</span>
+<span class="fc" id="L2179">            this.space = space;</span>
+<span class="fc" id="L2180">            next = space;</span>
+<span class="fc" id="L2181">        }</span>
+
+        void set( int space /*twips*/ )
+        {
+<span class="fc" id="L2185">            stack.addElement( this.space );</span>
+<span class="fc" id="L2186">            this.space = space;</span>
+<span class="fc" id="L2187">            next = space;</span>
+<span class="fc" id="L2188">        }</span>
+
+        int get()
+        {
+<span class="fc" id="L2192">            return space;</span>
+        }
+
+        void restore()
+        {
+<span class="pc bpc" id="L2197" title="1 of 2 branches missed.">            if ( !stack.isEmpty() )</span>
+            {
+<span class="fc" id="L2199">                space = (Integer) stack.lastElement();</span>
+<span class="fc" id="L2200">                stack.removeElementAt( stack.size() - 1 );</span>
+<span class="fc" id="L2201">                next = space;</span>
+            }
+<span class="fc" id="L2203">        }</span>
+
+        void setNext( int space /*twips*/ )
+        {
+<span class="fc" id="L2207">            next = space;</span>
+<span class="fc" id="L2208">        }</span>
+
+        int getNext()
+        {
+<span class="fc" id="L2212">            int nxt = this.next;</span>
+<span class="fc" id="L2213">            this.next = space;</span>
+<span class="fc" id="L2214">            return nxt;</span>
+        }
+
+        void skip()
+        {
+<span class="fc" id="L2219">            skip( getNext() );</span>
+<span class="fc" id="L2220">        }</span>
+
+        void skip( int space /*twips*/ )
+        {
+<span class="fc" id="L2224">            writer.print( &quot;\\pard&quot; );</span>
+<span class="pc bpc" id="L2225" title="1 of 2 branches missed.">            if ( ( space -= 10 ) &gt; 0 )</span>
+            {
+<span class="fc" id="L2227">                writer.print( &quot;\\sb&quot; + space );</span>
+            }
+<span class="fc" id="L2229">            writer.println( &quot;\\plain\\fs1\\par&quot; );</span>
+<span class="fc" id="L2230">        }</span>
+    }
+
+    static class Indentation
+    {
+        private int indent;
+
+<span class="fc" id="L2237">        private Vector stack = new Vector();</span>
+
+        Indentation( int indent /*twips*/ )
+<span class="fc" id="L2240">        {</span>
+<span class="fc" id="L2241">            this.indent = indent;</span>
+<span class="fc" id="L2242">        }</span>
+
+        void set( int indent /*twips*/ )
+        {
+<span class="fc" id="L2246">            stack.addElement( this.indent );</span>
+<span class="fc" id="L2247">            this.indent = indent;</span>
+<span class="fc" id="L2248">        }</span>
+
+        int get()
+        {
+<span class="fc" id="L2252">            return indent;</span>
+        }
+
+        void restore()
+        {
+<span class="pc bpc" id="L2257" title="1 of 2 branches missed.">            if ( !stack.isEmpty() )</span>
+            {
+<span class="fc" id="L2259">                indent = (Integer) stack.lastElement();</span>
+<span class="fc" id="L2260">                stack.removeElementAt( stack.size() - 1 );</span>
+            }
+<span class="fc" id="L2262">        }</span>
+
+        void add( int indent /*twips*/ )
+        {
+<span class="fc" id="L2266">            set( this.indent + indent );</span>
+<span class="fc" id="L2267">        }</span>
+    }
+
+    static class Table
+    {
+        int numColumns;
+
+        int[] columnWidths;
+
+        int[] justification;
+
+        boolean grid;
+
+        Vector rows;
+
+        Table( int[] justification, boolean grid )
+<span class="fc" id="L2283">        {</span>
+<span class="fc" id="L2284">            numColumns = justification.length;</span>
+<span class="fc" id="L2285">            columnWidths = new int[numColumns];</span>
+<span class="fc" id="L2286">            this.justification = justification;</span>
+<span class="fc" id="L2287">            this.grid = grid;</span>
+<span class="fc" id="L2288">            rows = new Vector();</span>
+<span class="fc" id="L2289">        }</span>
+
+        void add( Row row )
+        {
+<span class="fc" id="L2293">            rows.addElement( row );</span>
+
+<span class="fc bfc" id="L2295" title="All 2 branches covered.">            for ( int i = 0; i &lt; numColumns; ++i )</span>
+            {
+<span class="pc bpc" id="L2297" title="1 of 2 branches missed.">                if ( i &gt;= row.cells.size() )</span>
+                {
+<span class="nc" id="L2299">                    break;</span>
+                }
+<span class="fc" id="L2301">                Cell cell = (Cell) row.cells.elementAt( i );</span>
+<span class="fc" id="L2302">                int width = cell.boundingBox().width;</span>
+<span class="fc bfc" id="L2303" title="All 2 branches covered.">                if ( width &gt; columnWidths[i] )</span>
+                {
+<span class="fc" id="L2305">                    columnWidths[i] = width;</span>
+                }
+            }
+<span class="fc" id="L2308">        }</span>
+
+        int width()
+        {
+<span class="fc" id="L2312">            int width = 0;</span>
+<span class="fc bfc" id="L2313" title="All 2 branches covered.">            for ( int i = 0; i &lt; numColumns; ++i )</span>
+            {
+<span class="fc" id="L2315">                width += columnWidths[i];</span>
+            }
+<span class="fc bfc" id="L2317" title="All 2 branches covered.">            if ( grid )</span>
+            {
+<span class="fc" id="L2319">                width += ( numColumns + 1 ) * BORDER_WIDTH;</span>
+            }
+<span class="fc" id="L2321">            return width;</span>
+        }
+    }
+
+<span class="fc" id="L2325">    static class Row</span>
+    {
+<span class="fc" id="L2327">        Vector cells = new Vector();</span>
+
+        void add( Cell cell )
+        {
+<span class="fc" id="L2331">            cells.addElement( cell );</span>
+<span class="fc" id="L2332">        }</span>
+
+        int height()
+        {
+<span class="fc" id="L2336">            int height = 0;</span>
+<span class="fc" id="L2337">            int numCells = cells.size();</span>
+<span class="fc bfc" id="L2338" title="All 2 branches covered.">            for ( int i = 0; i &lt; numCells; ++i )</span>
+            {
+<span class="fc" id="L2340">                Cell cell = (Cell) cells.elementAt( i );</span>
+<span class="fc" id="L2341">                Box box = cell.boundingBox();</span>
+<span class="fc bfc" id="L2342" title="All 2 branches covered.">                if ( box.height &gt; height )</span>
+                {
+<span class="fc" id="L2344">                    height = box.height;</span>
+                }
+            }
+<span class="fc" id="L2347">            return height;</span>
+        }
+    }
+
+<span class="fc" id="L2351">    class Cell</span>
+    {
+<span class="fc" id="L2353">        Vector lines = new Vector();</span>
+
+        void add( Line line )
+        {
+<span class="fc" id="L2357">            lines.addElement( line );</span>
+<span class="fc" id="L2358">        }</span>
+
+        Box boundingBox()
+        {
+<span class="fc" id="L2362">            int width = 0;</span>
+<span class="fc" id="L2363">            int height = 0;</span>
+
+<span class="fc bfc" id="L2365" title="All 2 branches covered.">            for ( int i = 0; i &lt; lines.size(); ++i )</span>
+            {
+<span class="fc" id="L2367">                int w = 0;</span>
+<span class="fc" id="L2368">                int h = 0;</span>
+<span class="fc" id="L2369">                Line line = (Line) lines.elementAt( i );</span>
+
+<span class="fc bfc" id="L2371" title="All 2 branches covered.">                for ( int j = 0; j &lt; line.items.size(); ++j )</span>
+                {
+<span class="fc" id="L2373">                    Item item = (Item) line.items.elementAt( j );</span>
+<span class="fc" id="L2374">                    Font font = getFont( item.style, fontSize );</span>
+<span class="pc bpc" id="L2375" title="1 of 2 branches missed.">                    if ( font == null )</span>
+                    {
+<span class="nc" id="L2377">                        continue;</span>
+                    }
+<span class="fc" id="L2379">                    Font.TextExtents x = font.textExtents( item.text );</span>
+<span class="fc" id="L2380">                    w += x.width;</span>
+<span class="pc bpc" id="L2381" title="1 of 2 branches missed.">                    if ( x.height &gt; h )</span>
+                    {
+<span class="fc" id="L2383">                        h = x.height;</span>
+                    }
+                }
+
+<span class="fc bfc" id="L2387" title="All 2 branches covered.">                if ( w &gt; width )</span>
+                {
+<span class="fc" id="L2389">                    width = w;</span>
+                }
+<span class="fc" id="L2391">                height += h;</span>
+            }
+
+<span class="fc" id="L2394">            width += ( 2 * CELL_HORIZONTAL_PAD );</span>
+<span class="fc" id="L2395">            height += ( 2 * CELL_VERTICAL_PAD );</span>
+
+            // allow one more pixel for grid outline
+<span class="fc" id="L2398">            width += toTwips( 1., UNIT_PIXEL );</span>
+
+<span class="fc" id="L2400">            return new Box( width, height );</span>
+        }
+    }
+
+<span class="fc" id="L2404">    static class Line</span>
+    {
+<span class="fc" id="L2406">        Vector items = new Vector();</span>
+
+        void add( Item item )
+        {
+<span class="fc" id="L2410">            items.addElement( item );</span>
+<span class="fc" id="L2411">        }</span>
+    }
+
+    static class Item
+    {
+        int style;
+
+        String text;
+
+        Item( int style, String text )
+<span class="fc" id="L2421">        {</span>
+<span class="fc" id="L2422">            this.style = style;</span>
+<span class="fc" id="L2423">            this.text = text;</span>
+<span class="fc" id="L2424">        }</span>
+    }
+
+    static class Box
+    {
+        int width;
+
+        int height;
+
+        Box( int width, int height )
+<span class="fc" id="L2434">        {</span>
+<span class="fc" id="L2435">            this.width = width;</span>
+<span class="fc" id="L2436">            this.height = height;</span>
+<span class="fc" id="L2437">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

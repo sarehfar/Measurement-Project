@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DoxiaUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.util</a> &gt; <span class="el_source">DoxiaUtils.java</span></div><h1>DoxiaUtils.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.util;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.awt.image.BufferedImage;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.net.URL;
+
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+
+import java.util.Date;
+import java.util.Locale;
+
+import javax.imageio.ImageIO;
+
+import javax.swing.text.MutableAttributeSet;
+
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+
+/**
+ * General Doxia utility methods. The methods in this class should not assume
+ * any specific Doxia module or document format.
+ *
+ * @author ltheussl
+ * @since 1.1
+ */
+public class DoxiaUtils
+{
+    private static final int MINUS_ONE = 0xFF;
+
+    /**
+     * Checks if the given string corresponds to an internal link,
+     * ie it is a link to an anchor within the same document.
+     * If link is not null, then exactly one of the three methods
+     * {@link #isInternalLink(java.lang.String)}, {@link #isExternalLink(java.lang.String)} and
+     * {@link #isLocalLink(java.lang.String)} will return true.
+     *
+     * @param link The link to check. Not null.
+     * @return True if the link starts with &quot;#&quot;.
+     *
+     * @throws NullPointerException if link is null.
+     * @see #isExternalLink(String)
+     * @see #isLocalLink(String)
+     */
+    public static boolean isInternalLink( final String link )
+    {
+<span class="fc" id="L70">        return link.startsWith( &quot;#&quot; );</span>
+    }
+
+    /**
+     * Checks if the given string corresponds to an external URI,
+     * ie is not a link within the same document nor a relative link
+     * to another document (a local link) of the same site.
+     * If link is not null, then exactly one of the three methods
+     * {@link #isInternalLink(java.lang.String)}, {@link #isExternalLink(java.lang.String)} and
+     * {@link #isLocalLink(java.lang.String)} will return true.
+     *
+     * @param link The link to check. Not null.
+     * @return True if the link (ignoring case) starts with either &quot;http:/&quot;,
+     * &quot;https:/&quot;, &quot;ftp:/&quot;, &quot;mailto:&quot;, &quot;file:/&quot;, or contains the string &quot;://&quot;.
+     * Note that Windows style separators &quot;\&quot; are not allowed
+     * for URIs, see  http://www.ietf.org/rfc/rfc2396.txt , section 2.4.3.
+     *
+     * @throws NullPointerException if link is null.
+     *
+     * @see #isInternalLink(String)
+     * @see #isLocalLink(String)
+     */
+    public static boolean isExternalLink( final String link )
+    {
+<span class="fc" id="L94">        String text = link.toLowerCase( Locale.ENGLISH );</span>
+
+<span class="fc bfc" id="L96" title="All 4 branches covered.">        return ( text.startsWith( &quot;http:/&quot; ) || text.startsWith( &quot;https:/&quot; )</span>
+<span class="fc bfc" id="L97" title="All 4 branches covered.">            || text.startsWith( &quot;ftp:/&quot; ) || text.startsWith( &quot;mailto:&quot; )</span>
+<span class="fc bfc" id="L98" title="All 4 branches covered.">            || text.startsWith( &quot;file:/&quot; ) || text.contains( &quot;://&quot; ) );</span>
+    }
+
+    /**
+     * Checks if the given string corresponds to a relative link to another document
+     * within the same site, ie it is neither an {@link #isInternalLink(String) internal}
+     * nor an {@link #isExternalLink(String) external} link.
+     * If link is not null, then exactly one of the three methods
+     * {@link #isInternalLink(java.lang.String)}, {@link #isExternalLink(java.lang.String)} and
+     * {@link #isLocalLink(java.lang.String)} will return true.
+     *
+     * @param link The link to check. Not null.
+     * @return True if the link is neither an external nor an internal link.
+     *
+     * @throws NullPointerException if link is null.
+     *
+     * @see #isExternalLink(String)
+     * @see #isInternalLink(String)
+     */
+    public static boolean isLocalLink( final String link )
+    {
+<span class="fc bfc" id="L119" title="All 4 branches covered.">        return ( !isExternalLink( link ) &amp;&amp; !isInternalLink( link ) );</span>
+    }
+
+    /**
+     * Construct a valid Doxia id.
+     *
+     * &lt;p&gt;
+     *   This method is equivalent to {@link #encodeId(java.lang.String, boolean) encodeId( id, false )}.
+     * &lt;/p&gt;
+     *
+     * @param id The id to be encoded.
+     *      May be null in which case null is returned.
+     * @return The trimmed and encoded id, or null if id is null.
+     * @see #encodeId(java.lang.String, boolean)
+     */
+    public static String encodeId( final String id )
+    {
+<span class="fc" id="L136">        return encodeId( id, false );</span>
+    }
+
+    /**
+     * Construct a valid Doxia id.
+     *
+     * &lt;p&gt;
+     *   A valid Doxia id obeys the same constraints as an HTML ID or NAME token.
+     *   According to the &lt;a href=&quot;http://www.w3.org/TR/html4/types.html#type-name&quot;&gt;
+     *   HTML 4.01 specification section 6.2 SGML basic types&lt;/a&gt;:
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *   &lt;i&gt;ID and NAME tokens must begin with a letter ([A-Za-z]) and may be
+     *   followed by any number of letters, digits ([0-9]), hyphens (&quot;-&quot;),
+     *   underscores (&quot;_&quot;), colons (&quot;:&quot;), and periods (&quot;.&quot;).&lt;/i&gt;
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *   According to &lt;a href=&quot;http://www.w3.org/TR/xhtml1/#C_8&quot;&gt;XHTML 1.0
+     *   section C.8. Fragment Identifiers&lt;/a&gt;:
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *   &lt;i&gt;When defining fragment identifiers to be backward-compatible, only
+     *   strings matching the pattern [A-Za-z][A-Za-z0-9:_.-]* should be used.&lt;/i&gt;
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *   To achieve this we need to convert the &lt;i&gt;id&lt;/i&gt; String. Two conversions
+     *   are necessary and one is done to get prettier ids:
+     * &lt;/p&gt;
+     * &lt;ol&gt;
+     *   &lt;li&gt;Remove whitespace at the start and end before starting to process&lt;/li&gt;
+     *   &lt;li&gt;If the first character is not a letter, prepend the id with the letter 'a'&lt;/li&gt;
+     *   &lt;li&gt;Any spaces are replaced with an underscore '_'&lt;/li&gt;
+     *   &lt;li&gt;
+     *     Any characters not matching the above pattern are either dropped,
+     *     or replaced according to the rules specified in the
+     *     &lt;a href=&quot;http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars&quot;&gt;HTML specs&lt;/a&gt;.
+     *   &lt;/li&gt;
+     * &lt;/ol&gt;
+     * &lt;p&gt;
+     *   For letters, the case is preserved in the conversion.
+     * &lt;/p&gt;
+     *
+     * &lt;p&gt;
+     * Here are some examples:
+     * &lt;/p&gt;
+     * &lt;pre&gt;
+     * DoxiaUtils.encodeId( null )        = null
+     * DoxiaUtils.encodeId( &quot;&quot; )          = &quot;a&quot;
+     * DoxiaUtils.encodeId( &quot;  &quot; )        = &quot;a&quot;
+     * DoxiaUtils.encodeId( &quot; _ &quot; )       = &quot;a_&quot;
+     * DoxiaUtils.encodeId( &quot;1&quot; )         = &quot;a1&quot;
+     * DoxiaUtils.encodeId( &quot;1anchor&quot; )   = &quot;a1anchor&quot;
+     * DoxiaUtils.encodeId( &quot;_anchor&quot; )   = &quot;a_anchor&quot;
+     * DoxiaUtils.encodeId( &quot;a b-c123 &quot; ) = &quot;a_b-c123&quot;
+     * DoxiaUtils.encodeId( &quot;   anchor&quot; ) = &quot;anchor&quot;
+     * DoxiaUtils.encodeId( &quot;myAnchor&quot; )  = &quot;myAnchor&quot;
+     * &lt;/pre&gt;
+     *
+     * @param id The id to be encoded.
+     *      May be null in which case null is returned.
+     * @param chop true if non-ASCII characters should be ignored.
+     * If false, any non-ASCII characters will be replaced as specified above.
+     * @return The trimmed and encoded id, or null if id is null.
+     * If id is not null, the return value is guaranteed to be a valid Doxia id.
+     * @see #isValidId(java.lang.String)
+     * @since 1.1.1
+     */
+    public static String encodeId( final String id, final boolean chop )
+    {
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if ( id == null )</span>
+        {
+<span class="fc" id="L207">            return null;</span>
+        }
+
+<span class="fc" id="L210">        final String idd = id.trim();</span>
+<span class="fc" id="L211">        int length = idd.length();</span>
+
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        if ( length == 0 )</span>
+        {
+<span class="fc" id="L215">            return &quot;a&quot;;</span>
+        }
+
+<span class="fc" id="L218">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L222">            char c = idd.charAt( i );</span>
+
+<span class="fc bfc" id="L224" title="All 4 branches covered.">            if ( ( i == 0 ) &amp;&amp; ( !isAsciiLetter( c ) ) )</span>
+            {
+<span class="fc" id="L226">                buffer.append( 'a' );</span>
+            }
+
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            if ( c == ' ' )</span>
+            {
+<span class="fc" id="L231">                buffer.append( '_' );</span>
+            }
+<span class="pc bpc" id="L233" title="2 of 12 branches missed.">            else if ( isAsciiLetter( c ) || isAsciiDigit( c ) || ( c == '-' ) || ( c == '_' ) || ( c == ':' )</span>
+                            || ( c == '.' ) )
+            {
+<span class="fc" id="L236">                buffer.append( c );</span>
+            }
+<span class="fc bfc" id="L238" title="All 2 branches covered.">            else if ( !chop )</span>
+            {
+
+<span class="fc" id="L241">                byte[] bytes = String.valueOf( c ).getBytes( StandardCharsets.UTF_8 );</span>
+
+<span class="fc bfc" id="L243" title="All 2 branches covered.">                for ( byte aByte : bytes )</span>
+                {
+<span class="fc" id="L245">                    buffer.append( '.' );</span>
+<span class="fc" id="L246">                    buffer.append( String.format( &quot;%02X&quot;, aByte ) );</span>
+                }
+            }
+        }
+
+<span class="fc" id="L251">        return buffer.toString();</span>
+    }
+
+    /**
+     * Convert a byte to it's hexadecimal equivalent.
+     *
+     * @param b the byte value.
+     * @return the result of Integer.toHexString( b &amp;amp; 0xFF ).
+     * @since 1.1.1
+     * @deprecated Use {@code String.format( &quot;%02X&quot;, bytes[j] )}
+     */
+    @Deprecated
+    public static String byteToHex( final byte b )
+    {
+<span class="nc" id="L265">        return Integer.toHexString( b &amp; MINUS_ONE );</span>
+    }
+
+    /**
+     * Determines if the specified text is a valid id according to the rules
+     * laid out in {@link #encodeId(String)}.
+     *
+     * @param text The text to be tested.
+     *      May be null in which case false is returned.
+     * @return &lt;code&gt;true&lt;/code&gt; if the text is a valid id, otherwise &lt;code&gt;false&lt;/code&gt;.
+     * @see #encodeId(String)
+     */
+    public static boolean isValidId( final String text )
+    {
+<span class="fc bfc" id="L279" title="All 4 branches covered.">        if ( text == null || text.length() == 0 )</span>
+        {
+<span class="fc" id="L281">            return false;</span>
+        }
+
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        for ( int i = 0; i &lt; text.length(); ++i )</span>
+        {
+<span class="fc" id="L286">            char c = text.charAt( i );</span>
+
+<span class="fc bfc" id="L288" title="All 2 branches covered.">            if ( isAsciiLetter( c ) )</span>
+            {
+<span class="fc" id="L290">                continue;</span>
+            }
+
+<span class="fc bfc" id="L293" title="All 14 branches covered.">            if ( ( i == 0 ) || ( c == ' ' ) || ( !isAsciiDigit( c ) &amp;&amp; c != '-' &amp;&amp; c != '_' &amp;&amp; c != ':' &amp;&amp; c != '.' ) )</span>
+            {
+<span class="fc" id="L295">                return false;</span>
+            }
+        }
+
+<span class="fc" id="L299">        return true;</span>
+    }
+
+<span class="fc" id="L302">    private static final SimpleDateFormat DATE_PARSER = new SimpleDateFormat( &quot;&quot;, Locale.ENGLISH );</span>
+<span class="fc" id="L303">    private static final ParsePosition DATE_PARSE_POSITION = new ParsePosition( 0 );</span>
+<span class="fc" id="L304">    private static final String[] DATE_PATTERNS = new String[]</span>
+    {
+        &quot;yyyy-MM-dd&quot;, &quot;yyyy/MM/dd&quot;, &quot;yyyyMMdd&quot;, &quot;yyyy&quot;, &quot;dd.MM.yyyy&quot;, &quot;dd MMM yyyy&quot;,
+        &quot;dd MMM. yyyy&quot;, &quot;MMMM yyyy&quot;, &quot;MMM. dd, yyyy&quot;, &quot;MMM. yyyy&quot;, &quot;MMMM dd, yyyy&quot;,
+        &quot;MMM d, ''yy&quot;, &quot;MMM. ''yy&quot;, &quot;MMMM ''yy&quot;
+    };
+
+    /**
+     * &lt;p&gt;Parses a string representing a date by trying different date patterns.&lt;/p&gt;
+     *
+     * &lt;p&gt;The following date patterns are tried (in the given order):&lt;/p&gt;
+     *
+     * &lt;pre&gt;&quot;yyyy-MM-dd&quot;, &quot;yyyy/MM/dd&quot;, &quot;yyyyMMdd&quot;, &quot;yyyy&quot;, &quot;dd.MM.yyyy&quot;, &quot;dd MMM yyyy&quot;,
+     *  &quot;dd MMM. yyyy&quot;, &quot;MMMM yyyy&quot;, &quot;MMM. dd, yyyy&quot;, &quot;MMM. yyyy&quot;, &quot;MMMM dd, yyyy&quot;,
+     *  &quot;MMM d, ''yy&quot;, &quot;MMM. ''yy&quot;, &quot;MMMM ''yy&quot;&lt;/pre&gt;
+     *
+     * &lt;p&gt;A parse is only sucessful if it parses the whole of the input string.
+     * If no parse patterns match, a ParseException is thrown.&lt;/p&gt;
+     *
+     * &lt;p&gt;As a special case, the strings &lt;code&gt;&quot;today&quot;&lt;/code&gt; and &lt;code&gt;&quot;now&quot;&lt;/code&gt;
+     * (ignoring case) return the current date.&lt;/p&gt;
+     *
+     * @param str the date to parse, not null.
+     * @return the parsed date, or the current date if the input String (ignoring case) was
+     *      &lt;code&gt;&quot;today&quot;&lt;/code&gt; or &lt;code&gt;&quot;now&quot;&lt;/code&gt;.
+     *
+     * @throws ParseException if no pattern matches.
+     * @throws NullPointerException if str is null.
+     * @since 1.1.1.
+     */
+    public static Date parseDate( final String str )
+            throws ParseException
+    {
+<span class="fc bfc" id="L337" title="All 4 branches covered.">        if ( &quot;today&quot;.equalsIgnoreCase( str ) || &quot;now&quot;.equalsIgnoreCase( str ) )</span>
+        {
+<span class="fc" id="L339">            return new Date();</span>
+        }
+
+<span class="fc bfc" id="L342" title="All 2 branches covered.">        for ( String datePattern : DATE_PATTERNS )</span>
+        {
+<span class="fc" id="L344">            DATE_PARSER.applyPattern( datePattern );</span>
+<span class="fc" id="L345">            DATE_PARSE_POSITION.setIndex( 0 );</span>
+<span class="fc" id="L346">            final Date date = DATE_PARSER.parse( str, DATE_PARSE_POSITION );</span>
+
+<span class="fc bfc" id="L348" title="All 4 branches covered.">            if ( date != null &amp;&amp; DATE_PARSE_POSITION.getIndex() == str.length() )</span>
+            {
+<span class="fc" id="L350">                return date;</span>
+            }
+        }
+
+<span class="fc" id="L354">        throw new ParseException( &quot;Unable to parse date: &quot; + str, -1 );</span>
+    }
+
+      //
+     // private
+    //
+
+    private static boolean isAsciiLetter( final char c )
+    {
+<span class="fc bfc" id="L363" title="All 8 branches covered.">        return ( ( c &gt;= 'a' &amp;&amp; c &lt;= 'z' ) || ( c &gt;= 'A' &amp;&amp; c &lt;= 'Z' ) );</span>
+    }
+
+    private static boolean isAsciiDigit( final char c )
+    {
+<span class="fc bfc" id="L368" title="All 4 branches covered.">        return ( c &gt;= '0' &amp;&amp; c &lt;= '9' );</span>
+    }
+
+    /**
+     * Determine width and height of an image. If successful, the returned SinkEventAttributes
+     * contain width and height attribute keys whose values are the width and height of the image (as a String).
+     *
+     * @param logo a String containing either a URL or a path to an image file. Not null.
+     * @return a set of SinkEventAttributes, or null if no ImageReader was found to read the image.
+     *
+     * @throws java.io.IOException if an error occurs during reading.
+     * @throws NullPointerException if logo is null.
+     *
+     * @since 1.1.1
+     */
+    public static MutableAttributeSet getImageAttributes( final String logo )
+            throws IOException
+    {
+        BufferedImage img;
+
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        if ( isExternalLink( logo ) )</span>
+        {
+<span class="nc" id="L390">            img = ImageIO.read( new URL( logo ) );</span>
+        }
+        else
+        {
+<span class="nc" id="L394">            img = ImageIO.read( new File( logo ) );</span>
+        }
+
+<span class="nc bnc" id="L397" title="All 2 branches missed.">        if ( img == null )</span>
+        {
+<span class="nc" id="L399">            return null;</span>
+        }
+
+<span class="nc" id="L402">        MutableAttributeSet atts = new SinkEventAttributeSet();</span>
+<span class="nc" id="L403">        atts.addAttribute( SinkEventAttributeSet.WIDTH, Integer.toString( img.getWidth() ) );</span>
+<span class="nc" id="L404">        atts.addAttribute( SinkEventAttributeSet.HEIGHT, Integer.toString( img.getHeight() ) );</span>
+        // add other attributes?
+
+<span class="nc" id="L407">        return atts;</span>
+    }
+
+    private DoxiaUtils()
+    {
+        // utility class
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

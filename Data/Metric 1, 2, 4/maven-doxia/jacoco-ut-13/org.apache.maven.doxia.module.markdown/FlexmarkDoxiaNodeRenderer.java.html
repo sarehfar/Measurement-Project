@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlexmarkDoxiaNodeRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Markdown Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.markdown</a> &gt; <span class="el_source">FlexmarkDoxiaNodeRenderer.java</span></div><h1>FlexmarkDoxiaNodeRenderer.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.markdown;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import com.vladsch.flexmark.ast.FencedCodeBlock;
+import com.vladsch.flexmark.ast.IndentedCodeBlock;
+import com.vladsch.flexmark.html.CustomNodeRenderer;
+import com.vladsch.flexmark.html.HtmlWriter;
+import com.vladsch.flexmark.html.renderer.NodeRenderer;
+import com.vladsch.flexmark.html.renderer.NodeRendererContext;
+import com.vladsch.flexmark.html.renderer.NodeRendererFactory;
+import com.vladsch.flexmark.html.renderer.NodeRenderingHandler;
+import com.vladsch.flexmark.util.options.DataHolder;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * The node renderer that renders all the core nodes (comes last in the order of node renderers).
+ */
+@SuppressWarnings( &quot;WeakerAccess&quot; )
+class FlexmarkDoxiaNodeRenderer implements NodeRenderer
+{
+    FlexmarkDoxiaNodeRenderer( DataHolder options )
+<span class="fc" id="L43">    {</span>
+<span class="fc" id="L44">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public Set&lt;NodeRenderingHandler&lt;?&gt;&gt; getNodeRenderingHandlers()
+    {
+<span class="fc" id="L50">        return new HashSet&lt;NodeRenderingHandler&lt;?&gt;&gt;( Arrays.asList(</span>
+                new NodeRenderingHandler&lt;&gt;( IndentedCodeBlock.class, new CustomNodeRenderer&lt;IndentedCodeBlock&gt;()
+<span class="fc" id="L52">                {</span>
+                    @Override
+                    public void render( IndentedCodeBlock node, NodeRendererContext context, HtmlWriter html )
+                    {
+<span class="fc" id="L56">                        FlexmarkDoxiaNodeRenderer.this.render( node, context, html );</span>
+<span class="fc" id="L57">                    }</span>
+                } ),
+                new NodeRenderingHandler&lt;&gt;( FencedCodeBlock.class, new CustomNodeRenderer&lt;FencedCodeBlock&gt;()
+<span class="fc" id="L60">                {</span>
+                    @Override
+                    public void render( FencedCodeBlock node, NodeRendererContext context, HtmlWriter html )
+                    {
+<span class="nc" id="L64">                        FlexmarkDoxiaNodeRenderer.this.render( node, context, html );</span>
+<span class="nc" id="L65">                    }</span>
+                } )
+        ) );
+    }
+
+    private void render( IndentedCodeBlock node, NodeRendererContext context, HtmlWriter html )
+    {
+<span class="fc" id="L72">        html.line();</span>
+<span class="fc" id="L73">        html.attr( &quot;class&quot;, &quot;source&quot; ).withAttr().tag( &quot;div&quot; );</span>
+<span class="fc" id="L74">        html.srcPosWithEOL( node.getChars() ).tag( &quot;pre&quot; ).openPre();</span>
+
+<span class="fc" id="L76">        String noLanguageClass = context.getHtmlOptions().noLanguageClass.trim();</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if ( !noLanguageClass.isEmpty() )</span>
+        {
+<span class="nc" id="L79">            html.attr( &quot;class&quot;, noLanguageClass );</span>
+        }
+
+        //html.srcPosWithEOL(node.getContentChars()).withAttr(CoreNodeRenderer.CODE_CONTENT).tag(&quot;code&quot;);
+<span class="fc" id="L83">        String s = node.getContentChars().trimTailBlankLines().normalizeEndWithEOL();</span>
+<span class="pc bpc" id="L84" title="2 of 4 branches missed.">        while ( !s.isEmpty() &amp;&amp; s.charAt( 0 ) == '\n' )</span>
+        {
+<span class="nc" id="L86">            html.raw( &quot;&lt;br/&gt;&quot; );</span>
+<span class="nc" id="L87">            s = s.substring( 1 );</span>
+        }
+<span class="fc" id="L89">        html.text( s );</span>
+
+        //html.tag(&quot;/code&quot;);
+<span class="fc" id="L92">        html.tag( &quot;/pre&quot; ).closePre();</span>
+<span class="fc" id="L93">        html.tag( &quot;/div&quot; );</span>
+<span class="fc" id="L94">        html.line();</span>
+<span class="fc" id="L95">    }</span>
+
+    private void render( FencedCodeBlock node, NodeRendererContext context, HtmlWriter html )
+    {
+<span class="nc" id="L99">        html.line();</span>
+<span class="nc" id="L100">        html.attr( &quot;class&quot;, &quot;source&quot; ).withAttr().tag( &quot;div&quot; );</span>
+<span class="nc" id="L101">        html.srcPosWithTrailingEOL( node.getChars() ).tag( &quot;pre&quot; ).openPre();</span>
+
+        //BasedSequence info = node.getInfo();
+        //if (info.isNotNull() &amp;&amp; !info.isBlank()) {
+        //    int space = info.indexOf(' ');
+        //    BasedSequence language;
+        //    if (space == -1) {
+        //        language = info;
+        //    } else {
+        //        language = info.subSequence(0, space);
+        //    }
+        //    html.attr(&quot;class&quot;, context.getHtmlOptions().languageClassPrefix + language.unescape());
+        //} else  {
+        //    String noLanguageClass = context.getHtmlOptions().noLanguageClass.trim();
+        //    if (!noLanguageClass.isEmpty()) {
+        //        html.attr(&quot;class&quot;, noLanguageClass);
+        //    }
+        //}
+
+        //html.srcPosWithEOL(node.getContentChars()).withAttr(CoreNodeRenderer.CODE_CONTENT).tag(&quot;code&quot;);
+<span class="nc" id="L121">        String s = node.getContentChars().normalizeEOL();</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">        while ( !s.isEmpty() &amp;&amp; s.charAt( 0 ) == '\n' )</span>
+        {
+<span class="nc" id="L124">            html.raw( &quot;&lt;br/&gt;&quot; );</span>
+<span class="nc" id="L125">            s = s.substring( 1 );</span>
+        }
+<span class="nc" id="L127">        html.text( s );</span>
+
+        //html.tag(&quot;/code&quot;);
+<span class="nc" id="L130">        html.tag( &quot;/pre&quot; ).closePre();</span>
+<span class="nc" id="L131">        html.tag( &quot;/div&quot; );</span>
+<span class="nc" id="L132">        html.line();</span>
+<span class="nc" id="L133">    }</span>
+
+    /**
+     * Factory for doxia node renderer
+     */
+<span class="fc" id="L138">    public static class Factory implements NodeRendererFactory</span>
+    {
+        @Override
+        public NodeRenderer create( final DataHolder options )
+        {
+<span class="fc" id="L143">            return new FlexmarkDoxiaNodeRenderer( options );</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

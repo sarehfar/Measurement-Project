@@ -129,7 +129,7 @@ public class Lang {
     public static Lang loadFromResource(final String languageRulesResourceName, final Languages languages) {
 <span class="fc" id="L130">        final List&lt;LangRule&gt; rules = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L131">        try (final Scanner scanner = new Scanner(Resources.getInputStream(languageRulesResourceName),</span>
-<span class="fc" id="L132">                ResourceConstants.ENCODING)) {</span>
+                ResourceConstants.ENCODING)) {
 <span class="fc" id="L133">            boolean inExtendedComment = false;</span>
 <span class="fc bfc" id="L134" title="All 2 branches covered.">            while (scanner.hasNextLine()) {</span>
 <span class="fc" id="L135">                final String rawLine = scanner.nextLine();</span>
@@ -139,10 +139,10 @@ public class Lang {
 <span class="fc bfc" id="L139" title="All 2 branches covered.">                    if (line.endsWith(ResourceConstants.EXT_CMT_END)) {</span>
 <span class="fc" id="L140">                        inExtendedComment = false;</span>
                     }
-<span class="fc" id="L142">                } else {</span>
+                } else {
 <span class="fc bfc" id="L143" title="All 2 branches covered.">                    if (line.startsWith(ResourceConstants.EXT_CMT_START)) {</span>
 <span class="fc" id="L144">                        inExtendedComment = true;</span>
-<span class="fc" id="L145">                    } else {</span>
+                    } else {
                         // discard comments
 <span class="fc" id="L147">                        final int cmtI = line.indexOf(ResourceConstants.CMT);</span>
 <span class="fc bfc" id="L148" title="All 2 branches covered.">                        if (cmtI &gt;= 0) {</span>
@@ -161,7 +161,7 @@ public class Lang {
 
 <span class="pc bpc" id="L162" title="1 of 2 branches missed.">                        if (parts.length != 3) {</span>
 <span class="nc" id="L163">                            throw new IllegalArgumentException(&quot;Malformed line '&quot; + rawLine +</span>
-<span class="nc" id="L164">                                    &quot;' in language resource '&quot; + languageRulesResourceName + &quot;'&quot;);</span>
+                                    &quot;' in language resource '&quot; + languageRulesResourceName + &quot;'&quot;);
                         }
 
 <span class="fc" id="L167">                        final Pattern pattern = Pattern.compile(parts[0]);</span>
@@ -171,7 +171,7 @@ public class Lang {
 <span class="fc" id="L171">                        rules.add(new LangRule(pattern, new HashSet&lt;&gt;(Arrays.asList(langs)), accept));</span>
                     }
                 }
-            }
+<span class="fc" id="L174">            }</span>
         }
 <span class="fc" id="L176">        return new Lang(rules, languages);</span>
     }
@@ -211,14 +211,14 @@ public class Lang {
 <span class="fc bfc" id="L211" title="All 2 branches covered.">            if (rule.matches(text)) {</span>
 <span class="fc bfc" id="L212" title="All 2 branches covered.">                if (rule.acceptOnMatch) {</span>
 <span class="fc" id="L213">                    langs.retainAll(rule.languages);</span>
-<span class="fc" id="L214">                } else {</span>
+                } else {
 <span class="fc" id="L215">                    langs.removeAll(rule.languages);</span>
                 }
             }
-        }
+<span class="fc" id="L218">        }</span>
 
 <span class="fc" id="L220">        final Languages.LanguageSet ls = Languages.LanguageSet.from(langs);</span>
 <span class="fc bfc" id="L221" title="All 2 branches covered.">        return ls.equals(Languages.NO_LANGUAGES) ? Languages.ANY_LANGUAGE : ls;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

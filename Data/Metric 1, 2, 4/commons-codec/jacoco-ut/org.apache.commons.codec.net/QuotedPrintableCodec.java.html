@@ -27,6 +27,7 @@ import java.util.BitSet;
 
 import org.apache.commons.codec.BinaryDecoder;
 import org.apache.commons.codec.BinaryEncoder;
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.StringDecoder;
@@ -76,7 +77,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
     /**
      * BitSet of printable characters as defined in RFC 1521.
      */
-<span class="fc" id="L79">    private static final BitSet PRINTABLE_CHARS = new BitSet(256);</span>
+<span class="fc" id="L80">    private static final BitSet PRINTABLE_CHARS = new BitSet(256);</span>
 
     private static final byte ESCAPE_CHAR = '=';
 
@@ -96,22 +97,22 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
     // Static initializer for printable chars collection
     static {
         // alpha characters
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (int i = 33; i &lt;= 60; i++) {</span>
-<span class="fc" id="L100">            PRINTABLE_CHARS.set(i);</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (int i = 33; i &lt;= 60; i++) {</span>
+<span class="fc" id="L101">            PRINTABLE_CHARS.set(i);</span>
         }
-<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (int i = 62; i &lt;= 126; i++) {</span>
-<span class="fc" id="L103">            PRINTABLE_CHARS.set(i);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        for (int i = 62; i &lt;= 126; i++) {</span>
+<span class="fc" id="L104">            PRINTABLE_CHARS.set(i);</span>
         }
-<span class="fc" id="L105">        PRINTABLE_CHARS.set(TAB);</span>
-<span class="fc" id="L106">        PRINTABLE_CHARS.set(SPACE);</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L106">        PRINTABLE_CHARS.set(TAB);</span>
+<span class="fc" id="L107">        PRINTABLE_CHARS.set(SPACE);</span>
+<span class="fc" id="L108">    }</span>
 
     /**
      * Default constructor, assumes default Charset of {@link StandardCharsets#UTF_8}
      */
     public QuotedPrintableCodec() {
-<span class="fc" id="L113">        this(StandardCharsets.UTF_8, false);</span>
-<span class="fc" id="L114">    }</span>
+<span class="fc" id="L114">        this(StandardCharsets.UTF_8, false);</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * Constructor which allows for the selection of the strict mode.
@@ -121,8 +122,8 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @since 1.10
      */
     public QuotedPrintableCodec(final boolean strict) {
-<span class="fc" id="L124">        this(StandardCharsets.UTF_8, strict);</span>
-<span class="fc" id="L125">    }</span>
+<span class="fc" id="L125">        this(StandardCharsets.UTF_8, strict);</span>
+<span class="fc" id="L126">    }</span>
 
     /**
      * Constructor which allows for the selection of a default Charset.
@@ -132,8 +133,8 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @since 1.7
      */
     public QuotedPrintableCodec(final Charset charset) {
-<span class="nc" id="L135">        this(charset, false);</span>
-<span class="nc" id="L136">    }</span>
+<span class="nc" id="L136">        this(charset, false);</span>
+<span class="nc" id="L137">    }</span>
 
     /**
      * Constructor which allows for the selection of a default Charset and strict mode.
@@ -144,10 +145,10 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      *            if {@code true}, soft line breaks will be used
      * @since 1.10
      */
-<span class="fc" id="L147">    public QuotedPrintableCodec(final Charset charset, final boolean strict) {</span>
-<span class="fc" id="L148">        this.charset = charset;</span>
-<span class="fc" id="L149">        this.strict = strict;</span>
-<span class="fc" id="L150">    }</span>
+<span class="fc" id="L148">    public QuotedPrintableCodec(final Charset charset, final boolean strict) {</span>
+<span class="fc" id="L149">        this.charset = charset;</span>
+<span class="fc" id="L150">        this.strict = strict;</span>
+<span class="fc" id="L151">    }</span>
 
     /**
      * Constructor which allows for the selection of a default Charset.
@@ -166,8 +167,8 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     public QuotedPrintableCodec(final String charsetName)
             throws IllegalCharsetNameException, IllegalArgumentException, UnsupportedCharsetException {
-<span class="fc" id="L169">        this(Charset.forName(charsetName), false);</span>
-<span class="fc" id="L170">    }</span>
+<span class="fc" id="L170">        this(Charset.forName(charsetName), false);</span>
+<span class="fc" id="L171">    }</span>
 
     /**
      * Encodes byte into its quoted-printable representation.
@@ -179,12 +180,12 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @return The number of bytes written to the {@code buffer}
      */
     private static final int encodeQuotedPrintable(final int b, final ByteArrayOutputStream buffer) {
-<span class="fc" id="L182">        buffer.write(ESCAPE_CHAR);</span>
-<span class="fc" id="L183">        final char hex1 = Utils.hexDigit(b &gt;&gt; 4);</span>
-<span class="fc" id="L184">        final char hex2 = Utils.hexDigit(b);</span>
-<span class="fc" id="L185">        buffer.write(hex1);</span>
-<span class="fc" id="L186">        buffer.write(hex2);</span>
-<span class="fc" id="L187">        return 3;</span>
+<span class="fc" id="L183">        buffer.write(ESCAPE_CHAR);</span>
+<span class="fc" id="L184">        final char hex1 = Utils.hexDigit(b &gt;&gt; 4);</span>
+<span class="fc" id="L185">        final char hex2 = Utils.hexDigit(b);</span>
+<span class="fc" id="L186">        buffer.write(hex1);</span>
+<span class="fc" id="L187">        buffer.write(hex2);</span>
+<span class="fc" id="L188">        return 3;</span>
     }
 
     /**
@@ -198,11 +199,11 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @return the unsigned octet at position {@code index} from the array
      */
     private static int getUnsignedOctet(final int index, final byte[] bytes) {
-<span class="fc" id="L201">        int b = bytes[index];</span>
-<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (b &lt; 0) {</span>
-<span class="nc" id="L203">            b = 256 + b;</span>
+<span class="fc" id="L202">        int b = bytes[index];</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">        if (b &lt; 0) {</span>
+<span class="nc" id="L204">            b = 256 + b;</span>
         }
-<span class="fc" id="L205">        return b;</span>
+<span class="fc" id="L206">        return b;</span>
     }
 
     /**
@@ -218,11 +219,11 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     private static int encodeByte(final int b, final boolean encode,
                                   final ByteArrayOutputStream buffer) {
-<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (encode) {</span>
-<span class="fc" id="L222">            return encodeQuotedPrintable(b, buffer);</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        if (encode) {</span>
+<span class="fc" id="L223">            return encodeQuotedPrintable(b, buffer);</span>
         }
-<span class="fc" id="L224">        buffer.write(b);</span>
-<span class="fc" id="L225">        return 1;</span>
+<span class="fc" id="L225">        buffer.write(b);</span>
+<span class="fc" id="L226">        return 1;</span>
     }
 
     /**
@@ -233,7 +234,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @return {@code true} if the byte is either a space or tab character
      */
     private static boolean isWhitespace(final int b) {
-<span class="fc bfc" id="L236" title="All 4 branches covered.">        return b == SPACE || b == TAB;</span>
+<span class="fc bfc" id="L237" title="All 4 branches covered.">        return b == SPACE || b == TAB;</span>
     }
 
     /**
@@ -249,7 +250,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @return array of bytes containing quoted-printable data
      */
     public static final byte[] encodeQuotedPrintable(final BitSet printable, final byte[] bytes) {
-<span class="fc" id="L252">        return encodeQuotedPrintable(printable, bytes, false);</span>
+<span class="fc" id="L253">        return encodeQuotedPrintable(printable, bytes, false);</span>
     }
 
     /**
@@ -269,69 +270,69 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @since 1.10
      */
     public static final byte[] encodeQuotedPrintable(BitSet printable, final byte[] bytes, final boolean strict) {
-<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (bytes == null) {</span>
-<span class="fc" id="L273">            return null;</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        if (bytes == null) {</span>
+<span class="fc" id="L274">            return null;</span>
         }
-<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (printable == null) {</span>
-<span class="fc" id="L276">            printable = PRINTABLE_CHARS;</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">        if (printable == null) {</span>
+<span class="fc" id="L277">            printable = PRINTABLE_CHARS;</span>
         }
-<span class="fc" id="L278">        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();</span>
+<span class="fc" id="L279">        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();</span>
 
-<span class="fc bfc" id="L280" title="All 2 branches covered.">        if (strict) {</span>
-<span class="fc" id="L281">            int pos = 1;</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (strict) {</span>
+<span class="fc" id="L282">            int pos = 1;</span>
             // encode up to buffer.length - 3, the last three octets will be treated
             // separately for simplification of note #3
-<span class="fc bfc" id="L284" title="All 2 branches covered.">            for (int i = 0; i &lt; bytes.length - 3; i++) {</span>
-<span class="fc" id="L285">                final int b = getUnsignedOctet(i, bytes);</span>
-<span class="fc bfc" id="L286" title="All 2 branches covered.">                if (pos &lt; SAFE_LENGTH) {</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">            for (int i = 0; i &lt; bytes.length - 3; i++) {</span>
+<span class="fc" id="L286">                final int b = getUnsignedOctet(i, bytes);</span>
+<span class="fc bfc" id="L287" title="All 2 branches covered.">                if (pos &lt; SAFE_LENGTH) {</span>
                     // up to this length it is safe to add any byte, encoded or not
-<span class="fc bfc" id="L288" title="All 2 branches covered.">                    pos += encodeByte(b, !printable.get(b), buffer);</span>
-<span class="fc" id="L289">                } else {</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">                    pos += encodeByte(b, !printable.get(b), buffer);</span>
+                } else {
                     // rule #3: whitespace at the end of a line *must* be encoded
-<span class="fc bfc" id="L291" title="All 4 branches covered.">                    encodeByte(b, !printable.get(b) || isWhitespace(b), buffer);</span>
+<span class="fc bfc" id="L292" title="All 4 branches covered.">                    encodeByte(b, !printable.get(b) || isWhitespace(b), buffer);</span>
 
                     // rule #5: soft line break
-<span class="fc" id="L294">                    buffer.write(ESCAPE_CHAR);</span>
-<span class="fc" id="L295">                    buffer.write(CR);</span>
-<span class="fc" id="L296">                    buffer.write(LF);</span>
-<span class="fc" id="L297">                    pos = 1;</span>
+<span class="fc" id="L295">                    buffer.write(ESCAPE_CHAR);</span>
+<span class="fc" id="L296">                    buffer.write(CR);</span>
+<span class="fc" id="L297">                    buffer.write(LF);</span>
+<span class="fc" id="L298">                    pos = 1;</span>
                 }
             }
 
             // rule #3: whitespace at the end of a line *must* be encoded
             // if we would do a soft break line after this octet, encode whitespace
-<span class="fc" id="L303">            int b = getUnsignedOctet(bytes.length - 3, bytes);</span>
-<span class="fc bfc" id="L304" title="All 6 branches covered.">            boolean encode = !printable.get(b) || (isWhitespace(b) &amp;&amp; pos &gt; SAFE_LENGTH - 5);</span>
-<span class="fc" id="L305">            pos += encodeByte(b, encode, buffer);</span>
+<span class="fc" id="L304">            int b = getUnsignedOctet(bytes.length - 3, bytes);</span>
+<span class="fc bfc" id="L305" title="All 6 branches covered.">            boolean encode = !printable.get(b) || (isWhitespace(b) &amp;&amp; pos &gt; SAFE_LENGTH - 5);</span>
+<span class="fc" id="L306">            pos += encodeByte(b, encode, buffer);</span>
 
             // note #3: '=' *must not* be the ultimate or penultimate character
             // simplification: if &lt; 6 bytes left, do a soft line break as we may need
             //                 exactly 6 bytes space for the last 2 bytes
-<span class="fc bfc" id="L310" title="All 2 branches covered.">            if (pos &gt; SAFE_LENGTH - 2) {</span>
-<span class="fc" id="L311">                buffer.write(ESCAPE_CHAR);</span>
-<span class="fc" id="L312">                buffer.write(CR);</span>
-<span class="fc" id="L313">                buffer.write(LF);</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">            if (pos &gt; SAFE_LENGTH - 2) {</span>
+<span class="fc" id="L312">                buffer.write(ESCAPE_CHAR);</span>
+<span class="fc" id="L313">                buffer.write(CR);</span>
+<span class="fc" id="L314">                buffer.write(LF);</span>
             }
-<span class="fc bfc" id="L315" title="All 2 branches covered.">            for (int i = bytes.length - 2; i &lt; bytes.length; i++) {</span>
-<span class="fc" id="L316">                b = getUnsignedOctet(i, bytes);</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">            for (int i = bytes.length - 2; i &lt; bytes.length; i++) {</span>
+<span class="fc" id="L317">                b = getUnsignedOctet(i, bytes);</span>
                 // rule #3: trailing whitespace shall be encoded
-<span class="pc bpc" id="L318" title="1 of 6 branches missed.">                encode = !printable.get(b) || (i &gt; bytes.length - 2 &amp;&amp; isWhitespace(b));</span>
-<span class="fc" id="L319">                encodeByte(b, encode, buffer);</span>
+<span class="pc bpc" id="L319" title="1 of 6 branches missed.">                encode = !printable.get(b) || (i &gt; bytes.length - 2 &amp;&amp; isWhitespace(b));</span>
+<span class="fc" id="L320">                encodeByte(b, encode, buffer);</span>
             }
-<span class="fc" id="L321">        } else {</span>
-<span class="fc bfc" id="L322" title="All 2 branches covered.">            for (final byte c : bytes) {</span>
-<span class="fc" id="L323">                int b = c;</span>
-<span class="fc bfc" id="L324" title="All 2 branches covered.">                if (b &lt; 0) {</span>
-<span class="fc" id="L325">                    b = 256 + b;</span>
+<span class="fc" id="L322">        } else {</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">            for (final byte c : bytes) {</span>
+<span class="fc" id="L324">                int b = c;</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">                if (b &lt; 0) {</span>
+<span class="fc" id="L326">                    b = 256 + b;</span>
                 }
-<span class="fc bfc" id="L327" title="All 2 branches covered.">                if (printable.get(b)) {</span>
-<span class="fc" id="L328">                    buffer.write(b);</span>
-<span class="fc" id="L329">                } else {</span>
-<span class="fc" id="L330">                    encodeQuotedPrintable(b, buffer);</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">                if (printable.get(b)) {</span>
+<span class="fc" id="L329">                    buffer.write(b);</span>
+                } else {
+<span class="fc" id="L331">                    encodeQuotedPrintable(b, buffer);</span>
                 }
             }
         }
-<span class="fc" id="L334">        return buffer.toByteArray();</span>
+<span class="fc" id="L335">        return buffer.toByteArray();</span>
     }
 
     /**
@@ -348,30 +349,30 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      *             Thrown if quoted-printable decoding is unsuccessful
      */
     public static final byte[] decodeQuotedPrintable(final byte[] bytes) throws DecoderException {
-<span class="fc bfc" id="L351" title="All 2 branches covered.">        if (bytes == null) {</span>
-<span class="fc" id="L352">            return null;</span>
+<span class="fc bfc" id="L352" title="All 2 branches covered.">        if (bytes == null) {</span>
+<span class="fc" id="L353">            return null;</span>
         }
-<span class="fc" id="L354">        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();</span>
-<span class="fc bfc" id="L355" title="All 2 branches covered.">        for (int i = 0; i &lt; bytes.length; i++) {</span>
-<span class="fc" id="L356">            final int b = bytes[i];</span>
-<span class="fc bfc" id="L357" title="All 2 branches covered.">            if (b == ESCAPE_CHAR) {</span>
+<span class="fc" id="L355">        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">        for (int i = 0; i &lt; bytes.length; i++) {</span>
+<span class="fc" id="L357">            final int b = bytes[i];</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">            if (b == ESCAPE_CHAR) {</span>
                 try {
                     // if the next octet is a CR we have found a soft line break
-<span class="fc bfc" id="L360" title="All 2 branches covered.">                    if (bytes[++i] == CR) {</span>
-<span class="fc" id="L361">                        continue;</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">                    if (bytes[++i] == CR) {</span>
+<span class="fc" id="L362">                        continue;</span>
                     }
-<span class="fc" id="L363">                    final int u = Utils.digit16(bytes[i]);</span>
-<span class="fc" id="L364">                    final int l = Utils.digit16(bytes[++i]);</span>
-<span class="fc" id="L365">                    buffer.write((char) ((u &lt;&lt; 4) + l));</span>
-<span class="fc" id="L366">                } catch (final ArrayIndexOutOfBoundsException e) {</span>
-<span class="fc" id="L367">                    throw new DecoderException(&quot;Invalid quoted-printable encoding&quot;, e);</span>
-                }
-<span class="fc bfc" id="L369" title="All 4 branches covered.">            } else if (b != CR &amp;&amp; b != LF) {</span>
+<span class="fc" id="L364">                    final int u = Utils.digit16(bytes[i]);</span>
+<span class="fc" id="L365">                    final int l = Utils.digit16(bytes[++i]);</span>
+<span class="fc" id="L366">                    buffer.write((char) ((u &lt;&lt; 4) + l));</span>
+<span class="fc" id="L367">                } catch (final ArrayIndexOutOfBoundsException e) {</span>
+<span class="fc" id="L368">                    throw new DecoderException(&quot;Invalid quoted-printable encoding&quot;, e);</span>
+<span class="fc" id="L369">                }</span>
+<span class="fc bfc" id="L370" title="All 4 branches covered.">            } else if (b != CR &amp;&amp; b != LF) {</span>
                 // every other octet is appended except for CR &amp; LF
-<span class="fc" id="L371">                buffer.write(b);</span>
+<span class="fc" id="L372">                buffer.write(b);</span>
             }
         }
-<span class="fc" id="L374">        return buffer.toByteArray();</span>
+<span class="fc" id="L375">        return buffer.toByteArray();</span>
     }
 
     /**
@@ -387,7 +388,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     @Override
     public byte[] encode(final byte[] bytes) {
-<span class="fc" id="L390">        return encodeQuotedPrintable(PRINTABLE_CHARS, bytes, strict);</span>
+<span class="fc" id="L391">        return encodeQuotedPrintable(PRINTABLE_CHARS, bytes, strict);</span>
     }
 
     /**
@@ -405,7 +406,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     @Override
     public byte[] decode(final byte[] bytes) throws DecoderException {
-<span class="fc" id="L408">        return decodeQuotedPrintable(bytes);</span>
+<span class="fc" id="L409">        return decodeQuotedPrintable(bytes);</span>
     }
 
     /**
@@ -425,7 +426,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     @Override
     public String encode(final String sourceStr) throws EncoderException {
-<span class="fc" id="L428">        return this.encode(sourceStr, getCharset());</span>
+<span class="fc" id="L429">        return this.encode(sourceStr, getCharset());</span>
     }
 
     /**
@@ -442,10 +443,10 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @since 1.7
      */
     public String decode(final String sourceStr, final Charset sourceCharset) throws DecoderException {
-<span class="fc bfc" id="L445" title="All 2 branches covered.">        if (sourceStr == null) {</span>
-<span class="fc" id="L446">            return null;</span>
+<span class="fc bfc" id="L446" title="All 2 branches covered.">        if (sourceStr == null) {</span>
+<span class="fc" id="L447">            return null;</span>
         }
-<span class="fc" id="L448">        return new String(this.decode(StringUtils.getBytesUsAscii(sourceStr)), sourceCharset);</span>
+<span class="fc" id="L449">        return new String(this.decode(StringUtils.getBytesUsAscii(sourceStr)), sourceCharset);</span>
     }
 
     /**
@@ -464,10 +465,10 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     public String decode(final String sourceStr, final String sourceCharset)
             throws DecoderException, UnsupportedEncodingException {
-<span class="fc bfc" id="L467" title="All 2 branches covered.">        if (sourceStr == null) {</span>
-<span class="fc" id="L468">            return null;</span>
+<span class="fc bfc" id="L468" title="All 2 branches covered.">        if (sourceStr == null) {</span>
+<span class="fc" id="L469">            return null;</span>
         }
-<span class="fc" id="L470">        return new String(decode(StringUtils.getBytesUsAscii(sourceStr)), sourceCharset);</span>
+<span class="fc" id="L471">        return new String(decode(StringUtils.getBytesUsAscii(sourceStr)), sourceCharset);</span>
     }
 
     /**
@@ -483,7 +484,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     @Override
     public String decode(final String sourceStr) throws DecoderException {
-<span class="fc" id="L486">        return this.decode(sourceStr, this.getCharset());</span>
+<span class="fc" id="L487">        return this.decode(sourceStr, this.getCharset());</span>
     }
 
     /**
@@ -498,16 +499,16 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     @Override
     public Object encode(final Object obj) throws EncoderException {
-<span class="fc bfc" id="L501" title="All 2 branches covered.">        if (obj == null) {</span>
-<span class="fc" id="L502">            return null;</span>
-<span class="fc bfc" id="L503" title="All 2 branches covered.">        } else if (obj instanceof byte[]) {</span>
-<span class="fc" id="L504">            return encode((byte[]) obj);</span>
-<span class="fc bfc" id="L505" title="All 2 branches covered.">        } else if (obj instanceof String) {</span>
-<span class="fc" id="L506">            return encode((String) obj);</span>
+<span class="fc bfc" id="L502" title="All 2 branches covered.">        if (obj == null) {</span>
+<span class="fc" id="L503">            return null;</span>
+<span class="fc bfc" id="L504" title="All 2 branches covered.">        } else if (obj instanceof byte[]) {</span>
+<span class="fc" id="L505">            return encode((byte[]) obj);</span>
+<span class="fc bfc" id="L506" title="All 2 branches covered.">        } else if (obj instanceof String) {</span>
+<span class="fc" id="L507">            return encode((String) obj);</span>
         } else {
-<span class="fc" id="L508">            throw new EncoderException(&quot;Objects of type &quot; +</span>
-<span class="fc" id="L509">                  obj.getClass().getName() +</span>
-<span class="fc" id="L510">                  &quot; cannot be quoted-printable encoded&quot;);</span>
+<span class="fc" id="L509">            throw new EncoderException(&quot;Objects of type &quot; +</span>
+<span class="fc" id="L510">                  obj.getClass().getName() +</span>
+                  &quot; cannot be quoted-printable encoded&quot;);
         }
     }
 
@@ -524,16 +525,16 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      */
     @Override
     public Object decode(final Object obj) throws DecoderException {
-<span class="fc bfc" id="L527" title="All 2 branches covered.">        if (obj == null) {</span>
-<span class="fc" id="L528">            return null;</span>
-<span class="fc bfc" id="L529" title="All 2 branches covered.">        } else if (obj instanceof byte[]) {</span>
-<span class="fc" id="L530">            return decode((byte[]) obj);</span>
-<span class="fc bfc" id="L531" title="All 2 branches covered.">        } else if (obj instanceof String) {</span>
-<span class="fc" id="L532">            return decode((String) obj);</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">        if (obj == null) {</span>
+<span class="fc" id="L529">            return null;</span>
+<span class="fc bfc" id="L530" title="All 2 branches covered.">        } else if (obj instanceof byte[]) {</span>
+<span class="fc" id="L531">            return decode((byte[]) obj);</span>
+<span class="fc bfc" id="L532" title="All 2 branches covered.">        } else if (obj instanceof String) {</span>
+<span class="fc" id="L533">            return decode((String) obj);</span>
         } else {
-<span class="fc" id="L534">            throw new DecoderException(&quot;Objects of type &quot; +</span>
-<span class="fc" id="L535">                  obj.getClass().getName() +</span>
-<span class="fc" id="L536">                  &quot; cannot be quoted-printable decoded&quot;);</span>
+<span class="fc" id="L535">            throw new DecoderException(&quot;Objects of type &quot; +</span>
+<span class="fc" id="L536">                  obj.getClass().getName() +</span>
+                  &quot; cannot be quoted-printable decoded&quot;);
         }
     }
 
@@ -544,7 +545,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @since 1.7
      */
     public Charset getCharset() {
-<span class="fc" id="L547">        return this.charset;</span>
+<span class="fc" id="L548">        return this.charset;</span>
     }
 
     /**
@@ -553,7 +554,7 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @return the default Charset name
      */
     public String getDefaultCharset() {
-<span class="nc" id="L556">        return this.charset.name();</span>
+<span class="nc" id="L557">        return this.charset.name();</span>
     }
 
     /**
@@ -571,10 +572,10 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      * @since 1.7
      */
     public String encode(final String sourceStr, final Charset sourceCharset) {
-<span class="fc bfc" id="L574" title="All 2 branches covered.">        if (sourceStr == null) {</span>
-<span class="fc" id="L575">            return null;</span>
+<span class="fc bfc" id="L575" title="All 2 branches covered.">        if (sourceStr == null) {</span>
+<span class="fc" id="L576">            return null;</span>
         }
-<span class="fc" id="L577">        return StringUtils.newStringUsAscii(this.encode(sourceStr.getBytes(sourceCharset)));</span>
+<span class="fc" id="L578">        return StringUtils.newStringUsAscii(this.encode(sourceStr.getBytes(sourceCharset)));</span>
     }
 
     /**
@@ -593,10 +594,10 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
      *             Thrown if the Charset is not supported
      */
     public String encode(final String sourceStr, final String sourceCharset) throws UnsupportedEncodingException {
-<span class="fc bfc" id="L596" title="All 2 branches covered.">        if (sourceStr == null) {</span>
-<span class="fc" id="L597">            return null;</span>
+<span class="fc bfc" id="L597" title="All 2 branches covered.">        if (sourceStr == null) {</span>
+<span class="fc" id="L598">            return null;</span>
         }
-<span class="fc" id="L599">        return StringUtils.newStringUsAscii(encode(sourceStr.getBytes(sourceCharset)));</span>
+<span class="fc" id="L600">        return StringUtils.newStringUsAscii(encode(sourceStr.getBytes(sourceCharset)));</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

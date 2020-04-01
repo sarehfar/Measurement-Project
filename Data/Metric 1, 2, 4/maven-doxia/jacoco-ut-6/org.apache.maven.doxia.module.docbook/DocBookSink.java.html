@@ -1,0 +1,1914 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocBookSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Simplified DocBook Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.docbook</a> &gt; <span class="el_source">DocBookSink.java</span></div><h1>DocBookSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.docbook;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.AbstractXmlSink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.util.DoxiaUtils;
+import org.codehaus.plexus.util.FileUtils;
+
+import static org.apache.maven.doxia.util.HtmlTools.escapeHTML;
+
+/**
+ * &lt;a href=&quot;http://www.oasis-open.org/docbook&quot;&gt;Docbook&lt;/a&gt; Sink implementation.
+ * &lt;br&gt;
+ * It uses the Docbook v4.4 DTD &lt;a href=&quot;http://www.oasis-open.org/docbook/sgml/4.4/docbookx.dtd&quot;&gt;
+ * http://www.oasis-open.org/docbook/sgml/4.4/docbookx.dtd&lt;/a&gt;.
+ *
+ * @since 1.0
+ */
+public class DocBookSink
+    extends AbstractXmlSink
+    implements DocbookMarkup, SimplifiedDocbookMarkup
+{
+    /** DocBook V4.4 SGML public id: &quot;-//OASIS//DTD DocBook V4.4//EN&quot;
+     * @deprecated since 1.1, use {@link DocbookMarkup#DEFAULT_SGML_PUBLIC_ID} instead of. */
+    public static final String DEFAULT_SGML_PUBLIC_ID = DocbookMarkup.DEFAULT_SGML_PUBLIC_ID;
+
+    /** DocBook XML V4.4 XML public id: &quot;-//OASIS//DTD DocBook XML V4.4//EN&quot;
+     * @deprecated since 1.1, use {@link DocbookMarkup#DEFAULT_XML_PUBLIC_ID} instead of. */
+    public static final String DEFAULT_XML_PUBLIC_ID = DocbookMarkup.DEFAULT_XML_PUBLIC_ID;
+
+    /** DocBook XML V4.4 XML system id: &quot;http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd&quot;
+     * @deprecated since 1.1, use {@link DocbookMarkup#DEFAULT_XML_SYSTEM_ID} instead of. */
+    public static final String DEFAULT_XML_SYSTEM_ID = DocbookMarkup.DEFAULT_XML_SYSTEM_ID;
+
+    /** DocBook XML V4.4 SGML system id: &quot;http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd&quot;
+     * @deprecated since 1.1, use {@link DocbookMarkup#DEFAULT_SGML_SYSTEM_ID} instead of. */
+    public static final String DEFAULT_SGML_SYSTEM_ID = DocbookMarkup.DEFAULT_SGML_SYSTEM_ID;
+
+    /** The output writer. */
+    private PrintWriter out;
+
+    /** xmlMode. */
+<span class="fc" id="L79">    private boolean xmlMode = false;</span>
+
+    /** styleSheet. */
+<span class="fc" id="L82">    private String styleSheet = null;</span>
+
+    /** language. */
+<span class="fc" id="L85">    private String lang = null;</span>
+
+    /** publicId. */
+<span class="fc" id="L88">    private String publicId = null;</span>
+
+    /** systemId. */
+<span class="fc" id="L91">    private String systemId = null;</span>
+
+    /** italicBegin. */
+    private String italicBeginTag;
+
+    /** italicEnd. */
+    private String italicEndTag;
+
+    /** boldBegin. */
+    private String boldBeginTag;
+
+    /** boldEnd. */
+    private String boldEndTag;
+
+    /** monospacedBegin. */
+    private String monospacedBeginTag;
+
+    /** monospacedEnd. */
+    private String monospacedEndTag;
+
+    /** horizontalRule. */
+    private String horizontalRuleElement;
+
+    /** pageBreak. */
+    private String pageBreakElement;
+
+    /** lineBreak. */
+    private String lineBreakElement;
+
+    /** An image source file. */
+    private String graphicsFileName;
+
+    /** hasTitle. */
+    private boolean hasTitle;
+
+    /** authorDate. */
+    private boolean authorDateFlag;
+
+    /** verbatim. */
+    private boolean verbatimFlag;
+
+    /** externalLink. */
+    private boolean externalLinkFlag;
+
+    /** tableHasCaption. */
+    private boolean tableHasCaption;
+
+    /** Used for table rows. */
+    private PrintWriter savedOut;
+
+    /** tableRows. */
+    private String tableRows;
+
+    /** tableRows writer. */
+    private StringWriter tableRowsWriter;
+
+    /** tableHasGrid. */
+    private boolean tableHasGrid;
+
+    private boolean skip;
+
+    private boolean paragraph;
+
+    private String encoding;
+
+    /** Keep track of the closing tags for inline events. */
+<span class="fc" id="L157">    protected Stack&lt;List&lt;String&gt;&gt; inlineStack = new Stack&lt;&gt;();</span>
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    private Map&lt;String, Set&lt;String&gt;&gt; warnMessages;
+
+    /**
+     * Constructor, initialize the Writer.
+     *
+     * @param writer not null writer to write the result. &lt;b&gt;Should&lt;/b&gt; be an UTF-8 Writer.
+     * You could use &lt;code&gt;newXmlWriter&lt;/code&gt; methods from {@link org.codehaus.plexus.util.WriterFactory}.
+     */
+    protected DocBookSink( Writer writer )
+    {
+<span class="fc" id="L171">        this( writer, null );</span>
+<span class="fc" id="L172">    }</span>
+
+    /**
+     * Constructor, initialize the Writer and tells which encoding is used.
+     *
+     * @param writer not null writer to write the result.
+     * @param encoding the encoding used, that should be written to the generated HTML content
+     * if not &lt;code&gt;null&lt;/code&gt;.
+     */
+    protected DocBookSink( Writer writer, String encoding )
+<span class="fc" id="L182">    {</span>
+<span class="fc" id="L183">        this.out = new PrintWriter( writer );</span>
+<span class="fc" id="L184">        this.encoding = encoding;</span>
+
+<span class="fc" id="L186">        setItalicElement( &quot;&lt;emphasis&gt;&quot; );</span>
+<span class="fc" id="L187">        setBoldElement( &quot;&lt;emphasis role=\&quot;bold\&quot;&gt;&quot; );</span>
+<span class="fc" id="L188">        setMonospacedElement( &quot;&lt;literal&gt;&quot; );</span>
+<span class="fc" id="L189">        setHorizontalRuleElement( &quot;&lt;!-- HR --&gt;&quot; );</span>
+<span class="fc" id="L190">        setPageBreakElement( &quot;&lt;!-- PB --&gt;&quot; );</span>
+<span class="fc" id="L191">        setLineBreakElement( &quot;&lt;!-- LB --&gt;&quot; );</span>
+<span class="fc" id="L192">    }</span>
+
+    /**
+     * Constructor, initialize the Writer and tells which encoding and languageId are used.
+     *
+     * @param writer not null writer to write the result.
+     * @param encoding the encoding used, that should be written to the generated HTML content
+     * if not &lt;code&gt;null&lt;/code&gt;.
+     * @param languageId language identifier for the root element as defined by
+     * &lt;a href=&quot;ftp://ftp.isi.edu/in-notes/bcp/bcp47.txt&quot;&gt;IETF BCP 47&lt;/a&gt;, Tags for the Identification of Languages;
+     * in addition, the empty string may be specified.
+     * @since 1.1
+     */
+    protected DocBookSink( Writer writer, String encoding, String languageId )
+    {
+<span class="nc" id="L207">        this( writer, encoding );</span>
+
+<span class="nc" id="L209">        this.lang = languageId;</span>
+<span class="nc" id="L210">    }</span>
+
+    /**
+     * &lt;p&gt;escapeSGML&lt;/p&gt;
+     *
+     * @param text The text to escape.
+     * @param xmlMode xmlMode.
+     * @return The escaped text.
+     * @deprecated Use HtmlTools#escapeHTML(String,boolean).
+     */
+    public static String escapeSGML( String text, boolean xmlMode )
+    {
+<span class="nc" id="L222">        return escapeHTML( text, xmlMode );</span>
+    }
+
+    /**
+     * Sets the xml mode.
+     *
+     * @param mode the mode to set.
+     * @deprecated xml mode is not used.
+     */
+    public void setXMLMode( boolean mode )
+    {
+<span class="nc" id="L233">        this.xmlMode = mode;</span>
+<span class="nc" id="L234">    }</span>
+
+    /**
+     * Returns the current xmlMode.
+     *
+     * @return the current xmlMode.
+     * @deprecated xml mode is not used.
+     */
+    public boolean isXMLMode()
+    {
+<span class="nc" id="L244">        return xmlMode;</span>
+    }
+
+    /**
+     * Sets the encoding. The encoding specified here must be consistent with then encoding
+     * used in the Writer used by this DocBookSink instance.
+     *
+     * @param enc the encoding to set.
+     */
+    public void setEncoding( String enc )
+    {
+<span class="nc" id="L255">        encoding = enc;</span>
+<span class="nc" id="L256">    }</span>
+
+    /**
+     * Returns the encoding.
+     *
+     * @return the encoding set (can be &lt;code&gt;null&lt;/code&gt;).
+     */
+    public String getEncoding()
+    {
+<span class="nc" id="L265">        return encoding;</span>
+    }
+
+    /**
+     * Sets the styleSheet.
+     *
+     * @param sheet the styleSheet to set.
+     */
+    public void setStyleSheet( String sheet )
+    {
+<span class="nc" id="L275">        this.styleSheet = sheet;</span>
+<span class="nc" id="L276">    }</span>
+
+    /**
+     * Returns the current styleSheet.
+     *
+     * @return the current styleSheet.
+     */
+    public String getStyleSheet()
+    {
+<span class="nc" id="L285">        return styleSheet;</span>
+    }
+
+    /**
+     * Sets the publicId.
+     *
+     * @param id the publicId to set.
+     */
+    public void setPublicId( String id )
+    {
+<span class="nc" id="L295">        this.publicId = id;</span>
+<span class="nc" id="L296">    }</span>
+
+    /**
+     * Returns the current publicId.
+     *
+     * @return the current publicId.
+     */
+    public String getPublicId()
+    {
+<span class="nc" id="L305">        return publicId;</span>
+    }
+
+    /**
+     * Sets the systemId.
+     *
+     * @param id the systemId to set.
+     */
+    public void setSystemId( String id )
+    {
+<span class="nc" id="L315">        this.systemId = id;</span>
+<span class="nc" id="L316">    }</span>
+
+    /**
+     * Returns the current systemId.
+     *
+     * @return the current systemId.
+     */
+    public String getSystemId()
+    {
+<span class="nc" id="L325">        return systemId;</span>
+    }
+
+    /**
+     * Sets the language.
+     *
+     * @param language the language to set.
+     */
+    public void setLanguage( String language )
+    {
+<span class="nc" id="L335">        this.lang = language;</span>
+<span class="nc" id="L336">    }</span>
+
+    /**
+     * Returns the current language.
+     *
+     * @return the current language.
+     */
+    public String getLanguage()
+    {
+<span class="nc" id="L345">        return lang;</span>
+    }
+
+    /**
+     * Sets the current italicBeginTag and constructs the corresponding end tag from it.
+     *
+     * @param tag the tag to set. If tag is null, the empty string is used.
+     */
+    public void setItalicElement( String tag )
+    {
+<span class="pc bpc" id="L355" title="1 of 2 branches missed.">        if ( tag == null )</span>
+        {
+<span class="nc" id="L357">            tag = &quot;&quot;;</span>
+        }
+<span class="fc" id="L359">        this.italicBeginTag = tag;</span>
+<span class="fc" id="L360">        italicEndTag = makeEndTag( italicBeginTag );</span>
+<span class="fc" id="L361">    }</span>
+
+    /**
+     * Constructs the corresponding end tag from the given begin tag.
+     *
+     * @param beginTag the begin tag to set. If null, the empty string is returned.
+     * @return the corresponding end tag.
+     */
+    private String makeEndTag( String beginTag )
+    {
+<span class="fc" id="L371">        int length = beginTag.length();</span>
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">        if ( length == 0 )</span>
+        {
+<span class="nc" id="L374">            return &quot;&quot;;</span>
+        }
+
+<span class="pc bpc" id="L377" title="2 of 4 branches missed.">        if ( beginTag.charAt( 0 ) != '&lt;' || beginTag.charAt( length - 1 ) != '&gt;' )</span>
+        {
+<span class="nc" id="L379">            throw new IllegalArgumentException( &quot;'&quot; + beginTag + &quot;', not a tag&quot; );</span>
+        }
+
+<span class="fc" id="L382">        StringTokenizer tokens = new StringTokenizer( beginTag, &quot;&lt;&gt; \t\n\r\f&quot; );</span>
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">        if ( !tokens.hasMoreTokens() )</span>
+        {
+<span class="nc" id="L385">            throw new IllegalArgumentException( &quot;'&quot; + beginTag + &quot;', invalid tag&quot; );</span>
+        }
+
+<span class="fc" id="L388">        return &quot;&lt;/&quot; + tokens.nextToken() + &quot;&gt;&quot;;</span>
+    }
+
+    /**
+     * Returns the current italicBeginTag.
+     *
+     * @return the current italicBeginTag. Defaults to {@code &lt;emphasis&gt;}.
+     */
+    public String getItalicElement()
+    {
+<span class="nc" id="L398">        return italicBeginTag;</span>
+    }
+
+    /**
+     * Sets the current boldBeginTag and constructs the corresponding end tag from it.
+     *
+     * @param tag the tag to set. If tag is null, the empty string is used.
+     */
+    public void setBoldElement( String tag )
+    {
+<span class="pc bpc" id="L408" title="1 of 2 branches missed.">        if ( tag == null )</span>
+        {
+<span class="nc" id="L410">            tag = &quot;&quot;;</span>
+        }
+<span class="fc" id="L412">        this.boldBeginTag = tag;</span>
+<span class="fc" id="L413">        boldEndTag = makeEndTag( boldBeginTag );</span>
+<span class="fc" id="L414">    }</span>
+
+    /**
+     * Returns the current boldBeginTag.
+     *
+     * @return the current boldBeginTag. Defaults to {@code &lt;emphasis role=\&quot;bold\&quot;&gt;}.
+     */
+    public String getBoldElement()
+    {
+<span class="nc" id="L423">        return boldBeginTag;</span>
+    }
+
+    /**
+     * Sets the current monospacedBeginTag and constructs the corresponding end tag from it.
+     *
+     * @param tag the tag to set. If tag is null, the empty string is used.
+     */
+    public void setMonospacedElement( String tag )
+    {
+<span class="pc bpc" id="L433" title="1 of 2 branches missed.">        if ( tag == null )</span>
+        {
+<span class="nc" id="L435">            tag = &quot;&quot;;</span>
+        }
+<span class="fc" id="L437">        this.monospacedBeginTag = tag;</span>
+<span class="fc" id="L438">        monospacedEndTag = makeEndTag( monospacedBeginTag );</span>
+<span class="fc" id="L439">    }</span>
+
+    /**
+     * Returns the current monospacedBeginTag.
+     *
+     * @return the current monospacedBeginTag. Defaults to {@code &lt;literal&gt;}.
+     */
+    public String getMonospacedElement()
+    {
+<span class="nc" id="L448">        return monospacedBeginTag;</span>
+    }
+
+    /**
+     * Sets the current horizontalRuleElement.
+     *
+     * @param element the element to set.
+     */
+    public void setHorizontalRuleElement( String element )
+    {
+<span class="fc" id="L458">        this.horizontalRuleElement = element;</span>
+<span class="fc" id="L459">    }</span>
+
+    /**
+     * Returns the current horizontalRuleElement.
+     *
+     * @return the current horizontalRuleElement. Defaults to &quot;&lt;!-- HR --&gt;&quot;.
+     */
+    public String getHorizontalRuleElement()
+    {
+<span class="nc" id="L468">        return horizontalRuleElement;</span>
+    }
+
+    /**
+     * Sets the current pageBreakElement.
+     *
+     * @param element the element to set.
+     */
+    public void setPageBreakElement( String element )
+    {
+<span class="fc" id="L478">        this.pageBreakElement = element;</span>
+<span class="fc" id="L479">    }</span>
+
+    /**
+     * Returns the current pageBreakElement.
+     *
+     * @return the current pageBreakElement. Defaults to &quot;&lt;!-- PB --&gt;&quot;.
+     */
+    public String getPageBreakElement()
+    {
+<span class="nc" id="L488">        return pageBreakElement;</span>
+    }
+
+    /**
+     * Sets the current lineBreakElement.
+     *
+     * @param element the element to set.
+     */
+    public void setLineBreakElement( String element )
+    {
+<span class="fc" id="L498">        this.lineBreakElement = element;</span>
+<span class="fc" id="L499">    }</span>
+
+    /**
+     * Returns the current lineBreakElement.
+     *
+     * @return the current lineBreakElement. Defaults to &quot;&lt;!-- LB --&gt;&quot;.
+     */
+    public String getLineBreakElement()
+    {
+<span class="nc" id="L508">        return lineBreakElement;</span>
+    }
+
+    /**
+     * Reset all variables.
+     *
+     * @deprecated since 1.1.2, use {@link #init()} instead of.
+     */
+    protected void resetState()
+    {
+<span class="nc" id="L518">       init();</span>
+<span class="nc" id="L519">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void init()
+    {
+<span class="fc" id="L526">        hasTitle = false;</span>
+<span class="fc" id="L527">        authorDateFlag = false;</span>
+<span class="fc" id="L528">        verbatimFlag = false;</span>
+<span class="fc" id="L529">        externalLinkFlag = false;</span>
+<span class="fc" id="L530">        graphicsFileName = null;</span>
+<span class="fc" id="L531">        tableHasCaption = false;</span>
+<span class="fc" id="L532">        savedOut = null;</span>
+<span class="fc" id="L533">        tableRows = null;</span>
+<span class="fc" id="L534">        tableHasGrid = false;</span>
+<span class="fc" id="L535">    }</span>
+
+    // ----------------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#DEFAULT_XML_PUBLIC_ID
+     * @see SimplifiedDocbookMarkup#DEFAULT_XML_SYSTEM_ID
+     * @see SimplifiedDocbookMarkup#ARTICLE_TAG
+     */
+    public void head()
+    {
+<span class="fc" id="L550">        init();</span>
+
+<span class="fc" id="L552">        MutableAttributeSet att = writeXmlHeader( &quot;article&quot; );</span>
+
+<span class="fc" id="L554">        writeStartTag( SimplifiedDocbookMarkup.ARTICLE_TAG, att );</span>
+<span class="fc" id="L555">    }</span>
+
+    /**
+     * writeXmlHeader.
+     *
+     * @param root not null.
+     * @return an attribute set.
+     * @see SimplifiedDocbookMarkup#DEFAULT_XML_PUBLIC_ID
+     * @see SimplifiedDocbookMarkup#DEFAULT_XML_SYSTEM_ID
+     * @see SimplifiedDocbookMarkup#ARTICLE_TAG
+     * @since 1.1
+     */
+    protected MutableAttributeSet writeXmlHeader( String root )
+    {
+<span class="fc" id="L569">        markup( &quot;&lt;?xml version=\&quot;1.0\&quot;&quot; );</span>
+<span class="fc bfc" id="L570" title="All 2 branches covered.">        if ( encoding != null )</span>
+        {
+<span class="fc" id="L572">            markup( &quot; encoding=\&quot;&quot; + encoding + &quot;\&quot;&quot; );</span>
+        }
+<span class="fc" id="L574">        markup( &quot;?&gt;&quot; );</span>
+
+<span class="pc bpc" id="L576" title="1 of 2 branches missed.">        if ( styleSheet != null )</span>
+        {
+<span class="nc" id="L578">            markup( &quot;&lt;?xml-stylesheet type=\&quot;text/css\&quot; href=\&quot;&quot; + styleSheet + &quot;\&quot; ?&gt;&quot; );</span>
+        }
+
+        String pubId;
+<span class="fc" id="L582">        markup( &quot;&lt;!DOCTYPE &quot; + root + &quot; PUBLIC&quot; );</span>
+
+<span class="pc bpc" id="L584" title="1 of 2 branches missed.">        if ( publicId == null )</span>
+        {
+<span class="fc" id="L586">            pubId = SimplifiedDocbookMarkup.DEFAULT_XML_PUBLIC_ID;</span>
+        }
+        else
+        {
+<span class="nc" id="L590">            pubId = publicId;</span>
+        }
+<span class="fc" id="L592">        markup( &quot; \&quot;&quot; + pubId + &quot;\&quot;&quot; );</span>
+<span class="fc" id="L593">        String sysId = systemId;</span>
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">        if ( sysId == null )</span>
+        {
+<span class="fc" id="L596">                sysId = SimplifiedDocbookMarkup.DEFAULT_XML_SYSTEM_ID;</span>
+        }
+<span class="fc" id="L598">        markup( &quot; \&quot;&quot; + sysId + &quot;\&quot;&gt;&quot; );</span>
+
+<span class="fc" id="L600">        MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="pc bpc" id="L601" title="1 of 2 branches missed.">        if ( lang != null )</span>
+        {
+<span class="nc" id="L603">            att.addAttribute( LANG_ATTRIBUTE, lang );</span>
+        }
+<span class="fc" id="L605">        return att;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ARTICLEINFO_TAG
+     */
+    public void head_()
+    {
+<span class="fc bfc" id="L615" title="All 2 branches covered.">        if ( hasTitle )</span>
+        {
+<span class="fc" id="L617">            writeEndTag( SimplifiedDocbookMarkup.ARTICLEINFO_TAG );</span>
+<span class="fc" id="L618">            hasTitle = false;</span>
+        }
+<span class="fc" id="L620">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ARTICLEINFO_TAG
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void title()
+    {
+<span class="fc" id="L630">        writeStartTag( SimplifiedDocbookMarkup.ARTICLEINFO_TAG );</span>
+<span class="fc" id="L631">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L632">        hasTitle = true;</span>
+<span class="fc" id="L633">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void title_()
+    {
+<span class="fc" id="L642">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L643">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#CORPAUTHOR_TAG
+     */
+    public void author()
+    {
+<span class="fc" id="L652">        authorDateFlag = true;</span>
+<span class="fc" id="L653">        writeStartTag( SimplifiedDocbookMarkup.CORPAUTHOR_TAG );</span>
+<span class="fc" id="L654">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#CORPAUTHOR_TAG
+     */
+    public void author_()
+    {
+<span class="fc" id="L663">        writeEndTag( SimplifiedDocbookMarkup.CORPAUTHOR_TAG );</span>
+<span class="fc" id="L664">        authorDateFlag = false;</span>
+<span class="fc" id="L665">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#DATE_TAG
+     */
+    public void date()
+    {
+<span class="fc" id="L674">        authorDateFlag = true;</span>
+<span class="fc" id="L675">        writeStartTag( SimplifiedDocbookMarkup.DATE_TAG );</span>
+<span class="fc" id="L676">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#DATE_TAG
+     */
+    public void date_()
+    {
+<span class="fc" id="L685">        writeEndTag( SimplifiedDocbookMarkup.DATE_TAG );</span>
+<span class="fc" id="L686">        authorDateFlag = false;</span>
+<span class="fc" id="L687">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ARTICLE_TAG
+     */
+    public void body_()
+    {
+<span class="fc" id="L696">        writeEndTag( SimplifiedDocbookMarkup.ARTICLE_TAG );</span>
+<span class="fc" id="L697">        out.flush();</span>
+<span class="fc" id="L698">        init();</span>
+<span class="fc" id="L699">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SIDEBAR_TAG
+     */
+    public void sidebar()
+    {
+<span class="fc" id="L708">        writeStartTag( SimplifiedDocbookMarkup.SIDEBAR_TAG );</span>
+<span class="fc" id="L709">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SIDEBAR_TAG
+     */
+    public void sidebar_()
+    {
+<span class="fc" id="L718">        writeEndTag( SimplifiedDocbookMarkup.SIDEBAR_TAG );</span>
+<span class="fc" id="L719">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section1()
+    {
+<span class="fc" id="L728">        writeStartTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L729">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section1_()
+    {
+<span class="fc" id="L738">        writeEndTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L739">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section2()
+    {
+<span class="fc" id="L748">        writeStartTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L749">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section2_()
+    {
+<span class="fc" id="L758">        writeEndTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L759">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section3()
+    {
+<span class="fc" id="L768">        writeStartTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L769">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section3_()
+    {
+<span class="fc" id="L778">        writeEndTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L779">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section4()
+    {
+<span class="fc" id="L788">        writeStartTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L789">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section4_()
+    {
+<span class="fc" id="L798">        writeEndTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L799">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section5()
+    {
+<span class="fc" id="L808">        writeStartTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L809">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTION_TAG
+     */
+    public void section5_()
+    {
+<span class="fc" id="L818">        writeEndTag( SimplifiedDocbookMarkup.SECTION_TAG );</span>
+<span class="fc" id="L819">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle()
+    {
+<span class="fc" id="L828">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L829">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle_()
+    {
+<span class="fc" id="L838">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L839">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle1()
+    {
+<span class="fc" id="L848">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L849">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle1_()
+    {
+<span class="fc" id="L858">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L859">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle2()
+    {
+<span class="fc" id="L868">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L869">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle2_()
+    {
+<span class="fc" id="L878">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L879">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle3()
+    {
+<span class="fc" id="L888">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L889">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle3_()
+    {
+<span class="fc" id="L898">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L899">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle4()
+    {
+<span class="fc" id="L908">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L909">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle4_()
+    {
+<span class="fc" id="L918">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L919">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle5()
+    {
+<span class="fc" id="L928">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L929">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void sectionTitle5_()
+    {
+<span class="fc" id="L938">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L939">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTIONINFO_TAG
+     */
+    public void header()
+    {
+<span class="fc" id="L948">        writeStartTag( SimplifiedDocbookMarkup.SECTIONINFO_TAG );</span>
+<span class="fc" id="L949">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#SECTIONINFO_TAG
+     */
+    public void header_()
+    {
+<span class="fc" id="L958">        writeEndTag( SimplifiedDocbookMarkup.SECTIONINFO_TAG );</span>
+<span class="fc" id="L959">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ITEMIZEDLIST_TAG
+     */
+    public void list()
+    {
+<span class="fc" id="L968">        paragraph_();</span>
+<span class="fc" id="L969">        writeStartTag( SimplifiedDocbookMarkup.ITEMIZEDLIST_TAG );</span>
+<span class="fc" id="L970">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ITEMIZEDLIST_TAG
+     */
+    public void list_()
+    {
+<span class="fc" id="L979">        writeEndTag( SimplifiedDocbookMarkup.ITEMIZEDLIST_TAG );</span>
+<span class="fc" id="L980">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#LISTITEM_TAG
+     */
+    public void listItem()
+    {
+<span class="fc" id="L989">        writeStartTag( SimplifiedDocbookMarkup.LISTITEM_TAG );</span>
+<span class="fc" id="L990">        paragraph();</span>
+<span class="fc" id="L991">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#LISTITEM_TAG
+     */
+    public void listItem_()
+    {
+<span class="fc" id="L1000">        paragraph_();</span>
+<span class="fc" id="L1001">        writeEndTag( SimplifiedDocbookMarkup.LISTITEM_TAG );</span>
+<span class="fc" id="L1002">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see SimplifiedDocbookMarkup#ORDEREDLIST_TAG
+     * @see SimplifiedDocbookMarkup#NUMERATION_ATTRIBUTE
+     */
+    public void numberedList( int numbering )
+    {
+<span class="fc" id="L1011">        String numeration = DocbookUtils.docbookListNumbering( numbering );</span>
+
+<span class="fc" id="L1013">        paragraph_();</span>
+
+<span class="fc" id="L1015">        MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1016">        att.addAttribute( SimplifiedDocbookMarkup.NUMERATION_ATTRIBUTE, numeration );</span>
+
+<span class="fc" id="L1018">        writeStartTag( SimplifiedDocbookMarkup.ORDEREDLIST_TAG, att );</span>
+<span class="fc" id="L1019">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ORDEREDLIST_TAG
+     */
+    public void numberedList_()
+    {
+<span class="fc" id="L1028">        writeEndTag( SimplifiedDocbookMarkup.ORDEREDLIST_TAG );</span>
+<span class="fc" id="L1029">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#LISTITEM_TAG
+     */
+    public void numberedListItem()
+    {
+<span class="fc" id="L1038">        writeStartTag( SimplifiedDocbookMarkup.LISTITEM_TAG );</span>
+<span class="fc" id="L1039">        paragraph();</span>
+<span class="fc" id="L1040">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#LISTITEM_TAG
+     */
+    public void numberedListItem_()
+    {
+<span class="fc" id="L1049">        paragraph_();</span>
+<span class="fc" id="L1050">        writeEndTag( SimplifiedDocbookMarkup.LISTITEM_TAG );</span>
+<span class="fc" id="L1051">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#VARIABLELIST_TAG
+     */
+    public void definitionList()
+    {
+<span class="fc" id="L1060">        paragraph_();</span>
+<span class="fc" id="L1061">        writeStartTag( SimplifiedDocbookMarkup.VARIABLELIST_TAG );</span>
+<span class="fc" id="L1062">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#VARIABLELIST_TAG
+     */
+    public void definitionList_()
+    {
+<span class="fc" id="L1071">        writeEndTag( SimplifiedDocbookMarkup.VARIABLELIST_TAG );</span>
+<span class="fc" id="L1072">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#VARLISTENTRY_TAG
+     */
+    public void definitionListItem()
+    {
+<span class="fc" id="L1081">        writeStartTag( SimplifiedDocbookMarkup.VARLISTENTRY_TAG );</span>
+<span class="fc" id="L1082">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#VARLISTENTRY_TAG
+     */
+    public void definitionListItem_()
+    {
+<span class="fc" id="L1091">        writeEndTag( SimplifiedDocbookMarkup.VARLISTENTRY_TAG );</span>
+<span class="fc" id="L1092">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TERM_TAG
+     */
+    public void definedTerm()
+    {
+<span class="fc" id="L1101">        writeStartTag( SimplifiedDocbookMarkup.TERM_TAG );</span>
+<span class="fc" id="L1102">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TERM_TAG
+     */
+    public void definedTerm_()
+    {
+<span class="fc" id="L1111">        writeEndTag( SimplifiedDocbookMarkup.TERM_TAG );</span>
+<span class="fc" id="L1112">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#LISTITEM_TAG
+     */
+    public void definition()
+    {
+<span class="fc" id="L1121">        writeStartTag( SimplifiedDocbookMarkup.LISTITEM_TAG );</span>
+<span class="fc" id="L1122">        paragraph();</span>
+<span class="fc" id="L1123">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#LISTITEM_TAG
+     */
+    public void definition_()
+    {
+<span class="fc" id="L1132">        paragraph_();</span>
+<span class="fc" id="L1133">        writeEndTag( SimplifiedDocbookMarkup.LISTITEM_TAG );</span>
+<span class="fc" id="L1134">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#PARA_TAG
+     */
+    public void paragraph()
+    {
+<span class="fc bfc" id="L1143" title="All 2 branches covered.">        if ( !paragraph )</span>
+        {
+<span class="fc" id="L1145">            writeStartTag( SimplifiedDocbookMarkup.PARA_TAG );</span>
+<span class="fc" id="L1146">            paragraph = true;</span>
+        }
+<span class="fc" id="L1148">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#PARA_TAG
+     */
+    public void paragraph_()
+    {
+<span class="fc bfc" id="L1157" title="All 2 branches covered.">        if ( paragraph )</span>
+        {
+<span class="fc" id="L1159">            writeEndTag( SimplifiedDocbookMarkup.PARA_TAG );</span>
+<span class="fc" id="L1160">            paragraph = false;</span>
+        }
+<span class="fc" id="L1162">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see SimplifiedDocbookMarkup#PROGRAMLISTING_TAG
+     */
+    public void verbatim( boolean boxed )
+    {
+<span class="fc" id="L1170">        verbatimFlag = true;</span>
+<span class="fc" id="L1171">        paragraph_();</span>
+<span class="fc" id="L1172">        writeStartTag( SimplifiedDocbookMarkup.PROGRAMLISTING_TAG );</span>
+<span class="fc" id="L1173">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#PROGRAMLISTING_TAG
+     */
+    public void verbatim_()
+    {
+<span class="fc" id="L1182">        writeEndTag( SimplifiedDocbookMarkup.PROGRAMLISTING_TAG );</span>
+<span class="fc" id="L1183">        verbatimFlag = false;</span>
+<span class="fc" id="L1184">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void horizontalRule()
+    {
+<span class="fc" id="L1191">        markup( horizontalRuleElement );</span>
+<span class="fc" id="L1192">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void pageBreak()
+    {
+<span class="fc" id="L1199">        markup( pageBreakElement );</span>
+<span class="fc" id="L1200">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figure()
+    {
+<span class="fc" id="L1207">        writeStartTag( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG );</span>
+<span class="fc" id="L1208">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figure_()
+    {
+<span class="fc" id="L1215">        writeEndTag( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG );</span>
+<span class="fc" id="L1216">    }</span>
+
+    /**
+     * &lt;p&gt;graphicElement&lt;/p&gt;
+     *
+     * @see SimplifiedDocbookMarkup#MEDIAOBJECT_TAG
+     * @see SimplifiedDocbookMarkup#IMAGEOBJECT_TAG
+     * @see SimplifiedDocbookMarkup#IMAGEDATA_TAG
+     * @see SimplifiedDocbookMarkup#FORMAT_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#FILEREF_ATTRIBUTE
+     * @deprecated do not use!
+     */
+    protected void graphicElement()
+    {
+<span class="nc bnc" id="L1230" title="All 2 branches missed.">        if ( graphicsFileName != null )</span>
+        {
+<span class="nc" id="L1232">            String format = FileUtils.extension( graphicsFileName ).toUpperCase( Locale.ENGLISH );</span>
+<span class="nc bnc" id="L1233" title="All 2 branches missed.">            if ( format.length() == 0 )</span>
+            {
+<span class="nc" id="L1235">                format = &quot;JPEG&quot;;</span>
+            }
+
+<span class="nc" id="L1238">            writeStartTag( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG );</span>
+<span class="nc" id="L1239">            writeStartTag( SimplifiedDocbookMarkup.IMAGEOBJECT_TAG );</span>
+
+<span class="nc" id="L1241">            MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="nc" id="L1242">            att.addAttribute( SimplifiedDocbookMarkup.FORMAT_ATTRIBUTE, escapeHTML( format, true ) );</span>
+<span class="nc" id="L1243">            att.addAttribute( SimplifiedDocbookMarkup.FILEREF_ATTRIBUTE, escapeHTML( graphicsFileName, true ) );</span>
+
+<span class="nc" id="L1245">            writeSimpleTag( SimplifiedDocbookMarkup.IMAGEDATA_TAG, att );</span>
+
+<span class="nc" id="L1247">            writeEndTag( SimplifiedDocbookMarkup.IMAGEOBJECT_TAG );</span>
+<span class="nc" id="L1248">            writeEndTag( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG );</span>
+<span class="nc" id="L1249">            graphicsFileName = null;</span>
+        }
+<span class="nc" id="L1251">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureGraphics( String name )
+    {
+<span class="fc" id="L1256">        String format = FileUtils.extension( name ).toUpperCase( Locale.ENGLISH );</span>
+
+<span class="fc" id="L1258">        writeStartTag( SimplifiedDocbookMarkup.IMAGEOBJECT_TAG );</span>
+
+<span class="fc" id="L1260">        MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1261">        att.addAttribute( SimplifiedDocbookMarkup.FORMAT_ATTRIBUTE, escapeHTML( format, true ) );</span>
+<span class="fc" id="L1262">        att.addAttribute( SimplifiedDocbookMarkup.FILEREF_ATTRIBUTE, escapeHTML( name, true ) );</span>
+
+<span class="fc" id="L1264">        writeSimpleTag( SimplifiedDocbookMarkup.IMAGEDATA_TAG, att );</span>
+
+<span class="fc" id="L1266">        writeEndTag( SimplifiedDocbookMarkup.IMAGEOBJECT_TAG );</span>
+<span class="fc" id="L1267">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#FIGURE_TAG
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void figureCaption()
+    {
+<span class="fc" id="L1277">        writeStartTag( SimplifiedDocbookMarkup.CAPTION_TAG );</span>
+<span class="fc" id="L1278">        writeStartTag( SimplifiedDocbookMarkup.PARA_TAG );</span>
+<span class="fc" id="L1279">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#FIGURE_TAG
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void figureCaption_()
+    {
+<span class="fc" id="L1289">        writeEndTag( SimplifiedDocbookMarkup.PARA_TAG );</span>
+<span class="fc" id="L1290">        writeEndTag( SimplifiedDocbookMarkup.CAPTION_TAG );</span>
+<span class="fc" id="L1291">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void table()
+    {
+<span class="fc" id="L1298">        tableHasCaption = false;</span>
+<span class="fc" id="L1299">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#INFORMALTABLE_TAG
+     * @see SimplifiedDocbookMarkup#FRAME_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#ROWSEP_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#COLSEP_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#TABLE_TAG
+     */
+    public void table_()
+    {
+<span class="fc bfc" id="L1312" title="All 2 branches covered.">        if ( tableHasCaption )</span>
+        {
+<span class="fc" id="L1314">            tableHasCaption = false;</span>
+            // Formal table+title already written to original destination ---
+
+<span class="fc" id="L1317">            out.write( tableRows  );</span>
+<span class="fc" id="L1318">            writeEndTag( TABLE_TAG );</span>
+        }
+        else
+        {
+<span class="fc" id="L1322">            String frame = &quot;none&quot;;</span>
+<span class="fc" id="L1323">            String sep = &quot;0&quot;;</span>
+<span class="fc bfc" id="L1324" title="All 2 branches covered.">            if ( tableHasGrid )</span>
+            {
+<span class="fc" id="L1326">                frame = &quot;all&quot;;</span>
+<span class="fc" id="L1327">                sep = &quot;1&quot;;</span>
+            }
+
+<span class="fc" id="L1330">            MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1331">            att.addAttribute( SimplifiedDocbookMarkup.FRAME_ATTRIBUTE, frame );</span>
+<span class="fc" id="L1332">            att.addAttribute( SimplifiedDocbookMarkup.ROWSEP_ATTRIBUTE, sep );</span>
+<span class="fc" id="L1333">            att.addAttribute( SimplifiedDocbookMarkup.COLSEP_ATTRIBUTE, sep );</span>
+
+<span class="fc" id="L1335">            writeStartTag( SimplifiedDocbookMarkup.INFORMALTABLE_TAG, att );</span>
+
+<span class="fc" id="L1337">            out.write( tableRows  );</span>
+
+<span class="fc" id="L1339">            writeEndTag( SimplifiedDocbookMarkup.INFORMALTABLE_TAG );</span>
+        }
+
+<span class="fc" id="L1342">        tableRows = null;</span>
+<span class="fc" id="L1343">        tableHasGrid = false;</span>
+<span class="fc" id="L1344">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see SimplifiedDocbookMarkup#TGROUP_TAG
+     * @see SimplifiedDocbookMarkup#COLS_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#COLSPEC_TAG
+     */
+    public void tableRows( int[] justification, boolean grid )
+    {
+<span class="fc" id="L1354">        tableHasGrid = grid;</span>
+
+        // Divert output to a string ---
+<span class="fc" id="L1357">        out.flush();</span>
+<span class="fc" id="L1358">        savedOut = out;</span>
+<span class="fc" id="L1359">        tableRowsWriter = new StringWriter();</span>
+<span class="fc" id="L1360">        out = new PrintWriter( tableRowsWriter );</span>
+
+<span class="fc" id="L1362">        MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1363">        att.addAttribute( SimplifiedDocbookMarkup.COLS_ATTRIBUTE, String.valueOf( justification.length ) );</span>
+
+<span class="fc" id="L1365">        writeStartTag( SimplifiedDocbookMarkup.TGROUP_TAG, att );</span>
+
+<span class="fc bfc" id="L1367" title="All 2 branches covered.">        for ( int i1 : justification )</span>
+        {
+            String justif;
+<span class="fc bfc" id="L1370" title="All 3 branches covered.">            switch ( i1 )</span>
+            {
+                case Sink.JUSTIFY_LEFT:
+<span class="fc" id="L1373">                    justif = &quot;left&quot;;</span>
+<span class="fc" id="L1374">                    break;</span>
+                case Sink.JUSTIFY_RIGHT:
+<span class="fc" id="L1376">                    justif = &quot;right&quot;;</span>
+<span class="fc" id="L1377">                    break;</span>
+                case Sink.JUSTIFY_CENTER:
+                default:
+<span class="fc" id="L1380">                    justif = &quot;center&quot;;</span>
+                    break;
+            }
+
+<span class="fc" id="L1384">            att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1385">            att.addAttribute( &quot;align&quot;, justif );</span>
+
+<span class="fc" id="L1387">            writeSimpleTag( SimplifiedDocbookMarkup.COLSPEC_TAG, att );</span>
+        }
+
+<span class="fc" id="L1390">        writeStartTag( SimplifiedDocbookMarkup.TBODY_TAG );</span>
+<span class="fc" id="L1391">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TGROUP_TAG
+     * @see SimplifiedDocbookMarkup#TBODY_TAG
+     */
+    public void tableRows_()
+    {
+<span class="fc" id="L1401">        writeEndTag( SimplifiedDocbookMarkup.TBODY_TAG );</span>
+<span class="fc" id="L1402">        writeEndTag( SimplifiedDocbookMarkup.TGROUP_TAG );</span>
+
+        // Remember diverted output and restore original destination ---
+<span class="fc" id="L1405">        out.flush();</span>
+<span class="pc bpc" id="L1406" title="1 of 2 branches missed.">        if ( tableRowsWriter == null )</span>
+        {
+<span class="nc" id="L1408">            throw new IllegalArgumentException( &quot;tableRows( int[] justification, boolean grid )&quot;</span>
+                                                + &quot; was not called before.&quot; );
+        }
+
+<span class="fc" id="L1412">        tableRows = tableRowsWriter.toString();</span>
+<span class="fc" id="L1413">        tableRowsWriter = null;</span>
+<span class="fc" id="L1414">        out = savedOut;</span>
+<span class="fc" id="L1415">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ROW_TAG
+     */
+    public void tableRow()
+    {
+<span class="fc" id="L1424">        writeStartTag( SimplifiedDocbookMarkup.ROW_TAG );</span>
+<span class="fc" id="L1425">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ROW_TAG
+     */
+    public void tableRow_()
+    {
+<span class="fc" id="L1434">        writeEndTag( SimplifiedDocbookMarkup.ROW_TAG );</span>
+<span class="fc" id="L1435">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ENTRY_TAG
+     */
+    public void tableCell()
+    {
+<span class="fc" id="L1444">        writeStartTag( SimplifiedDocbookMarkup.ENTRY_TAG );</span>
+<span class="fc" id="L1445">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ENTRY_TAG
+     */
+    public void tableCell_()
+    {
+<span class="fc" id="L1454">        writeEndTag( SimplifiedDocbookMarkup.ENTRY_TAG );</span>
+<span class="fc" id="L1455">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ENTRY_TAG
+     */
+    public void tableHeaderCell()
+    {
+<span class="fc" id="L1464">        writeStartTag( SimplifiedDocbookMarkup.ENTRY_TAG );</span>
+<span class="fc" id="L1465">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ENTRY_TAG
+     */
+    public void tableHeaderCell_()
+    {
+<span class="fc" id="L1474">        writeEndTag( SimplifiedDocbookMarkup.ENTRY_TAG );</span>
+<span class="fc" id="L1475">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TABLE_TAG
+     * @see SimplifiedDocbookMarkup#FRAME_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#ROWSEP_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#COLSEP_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void tableCaption()
+    {
+<span class="fc" id="L1488">        tableHasCaption = true;</span>
+
+        String frame;
+        int sep;
+<span class="fc bfc" id="L1492" title="All 2 branches covered.">        if ( tableHasGrid )</span>
+        {
+<span class="fc" id="L1494">            frame = &quot;all&quot;;</span>
+<span class="fc" id="L1495">            sep = 1;</span>
+        }
+        else
+        {
+<span class="fc" id="L1499">            frame = &quot;none&quot;;</span>
+<span class="fc" id="L1500">            sep = 0;</span>
+        }
+
+<span class="fc" id="L1503">        MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1504">        att.addAttribute( SimplifiedDocbookMarkup.FRAME_ATTRIBUTE, frame );</span>
+<span class="fc" id="L1505">        att.addAttribute( SimplifiedDocbookMarkup.ROWSEP_ATTRIBUTE, String.valueOf( sep ) );</span>
+<span class="fc" id="L1506">        att.addAttribute( SimplifiedDocbookMarkup.COLSEP_ATTRIBUTE, String.valueOf( sep ) );</span>
+
+<span class="fc" id="L1508">        writeStartTag( TABLE_TAG, att );</span>
+
+<span class="fc" id="L1510">        writeStartTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L1511">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#TITLE_TAG
+     */
+    public void tableCaption_()
+    {
+<span class="fc" id="L1520">        writeEndTag( SimplifiedDocbookMarkup.TITLE_TAG );</span>
+<span class="fc" id="L1521">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see SimplifiedDocbookMarkup#ANCHOR_TAG
+     */
+    public void anchor( String name )
+    {
+<span class="pc bpc" id="L1529" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L1531">            throw new NullPointerException( &quot;Anchor name cannot be null!&quot; );</span>
+        }
+
+<span class="pc bpc" id="L1534" title="1 of 2 branches missed.">        if ( authorDateFlag )</span>
+        {
+<span class="nc" id="L1536">            return;</span>
+        }
+
+<span class="fc" id="L1539">        String id = name;</span>
+
+<span class="pc bpc" id="L1541" title="1 of 2 branches missed.">        if ( !DoxiaUtils.isValidId( id ) )</span>
+        {
+<span class="nc" id="L1543">            id = DoxiaUtils.encodeId( name, true );</span>
+
+<span class="nc" id="L1545">            String msg = &quot;Modified invalid anchor name: '&quot; + name + &quot;' to '&quot; + id + &quot;'&quot;;</span>
+<span class="nc" id="L1546">            logMessage( &quot;modifiedLink&quot;, msg );</span>
+        }
+
+<span class="fc" id="L1549">        MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1550">        att.addAttribute( ID_ATTRIBUTE, id );</span>
+
+<span class="fc" id="L1552">        writeSimpleTag( SimplifiedDocbookMarkup.ANCHOR_TAG, att );</span>
+<span class="fc" id="L1553">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ANCHOR_TAG
+     */
+    public void anchor_()
+    {
+<span class="fc" id="L1562">        comment( &quot; anchor_end &quot; );</span>
+<span class="fc" id="L1563">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see SimplifiedDocbookMarkup#ULINK_TAG
+     * @see SimplifiedDocbookMarkup#URL_ATTRIBUTE
+     * @see SimplifiedDocbookMarkup#LINK_TAG
+     * @see SimplifiedDocbookMarkup#LINKEND_ATTRIBUTE
+     */
+    public void link( String name )
+    {
+<span class="pc bpc" id="L1574" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L1576">            throw new NullPointerException( &quot;Link name cannot be null!&quot; );</span>
+        }
+
+<span class="fc bfc" id="L1579" title="All 2 branches covered.">        if ( DoxiaUtils.isInternalLink( name ) )</span>
+        {
+<span class="fc" id="L1581">            String linkend = name.substring( 1 );</span>
+<span class="fc" id="L1582">            MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1583">            att.addAttribute( SimplifiedDocbookMarkup.LINKEND_ATTRIBUTE, escapeHTML( linkend ) );</span>
+
+<span class="fc" id="L1585">            writeStartTag( SimplifiedDocbookMarkup.LINK_TAG, att );</span>
+<span class="fc" id="L1586">        }</span>
+        else
+        {
+<span class="fc" id="L1589">            externalLinkFlag = true;</span>
+<span class="fc" id="L1590">            MutableAttributeSet att = new SimpleAttributeSet();</span>
+<span class="fc" id="L1591">            att.addAttribute( SimplifiedDocbookMarkup.URL_ATTRIBUTE, escapeHTML( name, true ) );</span>
+
+<span class="fc" id="L1593">            writeStartTag( SimplifiedDocbookMarkup.ULINK_TAG, att );</span>
+        }
+<span class="fc" id="L1595">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see SimplifiedDocbookMarkup#ULINK_TAG
+     * @see SimplifiedDocbookMarkup#LINK_TAG
+     */
+    public void link_()
+    {
+<span class="fc bfc" id="L1605" title="All 2 branches covered.">        if ( externalLinkFlag )</span>
+        {
+<span class="fc" id="L1607">            writeEndTag( SimplifiedDocbookMarkup.ULINK_TAG );</span>
+<span class="fc" id="L1608">            externalLinkFlag = false;</span>
+        }
+        else
+        {
+<span class="fc" id="L1612">            writeEndTag( SimplifiedDocbookMarkup.LINK_TAG );</span>
+        }
+<span class="fc" id="L1614">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void inline()
+    {
+<span class="fc" id="L1621">        inline( null );</span>
+<span class="fc" id="L1622">    }</span>
+
+    /** {@inheritDoc} */
+    public void inline( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1627">        List&lt;String&gt; tags = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L1629" title="All 2 branches covered.">        if ( attributes != null )</span>
+        {
+
+<span class="fc bfc" id="L1632" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;italic&quot; ) )</span>
+            {
+<span class="fc" id="L1634">                markup( italicBeginTag );</span>
+<span class="fc" id="L1635">                tags.add( 0, italicEndTag );</span>
+            }
+
+<span class="fc bfc" id="L1638" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;bold&quot; ) )</span>
+            {
+<span class="fc" id="L1640">                write( boldBeginTag );</span>
+<span class="fc" id="L1641">                tags.add( 0, boldEndTag );</span>
+            }
+
+<span class="fc bfc" id="L1644" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;code&quot; ) )</span>
+            {
+<span class="pc bpc" id="L1646" title="1 of 2 branches missed.">                if ( !authorDateFlag )</span>
+                {
+<span class="fc" id="L1648">                    write( monospacedBeginTag );</span>
+<span class="fc" id="L1649">                    tags.add( 0, monospacedEndTag );</span>
+                }
+            }
+
+        }
+
+<span class="fc" id="L1655">        inlineStack.push( tags );</span>
+<span class="fc" id="L1656">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void inline_()
+    {
+<span class="fc bfc" id="L1663" title="All 2 branches covered.">        for ( String tag: inlineStack.pop() )</span>
+        {
+<span class="fc" id="L1665">            markup( tag );</span>
+<span class="fc" id="L1666">        }</span>
+<span class="fc" id="L1667">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void italic()
+    {
+<span class="fc" id="L1674">        inline( SinkEventAttributeSet.Semantics.ITALIC );</span>
+<span class="fc" id="L1675">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void italic_()
+    {
+<span class="fc" id="L1682">        inline_();</span>
+<span class="fc" id="L1683">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void bold()
+    {
+<span class="fc" id="L1690">        inline( SinkEventAttributeSet.Semantics.BOLD );</span>
+<span class="fc" id="L1691">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void bold_()
+    {
+<span class="fc" id="L1698">        inline_();</span>
+<span class="fc" id="L1699">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void monospaced()
+    {
+<span class="fc" id="L1706">        inline( SinkEventAttributeSet.Semantics.CODE );</span>
+<span class="fc" id="L1707">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void monospaced_()
+    {
+<span class="fc" id="L1714">        inline_();</span>
+<span class="fc" id="L1715">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void lineBreak()
+    {
+<span class="fc" id="L1722">        markup( lineBreakElement );</span>
+<span class="fc" id="L1723">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void nonBreakingSpace()
+    {
+<span class="fc" id="L1730">        markup( &quot;&amp;#x00A0;&quot; );</span>
+        //markup( &quot;&amp;nbsp;&quot; );
+<span class="fc" id="L1732">    }</span>
+
+    /** {@inheritDoc} */
+    public void text( String text )
+    {
+<span class="fc bfc" id="L1737" title="All 2 branches covered.">        if ( verbatimFlag )</span>
+        {
+<span class="fc" id="L1739">            verbatimContent( text );</span>
+        }
+        else
+        {
+<span class="fc" id="L1743">            content( text );</span>
+        }
+<span class="fc" id="L1745">    }</span>
+
+    /** {@inheritDoc} */
+    public void comment( String comment )
+    {
+<span class="pc bpc" id="L1750" title="1 of 2 branches missed.">        if ( comment != null )</span>
+        {
+<span class="fc" id="L1752">            String originalComment = comment;</span>
+
+            // http://www.w3.org/TR/2000/REC-xml-20001006#sec-comments
+<span class="fc bfc" id="L1755" title="All 2 branches covered.">            while ( comment.contains( &quot;--&quot; ) )</span>
+            {
+<span class="fc" id="L1757">                comment = comment.replace( &quot;--&quot;, &quot;- -&quot; );</span>
+            }
+
+<span class="fc bfc" id="L1760" title="All 2 branches covered.">            if ( comment.endsWith( &quot;-&quot; ) )</span>
+            {
+<span class="fc" id="L1762">                comment += &quot; &quot;;</span>
+            }
+
+<span class="fc bfc" id="L1765" title="All 2 branches covered.">            if ( !originalComment.equals( comment ) )</span>
+            {
+<span class="fc" id="L1767">                String msg = &quot;Modified invalid comment: '&quot; + originalComment + &quot;' to '&quot; + comment + &quot;'&quot;;</span>
+<span class="fc" id="L1768">                logMessage( &quot;modifiedComment&quot;, msg );</span>
+            }
+
+<span class="fc" id="L1771">            StringBuilder buffer = new StringBuilder( comment.length() + 7 );</span>
+
+<span class="fc" id="L1773">            buffer.append( LESS_THAN ).append( BANG ).append( MINUS ).append( MINUS );</span>
+<span class="fc" id="L1774">            buffer.append( comment );</span>
+<span class="fc" id="L1775">            buffer.append( MINUS ).append( MINUS ).append( GREATER_THAN );</span>
+
+<span class="fc" id="L1777">            markup( buffer.toString() );</span>
+        }
+<span class="fc" id="L1779">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Unknown events just log a warning message but are ignored otherwise.
+     * @see org.apache.maven.doxia.sink.Sink#unknown(String,Object[],SinkEventAttributes)
+     */
+    public void unknown( String name, Object[] requiredParams, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1789">        String msg = &quot;Unknown Sink event: '&quot; + name + &quot;', ignoring!&quot;;</span>
+<span class="fc" id="L1790">        logMessage( &quot;unknownEvent&quot;, msg );</span>
+<span class="fc" id="L1791">    }</span>
+
+    // -----------------------------------------------------------------------
+
+    /**
+     * Write text to output, preserving white space.
+     *
+     * @param text The text to write.
+     */
+    protected void markup( String text )
+    {
+<span class="pc bpc" id="L1802" title="1 of 2 branches missed.">        if ( !skip )</span>
+        {
+<span class="fc" id="L1804">            out.write( text );</span>
+        }
+<span class="fc" id="L1806">    }</span>
+
+    /**
+     * Write SGML escaped text to output, not preserving white space.
+     *
+     * @param text The text to write.
+     */
+    protected void content( String text )
+    {
+<span class="pc bpc" id="L1815" title="1 of 2 branches missed.">        if ( !skip )</span>
+        {
+<span class="fc" id="L1817">            out.write( escapeHTML( text, true ) );</span>
+        }
+<span class="fc" id="L1819">    }</span>
+
+    /**
+     * Write SGML escaped text to output, preserving white space.
+     *
+     * @param text The text to write.
+     */
+    protected void verbatimContent( String text )
+    {
+<span class="pc bpc" id="L1828" title="1 of 2 branches missed.">        if ( !skip )</span>
+        {
+<span class="fc" id="L1830">            out.write( escapeHTML( text, true ) );</span>
+        }
+<span class="fc" id="L1832">    }</span>
+
+    // -----------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public void flush()
+    {
+<span class="fc" id="L1841">        out.flush();</span>
+<span class="fc" id="L1842">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void close()
+    {
+<span class="fc" id="L1849">        out.close();</span>
+
+<span class="pc bpc" id="L1851" title="1 of 4 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null )</span>
+        {
+<span class="fc bfc" id="L1853" title="All 2 branches covered.">            for ( Map.Entry&lt;String, Set&lt;String&gt;&gt; entry : this.warnMessages.entrySet() )</span>
+            {
+<span class="fc bfc" id="L1855" title="All 2 branches covered.">                for ( String msg : entry.getValue() )</span>
+                {
+<span class="fc" id="L1857">                    getLog().warn( msg );</span>
+<span class="fc" id="L1858">                }</span>
+<span class="fc" id="L1859">            }</span>
+
+<span class="fc" id="L1861">            this.warnMessages = null;</span>
+        }
+<span class="fc" id="L1863">    }</span>
+
+    /** {@inheritDoc} */
+    protected void write( String text )
+    {
+<span class="fc" id="L1868">        markup( unifyEOLs( text ) );</span>
+<span class="fc" id="L1869">    }</span>
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;skip&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param skip the skip to set.
+     * @since 1.1
+     */
+    public void setSkip( boolean skip )
+    {
+<span class="nc" id="L1879">        this.skip = skip;</span>
+<span class="nc" id="L1880">    }</span>
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #close()
+     * @since 1.1.1
+     */
+    private void logMessage( String key, String msg )
+    {
+<span class="fc" id="L1892">        msg = &quot;[Docbook Sink] &quot; + msg;</span>
+<span class="pc bpc" id="L1893" title="1 of 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L1895">            getLog().debug( msg );</span>
+
+<span class="nc" id="L1897">            return;</span>
+        }
+
+<span class="fc bfc" id="L1900" title="All 2 branches covered.">        if ( warnMessages == null )</span>
+        {
+<span class="fc" id="L1902">            warnMessages = new HashMap&lt;&gt;();</span>
+        }
+
+<span class="fc" id="L1905">        Set&lt;String&gt; set = warnMessages.get( key );</span>
+<span class="fc bfc" id="L1906" title="All 2 branches covered.">        if ( set == null )</span>
+        {
+<span class="fc" id="L1908">            set = new TreeSet&lt;&gt;();</span>
+        }
+<span class="fc" id="L1910">        set.add( msg );</span>
+<span class="fc" id="L1911">        warnMessages.put( key, set );</span>
+<span class="fc" id="L1912">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

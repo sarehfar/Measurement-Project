@@ -1,0 +1,2463 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Xhtml5BaseSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.sink.impl</a> &gt; <span class="el_source">Xhtml5BaseSink.java</span></div><h1>Xhtml5BaseSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.sink.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.EmptyStackException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.html.HTML.Attribute;
+import javax.swing.text.html.HTML.Tag;
+
+import org.apache.maven.doxia.markup.HtmlMarkup;
+import org.apache.maven.doxia.markup.Markup;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.util.DoxiaUtils;
+import org.apache.maven.doxia.util.HtmlTools;
+
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.PrettyPrintXMLWriter;
+
+/**
+ * Abstract base xhtml5 sink implementation.
+ */
+public class Xhtml5BaseSink
+    extends AbstractXmlSink
+    implements HtmlMarkup
+{
+    // ----------------------------------------------------------------------
+    // Instance fields
+    // ----------------------------------------------------------------------
+
+    /** The PrintWriter to write the result. */
+    private final PrintWriter writer;
+
+    /** Used to collect text events mainly for the head events. */
+<span class="fc" id="L64">    private StringBuffer textBuffer = new StringBuffer();</span>
+
+    /** An indication on if we're inside a head. */
+    private boolean headFlag;
+
+    /** Keep track of the main and div tags for content events. */
+<span class="fc" id="L70">    protected Stack&lt;Tag&gt; contentStack = new Stack&lt;&gt;();</span>
+
+    /** Keep track of the closing tags for inline events. */
+<span class="fc" id="L73">    protected Stack&lt;List&lt;Tag&gt;&gt; inlineStack = new Stack&lt;&gt;();</span>
+
+    /** An indication on if we're inside a paragraph flag. */
+    private boolean paragraphFlag;
+
+    /** An indication on if we're in verbatim mode. */
+    private boolean verbatimFlag;
+
+    /** Stack of alignment int[] of table cells. */
+    private final LinkedList&lt;int[]&gt; cellJustifStack;
+
+    /** Stack of justification of table cells. */
+    private final LinkedList&lt;Boolean&gt; isCellJustifStack;
+
+    /** Stack of current table cell. */
+    private final LinkedList&lt;Integer&gt; cellCountStack;
+
+    /** Used to style successive table rows differently. */
+<span class="fc" id="L91">    private boolean evenTableRow = true;</span>
+
+    /** The stack of StringWriter to write the table result temporary, so we could play with the output DOXIA-177. */
+    private final LinkedList&lt;StringWriter&gt; tableContentWriterStack;
+
+    private final LinkedList&lt;StringWriter&gt; tableCaptionWriterStack;
+
+    private final LinkedList&lt;PrettyPrintXMLWriter&gt; tableCaptionXMLWriterStack;
+
+    /** The stack of table caption */
+    private final LinkedList&lt;String&gt; tableCaptionStack;
+
+    /** used to store attributes passed to table(). */
+    protected MutableAttributeSet tableAttributes;
+
+    /** Flag to know if {@link #tableRows(int[], boolean)} is called or not. It is mainly to be backward compatible
+     * with some plugins (like checkstyle) which uses:
+     * &lt;pre&gt;
+     * sink.table();
+     * sink.tableRow();
+     * &lt;/pre&gt;
+     * instead of
+     * &lt;pre&gt;
+     * sink.table();
+     * sink.tableRows( justify, true );
+     * sink.tableRow();
+     * &lt;/pre&gt;
+     * */
+<span class="fc" id="L119">    protected boolean tableRows = false;</span>
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    private Map&lt;String, Set&lt;String&gt;&gt; warnMessages;
+
+    // ----------------------------------------------------------------------
+    // Constructor
+    // ----------------------------------------------------------------------
+
+    /**
+     * Constructor, initialize the PrintWriter.
+     *
+     * @param out The writer to write the result.
+     */
+    public Xhtml5BaseSink( Writer out )
+<span class="fc" id="L135">    {</span>
+<span class="fc" id="L136">        this.writer = new PrintWriter( out );</span>
+
+<span class="fc" id="L138">        this.cellJustifStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L139">        this.isCellJustifStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L140">        this.cellCountStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L141">        this.tableContentWriterStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L142">        this.tableCaptionWriterStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L143">        this.tableCaptionXMLWriterStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L144">        this.tableCaptionStack = new LinkedList&lt;&gt;();</span>
+
+<span class="fc" id="L146">        init();</span>
+<span class="fc" id="L147">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Accessor methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * To use mainly when playing with the head events.
+     *
+     * @return the current buffer of text events.
+     */
+    protected StringBuffer getTextBuffer()
+    {
+<span class="nc" id="L160">        return this.textBuffer;</span>
+    }
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;headFlag&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param headFlag an header flag.
+     */
+    protected void setHeadFlag( boolean headFlag )
+    {
+<span class="nc" id="L170">        this.headFlag = headFlag;</span>
+<span class="nc" id="L171">    }</span>
+
+    /**
+     * &lt;p&gt;isHeadFlag.&lt;/p&gt;
+     *
+     * @return the current headFlag.
+     */
+    protected boolean isHeadFlag()
+    {
+<span class="nc" id="L180">        return this.headFlag ;</span>
+    }
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;verbatimFlag&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param verb a verbatim flag.
+     */
+    protected void setVerbatimFlag( boolean verb )
+    {
+<span class="nc" id="L190">        this.verbatimFlag = verb;</span>
+<span class="nc" id="L191">    }</span>
+
+    /**
+     * &lt;p&gt;isVerbatimFlag.&lt;/p&gt;
+     *
+     * @return the current verbatim flag.
+     */
+    protected boolean isVerbatimFlag()
+    {
+<span class="fc" id="L200">        return this.verbatimFlag ;</span>
+    }
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;cellJustif&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param justif the new cell justification array.
+     */
+    protected void setCellJustif( int[] justif )
+    {
+<span class="fc" id="L210">        this.cellJustifStack.addLast( justif );</span>
+<span class="fc" id="L211">        this.isCellJustifStack.addLast( Boolean.TRUE );</span>
+<span class="fc" id="L212">    }</span>
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;cellJustif&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return the current cell justification array.
+     */
+    protected int[] getCellJustif()
+    {
+<span class="nc" id="L221">        return this.cellJustifStack.getLast();</span>
+    }
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;cellCount&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param count the new cell count.
+     */
+    protected void setCellCount( int count )
+    {
+<span class="nc" id="L231">        this.cellCountStack.addLast( count );</span>
+<span class="nc" id="L232">    }</span>
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;cellCount&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return the current cell count.
+     */
+    protected int getCellCount()
+    {
+<span class="nc" id="L241">        return Integer.parseInt( this.cellCountStack.getLast().toString() );</span>
+    }
+
+    /**
+     * Reset all variables.
+     *
+     * @deprecated since 1.1.2, use {@link #init()} instead of.
+     */
+    protected void resetState()
+    {
+<span class="nc" id="L251">        init();</span>
+<span class="nc" id="L252">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    protected void init()
+    {
+<span class="fc" id="L258">        super.init();</span>
+
+<span class="fc" id="L260">        resetTextBuffer();</span>
+
+<span class="fc" id="L262">        this.cellJustifStack.clear();</span>
+<span class="fc" id="L263">        this.isCellJustifStack.clear();</span>
+<span class="fc" id="L264">        this.cellCountStack.clear();</span>
+<span class="fc" id="L265">        this.tableContentWriterStack.clear();</span>
+<span class="fc" id="L266">        this.tableCaptionWriterStack.clear();</span>
+<span class="fc" id="L267">        this.tableCaptionXMLWriterStack.clear();</span>
+<span class="fc" id="L268">        this.tableCaptionStack.clear();</span>
+<span class="fc" id="L269">        this.inlineStack.clear();</span>
+
+<span class="fc" id="L271">        this.headFlag = false;</span>
+<span class="fc" id="L272">        this.paragraphFlag = false;</span>
+<span class="fc" id="L273">        this.verbatimFlag = false;</span>
+
+<span class="fc" id="L275">        this.evenTableRow = true;</span>
+<span class="fc" id="L276">        this.tableAttributes = null;</span>
+<span class="fc" id="L277">        this.tableRows = false;</span>
+<span class="fc" id="L278">        this.warnMessages = null;</span>
+<span class="fc" id="L279">    }</span>
+
+    /**
+     * Reset the text buffer.
+     */
+    protected void resetTextBuffer()
+    {
+<span class="fc" id="L286">        this.textBuffer = new StringBuffer();</span>
+<span class="fc" id="L287">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Sections
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void article()
+    {
+<span class="fc" id="L297">        article( null );</span>
+<span class="fc" id="L298">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void article( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L304">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L307">        writeStartTag( HtmlMarkup.ARTICLE, atts );</span>
+<span class="fc" id="L308">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void article_()
+    {
+<span class="fc" id="L314">        writeEndTag( HtmlMarkup.ARTICLE );</span>
+<span class="fc" id="L315">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void navigation()
+    {
+<span class="fc" id="L321">        navigation( null );</span>
+<span class="fc" id="L322">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void navigation( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L328">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L331">        writeStartTag( HtmlMarkup.NAV, atts );</span>
+<span class="fc" id="L332">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void navigation_()
+    {
+<span class="fc" id="L338">        writeEndTag( HtmlMarkup.NAV );</span>
+<span class="fc" id="L339">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sidebar()
+    {
+<span class="fc" id="L345">        sidebar( null );</span>
+<span class="fc" id="L346">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sidebar( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L352">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L355">        writeStartTag( HtmlMarkup.ASIDE, atts );</span>
+<span class="fc" id="L356">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sidebar_()
+    {
+<span class="fc" id="L362">        writeEndTag( HtmlMarkup.ASIDE );</span>
+<span class="fc" id="L363">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section( int level, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L369">        onSection( level, attributes );</span>
+<span class="fc" id="L370">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle( int level, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L376">        onSectionTitle( level, attributes );</span>
+<span class="fc" id="L377">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle_( int level )
+    {
+<span class="fc" id="L383">        onSectionTitle_( level );</span>
+<span class="fc" id="L384">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section_( int level )
+    {
+<span class="fc" id="L390">        onSection_( level );</span>
+<span class="fc" id="L391">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section1()
+    {
+<span class="fc" id="L397">        onSection( SECTION_LEVEL_1, null );</span>
+<span class="fc" id="L398">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle1()
+    {
+<span class="fc" id="L404">        onSectionTitle( SECTION_LEVEL_1, null );</span>
+<span class="fc" id="L405">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle1_()
+    {
+<span class="fc" id="L411">        onSectionTitle_( SECTION_LEVEL_1 );</span>
+<span class="fc" id="L412">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section1_()
+    {
+<span class="fc" id="L418">        onSection_( SECTION_LEVEL_1 );</span>
+<span class="fc" id="L419">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section2()
+    {
+<span class="fc" id="L425">        onSection( SECTION_LEVEL_2, null );</span>
+<span class="fc" id="L426">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle2()
+    {
+<span class="fc" id="L432">        onSectionTitle( SECTION_LEVEL_2, null );</span>
+<span class="fc" id="L433">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle2_()
+    {
+<span class="fc" id="L439">        onSectionTitle_( SECTION_LEVEL_2 );</span>
+<span class="fc" id="L440">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section2_()
+    {
+<span class="fc" id="L446">        onSection_( SECTION_LEVEL_2 );</span>
+<span class="fc" id="L447">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section3()
+    {
+<span class="fc" id="L453">        onSection( SECTION_LEVEL_3, null );</span>
+<span class="fc" id="L454">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle3()
+    {
+<span class="fc" id="L460">        onSectionTitle( SECTION_LEVEL_3, null );</span>
+<span class="fc" id="L461">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle3_()
+    {
+<span class="fc" id="L467">        onSectionTitle_( SECTION_LEVEL_3 );</span>
+<span class="fc" id="L468">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section3_()
+    {
+<span class="fc" id="L474">        onSection_( SECTION_LEVEL_3 );</span>
+<span class="fc" id="L475">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section4()
+    {
+<span class="fc" id="L481">        onSection( SECTION_LEVEL_4, null );</span>
+<span class="fc" id="L482">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle4()
+    {
+<span class="fc" id="L488">        onSectionTitle( SECTION_LEVEL_4, null );</span>
+<span class="fc" id="L489">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle4_()
+    {
+<span class="fc" id="L495">        onSectionTitle_( SECTION_LEVEL_4 );</span>
+<span class="fc" id="L496">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section4_()
+    {
+<span class="fc" id="L502">        onSection_( SECTION_LEVEL_4 );</span>
+<span class="fc" id="L503">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section5()
+    {
+<span class="fc" id="L509">        onSection( SECTION_LEVEL_5, null );</span>
+<span class="fc" id="L510">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle5()
+    {
+<span class="fc" id="L516">        onSectionTitle( SECTION_LEVEL_5, null );</span>
+<span class="fc" id="L517">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void sectionTitle5_()
+    {
+<span class="fc" id="L523">        onSectionTitle_( SECTION_LEVEL_5 );</span>
+<span class="fc" id="L524">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void section5_()
+    {
+<span class="fc" id="L530">        onSection_( SECTION_LEVEL_5 );</span>
+<span class="fc" id="L531">    }</span>
+
+    /**
+     * Starts a section. The default class style is &lt;code&gt;section&lt;/code&gt;.
+     *
+     * @param depth The level of the section.
+     * @param attributes some attributes. May be null.
+     */
+    protected void onSection( int depth, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L541" title="2 of 4 branches missed.">        if ( depth &gt;= SECTION_LEVEL_1 &amp;&amp; depth &lt;= SECTION_LEVEL_5 )</span>
+        {
+<span class="fc" id="L543">            MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="fc" id="L544">            att.addAttributes( SinkUtils.filterAttributes(</span>
+                    attributes, SinkUtils.SINK_BASE_ATTRIBUTES  ) );
+
+<span class="fc" id="L547">            writeStartTag( HtmlMarkup.SECTION, att );</span>
+        }
+<span class="fc" id="L549">    }</span>
+
+    /**
+     * Ends a section.
+     *
+     * @param depth The level of the section.
+     * @see javax.swing.text.html.HTML.Tag#DIV
+     */
+    protected void onSection_( int depth )
+    {
+<span class="pc bpc" id="L559" title="2 of 4 branches missed.">        if ( depth &gt;= SECTION_LEVEL_1 &amp;&amp; depth &lt;= SECTION_LEVEL_5 )</span>
+        {
+<span class="fc" id="L561">            writeEndTag( HtmlMarkup.SECTION );</span>
+        }
+<span class="fc" id="L563">    }</span>
+
+    /**
+     * Starts a section title.
+     *
+     * @param depth The level of the section title.
+     * @param attributes some attributes. May be null.
+     * @see javax.swing.text.html.HTML.Tag#H2
+     * @see javax.swing.text.html.HTML.Tag#H3
+     * @see javax.swing.text.html.HTML.Tag#H4
+     * @see javax.swing.text.html.HTML.Tag#H5
+     * @see javax.swing.text.html.HTML.Tag#H6
+     */
+    protected void onSectionTitle( int depth, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L578">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc bfc" id="L581" title="All 2 branches covered.">        if ( depth == SECTION_LEVEL_1 )</span>
+        {
+<span class="fc" id="L583">            writeStartTag( HtmlMarkup.H2, atts );</span>
+        }
+<span class="fc bfc" id="L585" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_2 )</span>
+        {
+<span class="fc" id="L587">            writeStartTag( HtmlMarkup.H3, atts );</span>
+        }
+<span class="fc bfc" id="L589" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_3 )</span>
+        {
+<span class="fc" id="L591">            writeStartTag( HtmlMarkup.H4, atts );</span>
+        }
+<span class="fc bfc" id="L593" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_4 )</span>
+        {
+<span class="fc" id="L595">            writeStartTag( HtmlMarkup.H5, atts );</span>
+        }
+<span class="pc bpc" id="L597" title="1 of 2 branches missed.">        else if ( depth == SECTION_LEVEL_5 )</span>
+        {
+<span class="fc" id="L599">            writeStartTag( HtmlMarkup.H6, atts );</span>
+        }
+<span class="fc" id="L601">    }</span>
+
+    /**
+     * Ends a section title.
+     *
+     * @param depth The level of the section title.
+     * @see javax.swing.text.html.HTML.Tag#H2
+     * @see javax.swing.text.html.HTML.Tag#H3
+     * @see javax.swing.text.html.HTML.Tag#H4
+     * @see javax.swing.text.html.HTML.Tag#H5
+     * @see javax.swing.text.html.HTML.Tag#H6
+     */
+    protected void onSectionTitle_( int depth )
+    {
+<span class="fc bfc" id="L615" title="All 2 branches covered.">        if ( depth == SECTION_LEVEL_1 )</span>
+        {
+<span class="fc" id="L617">            writeEndTag( HtmlMarkup.H2 );</span>
+        }
+<span class="fc bfc" id="L619" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_2 )</span>
+        {
+<span class="fc" id="L621">            writeEndTag( HtmlMarkup.H3 );</span>
+        }
+<span class="fc bfc" id="L623" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_3 )</span>
+        {
+<span class="fc" id="L625">            writeEndTag( HtmlMarkup.H4 );</span>
+        }
+<span class="fc bfc" id="L627" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_4 )</span>
+        {
+<span class="fc" id="L629">            writeEndTag( HtmlMarkup.H5 );</span>
+        }
+<span class="pc bpc" id="L631" title="1 of 2 branches missed.">        else if ( depth == SECTION_LEVEL_5 )</span>
+        {
+<span class="fc" id="L633">            writeEndTag( HtmlMarkup.H6 );</span>
+        }
+<span class="fc" id="L635">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void header()
+    {
+<span class="fc" id="L641">        header( null );</span>
+<span class="fc" id="L642">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void header( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L648">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L651">        writeStartTag( HtmlMarkup.HEADER, atts );</span>
+<span class="fc" id="L652">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void header_()
+    {
+<span class="fc" id="L658">        writeEndTag( HtmlMarkup.HEADER );</span>
+<span class="fc" id="L659">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void content()
+    {
+<span class="fc" id="L665">        content( (SinkEventAttributes) null );</span>
+<span class="fc" id="L666">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void content( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L672">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc bfc" id="L675" title="All 2 branches covered.">        if ( contentStack.empty() )</span>
+        {
+<span class="fc" id="L677">            writeStartTag( contentStack.push( HtmlMarkup.MAIN ), atts );</span>
+        }
+        else
+        {
+<span class="fc bfc" id="L681" title="All 2 branches covered.">            if ( atts == null )</span>
+            {
+<span class="fc" id="L683">                atts = new SinkEventAttributeSet( 1 );</span>
+            }
+
+<span class="pc bpc" id="L686" title="1 of 2 branches missed.">            if ( !atts.isDefined( SinkEventAttributes.CLASS ) )</span>
+            {
+<span class="fc" id="L688">                atts.addAttribute( SinkEventAttributes.CLASS, &quot;content&quot; );</span>
+            }
+
+<span class="fc" id="L691">            writeStartTag( contentStack.push( HtmlMarkup.DIV ), atts );</span>
+        }
+<span class="fc" id="L693">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void content_()
+    {
+        try
+        {
+<span class="fc" id="L701">            writeEndTag( contentStack.pop() );</span>
+        }
+<span class="nc" id="L703">        catch ( EmptyStackException ese )</span>
+        {
+            /* do nothing if the stack is empty */
+<span class="fc" id="L706">        }</span>
+<span class="fc" id="L707">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void footer()
+    {
+<span class="fc" id="L713">        footer( null );</span>
+<span class="fc" id="L714">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void footer( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L720">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L723">        writeStartTag( HtmlMarkup.FOOTER, atts );</span>
+<span class="fc" id="L724">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void footer_()
+    {
+<span class="fc" id="L730">        writeEndTag( HtmlMarkup.FOOTER );</span>
+<span class="fc" id="L731">    }</span>
+
+    // -----------------------------------------------------------------------
+    //
+    // -----------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#UL
+     */
+    @Override
+    public void list()
+    {
+<span class="fc" id="L744">        list( null );</span>
+<span class="fc" id="L745">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#UL
+     */
+    @Override
+    public void list( SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L754" title="1 of 2 branches missed.">        if ( paragraphFlag )</span>
+        {
+            // The content of element type &quot;p&quot; must match
+            // &quot;(a|br|span|bdo|object|applet|img|map|iframe|tt|i|b|u|s|strike|big|small|font|basefont|em|strong|
+            // dfn|code|q|samp|kbd|var|cite|abbr|acronym|sub|sup|input|select|textarea|label|button|ins|del|script)&quot;.
+<span class="nc" id="L759">            paragraph_();</span>
+        }
+
+<span class="fc" id="L762">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L765">        writeStartTag( HtmlMarkup.UL, atts );</span>
+<span class="fc" id="L766">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#UL
+     */
+    @Override
+    public void list_()
+    {
+<span class="fc" id="L775">        writeEndTag( HtmlMarkup.UL );</span>
+<span class="fc" id="L776">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#LI
+     */
+    @Override
+    public void listItem()
+    {
+<span class="fc" id="L785">        listItem( null );</span>
+<span class="fc" id="L786">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#LI
+     */
+    @Override
+    public void listItem( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L795">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L798">        writeStartTag( HtmlMarkup.LI, atts );</span>
+<span class="fc" id="L799">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#LI
+     */
+    @Override
+    public void listItem_()
+    {
+<span class="fc" id="L808">        writeEndTag( HtmlMarkup.LI );</span>
+<span class="fc" id="L809">    }</span>
+
+    /**
+     * The default list style depends on the numbering.
+     *
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#OL
+     */
+    @Override
+    public void numberedList( int numbering )
+    {
+<span class="fc" id="L820">        numberedList( numbering, null );</span>
+<span class="fc" id="L821">    }</span>
+
+    /**
+     * The default list style depends on the numbering.
+     *
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#OL
+     */
+    @Override
+    public void numberedList( int numbering, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L832" title="1 of 2 branches missed.">        if ( paragraphFlag )</span>
+        {
+            // The content of element type &quot;p&quot; must match
+            // &quot;(a|br|span|bdo|object|applet|img|map|iframe|tt|i|b|u|s|strike|big|small|font|basefont|em|strong|
+            // dfn|code|q|samp|kbd|var|cite|abbr|acronym|sub|sup|input|select|textarea|label|button|ins|del|script)&quot;.
+<span class="nc" id="L837">            paragraph_();</span>
+        }
+
+        String style;
+<span class="pc bpc" id="L841" title="4 of 5 branches missed.">        switch ( numbering )</span>
+        {
+            case NUMBERING_UPPER_ALPHA:
+<span class="nc" id="L844">                style = &quot;upper-alpha&quot;;</span>
+<span class="nc" id="L845">                break;</span>
+            case NUMBERING_LOWER_ALPHA:
+<span class="nc" id="L847">                style = &quot;lower-alpha&quot;;</span>
+<span class="nc" id="L848">                break;</span>
+            case NUMBERING_UPPER_ROMAN:
+<span class="nc" id="L850">                style = &quot;upper-roman&quot;;</span>
+<span class="nc" id="L851">                break;</span>
+            case NUMBERING_LOWER_ROMAN:
+<span class="nc" id="L853">                style = &quot;lower-roman&quot;;</span>
+<span class="nc" id="L854">                break;</span>
+            case NUMBERING_DECIMAL:
+            default:
+<span class="fc" id="L857">                style = &quot;decimal&quot;;</span>
+        }
+
+<span class="fc" id="L860">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc bfc" id="L863" title="All 2 branches covered.">        if ( atts == null )</span>
+        {
+<span class="fc" id="L865">            atts = new SinkEventAttributeSet( 1 );</span>
+        }
+
+<span class="fc" id="L868">        atts.addAttribute( Attribute.STYLE, &quot;list-style-type: &quot; + style );</span>
+
+<span class="fc" id="L870">        writeStartTag( HtmlMarkup.OL, atts );</span>
+<span class="fc" id="L871">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#OL
+     */
+    @Override
+    public void numberedList_()
+    {
+<span class="fc" id="L880">        writeEndTag( HtmlMarkup.OL );</span>
+<span class="fc" id="L881">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#LI
+     */
+    @Override
+    public void numberedListItem()
+    {
+<span class="fc" id="L890">        numberedListItem( null );</span>
+<span class="fc" id="L891">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#LI
+     */
+    @Override
+    public void numberedListItem( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L900">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L903">        writeStartTag( HtmlMarkup.LI, atts );</span>
+<span class="fc" id="L904">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#LI
+     */
+    @Override
+    public void numberedListItem_()
+    {
+<span class="fc" id="L913">        writeEndTag( HtmlMarkup.LI );</span>
+<span class="fc" id="L914">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DL
+     */
+    @Override
+    public void definitionList()
+    {
+<span class="fc" id="L923">        definitionList( null );</span>
+<span class="fc" id="L924">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DL
+     */
+    @Override
+    public void definitionList( SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L933" title="1 of 2 branches missed.">        if ( paragraphFlag )</span>
+        {
+            // The content of element type &quot;p&quot; must match
+            // &quot;(a|br|span|bdo|object|applet|img|map|iframe|tt|i|b|u|s|strike|big|small|font|basefont|em|strong|
+            // dfn|code|q|samp|kbd|var|cite|abbr|acronym|sub|sup|input|select|textarea|label|button|ins|del|script)&quot;.
+<span class="nc" id="L938">            paragraph_();</span>
+        }
+
+<span class="fc" id="L941">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L944">        writeStartTag( HtmlMarkup.DL, atts );</span>
+<span class="fc" id="L945">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DL
+     */
+    @Override
+    public void definitionList_()
+    {
+<span class="fc" id="L954">        writeEndTag( HtmlMarkup.DL );</span>
+<span class="fc" id="L955">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DT
+     */
+    @Override
+    public void definedTerm( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L964">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L967">        writeStartTag( HtmlMarkup.DT, atts );</span>
+<span class="fc" id="L968">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DT
+     */
+    @Override
+    public void definedTerm()
+    {
+<span class="fc" id="L977">        definedTerm( null );</span>
+<span class="fc" id="L978">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DT
+     */
+    @Override
+    public void definedTerm_()
+    {
+<span class="fc" id="L987">        writeEndTag( HtmlMarkup.DT );</span>
+<span class="fc" id="L988">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DD
+     */
+    @Override
+    public void definition()
+    {
+<span class="fc" id="L997">        definition( null );</span>
+<span class="fc" id="L998">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DD
+     */
+    @Override
+    public void definition( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1007">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L1010">        writeStartTag( HtmlMarkup.DD, atts );</span>
+<span class="fc" id="L1011">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DD
+     */
+    @Override
+    public void definition_()
+    {
+<span class="fc" id="L1020">        writeEndTag( HtmlMarkup.DD );</span>
+<span class="fc" id="L1021">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figure()
+    {
+<span class="nc" id="L1027">        figure( null );</span>
+<span class="nc" id="L1028">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figure( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1034">        writeStartTag( HtmlMarkup.FIGURE, attributes );</span>
+<span class="fc" id="L1035">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figure_()
+    {
+<span class="fc" id="L1041">        writeEndTag( HtmlMarkup.FIGURE );</span>
+<span class="fc" id="L1042">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figureGraphics( String name )
+    {
+<span class="nc" id="L1048">        figureGraphics( name, null );</span>
+<span class="nc" id="L1049">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figureGraphics( String src, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1055">        MutableAttributeSet filtered = SinkUtils.filterAttributes( attributes, SinkUtils.SINK_IMG_ATTRIBUTES );</span>
+<span class="pc bpc" id="L1056" title="1 of 2 branches missed.">        if ( filtered != null )</span>
+        {
+<span class="fc" id="L1058">            filtered.removeAttribute( Attribute.SRC.toString() );</span>
+        }
+
+<span class="pc bpc" id="L1061" title="1 of 2 branches missed.">        int count = ( attributes == null ? 1 : attributes.getAttributeCount() + 1 );</span>
+
+<span class="fc" id="L1063">        MutableAttributeSet atts = new SinkEventAttributeSet( count );</span>
+
+<span class="fc" id="L1065">        atts.addAttribute( Attribute.SRC, HtmlTools.escapeHTML( src, true ) );</span>
+<span class="fc" id="L1066">        atts.addAttributes( filtered );</span>
+
+<span class="pc bpc" id="L1068" title="1 of 2 branches missed.">        if ( atts.getAttribute( Attribute.ALT.toString() ) == null )</span>
+        {
+<span class="fc" id="L1070">            atts.addAttribute( Attribute.ALT.toString(), &quot;&quot; );</span>
+        }
+
+<span class="fc" id="L1073">        writeStartTag( HtmlMarkup.IMG, atts, true );</span>
+<span class="fc" id="L1074">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figureCaption()
+    {
+<span class="nc" id="L1080">        figureCaption( null );</span>
+<span class="nc" id="L1081">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figureCaption( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1087">        writeStartTag( HtmlMarkup.FIGCAPTION, attributes );</span>
+<span class="fc" id="L1088">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void figureCaption_()
+    {
+<span class="fc" id="L1094">        writeEndTag( HtmlMarkup.FIGCAPTION );</span>
+<span class="fc" id="L1095">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#P
+     */
+    @Override
+    public void paragraph()
+    {
+<span class="fc" id="L1104">        paragraph( null );</span>
+<span class="fc" id="L1105">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#P
+     */
+    @Override
+    public void paragraph( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1114">        paragraphFlag = true;</span>
+
+<span class="fc" id="L1116">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L1119">        writeStartTag( HtmlMarkup.P, atts );</span>
+<span class="fc" id="L1120">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#P
+     */
+    @Override
+    public void paragraph_()
+    {
+<span class="pc bpc" id="L1129" title="1 of 2 branches missed.">        if ( paragraphFlag )</span>
+        {
+<span class="fc" id="L1131">            writeEndTag( HtmlMarkup.P );</span>
+<span class="fc" id="L1132">            paragraphFlag = false;</span>
+        }
+<span class="fc" id="L1134">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void data( String value )
+    {
+<span class="nc" id="L1140">        data( value, null );</span>
+<span class="nc" id="L1141">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void data( String value, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1147">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L1150">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="pc bpc" id="L1151" title="1 of 2 branches missed.">        if ( value != null )</span>
+        {
+<span class="fc" id="L1153">            att.addAttribute( Attribute.VALUE, value );</span>
+        }
+<span class="fc" id="L1155">        att.addAttributes( atts );</span>
+
+<span class="fc" id="L1157">        writeStartTag( HtmlMarkup.DATA, att );</span>
+<span class="fc" id="L1158">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void data_()
+    {
+<span class="fc" id="L1164">        writeEndTag( HtmlMarkup.DATA );</span>
+<span class="fc" id="L1165">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void time( String datetime )
+    {
+<span class="nc" id="L1171">        time( datetime, null );</span>
+<span class="nc" id="L1172">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void time( String datetime, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1178">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L1181">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="pc bpc" id="L1182" title="1 of 2 branches missed.">        if ( datetime != null )</span>
+        {
+<span class="fc" id="L1184">            att.addAttribute( &quot;datetime&quot;, datetime );</span>
+        }
+<span class="fc" id="L1186">        att.addAttributes( atts );</span>
+
+<span class="fc" id="L1188">        writeStartTag( HtmlMarkup.TIME, att );</span>
+<span class="fc" id="L1189">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void time_()
+    {
+<span class="fc" id="L1195">        writeEndTag( HtmlMarkup.TIME );</span>
+<span class="fc" id="L1196">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#ADDRESS
+     */
+    @Override
+    public void address()
+    {
+<span class="fc" id="L1205">        address( null );</span>
+<span class="fc" id="L1206">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#ADDRESS
+     */
+    @Override
+    public void address( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1215">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L1218">        writeStartTag( HtmlMarkup.ADDRESS, atts );</span>
+<span class="fc" id="L1219">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#ADDRESS
+     */
+    @Override
+    public void address_()
+    {
+<span class="fc" id="L1228">        writeEndTag( HtmlMarkup.ADDRESS );</span>
+<span class="fc" id="L1229">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#BLOCKQUOTE
+     */
+    @Override
+    public void blockquote()
+    {
+<span class="fc" id="L1238">        blockquote( null );</span>
+<span class="fc" id="L1239">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#BLOCKQUOTE
+     */
+    @Override
+    public void blockquote( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1248">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L1251">        writeStartTag( HtmlMarkup.BLOCKQUOTE, atts );</span>
+<span class="fc" id="L1252">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#BLOCKQUOTE
+     */
+    @Override
+    public void blockquote_()
+    {
+<span class="fc" id="L1261">        writeEndTag( HtmlMarkup.BLOCKQUOTE );</span>
+<span class="fc" id="L1262">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DIV
+     */
+    @Override
+    public void division()
+    {
+<span class="fc" id="L1271">        division( null );</span>
+<span class="fc" id="L1272">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DIV
+     */
+    @Override
+    public void division( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1281">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L1284">        writeStartTag( HtmlMarkup.DIV, atts );</span>
+<span class="fc" id="L1285">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DIV
+     */
+    @Override
+    public void division_()
+    {
+<span class="fc" id="L1294">        writeEndTag( HtmlMarkup.DIV );</span>
+<span class="fc" id="L1295">    }</span>
+
+    /**
+     * The default class style for boxed is &lt;code&gt;source&lt;/code&gt;.
+     *
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DIV
+     * @see javax.swing.text.html.HTML.Tag#PRE
+     */
+    @Override
+    public void verbatim( boolean boxed )
+    {
+<span class="pc bpc" id="L1307" title="1 of 2 branches missed.">        if ( boxed )</span>
+        {
+<span class="fc" id="L1309">            verbatim( SinkEventAttributeSet.BOXED );</span>
+        }
+        else
+        {
+<span class="nc" id="L1313">            verbatim( null );</span>
+        }
+<span class="fc" id="L1315">    }</span>
+
+    /**
+     * The default class style for boxed is &lt;code&gt;source&lt;/code&gt;.
+     *
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DIV
+     * @see javax.swing.text.html.HTML.Tag#PRE
+     */
+    @Override
+    public void verbatim( SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L1327" title="1 of 2 branches missed.">        if ( paragraphFlag )</span>
+        {
+            // The content of element type &quot;p&quot; must match
+            // &quot;(a|br|span|bdo|object|applet|img|map|iframe|tt|i|b|u|s|strike|big|small|font|basefont|em|strong|
+            // dfn|code|q|samp|kbd|var|cite|abbr|acronym|sub|sup|input|select|textarea|label|button|ins|del|script)&quot;.
+<span class="nc" id="L1332">            paragraph_();</span>
+        }
+
+<span class="fc" id="L1335">        verbatimFlag = true;</span>
+
+<span class="fc" id="L1337">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_VERBATIM_ATTRIBUTES  );
+
+<span class="pc bpc" id="L1340" title="1 of 2 branches missed.">        if ( atts == null )</span>
+        {
+<span class="nc" id="L1342">            atts = new SinkEventAttributeSet();</span>
+        }
+
+<span class="fc" id="L1345">        boolean boxed = false;</span>
+
+<span class="fc bfc" id="L1347" title="All 2 branches covered.">        if ( atts.isDefined( SinkEventAttributes.DECORATION ) )</span>
+        {
+<span class="fc" id="L1349">            boxed =</span>
+<span class="fc" id="L1350">                &quot;boxed&quot;.equals( atts.getAttribute( SinkEventAttributes.DECORATION ).toString() );</span>
+        }
+
+<span class="fc" id="L1353">        SinkEventAttributes divAtts = null;</span>
+
+<span class="fc bfc" id="L1355" title="All 2 branches covered.">        if ( boxed )</span>
+        {
+<span class="fc" id="L1357">            divAtts = new SinkEventAttributeSet( Attribute.CLASS.toString(), &quot;source&quot; );</span>
+        }
+
+<span class="fc" id="L1360">        atts.removeAttribute( SinkEventAttributes.DECORATION );</span>
+
+<span class="fc" id="L1362">        writeStartTag( HtmlMarkup.DIV, divAtts );</span>
+<span class="fc" id="L1363">        writeStartTag( HtmlMarkup.PRE, atts );</span>
+<span class="fc" id="L1364">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#DIV
+     * @see javax.swing.text.html.HTML.Tag#PRE
+     */
+    @Override
+    public void verbatim_()
+    {
+<span class="fc" id="L1374">        writeEndTag( HtmlMarkup.PRE );</span>
+<span class="fc" id="L1375">        writeEndTag( HtmlMarkup.DIV );</span>
+
+<span class="fc" id="L1377">        verbatimFlag = false;</span>
+
+<span class="fc" id="L1379">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#HR
+     */
+    @Override
+    public void horizontalRule()
+    {
+<span class="fc" id="L1388">        horizontalRule( null );</span>
+<span class="fc" id="L1389">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#HR
+     */
+    @Override
+    public void horizontalRule( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1398">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_HR_ATTRIBUTES  );
+
+<span class="fc" id="L1401">        writeSimpleTag( HtmlMarkup.HR, atts );</span>
+<span class="fc" id="L1402">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void table()
+    {
+        // start table with tableRows
+<span class="fc" id="L1409">        table( null );</span>
+<span class="fc" id="L1410">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void table( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1416">        this.tableContentWriterStack.addLast( new StringWriter() );</span>
+<span class="fc" id="L1417">        this.tableRows = false;</span>
+
+<span class="pc bpc" id="L1419" title="1 of 2 branches missed.">        if ( paragraphFlag )</span>
+        {
+            // The content of element type &quot;p&quot; must match
+            // &quot;(a|br|span|bdo|object|applet|img|map|iframe|tt|i|b|u|s|strike|big|small|font|basefont|em|strong|
+            // dfn|code|q|samp|kbd|var|cite|abbr|acronym|sub|sup|input|select|textarea|label|button|ins|del|script)&quot;.
+<span class="nc" id="L1424">            paragraph_();</span>
+        }
+
+        // start table with tableRows
+<span class="fc bfc" id="L1428" title="All 2 branches covered.">        if ( attributes == null )</span>
+        {
+<span class="fc" id="L1430">            this.tableAttributes = new SinkEventAttributeSet( 0 );</span>
+        }
+        else
+        {
+<span class="fc" id="L1434">            this.tableAttributes = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_TABLE_ATTRIBUTES  );
+        }
+<span class="fc" id="L1437">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#TABLE
+     */
+    @Override
+    public void table_()
+    {
+<span class="fc" id="L1446">        this.tableRows = false;</span>
+
+<span class="fc" id="L1448">        writeEndTag( HtmlMarkup.TABLE );</span>
+
+<span class="fc bfc" id="L1450" title="All 2 branches covered.">        if ( !this.cellCountStack.isEmpty() )</span>
+        {
+<span class="fc" id="L1452">            this.cellCountStack.removeLast().toString();</span>
+        }
+
+<span class="pc bpc" id="L1455" title="1 of 2 branches missed.">        if ( this.tableContentWriterStack.isEmpty() )</span>
+        {
+<span class="nc bnc" id="L1457" title="All 2 branches missed.">            if ( getLog().isWarnEnabled() )</span>
+            {
+<span class="nc" id="L1459">                getLog().warn( &quot;No table content.&quot; );</span>
+            }
+<span class="nc" id="L1461">            return;</span>
+        }
+
+<span class="fc" id="L1464">        String tableContent = this.tableContentWriterStack.removeLast().toString();</span>
+
+<span class="fc" id="L1466">        String tableCaption = null;</span>
+<span class="pc bpc" id="L1467" title="1 of 4 branches missed.">        if ( !this.tableCaptionStack.isEmpty() &amp;&amp; this.tableCaptionStack.getLast() != null )</span>
+        {
+<span class="fc" id="L1469">            tableCaption = this.tableCaptionStack.removeLast();</span>
+        }
+
+<span class="fc bfc" id="L1472" title="All 2 branches covered.">        if ( tableCaption != null )</span>
+        {
+            // DOXIA-177
+<span class="fc" id="L1475">            StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L1476">            sb.append( tableContent, 0, tableContent.indexOf( Markup.GREATER_THAN ) + 1 );</span>
+<span class="fc" id="L1477">            sb.append( tableCaption );</span>
+<span class="fc" id="L1478">            sb.append( tableContent.substring( tableContent.indexOf( Markup.GREATER_THAN ) + 1 ) );</span>
+
+<span class="fc" id="L1480">            write( sb.toString() );</span>
+<span class="fc" id="L1481">        }</span>
+        else
+        {
+<span class="fc" id="L1484">            write( tableContent );</span>
+        }
+<span class="fc" id="L1486">    }</span>
+
+    /**
+     * The default class style is &lt;code&gt;bodyTable&lt;/code&gt;.
+     * The default align is &lt;code&gt;center&lt;/code&gt;.
+     *
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#TABLE
+     */
+    @Override
+    public void tableRows( int[] justification, boolean grid )
+    {
+<span class="fc" id="L1498">        this.tableRows = true;</span>
+
+<span class="fc" id="L1500">        setCellJustif( justification );</span>
+
+<span class="fc bfc" id="L1502" title="All 2 branches covered.">        if ( this.tableAttributes == null )</span>
+        {
+<span class="fc" id="L1504">            this.tableAttributes = new SinkEventAttributeSet( 0 );</span>
+        }
+
+<span class="fc" id="L1507">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="pc bpc" id="L1508" title="1 of 2 branches missed.">        if ( !this.tableAttributes.isDefined( Attribute.BORDER.toString() ) )</span>
+        {
+<span class="fc bfc" id="L1510" title="All 2 branches covered.">            att.addAttribute( Attribute.BORDER, ( grid ? &quot;1&quot; : &quot;0&quot; ) );</span>
+        }
+
+<span class="pc bpc" id="L1513" title="1 of 2 branches missed.">        if ( !this.tableAttributes.isDefined( Attribute.CLASS.toString() ) )</span>
+        {
+<span class="fc" id="L1515">            att.addAttribute( Attribute.CLASS, &quot;bodyTable&quot; );</span>
+        }
+
+<span class="fc" id="L1518">        att.addAttributes( this.tableAttributes );</span>
+<span class="fc" id="L1519">        this.tableAttributes.removeAttributes( this.tableAttributes );</span>
+
+<span class="fc" id="L1521">        writeStartTag( HtmlMarkup.TABLE, att );</span>
+
+<span class="fc" id="L1523">        this.cellCountStack.addLast( 0 );</span>
+<span class="fc" id="L1524">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableRows_()
+    {
+<span class="fc" id="L1530">        this.tableRows = false;</span>
+<span class="pc bpc" id="L1531" title="1 of 2 branches missed.">        if ( !this.cellJustifStack.isEmpty() )</span>
+        {
+<span class="fc" id="L1533">            this.cellJustifStack.removeLast();</span>
+        }
+<span class="pc bpc" id="L1535" title="1 of 2 branches missed.">        if ( !this.isCellJustifStack.isEmpty() )</span>
+        {
+<span class="fc" id="L1537">            this.isCellJustifStack.removeLast();</span>
+        }
+
+<span class="fc" id="L1540">        this.evenTableRow = true;</span>
+<span class="fc" id="L1541">    }</span>
+
+    /**
+     * The default class style is &lt;code&gt;a&lt;/code&gt; or &lt;code&gt;b&lt;/code&gt; depending the row id.
+     *
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#TR
+     */
+    @Override
+    public void tableRow()
+    {
+        // To be backward compatible
+<span class="pc bpc" id="L1553" title="1 of 2 branches missed.">        if ( !this.tableRows )</span>
+        {
+<span class="nc" id="L1555">            tableRows( null, false );</span>
+        }
+<span class="fc" id="L1557">        tableRow( null );</span>
+<span class="fc" id="L1558">    }</span>
+
+    /**
+     * The default class style is &lt;code&gt;a&lt;/code&gt; or &lt;code&gt;b&lt;/code&gt; depending the row id.
+     *
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#TR
+     */
+    @Override
+    public void tableRow( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1569">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+
+<span class="fc bfc" id="L1571" title="All 2 branches covered.">        if ( evenTableRow )</span>
+        {
+<span class="fc" id="L1573">            att.addAttribute( Attribute.CLASS, &quot;a&quot; );</span>
+        }
+        else
+        {
+<span class="fc" id="L1577">            att.addAttribute( Attribute.CLASS, &quot;b&quot; );</span>
+        }
+
+<span class="fc" id="L1580">        att.addAttributes( SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_TR_ATTRIBUTES  ) );
+
+<span class="fc" id="L1583">        writeStartTag( HtmlMarkup.TR, att );</span>
+
+<span class="fc bfc" id="L1585" title="All 2 branches covered.">        evenTableRow = !evenTableRow;</span>
+
+<span class="fc bfc" id="L1587" title="All 2 branches covered.">        if ( !this.cellCountStack.isEmpty() )</span>
+        {
+<span class="fc" id="L1589">            this.cellCountStack.removeLast();</span>
+<span class="fc" id="L1590">            this.cellCountStack.addLast( 0 );</span>
+        }
+<span class="fc" id="L1592">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#TR
+     */
+    @Override
+    public void tableRow_()
+    {
+<span class="fc" id="L1601">        writeEndTag( HtmlMarkup.TR );</span>
+<span class="fc" id="L1602">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableCell()
+    {
+<span class="fc" id="L1608">        tableCell( (SinkEventAttributeSet) null );</span>
+<span class="fc" id="L1609">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableHeaderCell()
+    {
+<span class="nc" id="L1615">        tableHeaderCell( (SinkEventAttributeSet) null );</span>
+<span class="nc" id="L1616">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableCell( String width )
+    {
+<span class="nc" id="L1622">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="nc" id="L1623">        att.addAttribute( Attribute.WIDTH, width );</span>
+
+<span class="nc" id="L1625">        tableCell( false, att );</span>
+<span class="nc" id="L1626">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableHeaderCell( String width )
+    {
+<span class="nc" id="L1632">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="nc" id="L1633">        att.addAttribute( Attribute.WIDTH, width );</span>
+
+<span class="nc" id="L1635">        tableCell( true, att );</span>
+<span class="nc" id="L1636">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableCell( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1642">        tableCell( false, attributes );</span>
+<span class="fc" id="L1643">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableHeaderCell( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1649">        tableCell( true, attributes );</span>
+<span class="fc" id="L1650">    }</span>
+
+    /**
+     * @param headerRow true if it is an header row
+     * @param attributes the cell attributes
+     * @see javax.swing.text.html.HTML.Tag#TH
+     * @see javax.swing.text.html.HTML.Tag#TD
+     */
+    private void tableCell( boolean headerRow, MutableAttributeSet attributes )
+    {
+<span class="fc bfc" id="L1660" title="All 2 branches covered.">        Tag t = ( headerRow ? HtmlMarkup.TH : HtmlMarkup.TD );</span>
+
+<span class="fc bfc" id="L1662" title="All 2 branches covered.">        if ( attributes == null )</span>
+        {
+<span class="fc" id="L1664">            writeStartTag( t, null );</span>
+        }
+        else
+        {
+<span class="fc" id="L1668">            writeStartTag( t,</span>
+<span class="fc" id="L1669">                SinkUtils.filterAttributes( attributes, SinkUtils.SINK_TD_ATTRIBUTES ) );</span>
+        }
+<span class="fc" id="L1671">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableCell_()
+    {
+<span class="fc" id="L1677">        tableCell_( false );</span>
+<span class="fc" id="L1678">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void tableHeaderCell_()
+    {
+<span class="fc" id="L1684">        tableCell_( true );</span>
+<span class="fc" id="L1685">    }</span>
+
+    /**
+     * Ends a table cell.
+     *
+     * @param headerRow true if it is an header row
+     * @see javax.swing.text.html.HTML.Tag#TH
+     * @see javax.swing.text.html.HTML.Tag#TD
+     */
+    private void tableCell_( boolean headerRow )
+    {
+<span class="fc bfc" id="L1696" title="All 2 branches covered.">        Tag t = ( headerRow ? HtmlMarkup.TH : HtmlMarkup.TD );</span>
+
+<span class="fc" id="L1698">        writeEndTag( t );</span>
+
+<span class="pc bpc" id="L1700" title="1 of 4 branches missed.">        if ( !this.isCellJustifStack.isEmpty() &amp;&amp; this.isCellJustifStack.getLast().equals( Boolean.TRUE )</span>
+<span class="pc bpc" id="L1701" title="1 of 2 branches missed.">            &amp;&amp; !this.cellCountStack.isEmpty() )</span>
+        {
+<span class="fc" id="L1703">            int cellCount = Integer.parseInt( this.cellCountStack.removeLast().toString() );</span>
+<span class="fc" id="L1704">            this.cellCountStack.addLast( ++cellCount );</span>
+        }
+<span class="fc" id="L1706">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#CAPTION
+     */
+    @Override
+    public void tableCaption()
+    {
+<span class="fc" id="L1715">        tableCaption( null );</span>
+<span class="fc" id="L1716">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#CAPTION
+     */
+    @Override
+    public void tableCaption( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1725">        StringWriter sw = new StringWriter();</span>
+<span class="fc" id="L1726">        this.tableCaptionWriterStack.addLast( sw );</span>
+<span class="fc" id="L1727">        this.tableCaptionXMLWriterStack.addLast( new PrettyPrintXMLWriter( sw ) );</span>
+
+        // TODO: tableCaption should be written before tableRows (DOXIA-177)
+<span class="fc" id="L1730">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_SECTION_ATTRIBUTES  );
+
+<span class="fc" id="L1733">        writeStartTag( HtmlMarkup.CAPTION, atts );</span>
+<span class="fc" id="L1734">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#CAPTION
+     */
+    @Override
+    public void tableCaption_()
+    {
+<span class="fc" id="L1743">        writeEndTag( HtmlMarkup.CAPTION );</span>
+
+<span class="pc bpc" id="L1745" title="2 of 4 branches missed.">        if ( !this.tableCaptionXMLWriterStack.isEmpty() &amp;&amp; this.tableCaptionXMLWriterStack.getLast() != null )</span>
+        {
+<span class="fc" id="L1747">            this.tableCaptionStack.addLast( this.tableCaptionWriterStack.removeLast().toString() );</span>
+<span class="fc" id="L1748">            this.tableCaptionXMLWriterStack.removeLast();</span>
+        }
+<span class="fc" id="L1750">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#A
+     */
+    @Override
+    public void anchor( String name )
+    {
+<span class="nc" id="L1759">        anchor( name, null );</span>
+<span class="nc" id="L1760">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#A
+     */
+    @Override
+    public void anchor( String name, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L1769" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L1771">            throw new NullPointerException( &quot;Anchor name cannot be null!&quot; );</span>
+        }
+
+<span class="pc bpc" id="L1774" title="1 of 2 branches missed.">        if ( headFlag )</span>
+        {
+<span class="nc" id="L1776">            return;</span>
+        }
+
+<span class="fc" id="L1779">        MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BASE_ATTRIBUTES  );
+
+<span class="fc" id="L1782">        String id = name;</span>
+
+<span class="pc bpc" id="L1784" title="1 of 2 branches missed.">        if ( !DoxiaUtils.isValidId( id ) )</span>
+        {
+<span class="nc" id="L1786">            id = DoxiaUtils.encodeId( name, true );</span>
+
+<span class="nc" id="L1788">            String msg = &quot;Modified invalid anchor name: '&quot; + name + &quot;' to '&quot; + id + &quot;'&quot;;</span>
+<span class="nc" id="L1789">            logMessage( &quot;modifiedLink&quot;, msg );</span>
+        }
+
+<span class="fc" id="L1792">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="fc" id="L1793">        att.addAttribute( Attribute.NAME, id );</span>
+<span class="fc" id="L1794">        att.addAttributes( atts );</span>
+
+<span class="fc" id="L1796">        writeStartTag( HtmlMarkup.A, att );</span>
+<span class="fc" id="L1797">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#A
+     */
+    @Override
+    public void anchor_()
+    {
+<span class="pc bpc" id="L1806" title="1 of 2 branches missed.">        if ( !headFlag )</span>
+        {
+<span class="fc" id="L1808">            writeEndTag( HtmlMarkup.A );</span>
+        }
+<span class="fc" id="L1810">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void link( String name )
+    {
+<span class="nc" id="L1816">        link( name, null );</span>
+<span class="nc" id="L1817">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void link( String name, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L1823" title="1 of 2 branches missed.">        if ( attributes == null )</span>
+        {
+<span class="nc" id="L1825">            link( name, null, null );</span>
+        }
+        else
+        {
+<span class="fc" id="L1829">            String target = (String) attributes.getAttribute( Attribute.TARGET.toString() );</span>
+<span class="fc" id="L1830">            MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                    attributes, SinkUtils.SINK_LINK_ATTRIBUTES  );
+
+<span class="fc" id="L1833">            link( name, target, atts );</span>
+        }
+<span class="fc" id="L1835">    }</span>
+
+    /**
+     * Adds a link with an optional target.
+     * The default style class for external link is &lt;code&gt;externalLink&lt;/code&gt;.
+     *
+     * @param href the link href.
+     * @param target the link target, may be null.
+     * @param attributes an AttributeSet, may be null.
+     *      This is supposed to be filtered already.
+     * @see javax.swing.text.html.HTML.Tag#A
+     */
+    private void link( String href, String target, MutableAttributeSet attributes )
+    {
+<span class="pc bpc" id="L1849" title="1 of 2 branches missed.">        if ( href == null )</span>
+        {
+<span class="nc" id="L1851">            throw new NullPointerException( &quot;Link name cannot be null!&quot; );</span>
+        }
+
+<span class="pc bpc" id="L1854" title="1 of 2 branches missed.">        if ( headFlag )</span>
+        {
+<span class="nc" id="L1856">            return;</span>
+        }
+
+<span class="fc" id="L1859">        MutableAttributeSet att = new SinkEventAttributeSet();</span>
+
+<span class="pc bpc" id="L1861" title="1 of 2 branches missed.">        if ( DoxiaUtils.isExternalLink( href  ) )</span>
+        {
+<span class="nc" id="L1863">            att.addAttribute( Attribute.CLASS, &quot;externalLink&quot; );</span>
+        }
+
+<span class="fc" id="L1866">        att.addAttribute( Attribute.HREF, HtmlTools.escapeHTML( href  ) );</span>
+
+<span class="pc bpc" id="L1868" title="1 of 2 branches missed.">        if ( target != null )</span>
+        {
+<span class="nc" id="L1870">            att.addAttribute( Attribute.TARGET, target );</span>
+        }
+
+<span class="pc bpc" id="L1873" title="1 of 2 branches missed.">        if ( attributes != null )</span>
+        {
+<span class="fc" id="L1875">            attributes.removeAttribute( Attribute.HREF.toString() );</span>
+<span class="fc" id="L1876">            attributes.removeAttribute( Attribute.TARGET.toString() );</span>
+<span class="fc" id="L1877">            att.addAttributes( attributes );</span>
+        }
+
+<span class="fc" id="L1880">        writeStartTag( HtmlMarkup.A, att );</span>
+<span class="fc" id="L1881">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#A
+     */
+    @Override
+    public void link_()
+    {
+<span class="pc bpc" id="L1890" title="1 of 2 branches missed.">        if ( !headFlag )</span>
+        {
+<span class="fc" id="L1892">            writeEndTag( HtmlMarkup.A );</span>
+        }
+<span class="fc" id="L1894">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void inline()
+    {
+<span class="nc" id="L1900">        inline( null );</span>
+<span class="nc" id="L1901">    }</span>
+
+    private void inlineSemantics( SinkEventAttributes attributes, String semantic,
+            List&lt;Tag&gt; tags, Tag tag )
+    {
+<span class="fc bfc" id="L1906" title="All 2 branches covered.">        if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, semantic ) )</span>
+        {
+<span class="fc" id="L1908">            writeStartTag( tag );</span>
+<span class="fc" id="L1909">            tags.add( 0, tag );</span>
+        }
+<span class="fc" id="L1911">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void inline( SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L1917" title="1 of 2 branches missed.">        if ( !headFlag )</span>
+        {
+<span class="fc" id="L1919">            List&lt;Tag&gt; tags = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L1921" title="1 of 2 branches missed.">            if ( attributes != null )</span>
+            {
+<span class="fc" id="L1923">                inlineSemantics( attributes, &quot;emphasis&quot;, tags, HtmlMarkup.EM );</span>
+<span class="fc" id="L1924">                inlineSemantics( attributes, &quot;strong&quot;, tags, HtmlMarkup.STRONG );</span>
+<span class="fc" id="L1925">                inlineSemantics( attributes, &quot;small&quot;, tags, HtmlMarkup.SMALL );</span>
+<span class="fc" id="L1926">                inlineSemantics( attributes, &quot;line-through&quot;, tags, HtmlMarkup.S );</span>
+<span class="fc" id="L1927">                inlineSemantics( attributes, &quot;citation&quot;, tags, HtmlMarkup.CITE );</span>
+<span class="fc" id="L1928">                inlineSemantics( attributes, &quot;quote&quot;, tags, HtmlMarkup.Q );</span>
+<span class="fc" id="L1929">                inlineSemantics( attributes, &quot;definition&quot;, tags, HtmlMarkup.DFN );</span>
+<span class="fc" id="L1930">                inlineSemantics( attributes, &quot;abbreviation&quot;, tags, HtmlMarkup.ABBR );</span>
+<span class="fc" id="L1931">                inlineSemantics( attributes, &quot;italic&quot;, tags, HtmlMarkup.I );</span>
+<span class="fc" id="L1932">                inlineSemantics( attributes, &quot;bold&quot;, tags, HtmlMarkup.B );</span>
+<span class="fc" id="L1933">                inlineSemantics( attributes, &quot;code&quot;, tags, HtmlMarkup.CODE );</span>
+<span class="fc" id="L1934">                inlineSemantics( attributes, &quot;variable&quot;, tags, HtmlMarkup.VAR );</span>
+<span class="fc" id="L1935">                inlineSemantics( attributes, &quot;sample&quot;, tags, HtmlMarkup.SAMP );</span>
+<span class="fc" id="L1936">                inlineSemantics( attributes, &quot;keyboard&quot;, tags, HtmlMarkup.KBD );</span>
+<span class="fc" id="L1937">                inlineSemantics( attributes, &quot;superscript&quot;, tags, HtmlMarkup.SUP );</span>
+<span class="fc" id="L1938">                inlineSemantics( attributes, &quot;subscript&quot;, tags, HtmlMarkup.SUB );</span>
+<span class="fc" id="L1939">                inlineSemantics( attributes, &quot;annotation&quot;, tags, HtmlMarkup.U );</span>
+<span class="fc" id="L1940">                inlineSemantics( attributes, &quot;highlight&quot;, tags, HtmlMarkup.MARK );</span>
+<span class="fc" id="L1941">                inlineSemantics( attributes, &quot;ruby&quot;, tags, HtmlMarkup.RUBY );</span>
+<span class="fc" id="L1942">                inlineSemantics( attributes, &quot;rubyBase&quot;, tags, HtmlMarkup.RB );</span>
+<span class="fc" id="L1943">                inlineSemantics( attributes, &quot;rubyText&quot;, tags, HtmlMarkup.RT );</span>
+<span class="fc" id="L1944">                inlineSemantics( attributes, &quot;rubyTextContainer&quot;, tags, HtmlMarkup.RTC );</span>
+<span class="fc" id="L1945">                inlineSemantics( attributes, &quot;rubyParentheses&quot;, tags, HtmlMarkup.RP );</span>
+<span class="fc" id="L1946">                inlineSemantics( attributes, &quot;bidirectionalIsolation&quot;, tags, HtmlMarkup.BDI );</span>
+<span class="fc" id="L1947">                inlineSemantics( attributes, &quot;bidirectionalOverride&quot;, tags, HtmlMarkup.BDO );</span>
+<span class="fc" id="L1948">                inlineSemantics( attributes, &quot;phrase&quot;, tags, HtmlMarkup.SPAN );</span>
+<span class="fc" id="L1949">                inlineSemantics( attributes, &quot;insert&quot;, tags, HtmlMarkup.INS );</span>
+<span class="fc" id="L1950">                inlineSemantics( attributes, &quot;delete&quot;, tags, HtmlMarkup.DEL );</span>
+            }
+
+<span class="fc" id="L1953">            inlineStack.push( tags );</span>
+        }
+<span class="fc" id="L1955">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void inline_()
+    {
+<span class="pc bpc" id="L1961" title="1 of 2 branches missed.">        if ( !headFlag )</span>
+        {
+<span class="fc bfc" id="L1963" title="All 2 branches covered.">            for ( Tag tag: inlineStack.pop() )</span>
+            {
+<span class="fc" id="L1965">                writeEndTag( tag );</span>
+<span class="fc" id="L1966">            }</span>
+        }
+<span class="fc" id="L1968">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#I
+     */
+    @Override
+    public void italic()
+    {
+<span class="fc" id="L1977">        inline( SinkEventAttributeSet.Semantics.ITALIC );</span>
+<span class="fc" id="L1978">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#I
+     */
+    @Override
+    public void italic_()
+    {
+<span class="fc" id="L1987">        inline_();</span>
+<span class="fc" id="L1988">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#B
+     */
+    @Override
+    public void bold()
+    {
+<span class="nc" id="L1997">        inline( SinkEventAttributeSet.Semantics.BOLD );</span>
+<span class="nc" id="L1998">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#B
+     */
+    @Override
+    public void bold_()
+    {
+<span class="nc" id="L2007">        inline_();</span>
+<span class="nc" id="L2008">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#CODE
+     */
+    @Override
+    public void monospaced()
+    {
+<span class="nc" id="L2017">        inline( SinkEventAttributeSet.Semantics.CODE );</span>
+<span class="nc" id="L2018">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#CODE
+     */
+    @Override
+    public void monospaced_()
+    {
+<span class="nc" id="L2027">        inline_();</span>
+<span class="nc" id="L2028">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#BR
+     */
+    @Override
+    public void lineBreak()
+    {
+<span class="nc" id="L2037">        lineBreak( null );</span>
+<span class="nc" id="L2038">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * @see javax.swing.text.html.HTML.Tag#BR
+     */
+    @Override
+    public void lineBreak( SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L2047" title="2 of 4 branches missed.">        if ( headFlag || isVerbatimFlag() )</span>
+        {
+<span class="nc" id="L2049">            getTextBuffer().append( EOL );</span>
+        }
+        else
+        {
+<span class="fc" id="L2053">            MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BR_ATTRIBUTES  );
+
+<span class="fc" id="L2056">            writeSimpleTag( HtmlMarkup.BR, atts );</span>
+        }
+<span class="fc" id="L2058">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void lineBreakOpportunity()
+    {
+<span class="nc" id="L2064">        lineBreakOpportunity( null );</span>
+<span class="nc" id="L2065">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void lineBreakOpportunity( SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L2071" title="2 of 4 branches missed.">        if ( !headFlag &amp;&amp; !isVerbatimFlag() )</span>
+        {
+<span class="fc" id="L2073">            MutableAttributeSet atts = SinkUtils.filterAttributes(</span>
+                attributes, SinkUtils.SINK_BR_ATTRIBUTES  );
+
+<span class="fc" id="L2076">            writeSimpleTag( HtmlMarkup.WBR, atts );</span>
+        }
+<span class="fc" id="L2078">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void pageBreak()
+    {
+<span class="fc" id="L2084">        comment( &quot; PB &quot; );</span>
+<span class="fc" id="L2085">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void nonBreakingSpace()
+    {
+<span class="pc bpc" id="L2091" title="1 of 2 branches missed.">        if ( headFlag )</span>
+        {
+<span class="nc" id="L2093">            getTextBuffer().append( ' ' );</span>
+        }
+        else
+        {
+<span class="fc" id="L2097">            write( &quot;&amp;#160;&quot; );</span>
+        }
+<span class="fc" id="L2099">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void text( String text )
+    {
+<span class="pc bpc" id="L2105" title="1 of 2 branches missed.">        if ( headFlag )</span>
+        {
+<span class="nc" id="L2107">            getTextBuffer().append( text );</span>
+        }
+<span class="pc bpc" id="L2109" title="1 of 2 branches missed.">        else if ( verbatimFlag )</span>
+        {
+<span class="nc" id="L2111">            verbatimContent( text );</span>
+        }
+        else
+        {
+<span class="fc" id="L2115">            content( text );</span>
+        }
+<span class="fc" id="L2117">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void text( String text, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L2123">        text( text );</span>
+<span class="fc" id="L2124">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void rawText( String text )
+    {
+<span class="pc bpc" id="L2130" title="1 of 2 branches missed.">        if ( headFlag )</span>
+        {
+<span class="nc" id="L2132">            getTextBuffer().append( text );</span>
+        }
+        else
+        {
+<span class="fc" id="L2136">            write( text );</span>
+        }
+<span class="fc" id="L2138">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void comment( String comment )
+    {
+<span class="pc bpc" id="L2144" title="1 of 2 branches missed.">        if ( comment != null )</span>
+        {
+<span class="fc" id="L2146">            final String originalComment = comment;</span>
+
+            // http://www.w3.org/TR/2000/REC-xml-20001006#sec-comments
+<span class="pc bpc" id="L2149" title="1 of 2 branches missed.">            while ( comment.contains( &quot;--&quot; ) )</span>
+            {
+<span class="nc" id="L2151">                comment = comment.replace( &quot;--&quot;, &quot;- -&quot; );</span>
+            }
+
+<span class="pc bpc" id="L2154" title="1 of 2 branches missed.">            if ( comment.endsWith( &quot;-&quot; ) )</span>
+            {
+<span class="nc" id="L2156">                comment += &quot; &quot;;</span>
+            }
+
+<span class="pc bpc" id="L2159" title="1 of 2 branches missed.">            if ( !originalComment.equals( comment ) )</span>
+            {
+<span class="nc" id="L2161">                getLog().warn( &quot;[Xhtml5 Sink] Modified invalid comment '&quot; + originalComment</span>
+                        + &quot;' to '&quot; + comment + &quot;'&quot; );
+            }
+
+<span class="fc" id="L2165">            final StringBuilder buffer = new StringBuilder( comment.length() + 7 );</span>
+
+<span class="fc" id="L2167">            buffer.append( LESS_THAN ).append( BANG ).append( MINUS ).append( MINUS );</span>
+<span class="fc" id="L2168">            buffer.append( comment );</span>
+<span class="fc" id="L2169">            buffer.append( MINUS ).append( MINUS ).append( GREATER_THAN );</span>
+
+<span class="fc" id="L2171">            write( buffer.toString() );</span>
+        }
+<span class="fc" id="L2173">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Add an unknown event.
+     * This can be used to generate html tags for which no corresponding sink event exists.
+     *
+     * &lt;p&gt;
+     * If {@link org.apache.maven.doxia.util.HtmlTools#getHtmlTag(String) HtmlTools.getHtmlTag( name )}
+     * does not return null, the corresponding tag will be written.
+     * &lt;/p&gt;
+     *
+     * &lt;p&gt;For example, the div block&lt;/p&gt;
+     *
+     * &lt;pre&gt;
+     *  &amp;lt;div class=&quot;detail&quot; style=&quot;display:inline&quot;&amp;gt;text&amp;lt;/div&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * &lt;p&gt;can be generated via the following event sequence:&lt;/p&gt;
+     *
+     * &lt;pre&gt;
+     *  SinkEventAttributeSet atts = new SinkEventAttributeSet();
+     *  atts.addAttribute( SinkEventAttributes.CLASS, &quot;detail&quot; );
+     *  atts.addAttribute( SinkEventAttributes.STYLE, &quot;display:inline&quot; );
+     *  sink.unknown( &quot;div&quot;, new Object[]{new Integer( HtmlMarkup.TAG_TYPE_START )}, atts );
+     *  sink.text( &quot;text&quot; );
+     *  sink.unknown( &quot;div&quot;, new Object[]{new Integer( HtmlMarkup.TAG_TYPE_END )}, null );
+     * &lt;/pre&gt;
+     *
+     * @param name the name of the event. If this is not a valid xhtml tag name
+     *      as defined in {@link org.apache.maven.doxia.markup.HtmlMarkup} then the event is ignored.
+     * @param requiredParams If this is null or the first argument is not an Integer then the event is ignored.
+     *      The first argument should indicate the type of the unknown event, its integer value should be one of
+     *      {@link org.apache.maven.doxia.markup.HtmlMarkup#TAG_TYPE_START TAG_TYPE_START},
+     *      {@link org.apache.maven.doxia.markup.HtmlMarkup#TAG_TYPE_END TAG_TYPE_END},
+     *      {@link org.apache.maven.doxia.markup.HtmlMarkup#TAG_TYPE_SIMPLE TAG_TYPE_SIMPLE},
+     *      {@link org.apache.maven.doxia.markup.HtmlMarkup#ENTITY_TYPE ENTITY_TYPE}, or
+     *      {@link org.apache.maven.doxia.markup.HtmlMarkup#CDATA_TYPE CDATA_TYPE},
+     *      otherwise the event will be ignored.
+     * @param attributes a set of attributes for the event. May be null.
+     *      The attributes will always be written, no validity check is performed.
+     */
+    @Override
+    public void unknown( String name, Object[] requiredParams, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L2219" title="1 of 4 branches missed.">        if ( requiredParams == null || !( requiredParams[0] instanceof Integer ) )</span>
+        {
+<span class="fc" id="L2221">            String msg = &quot;No type information for unknown event: '&quot; + name + &quot;', ignoring!&quot;;</span>
+<span class="fc" id="L2222">            logMessage( &quot;noTypeInfo&quot;, msg );</span>
+
+<span class="fc" id="L2224">            return;</span>
+        }
+
+<span class="fc" id="L2227">        int tagType = (Integer) requiredParams[0];</span>
+
+<span class="pc bpc" id="L2229" title="1 of 2 branches missed.">        if ( tagType == ENTITY_TYPE )</span>
+        {
+<span class="nc" id="L2231">            rawText( name );</span>
+
+<span class="nc" id="L2233">            return;</span>
+        }
+
+<span class="pc bpc" id="L2236" title="1 of 2 branches missed.">        if ( tagType == CDATA_TYPE )</span>
+        {
+<span class="nc" id="L2238">            rawText( EOL + &quot;//&lt;![CDATA[&quot; + requiredParams[1] + &quot;]]&gt;&quot; + EOL );</span>
+
+<span class="nc" id="L2240">            return;</span>
+        }
+
+<span class="fc" id="L2243">        Tag tag = HtmlTools.getHtmlTag( name );</span>
+
+<span class="pc bpc" id="L2245" title="1 of 2 branches missed.">        if ( tag == null )</span>
+        {
+<span class="nc" id="L2247">            String msg = &quot;No HTML tag found for unknown event: '&quot; + name + &quot;', ignoring!&quot;;</span>
+<span class="nc" id="L2248">            logMessage( &quot;noHtmlTag&quot;, msg );</span>
+<span class="nc" id="L2249">        }</span>
+        else
+        {
+<span class="pc bpc" id="L2252" title="1 of 2 branches missed.">            if ( tagType == TAG_TYPE_SIMPLE )</span>
+            {
+<span class="nc" id="L2254">                writeSimpleTag( tag, escapeAttributeValues( attributes ) );</span>
+            }
+<span class="fc bfc" id="L2256" title="All 2 branches covered.">            else if ( tagType == TAG_TYPE_START )</span>
+            {
+<span class="fc" id="L2258">                writeStartTag( tag, escapeAttributeValues( attributes ) );</span>
+            }
+<span class="pc bpc" id="L2260" title="1 of 2 branches missed.">            else if ( tagType == TAG_TYPE_END )</span>
+            {
+<span class="fc" id="L2262">                writeEndTag( tag );</span>
+            }
+            else
+            {
+<span class="nc" id="L2266">                String msg = &quot;No type information for unknown event: '&quot; + name + &quot;', ignoring!&quot;;</span>
+<span class="nc" id="L2267">                logMessage( &quot;noTypeInfo&quot;, msg );</span>
+            }
+        }
+<span class="fc" id="L2270">    }</span>
+
+    private SinkEventAttributes escapeAttributeValues( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L2274">        SinkEventAttributeSet set = new SinkEventAttributeSet( attributes.getAttributeCount() );</span>
+
+<span class="fc" id="L2276">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L2278" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L2280">            Object name = names.nextElement();</span>
+
+<span class="fc" id="L2282">            set.addAttribute( name, escapeHTML( attributes.getAttribute( name ).toString() ) );</span>
+<span class="fc" id="L2283">        }</span>
+
+<span class="fc" id="L2285">        return set;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void flush()
+    {
+<span class="nc" id="L2292">        writer.flush();</span>
+<span class="nc" id="L2293">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public void close()
+    {
+<span class="fc" id="L2299">        writer.close();</span>
+
+<span class="pc bpc" id="L2301" title="1 of 4 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null )</span>
+        {
+<span class="fc bfc" id="L2303" title="All 2 branches covered.">            for ( Map.Entry&lt;String, Set&lt;String&gt;&gt; entry : this.warnMessages.entrySet() )</span>
+            {
+<span class="fc bfc" id="L2305" title="All 2 branches covered.">                for ( String msg : entry.getValue() )</span>
+                {
+<span class="fc" id="L2307">                    getLog().warn( msg );</span>
+<span class="fc" id="L2308">                }</span>
+<span class="fc" id="L2309">            }</span>
+
+<span class="fc" id="L2311">            this.warnMessages = null;</span>
+        }
+
+<span class="fc" id="L2314">        init();</span>
+<span class="fc" id="L2315">    }</span>
+
+    // ----------------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------------
+
+    /**
+     * Write HTML escaped text to output.
+     *
+     * @param text The text to write.
+     */
+    protected void content( String text )
+    {
+        // small hack due to DOXIA-314
+<span class="fc" id="L2329">        String txt = escapeHTML( text );</span>
+<span class="fc" id="L2330">        txt = StringUtils.replace( txt, &quot;&amp;amp;#&quot;, &quot;&amp;#&quot; );</span>
+<span class="fc" id="L2331">        write( txt );</span>
+<span class="fc" id="L2332">    }</span>
+
+    /**
+     * Write HTML escaped text to output.
+     *
+     * @param text The text to write.
+     */
+    protected void verbatimContent( String text )
+    {
+<span class="nc" id="L2341">        write( escapeHTML( text ) );</span>
+<span class="nc" id="L2342">    }</span>
+
+    /**
+     * Forward to HtmlTools.escapeHTML( text ).
+     *
+     * @param text the String to escape, may be null
+     * @return the text escaped, &quot;&quot; if null String input
+     * @see org.apache.maven.doxia.util.HtmlTools#escapeHTML(String)
+     */
+    protected static String escapeHTML( String text )
+    {
+<span class="fc" id="L2353">        return HtmlTools.escapeHTML( text, false );</span>
+    }
+
+    /**
+     * Forward to HtmlTools.encodeURL( text ).
+     *
+     * @param text the String to encode, may be null.
+     * @return the text encoded, null if null String input.
+     * @see org.apache.maven.doxia.util.HtmlTools#encodeURL(String)
+     */
+    protected static String encodeURL( String text )
+    {
+<span class="nc" id="L2365">        return HtmlTools.encodeURL( text );</span>
+    }
+
+    /** {@inheritDoc} */
+    protected void write( String text )
+    {
+<span class="pc bpc" id="L2371" title="1 of 4 branches missed.">        if ( !this.tableCaptionXMLWriterStack.isEmpty() &amp;&amp; this.tableCaptionXMLWriterStack.getLast() != null )</span>
+        {
+<span class="fc" id="L2373">            this.tableCaptionXMLWriterStack.getLast().writeMarkup( unifyEOLs( text ) );</span>
+        }
+<span class="pc bpc" id="L2375" title="1 of 4 branches missed.">        else if ( !this.tableContentWriterStack.isEmpty() &amp;&amp; this.tableContentWriterStack.getLast() != null )</span>
+        {
+<span class="fc" id="L2377">            this.tableContentWriterStack.getLast().write( unifyEOLs( text ) );</span>
+        }
+        else
+        {
+<span class="fc" id="L2381">            writer.write( unifyEOLs( text ) );</span>
+        }
+<span class="fc" id="L2383">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    protected void writeStartTag( Tag t, MutableAttributeSet att, boolean isSimpleTag )
+    {
+<span class="fc bfc" id="L2389" title="All 2 branches covered.">        if ( this.tableCaptionXMLWriterStack.isEmpty() )</span>
+        {
+<span class="fc" id="L2391">            super.writeStartTag ( t, att, isSimpleTag );</span>
+        }
+        else
+        {
+<span class="pc bpc" id="L2395" title="1 of 2 branches missed.">            String tag = ( getNameSpace() != null ? getNameSpace() + &quot;:&quot; : &quot;&quot; ) + t.toString();</span>
+<span class="fc" id="L2396">            this.tableCaptionXMLWriterStack.getLast().startElement( tag );</span>
+
+<span class="fc bfc" id="L2398" title="All 2 branches covered.">            if ( att != null )</span>
+            {
+<span class="fc" id="L2400">                Enumeration&lt;?&gt; names = att.getAttributeNames();</span>
+<span class="fc bfc" id="L2401" title="All 2 branches covered.">                while ( names.hasMoreElements() )</span>
+                {
+<span class="fc" id="L2403">                    Object key = names.nextElement();</span>
+<span class="fc" id="L2404">                    Object value = att.getAttribute( key );</span>
+
+<span class="fc" id="L2406">                    this.tableCaptionXMLWriterStack.getLast().addAttribute( key.toString(), value.toString() );</span>
+<span class="fc" id="L2407">                }</span>
+            }
+
+<span class="pc bpc" id="L2410" title="1 of 2 branches missed.">            if ( isSimpleTag )</span>
+            {
+<span class="nc" id="L2412">                this.tableCaptionXMLWriterStack.getLast().endElement();</span>
+            }
+        }
+<span class="fc" id="L2415">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    protected void writeEndTag( Tag t )
+    {
+<span class="fc bfc" id="L2421" title="All 2 branches covered.">        if ( this.tableCaptionXMLWriterStack.isEmpty() )</span>
+        {
+<span class="fc" id="L2423">            super.writeEndTag( t );</span>
+        }
+        else
+        {
+<span class="fc" id="L2427">            this.tableCaptionXMLWriterStack.getLast().endElement();</span>
+        }
+<span class="fc" id="L2429">    }</span>
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #close()
+     * @since 1.1.1
+     */
+    private void logMessage( String key, String msg )
+    {
+<span class="fc" id="L2441">        final String mesg = &quot;[XHTML5 Sink] &quot; + msg;</span>
+<span class="pc bpc" id="L2442" title="1 of 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L2444">            getLog().debug( mesg );</span>
+
+<span class="nc" id="L2446">            return;</span>
+        }
+
+<span class="pc bpc" id="L2449" title="1 of 2 branches missed.">        if ( warnMessages == null )</span>
+        {
+<span class="fc" id="L2451">            warnMessages = new HashMap&lt;&gt;();</span>
+        }
+
+<span class="fc" id="L2454">        Set&lt;String&gt; set = warnMessages.get( key );</span>
+<span class="pc bpc" id="L2455" title="1 of 2 branches missed.">        if ( set == null )</span>
+        {
+<span class="fc" id="L2457">            set = new TreeSet&lt;&gt;();</span>
+        }
+<span class="fc" id="L2459">        set.add( mesg );</span>
+<span class="fc" id="L2460">        warnMessages.put( key, set );</span>
+<span class="fc" id="L2461">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

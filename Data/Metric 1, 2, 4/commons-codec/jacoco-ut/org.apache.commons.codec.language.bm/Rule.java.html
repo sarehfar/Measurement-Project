@@ -100,7 +100,7 @@ public class Rule {
 
 <span class="fc" id="L101">                return 0;</span>
             }
-<span class="fc" id="L103">        };</span>
+        };
 
         private final StringBuilder phonemeText;
         private final Languages.LanguageSet languages;
@@ -206,12 +206,12 @@ public class Rule {
     private static final String HASH_INCLUDE = &quot;#include&quot;;
 
 <span class="fc" id="L208">    private static final Map&lt;NameType, Map&lt;RuleType, Map&lt;String, Map&lt;String, List&lt;Rule&gt;&gt;&gt;&gt;&gt; RULES =</span>
-<span class="fc" id="L209">            new EnumMap&lt;&gt;(NameType.class);</span>
+            new EnumMap&lt;&gt;(NameType.class);
 
     static {
 <span class="fc bfc" id="L212" title="All 2 branches covered.">        for (final NameType s : NameType.values()) {</span>
 <span class="fc" id="L213">            final Map&lt;RuleType, Map&lt;String, Map&lt;String, List&lt;Rule&gt;&gt;&gt;&gt; rts =</span>
-<span class="fc" id="L214">                    new EnumMap&lt;&gt;(RuleType.class);</span>
+                    new EnumMap&lt;&gt;(RuleType.class);
 
 <span class="fc bfc" id="L216" title="All 2 branches covered.">            for (final RuleType rt : RuleType.values()) {</span>
 <span class="fc" id="L217">                final Map&lt;String, Map&lt;String, List&lt;Rule&gt;&gt;&gt; rs = new HashMap&lt;&gt;();</span>
@@ -222,8 +222,8 @@ public class Rule {
 <span class="fc" id="L222">                        rs.put(l, parseRules(scanner, createResourceName(s, rt, l)));</span>
 <span class="nc" id="L223">                    } catch (final IllegalStateException e) {</span>
 <span class="nc" id="L224">                        throw new IllegalStateException(&quot;Problem processing &quot; + createResourceName(s, rt, l), e);</span>
-                    }
-                }
+<span class="fc" id="L225">                    }</span>
+<span class="fc" id="L226">                }</span>
 <span class="fc bfc" id="L227" title="All 2 branches covered.">                if (!rt.equals(RuleType.RULES)) {</span>
 <span class="fc" id="L228">                    try (final Scanner scanner = createScanner(s, rt, &quot;common&quot;)) {</span>
 <span class="fc" id="L229">                        rs.put(&quot;common&quot;, parseRules(scanner, createResourceName(s, rt, &quot;common&quot;)));</span>
@@ -290,7 +290,7 @@ public class Rule {
 <span class="nc" id="L290">        final List&lt;Rule&gt; allRules = new ArrayList&lt;&gt;();</span>
 <span class="nc bnc" id="L291" title="All 2 branches missed.">        for (final List&lt;Rule&gt; rules : ruleMap.values()) {</span>
 <span class="nc" id="L292">            allRules.addAll(rules);</span>
-        }
+<span class="nc" id="L293">        }</span>
 <span class="nc" id="L294">        return allRules;</span>
     }
 
@@ -400,10 +400,10 @@ public class Rule {
 <span class="fc bfc" id="L400" title="All 2 branches covered.">                if (line.endsWith(ResourceConstants.EXT_CMT_END)) {</span>
 <span class="fc" id="L401">                    inMultilineComment = false;</span>
                 }
-<span class="fc" id="L403">            } else {</span>
+            } else {
 <span class="fc bfc" id="L404" title="All 2 branches covered.">                if (line.startsWith(ResourceConstants.EXT_CMT_START)) {</span>
 <span class="fc" id="L405">                    inMultilineComment = true;</span>
-<span class="fc" id="L406">                } else {</span>
+                } else {
                     // discard comments
 <span class="fc" id="L408">                    final int cmtI = line.indexOf(ResourceConstants.CMT);</span>
 <span class="fc bfc" id="L409" title="All 2 branches covered.">                    if (cmtI &gt;= 0) {</span>
@@ -422,17 +422,17 @@ public class Rule {
 <span class="fc" id="L422">                        final String incl = line.substring(HASH_INCLUDE.length()).trim();</span>
 <span class="pc bpc" id="L423" title="1 of 2 branches missed.">                        if (incl.contains(&quot; &quot;)) {</span>
 <span class="nc" id="L424">                            throw new IllegalArgumentException(&quot;Malformed import statement '&quot; + rawLine + &quot;' in &quot; +</span>
-<span class="nc" id="L425">                                                               location);</span>
+                                                               location);
                         }
 <span class="fc" id="L427">                        try (final Scanner hashIncludeScanner = createScanner(incl)) {</span>
 <span class="fc" id="L428">                            lines.putAll(parseRules(hashIncludeScanner, location + &quot;-&gt;&quot; + incl));</span>
                         }
-                    } else {
+<span class="fc" id="L430">                    } else {</span>
                         // rule
 <span class="fc" id="L432">                        final String[] parts = line.split(&quot;\\s+&quot;);</span>
 <span class="pc bpc" id="L433" title="1 of 2 branches missed.">                        if (parts.length != 4) {</span>
 <span class="nc" id="L434">                            throw new IllegalArgumentException(&quot;Malformed rule statement split into &quot; + parts.length +</span>
-<span class="nc" id="L435">                                                               &quot; parts: &quot; + rawLine + &quot; in &quot; + location);</span>
+                                                               &quot; parts: &quot; + rawLine + &quot; in &quot; + location);
                         }
                         try {
 <span class="fc" id="L438">                            final String pat = stripQuotes(parts[0]);</span>
@@ -464,14 +464,14 @@ public class Rule {
 <span class="fc" id="L464">                                lines.put(patternKey, rules);</span>
                             }
 <span class="fc" id="L466">                            rules.add(r);</span>
-<span class="pc" id="L467">                        } catch (final IllegalArgumentException e) {</span>
+<span class="nc" id="L467">                        } catch (final IllegalArgumentException e) {</span>
 <span class="nc" id="L468">                            throw new IllegalStateException(&quot;Problem parsing line '&quot; + currentLine + &quot;' in &quot; +</span>
-<span class="nc" id="L469">                                                            location, e);</span>
-                        }
+                                                            location, e);
+<span class="fc" id="L470">                        }</span>
                     }
                 }
             }
-        }
+<span class="fc" id="L474">        }</span>
 
 <span class="fc" id="L476">        return lines;</span>
     }
@@ -704,4 +704,4 @@ public class Rule {
 <span class="fc" id="L704">        return this.lContext.isMatch(input.subSequence(0, i));</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

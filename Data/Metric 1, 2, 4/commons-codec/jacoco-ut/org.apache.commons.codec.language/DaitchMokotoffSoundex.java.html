@@ -164,8 +164,8 @@ public class DaitchMokotoffSoundex implements StringEncoder {
         private final String[] replacementBeforeVowel;
         private final String[] replacementDefault;
 
-<span class="fc" id="L167">        protected Rule(final String pattern, final String replacementAtStart, final String replacementBeforeVowel,</span>
-                final String replacementDefault) {
+        protected Rule(final String pattern, final String replacementAtStart, final String replacementBeforeVowel,
+<span class="fc" id="L168">                final String replacementDefault) {</span>
 <span class="fc" id="L169">            this.pattern = pattern;</span>
 <span class="fc" id="L170">            this.replacementAtStart = replacementAtStart.split(&quot;\\|&quot;);</span>
 <span class="fc" id="L171">            this.replacementBeforeVowel = replacementBeforeVowel.split(&quot;\\|&quot;);</span>
@@ -238,7 +238,7 @@ public class DaitchMokotoffSoundex implements StringEncoder {
 <span class="fc" id="L238">                    return rule2.getPatternLength() - rule1.getPatternLength();</span>
                 }
             });
-        }
+<span class="fc" id="L241">        }</span>
 <span class="fc" id="L242">    }</span>
 
     private static void parseRules(final Scanner scanner, final String location,
@@ -255,12 +255,12 @@ public class DaitchMokotoffSoundex implements StringEncoder {
 <span class="fc bfc" id="L255" title="All 2 branches covered.">                if (line.endsWith(MULTILINE_COMMENT_END)) {</span>
 <span class="fc" id="L256">                    inMultilineComment = false;</span>
                 }
-<span class="fc" id="L258">                continue;</span>
+                continue;
             }
 
 <span class="fc bfc" id="L261" title="All 2 branches covered.">            if (line.startsWith(MULTILINE_COMMENT_START)) {</span>
 <span class="fc" id="L262">                inMultilineComment = true;</span>
-<span class="fc" id="L263">            } else {</span>
+            } else {
                 // discard comments
 <span class="fc" id="L265">                final int cmtI = line.indexOf(COMMENT);</span>
 <span class="fc bfc" id="L266" title="All 2 branches covered.">                if (cmtI &gt;= 0) {</span>
@@ -279,14 +279,14 @@ public class DaitchMokotoffSoundex implements StringEncoder {
 <span class="fc" id="L279">                    final String[] parts = line.split(&quot;=&quot;);</span>
 <span class="pc bpc" id="L280" title="1 of 2 branches missed.">                    if (parts.length != 2) {</span>
 <span class="nc" id="L281">                        throw new IllegalArgumentException(&quot;Malformed folding statement split into &quot; + parts.length +</span>
-<span class="nc" id="L282">                                &quot; parts: &quot; + rawLine + &quot; in &quot; + location);</span>
+                                &quot; parts: &quot; + rawLine + &quot; in &quot; + location);
                     }
 <span class="fc" id="L284">                    final String leftCharacter = parts[0];</span>
 <span class="fc" id="L285">                    final String rightCharacter = parts[1];</span>
 
 <span class="pc bpc" id="L287" title="2 of 4 branches missed.">                    if (leftCharacter.length() != 1 || rightCharacter.length() != 1) {</span>
 <span class="nc" id="L288">                        throw new IllegalArgumentException(&quot;Malformed folding statement - &quot; +</span>
-<span class="nc" id="L289">                                &quot;patterns are not single characters: &quot; + rawLine + &quot; in &quot; + location);</span>
+                                &quot;patterns are not single characters: &quot; + rawLine + &quot; in &quot; + location);
                     }
 
 <span class="fc" id="L292">                    asciiFoldings.put(leftCharacter.charAt(0), rightCharacter.charAt(0));</span>
@@ -295,7 +295,7 @@ public class DaitchMokotoffSoundex implements StringEncoder {
 <span class="fc" id="L295">                    final String[] parts = line.split(&quot;\\s+&quot;);</span>
 <span class="pc bpc" id="L296" title="1 of 2 branches missed.">                    if (parts.length != 4) {</span>
 <span class="nc" id="L297">                        throw new IllegalArgumentException(&quot;Malformed rule statement split into &quot; + parts.length +</span>
-<span class="nc" id="L298">                                &quot; parts: &quot; + rawLine + &quot; in &quot; + location);</span>
+                                &quot; parts: &quot; + rawLine + &quot; in &quot; + location);
                     }
                     try {
 <span class="fc" id="L301">                        final String pattern = stripQuotes(parts[0]);</span>
@@ -311,13 +311,13 @@ public class DaitchMokotoffSoundex implements StringEncoder {
 <span class="fc" id="L311">                            ruleMapping.put(patternKey, rules);</span>
                         }
 <span class="fc" id="L313">                        rules.add(r);</span>
-<span class="pc" id="L314">                    } catch (final IllegalArgumentException e) {</span>
+<span class="nc" id="L314">                    } catch (final IllegalArgumentException e) {</span>
 <span class="nc" id="L315">                        throw new IllegalStateException(</span>
-<span class="nc" id="L316">                                &quot;Problem parsing line '&quot; + currentLine + &quot;' in &quot; + location, e);</span>
-                    }
+                                &quot;Problem parsing line '&quot; + currentLine + &quot;' in &quot; + location, e);
+<span class="fc" id="L317">                    }</span>
                 }
             }
-        }
+<span class="fc" id="L320">        }</span>
 <span class="fc" id="L321">    }</span>
 
     private static String stripQuotes(String str) {
@@ -404,7 +404,7 @@ public class DaitchMokotoffSoundex implements StringEncoder {
     public Object encode(final Object obj) throws EncoderException {
 <span class="fc bfc" id="L405" title="All 2 branches covered.">        if (!(obj instanceof String)) {</span>
 <span class="fc" id="L406">            throw new EncoderException(</span>
-<span class="fc" id="L407">                    &quot;Parameter supplied to DaitchMokotoffSoundex encode is not of type java.lang.String&quot;);</span>
+                    &quot;Parameter supplied to DaitchMokotoffSoundex encode is not of type java.lang.String&quot;);
         }
 <span class="fc" id="L409">        return encode((String) obj);</span>
     }
@@ -526,7 +526,7 @@ public class DaitchMokotoffSoundex implements StringEncoder {
                                 break;
                             }
                         }
-                    }
+<span class="fc" id="L529">                    }</span>
 
 <span class="fc bfc" id="L531" title="All 2 branches covered.">                    if (branching) {</span>
 <span class="fc" id="L532">                        currentBranches.clear();</span>
@@ -535,7 +535,7 @@ public class DaitchMokotoffSoundex implements StringEncoder {
 <span class="fc" id="L535">                    index += rule.getPatternLength() - 1;</span>
 <span class="fc" id="L536">                    break;</span>
                 }
-            }
+<span class="fc" id="L538">            }</span>
 
 <span class="fc" id="L540">            lastChar = ch;</span>
         }
@@ -545,9 +545,9 @@ public class DaitchMokotoffSoundex implements StringEncoder {
 <span class="fc bfc" id="L545" title="All 2 branches covered.">        for (final Branch branch : currentBranches) {</span>
 <span class="fc" id="L546">            branch.finish();</span>
 <span class="fc" id="L547">            result[index++] = branch.toString();</span>
-        }
+<span class="fc" id="L548">        }</span>
 
 <span class="fc" id="L550">        return result;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Font.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: RTF Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.rtf</a> &gt; <span class="el_source">Font.java</span></div><h1>Font.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.rtf;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * A basic font descriptor using standard PostScript font metrics to compute
+ * text extents. All dimensions returned are in twips.
+ */
+class Font
+{
+    private int size;
+
+    private FontMetrics metrics;
+
+    Font( int style, int size /*pts*/ )
+        throws Exception
+<span class="fc" id="L34">    {</span>
+<span class="fc" id="L35">        this.size = size;</span>
+<span class="fc" id="L36">        metrics = FontMetrics.find( style );</span>
+<span class="fc" id="L37">    }</span>
+
+    int ascent()
+    {
+<span class="nc" id="L41">        return toTwips( metrics.ascent );</span>
+    }
+
+    int descent()
+    {
+<span class="nc" id="L46">        return toTwips( metrics.descent );</span>
+    }
+
+    TextExtents textExtents( String text )
+    {
+        int i, n;
+<span class="fc" id="L52">        int width = 0;</span>
+<span class="fc" id="L53">        int ascent = 0;</span>
+<span class="fc" id="L54">        int descent = 0;</span>
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        for ( i = 0, n = text.length(); i &lt; n; ++i )</span>
+        {
+<span class="fc" id="L58">            char c = text.charAt( i );</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">            if ( c &gt; 255 )</span>
+            {
+<span class="nc" id="L61">                c = ' ';</span>
+            }
+<span class="fc" id="L63">            FontMetrics.CharMetrics charMetrics = this.metrics.charMetrics[c];</span>
+<span class="fc" id="L64">            width += charMetrics.wx;</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if ( charMetrics.ury &gt; ascent )</span>
+            {
+<span class="fc" id="L67">                ascent = charMetrics.ury;</span>
+            }
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            if ( charMetrics.lly &lt; descent )</span>
+            {
+<span class="fc" id="L71">                descent = charMetrics.lly;</span>
+            }
+        }
+
+<span class="fc" id="L75">        int height = ascent + Math.abs( descent );</span>
+
+<span class="fc" id="L77">        return new TextExtents( toTwips( width ), toTwips( height ), toTwips( ascent ) );</span>
+    }
+
+    private int toTwips( int length )
+    {
+<span class="fc" id="L82">        return (int) Math.rint( (double) length * size / 50. );</span>
+    }
+
+    static class TextExtents
+    {
+
+        int width;
+
+        int height;
+
+        int ascent;
+
+        TextExtents( int width, int height, int ascent )
+<span class="fc" id="L95">        {</span>
+<span class="fc" id="L96">            this.width = width;</span>
+<span class="fc" id="L97">            this.height = height;</span>
+<span class="fc" id="L98">            this.ascent = ascent;</span>
+<span class="fc" id="L99">        }</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
