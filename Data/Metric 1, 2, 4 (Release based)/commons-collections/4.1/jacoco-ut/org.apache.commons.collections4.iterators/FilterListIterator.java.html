@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterListIterator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Collections</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.collections4.iterators</a> &gt; <span class="el_source">FilterListIterator.java</span></div><h1>FilterListIterator.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.collections4.iterators;
+
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+
+import org.apache.commons.collections4.Predicate;
+
+/**
+ * Decorates another {@link ListIterator} using a predicate to filter elements.
+ * &lt;p&gt;
+ * This iterator decorates the underlying iterator, only allowing through
+ * those elements that match the specified {@link Predicate Predicate}.
+ *
+ * @since 2.0
+ * @version $Id$
+ */
+public class FilterListIterator&lt;E&gt; implements ListIterator&lt;E&gt; {
+
+    /** The iterator being used */
+    private ListIterator&lt;? extends E&gt; iterator;
+
+    /** The predicate being used */
+    private Predicate&lt;? super E&gt; predicate;
+
+    /**
+     * The value of the next (matching) object, when
+     * {@link #nextObjectSet} is true.
+     */
+    private E nextObject;
+
+    /**
+     * Whether or not the {@link #nextObject} has been set
+     * (possibly to &lt;code&gt;null&lt;/code&gt;).
+     */
+<span class="pc" id="L51">    private boolean nextObjectSet = false;</span>
+
+    /**
+     * The value of the previous (matching) object, when
+     * {@link #previousObjectSet} is true.
+     */
+    private E previousObject;
+
+    /**
+     * Whether or not the {@link #previousObject} has been set
+     * (possibly to &lt;code&gt;null&lt;/code&gt;).
+     */
+<span class="pc" id="L63">    private boolean previousObjectSet = false;</span>
+
+    /**
+     * The index of the element that would be returned by {@link #next}.
+     */
+<span class="pc" id="L68">    private int nextIndex = 0;</span>
+
+    //-----------------------------------------------------------------------
+    /**
+     * Constructs a new &lt;code&gt;FilterListIterator&lt;/code&gt; that will not function
+     * until {@link #setListIterator(ListIterator) setListIterator}
+     * and {@link #setPredicate(Predicate) setPredicate} are invoked.
+     */
+    public FilterListIterator() {
+<span class="nc" id="L77">        super();</span>
+<span class="nc" id="L78">    }</span>
+
+    /**
+     * Constructs a new &lt;code&gt;FilterListIterator&lt;/code&gt; that will not
+     * function until {@link #setPredicate(Predicate) setPredicate} is invoked.
+     *
+     * @param iterator  the iterator to use
+     */
+    public FilterListIterator(final ListIterator&lt;? extends E&gt; iterator ) {
+<span class="nc" id="L87">        super();</span>
+<span class="nc" id="L88">        this.iterator = iterator;</span>
+<span class="nc" id="L89">    }</span>
+
+    /**
+     * Constructs a new &lt;code&gt;FilterListIterator&lt;/code&gt;.
+     *
+     * @param iterator  the iterator to use
+     * @param predicate  the predicate to use
+     */
+    public FilterListIterator(final ListIterator&lt;? extends E&gt; iterator, final Predicate&lt;? super E&gt; predicate) {
+<span class="fc" id="L98">        super();</span>
+<span class="fc" id="L99">        this.iterator = iterator;</span>
+<span class="fc" id="L100">        this.predicate = predicate;</span>
+<span class="fc" id="L101">    }</span>
+
+    /**
+     * Constructs a new &lt;code&gt;FilterListIterator&lt;/code&gt; that will not function
+     * until {@link #setListIterator(ListIterator) setListIterator} is invoked.
+     *
+     * @param predicate  the predicate to use.
+     */
+    public FilterListIterator(final Predicate&lt;? super E&gt; predicate) {
+<span class="fc" id="L110">        super();</span>
+<span class="fc" id="L111">        this.predicate = predicate;</span>
+<span class="fc" id="L112">    }</span>
+
+    //-----------------------------------------------------------------------
+    /** Not supported. */
+    public void add(final E o) {
+<span class="nc" id="L117">        throw new UnsupportedOperationException(&quot;FilterListIterator.add(Object) is not supported.&quot;);</span>
+    }
+
+    public boolean hasNext() {
+<span class="pc bpc" id="L121" title="1 of 4 branches missed.">        return nextObjectSet || setNextObject();</span>
+    }
+
+    public boolean hasPrevious() {
+<span class="pc bpc" id="L125" title="1 of 4 branches missed.">        return previousObjectSet || setPreviousObject();</span>
+    }
+
+    public E next() {
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (!nextObjectSet) {</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">            if (!setNextObject()) {</span>
+<span class="nc" id="L131">                throw new NoSuchElementException();</span>
+            }
+        }
+<span class="fc" id="L134">        nextIndex++;</span>
+<span class="fc" id="L135">        final E temp = nextObject;</span>
+<span class="fc" id="L136">        clearNextObject();</span>
+<span class="fc" id="L137">        return temp;</span>
+    }
+
+    public int nextIndex() {
+<span class="fc" id="L141">        return nextIndex;</span>
+    }
+
+    public E previous() {
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (!previousObjectSet) {</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            if (!setPreviousObject()) {</span>
+<span class="nc" id="L147">                throw new NoSuchElementException();</span>
+            }
+        }
+<span class="fc" id="L150">        nextIndex--;</span>
+<span class="fc" id="L151">        final E temp = previousObject;</span>
+<span class="fc" id="L152">        clearPreviousObject();</span>
+<span class="fc" id="L153">        return temp;</span>
+    }
+
+    public int previousIndex() {
+<span class="fc" id="L157">        return nextIndex-1;</span>
+    }
+
+    /** Not supported. */
+    public void remove() {
+<span class="nc" id="L162">        throw new UnsupportedOperationException(&quot;FilterListIterator.remove() is not supported.&quot;);</span>
+    }
+
+    /** Not supported. */
+    public void set(final E o) {
+<span class="nc" id="L167">        throw new UnsupportedOperationException(&quot;FilterListIterator.set(Object) is not supported.&quot;);</span>
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the iterator this iterator is using.
+     *
+     * @return the iterator.
+     */
+    public ListIterator&lt;? extends E&gt; getListIterator() {
+<span class="nc" id="L177">        return iterator;</span>
+    }
+
+    /**
+     * Sets the iterator for this iterator to use.
+     * If iteration has started, this effectively resets the iterator.
+     *
+     * @param iterator  the iterator to use
+     */
+    public void setListIterator(final ListIterator&lt;? extends E&gt; iterator) {
+<span class="nc" id="L187">        this.iterator = iterator;</span>
+<span class="nc" id="L188">    }</span>
+
+    //-----------------------------------------------------------------------
+    /**
+     * Gets the predicate this iterator is using.
+     *
+     * @return the predicate.
+     */
+    public Predicate&lt;? super E&gt; getPredicate() {
+<span class="nc" id="L197">        return predicate;</span>
+    }
+
+    /**
+     * Sets the predicate this the iterator to use.
+     *
+     * @param predicate  the transformer to use
+     */
+    public void setPredicate(final Predicate&lt;? super E&gt; predicate) {
+<span class="nc" id="L206">        this.predicate = predicate;</span>
+<span class="nc" id="L207">    }</span>
+
+    //-----------------------------------------------------------------------
+    private void clearNextObject() {
+<span class="fc" id="L211">        nextObject = null;</span>
+<span class="fc" id="L212">        nextObjectSet = false;</span>
+<span class="fc" id="L213">    }</span>
+
+    private boolean setNextObject() {
+        // if previousObjectSet,
+        // then we've walked back one step in the
+        // underlying list (due to a hasPrevious() call)
+        // so skip ahead one matching object
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        if (previousObjectSet) {</span>
+<span class="fc" id="L221">            clearPreviousObject();</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">            if (!setNextObject()) {</span>
+<span class="nc" id="L223">                return false;</span>
+            }
+<span class="fc" id="L225">            clearNextObject();</span>
+        }
+
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (iterator == null) {</span>
+<span class="fc" id="L229">            return false;</span>
+        }
+<span class="fc bfc" id="L231" title="All 2 branches covered.">        while (iterator.hasNext()) {</span>
+<span class="fc" id="L232">            final E object = iterator.next();</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">            if (predicate.evaluate(object)) {</span>
+<span class="fc" id="L234">                nextObject = object;</span>
+<span class="fc" id="L235">                nextObjectSet = true;</span>
+<span class="fc" id="L236">                return true;</span>
+            }
+<span class="fc" id="L238">        }</span>
+<span class="fc" id="L239">        return false;</span>
+    }
+
+    private void clearPreviousObject() {
+<span class="fc" id="L243">        previousObject = null;</span>
+<span class="fc" id="L244">        previousObjectSet = false;</span>
+<span class="fc" id="L245">    }</span>
+
+    private boolean setPreviousObject() {
+        // if nextObjectSet,
+        // then we've walked back one step in the
+        // underlying list (due to a hasNext() call)
+        // so skip ahead one matching object
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (nextObjectSet) {</span>
+<span class="fc" id="L253">            clearNextObject();</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">            if (!setPreviousObject()) {</span>
+<span class="nc" id="L255">                return false;</span>
+            }
+<span class="fc" id="L257">            clearPreviousObject();</span>
+        }
+
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        if (iterator == null) {</span>
+<span class="fc" id="L261">            return false;</span>
+        }
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        while (iterator.hasPrevious()) {</span>
+<span class="fc" id="L264">            final E object = iterator.previous();</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">            if (predicate.evaluate(object)) {</span>
+<span class="fc" id="L266">                previousObject = object;</span>
+<span class="fc" id="L267">                previousObjectSet = true;</span>
+<span class="fc" id="L268">                return true;</span>
+            }
+<span class="fc" id="L270">        }</span>
+<span class="fc" id="L271">        return false;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

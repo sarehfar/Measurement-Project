@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PBMReader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: RTF Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.rtf</a> &gt; <span class="el_source">PBMReader.java</span></div><h1>PBMReader.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.rtf;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.EOFException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+
+/**
+ * &lt;a href=&quot;http://en.wikipedia.org/wiki/Portable_pixmap&quot;&gt;PBM&lt;/a&gt; images reader.
+ *
+ * @version $Id$
+ */
+class PBMReader
+{
+    static final int TYPE_PBM = 1;
+
+    static final int TYPE_PGM = 2;
+
+    static final int TYPE_PPM = 3;
+
+    private static final String BAD_FILE_FORMAT = &quot;bad file format&quot;;
+
+    private static final String UNSUPPORTED_TYPE = &quot;unsupported file type&quot;;
+
+    private static final String UNSUPPORTED_FORMAT = &quot;unsupported data format&quot;;
+
+    private static final String UNSUPPORTED_DEPTH = &quot;unsupported color depth&quot;;
+
+    protected int type;
+
+    protected boolean binary;
+
+    protected int width;
+
+    protected int height;
+
+    protected int maxValue;
+
+    private int bytesPerLine;
+
+    private InputStream stream;
+
+    PBMReader( String fileName )
+        throws Exception
+<span class="nc" id="L69">    {</span>
+<span class="nc" id="L70">        HeaderReader header = new HeaderReader();</span>
+
+<span class="nc" id="L72">        int length = header.read( fileName );</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if ( type != TYPE_PPM )</span>
+        {
+<span class="nc" id="L76">            throw new Exception( UNSUPPORTED_TYPE );</span>
+        }
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if ( !binary )</span>
+        {
+<span class="nc" id="L81">            throw new Exception( UNSUPPORTED_FORMAT );</span>
+        }
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if ( maxValue &gt; 255 )</span>
+        {
+<span class="nc" id="L86">            throw new Exception( UNSUPPORTED_DEPTH );</span>
+        }
+
+<span class="nc bnc" id="L89" title="All 4 branches missed.">        switch ( type )</span>
+        {
+            case TYPE_PBM:
+<span class="nc" id="L92">                bytesPerLine = ( width + 7 ) / 8;</span>
+<span class="nc" id="L93">                break;</span>
+            case TYPE_PGM:
+<span class="nc" id="L95">                bytesPerLine = width;</span>
+<span class="nc" id="L96">                break;</span>
+            case TYPE_PPM:
+<span class="nc" id="L98">                bytesPerLine = 3 * width;</span>
+<span class="nc" id="L99">                break;</span>
+            default:
+        }
+
+<span class="nc" id="L103">        stream = new BufferedInputStream( new FileInputStream( fileName ) );</span>
+
+<span class="nc" id="L105">        skip( length );</span>
+<span class="nc" id="L106">    }</span>
+
+    int type()
+    {
+<span class="nc" id="L110">        return type;</span>
+    }
+
+    int width()
+    {
+<span class="nc" id="L115">        return width;</span>
+    }
+
+    int height()
+    {
+<span class="nc" id="L120">        return height;</span>
+    }
+
+    int maxValue()
+    {
+<span class="nc" id="L125">        return maxValue;</span>
+    }
+
+    int bytesPerLine()
+    {
+<span class="nc" id="L130">        return bytesPerLine;</span>
+    }
+
+    long skip( long count )
+        throws IOException
+    {
+<span class="nc" id="L136">        long skipped = stream.skip( count );</span>
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if ( skipped &lt; count )</span>
+        {
+<span class="nc" id="L140">            byte[] b = new byte[512];</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            while ( skipped &lt; count )</span>
+            {
+<span class="nc" id="L143">                int len = (int) Math.min( b.length, ( count - skipped ) );</span>
+<span class="nc" id="L144">                int n = stream.read( b, 0, len );</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                if ( n &lt; 0 )</span>
+                {
+<span class="nc" id="L147">                    break; // end of file</span>
+                }
+<span class="nc" id="L149">                skipped += n;</span>
+<span class="nc" id="L150">            }</span>
+        }
+
+<span class="nc" id="L153">        return skipped;</span>
+    }
+
+    int read( byte[] b, int off, int len )
+        throws IOException
+    {
+<span class="nc" id="L159">        int count = 0;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        while ( count &lt; len )</span>
+        {
+<span class="nc" id="L162">            int n = stream.read( b, off + count, len - count );</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">            if ( n &lt; 0 )</span>
+            {
+<span class="nc" id="L165">                break; // end of file</span>
+            }
+<span class="nc" id="L167">            count += n;</span>
+<span class="nc" id="L168">        }</span>
+<span class="nc" id="L169">        return count;</span>
+    }
+
+    // -----------------------------------------------------------------------
+
+<span class="nc" id="L174">    class HeaderReader</span>
+    {
+
+        private Reader reader;
+
+        private int offset;
+
+        int read( String fileName )
+            throws Exception
+        {
+            String field;
+
+<span class="nc" id="L186">            reader = new BufferedReader( new InputStreamReader(</span>
+                    new FileInputStream( fileName ), StandardCharsets.US_ASCII ) );
+<span class="nc" id="L188">            offset = 0;</span>
+
+<span class="nc" id="L190">            field = getField();</span>
+<span class="nc bnc" id="L191" title="All 4 branches missed.">            if ( field.length() != 2 || field.charAt( 0 ) != 'P' )</span>
+            {
+<span class="nc" id="L193">                reader.close();</span>
+<span class="nc" id="L194">                throw new Exception( BAD_FILE_FORMAT );</span>
+            }
+<span class="nc bnc" id="L196" title="All 4 branches missed.">            switch ( field.charAt( 1 ) )</span>
+            {
+                case '1':
+                case '4':
+<span class="nc" id="L200">                    type = TYPE_PBM;</span>
+<span class="nc" id="L201">                    break;</span>
+                case '2':
+                case '5':
+<span class="nc" id="L204">                    type = TYPE_PGM;</span>
+<span class="nc" id="L205">                    break;</span>
+                case '3':
+                case '6':
+<span class="nc" id="L208">                    type = TYPE_PPM;</span>
+<span class="nc" id="L209">                    break;</span>
+                default:
+<span class="nc" id="L211">                    reader.close();</span>
+<span class="nc" id="L212">                    throw new Exception( BAD_FILE_FORMAT );</span>
+            }
+<span class="nc bnc" id="L214" title="All 2 branches missed.">            if ( field.charAt( 1 ) &gt; '3' )</span>
+            {
+<span class="nc" id="L216">                binary = true;</span>
+            }
+            else
+            {
+<span class="nc" id="L220">                binary = false;</span>
+            }
+
+            try
+            {
+<span class="nc" id="L225">                width = Integer.parseInt( getField() );</span>
+<span class="nc" id="L226">                height = Integer.parseInt( getField() );</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">                if ( type == TYPE_PBM )</span>
+                {
+<span class="nc" id="L229">                    maxValue = 1;</span>
+                }
+                else
+                {
+<span class="nc" id="L233">                    maxValue = Integer.parseInt( getField() );</span>
+                }
+            }
+<span class="nc" id="L236">            catch ( NumberFormatException e )</span>
+            {
+<span class="nc" id="L238">                reader.close();</span>
+<span class="nc" id="L239">                throw new Exception( BAD_FILE_FORMAT );</span>
+<span class="nc" id="L240">            }</span>
+
+<span class="nc" id="L242">            reader.close();</span>
+
+<span class="nc" id="L244">            return offset;</span>
+        }
+
+        private String getField()
+            throws IOException
+        {
+            char c;
+<span class="nc" id="L251">            StringBuilder field = new StringBuilder();</span>
+
+            try
+            {
+                do
+                {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">                    while ( ( c = getChar() ) == '#' )</span>
+                    {
+<span class="nc" id="L259">                        skipComment();</span>
+                    }
+                }
+<span class="nc bnc" id="L262" title="All 2 branches missed.">                while ( Character.isWhitespace( c ) );</span>
+
+<span class="nc" id="L264">                field.append( c );</span>
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">                while ( !Character.isWhitespace( c = getChar() ) )</span>
+                {
+<span class="nc bnc" id="L268" title="All 2 branches missed.">                    if ( c == '#' )</span>
+                    {
+<span class="nc" id="L270">                        skipComment();</span>
+<span class="nc" id="L271">                        break;</span>
+                    }
+<span class="nc" id="L273">                    field.append( c );</span>
+                }
+            }
+<span class="nc" id="L276">            catch ( EOFException ignore )</span>
+            {
+                // nop
+<span class="nc" id="L279">            }</span>
+
+<span class="nc" id="L281">            return field.toString();</span>
+        }
+
+        private char getChar()
+            throws IOException, EOFException
+        {
+<span class="nc" id="L287">            int c = reader.read();</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            if ( c &lt; 0 )</span>
+            {
+<span class="nc" id="L290">                throw new EOFException();</span>
+            }
+<span class="nc" id="L292">            offset += 1;</span>
+<span class="nc" id="L293">            return (char) c;</span>
+        }
+
+        private void skipComment()
+            throws IOException
+        {
+            try
+            {
+<span class="nc bnc" id="L301" title="All 2 branches missed.">                while ( getChar() != '\n' )</span>
+                {
+                    // nop
+                }
+            }
+<span class="nc" id="L306">            catch ( EOFException ignore )</span>
+            {
+                // nop
+<span class="nc" id="L309">            }</span>
+<span class="nc" id="L310">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

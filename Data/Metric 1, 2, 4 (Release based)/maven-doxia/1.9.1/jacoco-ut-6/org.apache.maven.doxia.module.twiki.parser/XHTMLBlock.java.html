@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XHTMLBlock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki.parser</a> &gt; <span class="el_source">XHTMLBlock.java</span></div><h1>XHTMLBlock.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.sink.Sink;
+
+/**
+ * An XHTML Block
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ */
+class XHTMLBlock
+    implements Block
+{
+    private final String tag;
+
+    /**
+     * Creates the XHTMLBlock.
+     *
+     * @param tag the tag, eg: &amp;lt;pre&amp;gt;
+     * @throws IllegalArgumentException if the arguments are &lt;code&gt;null&lt;/code&gt;
+     */
+    XHTMLBlock( final String tag )
+<span class="fc" id="L41">    {</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        if ( tag == null )</span>
+        {
+<span class="nc" id="L44">            throw new IllegalArgumentException( &quot;argument can't be null&quot; );</span>
+        }
+<span class="fc" id="L46">        this.tag = tag;</span>
+<span class="fc" id="L47">    }</span>
+
+    /** {@inheritDoc} */
+    public final void traverse( final Sink sink )
+    {
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if ( tag.trim().length() == 0 )</span>
+        {
+<span class="nc" id="L54">            return;</span>
+        }
+
+<span class="fc" id="L57">        sink.rawText( tag );</span>
+<span class="fc" id="L58">    }</span>
+
+    /** {@inheritDoc} */
+    public final boolean equals( final Object obj )
+    {
+<span class="nc" id="L63">        boolean ret = false;</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if ( obj == this )</span>
+        {
+<span class="nc" id="L67">            ret = true;</span>
+        }
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        else if ( obj instanceof XHTMLBlock )</span>
+        {
+<span class="nc" id="L71">            final XHTMLBlock a = (XHTMLBlock) obj;</span>
+
+<span class="nc" id="L73">            ret = tag.equals( a.tag );</span>
+        }
+
+<span class="nc" id="L76">        return ret;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a int.
+     */
+    public final int hashCode()
+    {
+<span class="nc" id="L86">        return tag.hashCode();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

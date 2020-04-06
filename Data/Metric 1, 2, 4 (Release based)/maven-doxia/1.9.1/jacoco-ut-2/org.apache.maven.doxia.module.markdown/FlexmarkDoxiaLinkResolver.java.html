@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlexmarkDoxiaLinkResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Markdown Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.markdown</a> &gt; <span class="el_source">FlexmarkDoxiaLinkResolver.java</span></div><h1>FlexmarkDoxiaLinkResolver.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.markdown;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.vladsch.flexmark.ext.wikilink.internal.WikiLinkLinkResolver;
+import com.vladsch.flexmark.html.IndependentLinkResolverFactory;
+import com.vladsch.flexmark.html.LinkResolver;
+import com.vladsch.flexmark.html.LinkResolverFactory;
+import com.vladsch.flexmark.html.renderer.LinkResolverContext;
+import com.vladsch.flexmark.html.renderer.LinkStatus;
+import com.vladsch.flexmark.html.renderer.LinkType;
+import com.vladsch.flexmark.html.renderer.ResolvedLink;
+import com.vladsch.flexmark.util.ast.Node;
+
+/**
+ * The FlexmarkDoxiaLinkResolver rewrites the md, markdown links to html.
+ *
+ * Sample links it rewrites:
+ * - doc.md to doc.html
+ * - doc.markdown to doc.html
+ * - doc.md#anchor to doc.html#anchor
+ * - doc.markdown#anchor to doc.html#anchor
+ * - :doc.md to :doc.html
+ * - :doc.markdown to :doc.html
+ *
+ * Sample links it leaves untouched:
+ * - http://doc.md
+ * - https://doc.markdown
+ * - doc.md.badformat
+ * - doc.md#bad#format
+ * - doc.md#bad.format
+ */
+public class FlexmarkDoxiaLinkResolver implements LinkResolver
+{
+    final Pattern pattern;
+
+    /**
+     * &lt;p&gt;Constructor for FlexmarkDoxiaLinkResolver.&lt;/p&gt;
+     *
+     * @param context a {@link com.vladsch.flexmark.html.renderer.LinkResolverContext} object.
+     */
+    public FlexmarkDoxiaLinkResolver( LinkResolverContext context )
+<span class="fc" id="L65">    {</span>
+<span class="fc" id="L66">        this.pattern = Pattern.compile(</span>
+                            &quot;^(?![^:]+:)([^\\.]+).(?:&quot;
+                          + MarkdownParserModule.FILE_EXTENSION
+                          + &quot;|&quot;
+                          + MarkdownParserModule.ALTERNATE_FILE_EXTENSION
+                          + &quot;)(#[^#\\.]*){0,1}$&quot;
+                        );
+<span class="fc" id="L73">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public ResolvedLink resolveLink( Node node, LinkResolverContext context, ResolvedLink link )
+    {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if ( link.getLinkType() == LinkType.LINK )</span>
+        {
+<span class="fc" id="L81">            Matcher matcher = this.pattern.matcher( link.getUrl() );</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            if ( matcher.matches() )</span>
+            {
+<span class="fc" id="L84">                return link.withStatus( LinkStatus.VALID ).withUrl( matcher.replaceAll( &quot;$1.html$2&quot; ) );</span>
+            }
+        }
+
+<span class="fc" id="L88">        return link;</span>
+    }
+
+    /**
+     * Factory that creates FlexmarkDoxiaLinkResolver objects.
+     */
+<span class="fc" id="L94">    public static class Factory extends IndependentLinkResolverFactory</span>
+    {
+        @Override
+        public Set&lt;Class&lt;? extends LinkResolverFactory&gt;&gt; getBeforeDependents()
+        {
+<span class="fc" id="L99">            Set&lt;Class&lt;? extends LinkResolverFactory&gt;&gt; set = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L100">            set.add( WikiLinkLinkResolver.Factory.class );</span>
+<span class="fc" id="L101">            return set;</span>
+        }
+
+        @Override
+            public LinkResolver create( LinkResolverContext context )
+        {
+<span class="fc" id="L107">            return new FlexmarkDoxiaLinkResolver( context );</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

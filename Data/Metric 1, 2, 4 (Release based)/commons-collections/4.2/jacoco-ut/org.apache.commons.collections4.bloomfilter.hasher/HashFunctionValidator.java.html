@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HashFunctionValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Collections</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.collections4.bloomfilter.hasher</a> &gt; <span class="el_source">HashFunctionValidator.java</span></div><h1>HashFunctionValidator.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.collections4.bloomfilter.hasher;
+
+import java.util.Locale;
+import java.util.Objects;
+
+/**
+ * Contains validation for hash functions.
+ */
+final class HashFunctionValidator {
+    /** Do not instantiate. */
+    private HashFunctionValidator() {}
+
+    /**
+     * Generates a hash code for the identity of the hash function. The hash code is
+     * generated using the same properties as those tested in
+     * {@link #areEqual(HashFunctionIdentity, HashFunctionIdentity)}, that is the
+     * signedness, process type and name. The name is not case specific and is converted
+     * to lower-case using the {@link Locale#ROOT root locale}.
+     *
+     * &lt;p&gt;The generated value is suitable for use in generation of a hash code that satisfies
+     * the contract of {@link Object#hashCode()} if the {@link Object#equals(Object)} method
+     * is implemented using {@link #areEqual(HashFunctionIdentity, HashFunctionIdentity)}. That
+     * is two objects considered equal will have the same hash code.
+     *
+     * &lt;p&gt;If the hash function identity is a field within a larger object the generated hash code
+     * should be incorporated into the entire hash, for example using
+     * {@link Objects#hash(Object...)}.
+     *
+     * @param a hash function.
+     * @return hash code
+     * @see String#toLowerCase(Locale)
+     * @see Locale#ROOT
+     */
+    static int hash(HashFunctionIdentity a) {
+<span class="fc" id="L51">        return Objects.hash(a.getSignedness(),</span>
+<span class="fc" id="L52">                            a.getProcessType(),</span>
+<span class="fc" id="L53">                            a.getName().toLowerCase(Locale.ROOT));</span>
+    }
+
+    /**
+     * Compares the identity of the two hash functions. The functions are considered
+     * equal if the signedness, process type and name are equal. The name is not
+     * case specific.
+     *
+     * &lt;p&gt;A pair of functions that are equal would be expected to produce the same
+     * hash output from the same input.
+     *
+     * @param a First hash function.
+     * @param b Second hash function.
+     * @return true, if successful
+     * @see String#equalsIgnoreCase(String)
+     */
+    static boolean areEqual(HashFunctionIdentity a, HashFunctionIdentity b) {
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        return (a.getSignedness() == b.getSignedness() &amp;&amp;</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                a.getProcessType() == b.getProcessType() &amp;&amp;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                a.getName().equalsIgnoreCase(b.getName()));</span>
+    }
+
+    /**
+     * Compares the identity of the two hash functions and throws an exception if they
+     * are not equal.
+     *
+     * @param a First hash function.
+     * @param b Second hash function.
+     * @see #areEqual(HashFunctionIdentity, HashFunctionIdentity)
+     * @throws IllegalArgumentException if the hash functions are not equal
+     */
+    static void checkAreEqual(HashFunctionIdentity a, HashFunctionIdentity b) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (!areEqual(a, b)) {</span>
+<span class="fc" id="L86">            throw new IllegalArgumentException(String.format(&quot;Hash functions are not equal: (%s) != (%s)&quot;,</span>
+<span class="fc" id="L87">                HashFunctionIdentity.asCommonString(a), HashFunctionIdentity.asCommonString(b)));</span>
+        }
+<span class="fc" id="L89">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

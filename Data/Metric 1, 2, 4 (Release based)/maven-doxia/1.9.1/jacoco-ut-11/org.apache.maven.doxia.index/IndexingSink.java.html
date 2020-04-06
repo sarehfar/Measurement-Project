@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndexingSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.index</a> &gt; <span class="el_source">IndexingSink.java</span></div><h1>IndexingSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.index;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.Stack;
+
+import org.apache.maven.doxia.sink.impl.SinkAdapter;
+import org.apache.maven.doxia.util.HtmlTools;
+
+/**
+ * A sink implementation for index.
+ *
+ * @author &lt;a href=&quot;mailto:trygvis@inamo.no&quot;&gt;Trygve Laugst&amp;oslash;l&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ */
+public class IndexingSink
+    extends SinkAdapter
+{
+    /** Section 1. */
+    private static final int TYPE_SECTION_1 = 1;
+
+    /** Section 2. */
+    private static final int TYPE_SECTION_2 = 2;
+
+    /** Section 3. */
+    private static final int TYPE_SECTION_3 = 3;
+
+    /** Section 4. */
+    private static final int TYPE_SECTION_4 = 4;
+
+    /** Section 5. */
+    private static final int TYPE_SECTION_5 = 5;
+
+    /** Defined term. */
+    private static final int TYPE_DEFINED_TERM = 6;
+
+    /** Figure. */
+    private static final int TYPE_FIGURE = 7;
+
+    /** Table. */
+    private static final int TYPE_TABLE = 8;
+
+    /** Title. */
+    private static final int TITLE = 9;
+
+    /** The current type. */
+    private int type;
+
+    /** The current title. */
+    private String title;
+
+    /** The stack. */
+    private final Stack&lt;IndexEntry&gt; stack;
+
+    /**
+     * Default constructor.
+     *
+     * @param sectionEntry The first index entry.
+     */
+    public IndexingSink( IndexEntry sectionEntry )
+<span class="fc" id="L78">    {</span>
+<span class="fc" id="L79">        stack = new Stack&lt;&gt;();</span>
+<span class="fc" id="L80">        stack.push( sectionEntry );</span>
+
+<span class="fc" id="L82">        init();</span>
+<span class="fc" id="L83">    }</span>
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;title&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return the title
+     */
+    public String getTitle()
+    {
+<span class="nc" id="L92">        return title;</span>
+    }
+
+    // ----------------------------------------------------------------------
+    // Sink Overrides
+    // ----------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public void title()
+    {
+<span class="nc" id="L104">        this.type = TITLE;</span>
+<span class="nc" id="L105">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section1()
+    {
+<span class="fc" id="L112">        pushNewEntry();</span>
+<span class="fc" id="L113">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void sectionTitle1()
+    {
+<span class="fc" id="L120">        this.type = TYPE_SECTION_1;</span>
+<span class="fc" id="L121">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void title_()
+    {
+<span class="nc" id="L128">        this.type = 0;</span>
+<span class="nc" id="L129">    }</span>
+
+    /**
+     * &lt;p&gt;sectionTitle1_.&lt;/p&gt;
+     */
+    public void sectionTitle1_()
+    {
+<span class="fc" id="L136">        this.type = 0;</span>
+<span class="fc" id="L137">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section1_()
+    {
+<span class="fc" id="L144">        pop();</span>
+<span class="fc" id="L145">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section2()
+    {
+<span class="fc" id="L152">        pushNewEntry();</span>
+<span class="fc" id="L153">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void sectionTitle2()
+    {
+<span class="fc" id="L160">        this.type = TYPE_SECTION_2;</span>
+<span class="fc" id="L161">    }</span>
+
+    /**
+     * &lt;p&gt;sectionTitle2_.&lt;/p&gt;
+     */
+    public void sectionTitle2_()
+    {
+<span class="fc" id="L168">        this.type = 0;</span>
+<span class="fc" id="L169">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section2_()
+    {
+<span class="fc" id="L176">        pop();</span>
+<span class="fc" id="L177">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section3()
+    {
+<span class="fc" id="L184">        pushNewEntry();</span>
+<span class="fc" id="L185">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void sectionTitle3()
+    {
+<span class="fc" id="L192">        this.type = TYPE_SECTION_3;</span>
+<span class="fc" id="L193">    }</span>
+
+    /**
+     * &lt;p&gt;sectionTitle3_.&lt;/p&gt;
+     */
+    public void sectionTitle3_()
+    {
+<span class="fc" id="L200">        this.type = 0;</span>
+<span class="fc" id="L201">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section3_()
+    {
+<span class="fc" id="L208">        pop();</span>
+<span class="fc" id="L209">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section4()
+    {
+<span class="nc" id="L216">        pushNewEntry();</span>
+<span class="nc" id="L217">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void sectionTitle4()
+    {
+<span class="nc" id="L224">        this.type = TYPE_SECTION_4;</span>
+<span class="nc" id="L225">    }</span>
+
+    /**
+     * &lt;p&gt;sectionTitle4_.&lt;/p&gt;
+     */
+    public void sectionTitle4_()
+    {
+<span class="nc" id="L232">        this.type = 0;</span>
+<span class="nc" id="L233">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section4_()
+    {
+<span class="nc" id="L240">        pop();</span>
+<span class="nc" id="L241">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section5()
+    {
+<span class="nc" id="L248">        pushNewEntry();</span>
+<span class="nc" id="L249">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void sectionTitle5()
+    {
+<span class="nc" id="L256">        this.type = TYPE_SECTION_5;</span>
+<span class="nc" id="L257">    }</span>
+
+    /**
+     * &lt;p&gt;sectionTitle5_.&lt;/p&gt;
+     */
+    public void sectionTitle5_()
+    {
+<span class="nc" id="L264">        this.type = 0;</span>
+<span class="nc" id="L265">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void section5_()
+    {
+<span class="nc" id="L272">        pop();</span>
+<span class="nc" id="L273">    }</span>
+
+    // public void definedTerm()
+    // {
+    // type = TYPE_DEFINED_TERM;
+    // }
+    //
+    // public void figureCaption()
+    // {
+    // type = TYPE_FIGURE;
+    // }
+    //
+    // public void tableCaption()
+    // {
+    // type = TYPE_TABLE;
+    // }
+
+    /** {@inheritDoc} */
+    public void text( String text )
+    {
+<span class="pc bpc" id="L293" title="2 of 3 branches missed.">        switch ( this.type )</span>
+        {
+            case TITLE:
+<span class="nc" id="L296">                this.title = text;</span>
+<span class="nc" id="L297">                break;</span>
+            case TYPE_SECTION_1:
+            case TYPE_SECTION_2:
+            case TYPE_SECTION_3:
+            case TYPE_SECTION_4:
+            case TYPE_SECTION_5:
+                // -----------------------------------------------------------------------
+                // Sanitize the id. The most important step is to remove any blanks
+                // -----------------------------------------------------------------------
+
+                // append text to current entry
+<span class="fc" id="L308">                IndexEntry entry = stack.lastElement();</span>
+
+<span class="fc" id="L310">                String title = entry.getTitle() + text;</span>
+<span class="fc" id="L311">                title = title.replaceAll( &quot;[\\r\\n]+&quot;, &quot;&quot; );</span>
+<span class="fc" id="L312">                entry.setTitle( title );</span>
+
+<span class="fc" id="L314">                entry.setId( HtmlTools.encodeId( title ) );</span>
+
+<span class="fc" id="L316">                break;</span>
+            // Dunno how to handle these yet
+            case TYPE_DEFINED_TERM:
+            case TYPE_FIGURE:
+            case TYPE_TABLE:
+            default:
+                break;
+        }
+<span class="fc" id="L324">    }</span>
+
+    /**
+     * Creates and pushes a new IndexEntry onto the top of this stack.
+     */
+    public void pushNewEntry()
+    {
+<span class="fc" id="L331">        IndexEntry entry = new IndexEntry( peek(), &quot;&quot; );</span>
+
+<span class="fc" id="L333">        entry.setTitle( &quot;&quot; );</span>
+
+<span class="fc" id="L335">        stack.push( entry );</span>
+<span class="fc" id="L336">    }</span>
+
+    /**
+     * Pushes an IndexEntry onto the top of this stack.
+     *
+     * @param entry to put.
+     */
+    public void push( IndexEntry entry )
+    {
+<span class="nc" id="L345">        stack.push( entry );</span>
+<span class="nc" id="L346">    }</span>
+
+    /**
+     * Removes the IndexEntry at the top of this stack.
+     */
+    public void pop()
+    {
+<span class="fc" id="L353">        stack.pop();</span>
+<span class="fc" id="L354">    }</span>
+
+    /**
+     * &lt;p&gt;peek.&lt;/p&gt;
+     *
+     * @return Looks at the IndexEntry at the top of this stack.
+     */
+    public IndexEntry peek()
+    {
+<span class="fc" id="L363">        return stack.peek();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void close()
+    {
+<span class="nc" id="L371">        super.close();</span>
+
+<span class="nc" id="L373">        init();</span>
+<span class="nc" id="L374">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void init()
+    {
+<span class="fc" id="L381">        this.type = 0;</span>
+<span class="fc" id="L382">        this.title = null;</span>
+<span class="fc" id="L383">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

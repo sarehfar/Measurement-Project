@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DynamicHasher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Collections</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.collections4.bloomfilter.hasher</a> &gt; <span class="el_source">DynamicHasher.java</span></div><h1>DynamicHasher.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.collections4.bloomfilter.hasher;
+
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
+
+/**
+ * The class that performs hashing on demand.
+ * @since 4.5
+ */
+public class DynamicHasher implements Hasher {
+
+    /**
+     * The builder for DynamicHashers.
+     * @since 4.5
+     */
+    public static class Builder implements Hasher.Builder {
+
+        /**
+         * The list of items (each as a byte[]) that are to be hashed.
+         */
+        private final List&lt;byte[]&gt; buffers;
+
+        /**
+         * The function that the resulting DynamicHasher will use.
+         */
+        private final HashFunction function;
+
+        /**
+         * Constructs a DynamicHasher builder.
+         *
+         * @param function the function implementation.
+         */
+<span class="fc" id="L52">        public Builder(final HashFunction function) {</span>
+<span class="fc" id="L53">            this.function = function;</span>
+<span class="fc" id="L54">            this.buffers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L55">        }</span>
+
+        @Override
+        public DynamicHasher build() throws IllegalArgumentException {
+            // Assumes the hasher will create a copy of the buffers
+<span class="fc" id="L60">            final DynamicHasher hasher = new DynamicHasher(function, buffers);</span>
+            // Reset for further use
+<span class="fc" id="L62">            buffers.clear();</span>
+<span class="fc" id="L63">            return hasher;</span>
+        }
+
+        @Override
+        public final DynamicHasher.Builder with(final byte[] property) {
+<span class="fc" id="L68">            buffers.add(property);</span>
+<span class="fc" id="L69">            return this;</span>
+        }
+
+        @Override
+        public DynamicHasher.Builder with(CharSequence item, Charset charset) {
+<span class="fc" id="L74">            Hasher.Builder.super.with(item, charset);</span>
+<span class="fc" id="L75">            return this;</span>
+        }
+
+        @Override
+        public DynamicHasher.Builder withUnencoded(CharSequence item) {
+<span class="fc" id="L80">            Hasher.Builder.super.withUnencoded(item);</span>
+<span class="fc" id="L81">            return this;</span>
+        }
+    }
+
+    /**
+     * The iterator of integers.
+     *
+     * &lt;p&gt;This assumes that the list of buffers is not empty.
+     */
+    private class Iterator implements PrimitiveIterator.OfInt {
+        /** The number of hash functions per item. */
+        private final int k;
+        /** The number of bits in the shape. */
+        private final int m;
+        /** The current item. */
+        private byte[] item;
+        /** The index of the next item. */
+        private int nextItem;
+        /** The count of hash functions for the current item. */
+        private int functionCount;
+
+        /**
+         * Constructs iterator with the specified shape.
+         *
+         * @param shape
+         */
+<span class="fc" id="L107">        private Iterator(final Shape shape) {</span>
+            // Assumes that shape returns non-zero positive values for hash functions and bits
+<span class="fc" id="L109">            k = shape.getNumberOfHashFunctions();</span>
+<span class="fc" id="L110">            m = shape.getNumberOfBits();</span>
+            // Assume non-empty
+<span class="fc" id="L112">            item = buffers.get(0);</span>
+<span class="fc" id="L113">            nextItem = 1;</span>
+<span class="fc" id="L114">        }</span>
+
+        @Override
+        public boolean hasNext() {
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (functionCount != k) {</span>
+<span class="fc" id="L119">                return true;</span>
+            }
+            // Reached the number of hash functions for the current item.
+            // Try and advance to the next item.
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            if (nextItem != buffers.size()) {</span>
+<span class="fc" id="L124">                item = buffers.get(nextItem++);</span>
+<span class="fc" id="L125">                functionCount = 0;</span>
+<span class="fc" id="L126">                return true;</span>
+            }
+            // Finished.
+            // functionCount == shape.getNumberOfHashFunctions()
+            // nextItem == buffers.size()
+<span class="fc" id="L131">            return false;</span>
+        }
+
+        @Override
+        public int nextInt() {
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            if (hasNext()) {</span>
+<span class="fc" id="L137">                return (int) Math.floorMod(function.apply(item, functionCount++),</span>
+                    // Cast to long to workaround a bug in animal-sniffer.
+                    (long) m);
+            }
+<span class="fc" id="L141">            throw new NoSuchElementException();</span>
+        }
+    }
+
+    /**
+     * An iterator of integers to use when there are no values.
+     */
+    private static class NoValuesIterator implements PrimitiveIterator.OfInt {
+        /** The singleton instance. */
+<span class="fc" id="L150">        private static final NoValuesIterator INSTANCE = new NoValuesIterator();</span>
+
+        /**
+         * Empty constructor.
+         */
+        private NoValuesIterator() {}
+
+        @Override
+        public boolean hasNext() {
+<span class="fc" id="L159">            return false;</span>
+        }
+
+        @Override
+        public int nextInt() {
+<span class="fc" id="L164">            throw new NoSuchElementException();</span>
+        }
+    }
+
+    /**
+     * The list of byte arrays that are to be hashed.
+     * Package private for access by the iterator.
+     */
+    final List&lt;byte[]&gt; buffers;
+
+    /**
+     * The function to hash the buffers.
+     * Package private for access by the iterator.
+     */
+    final HashFunction function;
+
+    /**
+     * Constructs a DynamicHasher.
+     *
+     * @param function the function to use.
+     * @param buffers the byte buffers that will be hashed.
+     */
+<span class="fc" id="L186">    public DynamicHasher(final HashFunction function, final List&lt;byte[]&gt; buffers) {</span>
+<span class="fc" id="L187">        this.buffers = new ArrayList&lt;&gt;(buffers);</span>
+<span class="fc" id="L188">        this.function = function;</span>
+<span class="fc" id="L189">    }</span>
+
+    @Override
+    public PrimitiveIterator.OfInt iterator(final Shape shape) {
+<span class="fc" id="L193">        HashFunctionValidator.checkAreEqual(getHashFunctionIdentity(),</span>
+<span class="fc" id="L194">                                            shape.getHashFunctionIdentity());</span>
+        // Use optimised iterator for no values
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        return buffers.isEmpty() ? NoValuesIterator.INSTANCE : new Iterator(shape);</span>
+    }
+
+    @Override
+    public HashFunctionIdentity getHashFunctionIdentity() {
+<span class="fc" id="L201">        return function;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

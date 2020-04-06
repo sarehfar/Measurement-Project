@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarkdownToDoxiaHtmlSerializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Markdown Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.markdown</a> &gt; <span class="el_source">MarkdownToDoxiaHtmlSerializer.java</span></div><h1>MarkdownToDoxiaHtmlSerializer.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.markdown;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.pegdown.LinkRenderer;
+import org.pegdown.ToHtmlSerializer;
+import org.pegdown.ast.VerbatimNode;
+
+/**
+ * Custom Markdown to HTML serialization strategy that better matches the
+ * conventions of existing Doxia modules.
+ *
+ * @author Brian Ferris (bdferris@google.com)
+ */
+public class MarkdownToDoxiaHtmlSerializer
+    extends ToHtmlSerializer
+{
+    public MarkdownToDoxiaHtmlSerializer()
+    {
+<span class="fc" id="L37">        super( new LinkRenderer() );</span>
+<span class="fc" id="L38">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit( VerbatimNode node )
+    {
+        // Pegdown renders verbatim as &quot;&lt;pre&gt;&lt;code&gt;&quot;, but Doxia base Xhtml Sink renders as &quot;&lt;div class=..&gt;&lt;pre&gt;&quot;
+        // see XhtmlBaseSink.verbatim(SinkEventAttributes) implementation
+<span class="fc" id="L48">        printer.println().print( &quot;&lt;div class=\&quot;source\&quot;&gt;&lt;pre&gt;&quot; );</span>
+<span class="fc" id="L49">        String text = node.getText();</span>
+        // print HTML breaks for all initial newlines
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        while ( text.charAt( 0 ) == '\n' )</span>
+        {
+<span class="fc" id="L53">            printer.print( &quot;&lt;br/&gt;&quot; );</span>
+<span class="fc" id="L54">            text = text.substring( 1 );</span>
+        }
+<span class="fc" id="L56">        printer.printEncoded( text );</span>
+<span class="fc" id="L57">        printer.print( &quot;&lt;/pre&gt;&lt;/div&gt;&quot; );</span>
+<span class="fc" id="L58">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

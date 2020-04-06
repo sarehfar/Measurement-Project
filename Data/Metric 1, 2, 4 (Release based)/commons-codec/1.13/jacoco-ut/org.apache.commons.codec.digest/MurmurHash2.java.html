@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MurmurHash2.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Codec</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.codec.digest</a> &gt; <span class="el_source">MurmurHash2.java</span></div><h1>MurmurHash2.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.commons.codec.digest;
+
+/**
+ * MurmurHash2 yields a 32-bit or 64-bit value.
+ *
+ * MurmurHash is a non-cryptographic hash function suitable for general
+ * hash-based lookup. The name comes from two basic operations, multiply (MU)
+ * and rotate (R), used in its inner loop. Unlike cryptographic hash functions,
+ * it is not specifically designed to be difficult to reverse by an adversary,
+ * making it unsuitable for cryptographic purposes.
+ *
+ * This is a re-implementation of the original C code plus some additional
+ * features.
+ *
+ * Public domain.
+ *
+ * @see &lt;a href=&quot;https://en.wikipedia.org/wiki/MurmurHash&quot;&gt;MurmurHash&lt;/a&gt;
+ * @since 1.13
+ */
+public final class MurmurHash2 {
+
+	// all methods static; private constructor.
+	private MurmurHash2() {
+	}
+
+	/**
+	 * Generates 32 bit hash from byte array of the given length and seed.
+	 *
+	 * @param data   byte array to hash
+	 * @param length length of the array to hash
+	 * @param seed   initial seed value
+	 * @return 32 bit hash of the given array
+	 */
+	public static int hash32(final byte[] data, final int length, final int seed) {
+		// 'm' and 'r' are mixing constants generated offline.
+		// They're not really 'magic', they just happen to work well.
+<span class="fc" id="L54">		final int m = 0x5bd1e995;</span>
+<span class="fc" id="L55">		final int r = 24;</span>
+
+		// Initialize the hash to a random value
+<span class="fc" id="L58">		int h = seed ^ length;</span>
+<span class="fc" id="L59">		final int length4 = length / 4;</span>
+
+<span class="fc bfc" id="L61" title="All 2 branches covered.">		for (int i = 0; i &lt; length4; i++) {</span>
+<span class="fc" id="L62">			final int i4 = i * 4;</span>
+<span class="fc" id="L63">			int k = (data[i4 + 0] &amp; 0xff) + ((data[i4 + 1] &amp; 0xff) &lt;&lt; 8) + ((data[i4 + 2] &amp; 0xff) &lt;&lt; 16)</span>
+					+ ((data[i4 + 3] &amp; 0xff) &lt;&lt; 24);
+<span class="fc" id="L65">			k *= m;</span>
+<span class="fc" id="L66">			k ^= k &gt;&gt;&gt; r;</span>
+<span class="fc" id="L67">			k *= m;</span>
+<span class="fc" id="L68">			h *= m;</span>
+<span class="fc" id="L69">			h ^= k;</span>
+		}
+
+		// Handle the last few bytes of the input array
+<span class="fc bfc" id="L73" title="All 4 branches covered.">		switch (length % 4) {</span>
+		case 3:
+<span class="fc" id="L75">			h ^= (data[(length &amp; ~3) + 2] &amp; 0xff) &lt;&lt; 16;</span>
+		case 2:
+<span class="fc" id="L77">			h ^= (data[(length &amp; ~3) + 1] &amp; 0xff) &lt;&lt; 8;</span>
+		case 1:
+<span class="fc" id="L79">			h ^= (data[length &amp; ~3] &amp; 0xff);</span>
+<span class="fc" id="L80">			h *= m;</span>
+		}
+
+<span class="fc" id="L83">		h ^= h &gt;&gt;&gt; 13;</span>
+<span class="fc" id="L84">		h *= m;</span>
+<span class="fc" id="L85">		h ^= h &gt;&gt;&gt; 15;</span>
+
+<span class="fc" id="L87">		return h;</span>
+	}
+
+	/**
+	 * Generates 32 bit hash from byte array with default seed value.
+	 *
+	 * @param data   byte array to hash
+	 * @param length length of the array to hash
+	 * @return 32 bit hash of the given array
+	 */
+	public static int hash32(final byte[] data, final int length) {
+<span class="fc" id="L98">		return hash32(data, length, 0x9747b28c);</span>
+	}
+
+	/**
+	 * Generates 32 bit hash from a string.
+	 *
+	 * @param text string to hash
+	 * @return 32 bit hash of the given string
+	 */
+	public static int hash32(final String text) {
+<span class="fc" id="L108">		final byte[] bytes = text.getBytes();</span>
+<span class="fc" id="L109">		return hash32(bytes, bytes.length);</span>
+	}
+
+	/**
+	 * Generates 32 bit hash from a substring.
+	 *
+	 * @param text   string to hash
+	 * @param from   starting index
+	 * @param length length of the substring to hash
+	 * @return 32 bit hash of the given string
+	 */
+	public static int hash32(final String text, final int from, final int length) {
+<span class="fc" id="L121">		return hash32(text.substring(from, from + length));</span>
+	}
+
+	/**
+	 * Generates 64 bit hash from byte array of the given length and seed.
+	 *
+	 * @param data   byte array to hash
+	 * @param length length of the array to hash
+	 * @param seed   initial seed value
+	 * @return 64 bit hash of the given array
+	 */
+	public static long hash64(final byte[] data, final int length, final int seed) {
+<span class="fc" id="L133">		final long m = 0xc6a4a7935bd1e995L;</span>
+<span class="fc" id="L134">		final int r = 47;</span>
+
+<span class="fc" id="L136">		long h = (seed &amp; 0xffffffffl) ^ (length * m);</span>
+
+<span class="fc" id="L138">		final int length8 = length / 8;</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">		for (int i = 0; i &lt; length8; i++) {</span>
+<span class="fc" id="L141">			final int i8 = i * 8;</span>
+<span class="fc" id="L142">			long k = ((long) data[i8 + 0] &amp; 0xff) + (((long) data[i8 + 1] &amp; 0xff) &lt;&lt; 8)</span>
+					+ (((long) data[i8 + 2] &amp; 0xff) &lt;&lt; 16) + (((long) data[i8 + 3] &amp; 0xff) &lt;&lt; 24)
+					+ (((long) data[i8 + 4] &amp; 0xff) &lt;&lt; 32) + (((long) data[i8 + 5] &amp; 0xff) &lt;&lt; 40)
+					+ (((long) data[i8 + 6] &amp; 0xff) &lt;&lt; 48) + (((long) data[i8 + 7] &amp; 0xff) &lt;&lt; 56);
+
+<span class="fc" id="L147">			k *= m;</span>
+<span class="fc" id="L148">			k ^= k &gt;&gt;&gt; r;</span>
+<span class="fc" id="L149">			k *= m;</span>
+
+<span class="fc" id="L151">			h ^= k;</span>
+<span class="fc" id="L152">			h *= m;</span>
+		}
+
+<span class="fc bfc" id="L155" title="All 8 branches covered.">		switch (length % 8) {</span>
+		case 7:
+<span class="fc" id="L157">			h ^= (long) (data[(length &amp; ~7) + 6] &amp; 0xff) &lt;&lt; 48;</span>
+		case 6:
+<span class="fc" id="L159">			h ^= (long) (data[(length &amp; ~7) + 5] &amp; 0xff) &lt;&lt; 40;</span>
+		case 5:
+<span class="fc" id="L161">			h ^= (long) (data[(length &amp; ~7) + 4] &amp; 0xff) &lt;&lt; 32;</span>
+		case 4:
+<span class="fc" id="L163">			h ^= (long) (data[(length &amp; ~7) + 3] &amp; 0xff) &lt;&lt; 24;</span>
+		case 3:
+<span class="fc" id="L165">			h ^= (long) (data[(length &amp; ~7) + 2] &amp; 0xff) &lt;&lt; 16;</span>
+		case 2:
+<span class="fc" id="L167">			h ^= (long) (data[(length &amp; ~7) + 1] &amp; 0xff) &lt;&lt; 8;</span>
+		case 1:
+<span class="fc" id="L169">			h ^= data[length &amp; ~7] &amp; 0xff;</span>
+<span class="fc" id="L170">			h *= m;</span>
+		}
+
+<span class="fc" id="L173">		h ^= h &gt;&gt;&gt; r;</span>
+<span class="fc" id="L174">		h *= m;</span>
+<span class="fc" id="L175">		h ^= h &gt;&gt;&gt; r;</span>
+
+<span class="fc" id="L177">		return h;</span>
+	}
+
+	/**
+	 * Generates 64 bit hash from byte array with default seed value.
+	 *
+	 * @param data   byte array to hash
+	 * @param length length of the array to hash
+	 * @return 64 bit hash of the given string
+	 */
+	public static long hash64(final byte[] data, final int length) {
+<span class="fc" id="L188">		return hash64(data, length, 0xe17a1465);</span>
+	}
+
+	/**
+	 * Generates 64 bit hash from a string.
+	 *
+	 * @param text string to hash
+	 * @return 64 bit hash of the given string
+	 */
+	public static long hash64(final String text) {
+<span class="fc" id="L198">		final byte[] bytes = text.getBytes();</span>
+<span class="fc" id="L199">		return hash64(bytes, bytes.length);</span>
+	}
+
+	/**
+	 * Generates 64 bit hash from a substring.
+	 *
+	 * @param text   string to hash
+	 * @param from   starting index
+	 * @param length length of the substring to hash
+	 * @return 64 bit hash of the given array
+	 */
+	public static long hash64(final String text, final int from, final int length) {
+<span class="fc" id="L211">		return hash64(text.substring(from, from + length));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

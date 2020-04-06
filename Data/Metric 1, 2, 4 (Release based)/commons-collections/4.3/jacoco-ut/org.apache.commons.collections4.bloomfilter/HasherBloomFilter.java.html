@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HasherBloomFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Collections</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.collections4.bloomfilter</a> &gt; <span class="el_source">HasherBloomFilter.java</span></div><h1>HasherBloomFilter.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.collections4.bloomfilter;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.PrimitiveIterator.OfInt;
+import java.util.function.IntConsumer;
+
+import org.apache.commons.collections4.bloomfilter.hasher.Hasher;
+import org.apache.commons.collections4.bloomfilter.hasher.Shape;
+import org.apache.commons.collections4.bloomfilter.hasher.StaticHasher;
+import org.apache.commons.collections4.iterators.EmptyIterator;
+import org.apache.commons.collections4.iterators.IteratorChain;
+
+/**
+ * A Bloom filter built on a single hasher. This filter type should only be used for small
+ * filters (few on bits).  While this implementation correctly supports the merge() methods
+ * it is recommended that if merges are expected that one of the other Bloom filter
+ * implementations be used.
+ * @since 4.5
+ */
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">public class HasherBloomFilter extends AbstractBloomFilter {</span>
+    /** The bit representation for an empty Bloom filter. */
+<span class="fc" id="L40">    private static final long[] EMPTY = new long[0];</span>
+
+    /**
+     * The internal hasher representation.
+     */
+    private StaticHasher hasher;
+
+    /**
+     * Constructs a HasherBloomFilter from a hasher and a shape.
+     *
+     * @param hasher the hasher to use.
+     * @param shape the shape of the Bloom filter.
+     */
+    public HasherBloomFilter(final Hasher hasher, final Shape shape) {
+<span class="fc" id="L54">        super(shape);</span>
+<span class="fc" id="L55">        verifyHasher(hasher);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (hasher instanceof StaticHasher) {</span>
+<span class="fc" id="L57">            this.hasher = (StaticHasher) hasher;</span>
+<span class="fc" id="L58">            verifyShape(this.hasher.getShape());</span>
+        } else {
+<span class="fc" id="L60">            this.hasher = new StaticHasher(hasher, shape);</span>
+        }
+<span class="fc" id="L62">    }</span>
+
+    /**
+     * Constructs an empty HasherBloomFilter from a shape.
+     *
+     * @param shape the shape of the Bloom filter.
+     */
+    public HasherBloomFilter(final Shape shape) {
+<span class="fc" id="L70">        super(shape);</span>
+<span class="fc" id="L71">        this.hasher = new StaticHasher(EmptyIterator.emptyIterator(), shape);</span>
+<span class="fc" id="L72">    }</span>
+
+    @Override
+    public int cardinality() {
+<span class="fc" id="L76">        return hasher.size();</span>
+    }
+
+    @Override
+    public boolean contains(final Hasher hasher) {
+<span class="fc" id="L81">        verifyHasher(hasher);</span>
+<span class="fc" id="L82">        final Set&lt;Integer&gt; set = new TreeSet&lt;&gt;();</span>
+<span class="fc" id="L83">        hasher.iterator(getShape()).forEachRemaining((IntConsumer) idx -&gt; {</span>
+<span class="fc" id="L84">            set.add(idx);</span>
+<span class="fc" id="L85">        });</span>
+<span class="fc" id="L86">        final OfInt iter = this.hasher.iterator(getShape());</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        while (iter.hasNext()) {</span>
+<span class="fc" id="L88">            final int idx = iter.nextInt();</span>
+<span class="fc" id="L89">            set.remove(idx);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (set.isEmpty()) {</span>
+<span class="fc" id="L91">                return true;</span>
+            }
+<span class="fc" id="L93">        }</span>
+<span class="fc" id="L94">        return false;</span>
+    }
+
+    @Override
+    public long[] getBits() {
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (hasher.size() == 0) {</span>
+<span class="fc" id="L100">            return EMPTY;</span>
+        }
+
+        // Note: This can be simplified if the StaticHasher exposed a getMaxIndex()
+        // method. Since it maintains an ordered list of unique indices the maximum
+        // is the last value in the iterator. Knowing this value would allow
+        // exact allocation of the long[].
+        // For now we assume that the long[] will have a positive length and at least
+        // 1 bit set in the entire array.
+
+<span class="fc" id="L110">        final int n = (int) Math.ceil(hasher.getShape().getNumberOfBits() * (1.0 / Long.SIZE));</span>
+<span class="fc" id="L111">        final long[] result = new long[n];</span>
+<span class="fc" id="L112">        final OfInt iter = hasher.iterator(hasher.getShape());</span>
+<span class="fc" id="L113">        iter.forEachRemaining((IntConsumer) idx -&gt; {</span>
+<span class="fc" id="L114">            BloomFilterIndexer.checkPositive(idx);</span>
+<span class="fc" id="L115">            final int buffIdx = BloomFilterIndexer.getLongIndex(idx);</span>
+<span class="fc" id="L116">            final long buffOffset = BloomFilterIndexer.getLongBit(idx);</span>
+<span class="fc" id="L117">            result[buffIdx] |= buffOffset;</span>
+<span class="fc" id="L118">        });</span>
+
+<span class="fc" id="L120">        int limit = result.length;</span>
+
+        // Assume the array has a non-zero length and at least 1 bit set.
+        // This is tested using assertions.
+<span class="pc bpc" id="L124" title="2 of 4 branches missed.">        assert limit &gt; 0 : &quot;Number of bits in Shape is 0&quot;;</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        while (result[limit - 1] == 0) {</span>
+<span class="fc" id="L126">            limit--;</span>
+            // If the hasher was not empty it is not possible to return
+            // an array of length zero.
+<span class="pc bpc" id="L129" title="2 of 4 branches missed.">            assert limit &gt; 0 : &quot;Hasher reported a non-zero size but has no indices&quot;;</span>
+        }
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (limit &lt; result.length) {</span>
+<span class="fc" id="L132">            return Arrays.copyOf(result, limit);</span>
+        }
+<span class="fc" id="L134">        return result;</span>
+    }
+
+    @Override
+    public StaticHasher getHasher() {
+<span class="fc" id="L139">        return hasher;</span>
+    }
+
+    @Override
+    public boolean merge(final BloomFilter other) {
+<span class="fc" id="L144">        return merge(other.getHasher());</span>
+    }
+
+    @Override
+    public boolean merge(final Hasher hasher) {
+<span class="fc" id="L149">        verifyHasher(hasher);</span>
+<span class="fc" id="L150">        final IteratorChain&lt;Integer&gt; iter = new IteratorChain&lt;&gt;(this.hasher.iterator(getShape()),</span>
+<span class="fc" id="L151">            hasher.iterator(getShape()));</span>
+<span class="fc" id="L152">        this.hasher = new StaticHasher(iter, getShape());</span>
+<span class="fc" id="L153">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

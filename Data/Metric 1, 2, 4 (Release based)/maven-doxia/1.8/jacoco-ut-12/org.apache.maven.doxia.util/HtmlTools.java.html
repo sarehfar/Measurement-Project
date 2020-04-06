@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HtmlTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.util</a> &gt; <span class="el_source">HtmlTools.java</span></div><h1>HtmlTools.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.util;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.text.html.HTML.Tag;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.maven.doxia.markup.HtmlMarkup;
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * The &lt;code&gt;HtmlTools&lt;/code&gt; class defines methods to HTML handling.
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+public class HtmlTools
+{
+<span class="fc" id="L43">    private static final Tag[] ALL_TAGS  =</span>
+    {
+        HtmlMarkup.A, HtmlMarkup.ABBR, HtmlMarkup.ACRONYM, HtmlMarkup.ADDRESS, HtmlMarkup.APPLET,
+        HtmlMarkup.AREA, HtmlMarkup.B, HtmlMarkup.BASE, HtmlMarkup.BASEFONT, HtmlMarkup.BDO,
+        HtmlMarkup.BIG, HtmlMarkup.BLOCKQUOTE, HtmlMarkup.BODY, HtmlMarkup.BR, HtmlMarkup.BUTTON,
+        HtmlMarkup.CAPTION, HtmlMarkup.CENTER, HtmlMarkup.CITE, HtmlMarkup.CODE, HtmlMarkup.COL,
+        HtmlMarkup.COLGROUP, HtmlMarkup.DD, HtmlMarkup.DEL, HtmlMarkup.DFN, HtmlMarkup.DIR,
+        HtmlMarkup.DIV, HtmlMarkup.DL, HtmlMarkup.DT, HtmlMarkup.EM, HtmlMarkup.FIELDSET,
+        HtmlMarkup.FONT, HtmlMarkup.FORM, HtmlMarkup.FRAME, HtmlMarkup.FRAMESET, HtmlMarkup.H1,
+        HtmlMarkup.H2, HtmlMarkup.H3, HtmlMarkup.H4, HtmlMarkup.H5, HtmlMarkup.H6, HtmlMarkup.HEAD,
+        HtmlMarkup.HR, HtmlMarkup.HTML, HtmlMarkup.I, HtmlMarkup.IFRAME, HtmlMarkup.IMG,
+        HtmlMarkup.INPUT, HtmlMarkup.INS, HtmlMarkup.ISINDEX, HtmlMarkup.KBD, HtmlMarkup.LABEL,
+        HtmlMarkup.LEGEND, HtmlMarkup.LI, HtmlMarkup.LINK, HtmlMarkup.MAP, HtmlMarkup.MENU,
+        HtmlMarkup.META, HtmlMarkup.NOFRAMES, HtmlMarkup.NOSCRIPT, HtmlMarkup.OBJECT, HtmlMarkup.OL,
+        HtmlMarkup.OPTGROUP, HtmlMarkup.OPTION, HtmlMarkup.P, HtmlMarkup.PARAM, HtmlMarkup.PRE,
+        HtmlMarkup.Q, HtmlMarkup.S, HtmlMarkup.SAMP, HtmlMarkup.SCRIPT, HtmlMarkup.SELECT,
+        HtmlMarkup.SMALL, HtmlMarkup.SPAN, HtmlMarkup.STRIKE, HtmlMarkup.STRONG, HtmlMarkup.STYLE,
+        HtmlMarkup.SUB, HtmlMarkup.SUP, HtmlMarkup.TABLE, HtmlMarkup.TBODY, HtmlMarkup.TD,
+        HtmlMarkup.TEXTAREA, HtmlMarkup.TFOOT, HtmlMarkup.TH, HtmlMarkup.THEAD, HtmlMarkup.TITLE,
+        HtmlMarkup.TR, HtmlMarkup.TT, HtmlMarkup.U, HtmlMarkup.UL, HtmlMarkup.VAR
+    };
+
+<span class="fc" id="L65">    private static final Map&lt;String, Tag&gt; TAG_MAP = new HashMap&lt;String, Tag&gt;( ALL_TAGS.length );</span>
+
+    private static final int ASCII = 0x7E;
+
+    static
+    {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for ( Tag tag : ALL_TAGS )</span>
+        {
+<span class="fc" id="L73">            TAG_MAP.put( tag.toString(), tag );</span>
+        }
+<span class="fc" id="L75">    }</span>
+
+    /**
+     * Returns a tag for a defined HTML tag name. This is one of
+     * the tags defined in {@link org.apache.maven.doxia.markup.HtmlMarkup}.
+     * If the given name does not represent one of the defined tags, then
+     * &lt;code&gt;null&lt;/code&gt; will be returned.
+     *
+     * @param tagName the &lt;code&gt;String&lt;/code&gt; name requested.
+     * @return a tag constant corresponding to the &lt;code&gt;tagName&lt;/code&gt;,
+     *    or &lt;code&gt;null&lt;/code&gt; if not found.
+     * @see &lt;a href=&quot;http://www.w3.org/TR/html401/index/elements.html&quot;&gt;http://www.w3.org/TR/html401/index/elements.html&lt;/a&gt;
+     * @since 1.1
+     */
+    public static Tag getHtmlTag( String tagName )
+    {
+<span class="fc" id="L91">        Object t =  TAG_MAP.get( tagName );</span>
+
+<span class="fc" id="L93">        return (Tag) t;</span>
+    }
+
+    /**
+     * Escape special HTML characters in a String in &lt;code&gt;xml&lt;/code&gt; mode.
+     *
+     * &lt;b&gt;Note&lt;/b&gt;: this method doesn't escape non-ascii characters by numeric characters references.
+     *
+     * @param text the String to escape, may be null.
+     * @return The escaped text or the empty string if text == null.
+     * @see #escapeHTML(String,boolean)
+     */
+    public static String escapeHTML( String text )
+    {
+<span class="fc" id="L107">        return escapeHTML( text, true );</span>
+    }
+
+    /**
+     * Escape special HTML characters in a String.
+     *
+     * &lt;pre&gt;
+     * &lt; becomes &lt;code&gt;&amp;#38;lt;&lt;/code&gt;
+     * &gt; becomes &lt;code&gt;&amp;#38;gt;&lt;/code&gt;
+     * &amp; becomes &lt;code&gt;&amp;#38;amp;&lt;/code&gt;
+     * &quot; becomes &lt;code&gt;&amp;#38;quot;&lt;/code&gt;
+     * ' becomes &lt;code&gt;&amp;#38;apos;&lt;/code&gt; if xmlMode = true
+     * &lt;/pre&gt;
+     *
+     * If &lt;code&gt;xmlMode&lt;/code&gt; is true, every other character than the above remains unchanged,
+     * if &lt;code&gt;xmlMode&lt;/code&gt; is false, non-ascii characters get replaced by their hex code.
+     *
+     * &lt;b&gt;Note&lt;/b&gt;: all characters are encoded, i.e.:
+     * &lt;pre&gt;
+     * \u0159       = &amp;#38;#x159;
+     * \uD835\uDFED = &amp;#38;#x1d7ed;
+     * &lt;/pre&gt;
+     *
+     * @param text The String to escape, may be null.
+     * @param xmlMode &lt;code&gt;true&lt;/code&gt; to replace also ' to &amp;#38;apos, &lt;code&gt;false&lt;/code&gt; to replace non-ascii
+     * characters by numeric characters references.
+     * @return The escaped text or the empty string if text == null.
+     * @since 1.1
+     * @see &lt;a href=&quot;http://www.w3.org/TR/2000/REC-xml-20001006#sec-predefined-ent&quot;&gt;http://www.w3.org/TR/2000/REC-xml-20001006#sec-predefined-ent&lt;/a&gt;
+     * @see &lt;a href=&quot;http://www.w3.org/TR/html401/charset.html#h-5.3&quot;&gt;http://www.w3.org/TR/html401/charset.html#h-5.3&lt;/a&gt;
+     */
+    public static String escapeHTML( final String text, final boolean xmlMode )
+    {
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if ( text == null )</span>
+        {
+<span class="fc" id="L142">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L145">        int length = text.length();</span>
+<span class="fc" id="L146">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L150">            char c = text.charAt( i );</span>
+<span class="fc bfc" id="L151" title="All 5 branches covered.">            switch ( c )</span>
+            {
+                case '&lt;':
+<span class="fc" id="L154">                    buffer.append( &quot;&amp;lt;&quot; );</span>
+<span class="fc" id="L155">                    break;</span>
+                case '&gt;':
+<span class="fc" id="L157">                    buffer.append( &quot;&amp;gt;&quot; );</span>
+<span class="fc" id="L158">                    break;</span>
+                case '&amp;':
+<span class="fc" id="L160">                    buffer.append( &quot;&amp;amp;&quot; );</span>
+<span class="fc" id="L161">                    break;</span>
+                case '\&quot;':
+<span class="fc" id="L163">                    buffer.append( &quot;&amp;quot;&quot; );</span>
+<span class="fc" id="L164">                    break;</span>
+                default:
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                    if ( xmlMode )</span>
+                    {
+<span class="fc bfc" id="L168" title="All 2 branches covered.">                        if ( c == '\'' )</span>
+                        {
+<span class="fc" id="L170">                            buffer.append( &quot;&amp;apos;&quot; );</span>
+                        }
+                        else
+                        {
+<span class="fc" id="L174">                            buffer.append( c );</span>
+                        }
+                    }
+                    else
+                    {
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                        if ( c &lt;= ASCII )</span>
+                        {
+                            // ASCII.
+<span class="fc" id="L182">                            buffer.append( c );</span>
+                        }
+                        else
+                        {
+<span class="fc" id="L186">                            buffer.append( &quot;&amp;#x&quot; );</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">                            if ( isHighSurrogate( c ) )</span>
+                            {
+<span class="fc" id="L189">                                buffer.append( Integer.toHexString( toCodePoint( c, text.charAt( ++i ) ) ) );</span>
+                            }
+                            else
+                            {
+<span class="fc" id="L193">                                buffer.append( Integer.toHexString( c ) );</span>
+                            }
+<span class="fc" id="L195">                            buffer.append( ';' );</span>
+                        }
+                    }
+            }
+        }
+
+<span class="fc" id="L201">        return buffer.toString();</span>
+    }
+
+    /**
+     * Unescapes HTML entities in a string in non xml mode.
+     *
+     * @param text the &lt;code&gt;String&lt;/code&gt; to unescape, may be null.
+     * @return a new unescaped &lt;code&gt;String&lt;/code&gt;, &lt;code&gt;null&lt;/code&gt; if null string input.
+     * @since 1.1.1.
+     * @see #unescapeHTML(String, boolean)
+     */
+    public static String unescapeHTML( String text )
+    {
+<span class="fc" id="L214">        return unescapeHTML( text, false );</span>
+    }
+
+    /**
+     * Unescapes HTML entities in a string.
+     *
+     * &lt;p&gt; Unescapes a string containing entity escapes to a string
+     * containing the actual Unicode characters corresponding to the
+     * escapes. Supports HTML 4.0 entities.&lt;/p&gt;
+     *
+     * &lt;p&gt;For example, the string &quot;&amp;amp;lt;Fran&amp;amp;ccedil;ais&amp;amp;gt;&quot;
+     * will become &quot;&amp;lt;Fran&amp;ccedil;ais&amp;gt;&quot;.&lt;/p&gt;
+     *
+     * &lt;b&gt;Note&lt;/b&gt;: all unicode entities are decoded, i.e.:
+     * &lt;pre&gt;
+     * &amp;#38;#x159;   = \u0159
+     * &amp;#38;#x1d7ed; = \uD835\uDFED
+     * &lt;/pre&gt;
+     *
+     * @param text the &lt;code&gt;String&lt;/code&gt; to unescape, may be null.
+     * @param xmlMode set to &lt;code&gt;true&lt;/code&gt; to replace &amp;#38;apos by '.
+     * @return a new unescaped &lt;code&gt;String&lt;/code&gt;, &lt;code&gt;null&lt;/code&gt; if null string input.
+     * @since 1.1.1.
+     */
+    public static String unescapeHTML( String text, boolean xmlMode )
+    {
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if ( text == null )</span>
+        {
+<span class="fc" id="L242">            return null;</span>
+        }
+
+        String unescaped;
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if ( xmlMode )</span>
+        {
+<span class="fc" id="L248">            unescaped = StringEscapeUtils.unescapeXml( text );</span>
+        }
+        else
+        {
+            // StringEscapeUtils.unescapeHtml4 returns entities it doesn't recognize unchanged
+<span class="fc" id="L253">            unescaped = StringEscapeUtils.unescapeHtml4( text );</span>
+        }
+
+<span class="fc" id="L256">        String tmp = unescaped;</span>
+<span class="fc" id="L257">        List&lt;String&gt; entities = new ArrayList&lt;String&gt;();</span>
+        while ( true )
+        {
+<span class="fc" id="L260">            int i = tmp.indexOf( &quot;&amp;#x&quot; );</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">            if ( i == -1 )</span>
+            {
+<span class="fc" id="L263">                break;</span>
+            }
+
+<span class="fc" id="L266">            tmp = tmp.substring( i + 3 );</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">            if ( tmp.indexOf( ';' ) != -1 )</span>
+            {
+<span class="fc" id="L269">                String entity = tmp.substring( 0, tmp.indexOf( ';' ) );</span>
+                try
+                {
+<span class="nc" id="L272">                    Integer.parseInt( entity, 16 );</span>
+<span class="nc" id="L273">                    entities.add( entity );</span>
+                }
+<span class="fc" id="L275">                catch ( NumberFormatException e )</span>
+                {
+                    // nop
+<span class="nc" id="L278">                }</span>
+            }
+<span class="fc" id="L280">        }</span>
+
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">        for ( String entity : entities )</span>
+        {
+<span class="nc" id="L284">            int codePoint = Integer.parseInt( entity, 16 );</span>
+<span class="nc" id="L285">            unescaped = StringUtils.replace( unescaped, &quot;&amp;#x&quot; + entity + &quot;;&quot;, new String( toChars( codePoint ) ) );</span>
+<span class="nc" id="L286">        }</span>
+
+<span class="fc" id="L288">        return unescaped;</span>
+    }
+
+    /**
+     * Encode an url
+     *
+     * @param url the String to encode, may be null
+     * @return the text encoded, null if null String input
+     */
+    public static String encodeURL( String url )
+    {
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        if ( url == null )</span>
+        {
+<span class="fc" id="L301">            return null;</span>
+        }
+
+<span class="fc" id="L304">        StringBuilder encoded = new StringBuilder();</span>
+<span class="fc" id="L305">        int length = url.length();</span>
+
+<span class="fc" id="L307">        char[] unicode = new char[1];</span>
+
+<span class="fc bfc" id="L309" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L311">            char c = url.charAt( i );</span>
+
+<span class="fc bfc" id="L313" title="All 2 branches covered.">            switch ( c )</span>
+            {
+                case ';':
+                case '/':
+                case '?':
+                case ':':
+                case '@':
+                case '&amp;':
+                case '=':
+                case '+':
+                case '$':
+                case ',':
+                case '[':
+                case ']': // RFC 2732 (IPV6)
+                case '-':
+                case '_':
+                case '.':
+                case '!':
+                case '~':
+                case '*':
+                case '\'':
+                case '(':
+                case ')':
+                case '#': // XLink mark
+<span class="fc" id="L337">                    encoded.append( c );</span>
+<span class="fc" id="L338">                    break;</span>
+                default:
+<span class="pc bpc" id="L340" title="1 of 12 branches missed.">                    if ( ( c &gt;= 'a' &amp;&amp; c &lt;= 'z' ) || ( c &gt;= 'A' &amp;&amp; c &lt;= 'Z' ) || ( c &gt;= '0' &amp;&amp; c &lt;= '9' ) )</span>
+                    {
+<span class="fc" id="L342">                        encoded.append( c );</span>
+                    }
+                    else
+                    {
+                        byte[] bytes;
+
+                        try
+                        {
+<span class="fc bfc" id="L350" title="All 2 branches covered.">                            if ( isHighSurrogate( c ) )</span>
+                            {
+<span class="fc" id="L352">                                int codePoint = toCodePoint( c, url.charAt( ++i ) );</span>
+<span class="fc" id="L353">                                unicode = toChars( codePoint );</span>
+<span class="fc" id="L354">                                bytes = ( new String( unicode, 0, unicode.length ) ).getBytes( &quot;UTF8&quot; );</span>
+<span class="fc" id="L355">                            }</span>
+                            else
+                            {
+<span class="fc" id="L358">                                unicode[0] = c;</span>
+<span class="fc" id="L359">                                bytes = ( new String( unicode, 0, 1 ) ).getBytes( &quot;UTF8&quot; );</span>
+                            }
+                        }
+<span class="nc" id="L362">                        catch ( UnsupportedEncodingException cannotHappen )</span>
+                        {
+<span class="nc" id="L364">                            bytes = new byte[0];</span>
+<span class="fc" id="L365">                        }</span>
+
+<span class="fc bfc" id="L367" title="All 2 branches covered.">                        for ( int j = 0; j &lt; bytes.length; ++j )</span>
+                        {
+<span class="fc" id="L369">                            encoded.append( '%' );</span>
+<span class="fc" id="L370">                            encoded.append( String.format( &quot;%02X&quot;, bytes[j] ) );</span>
+                        }
+                    }
+            }
+        }
+
+<span class="fc" id="L376">        return encoded.toString();</span>
+    }
+
+    /**
+     * Construct a valid id.
+     *
+     * &lt;p&gt;
+     *   &lt;b&gt;Note&lt;/b&gt;: this method is identical to
+     *   {@link DoxiaUtils#encodeId(String,boolean) DoxiaUtils.encodeId( id, false )},
+     *   the rules to encode an id are laid out there.
+     * &lt;/p&gt;
+     *
+     * @param id The id to be encoded.
+     * @return The trimmed and encoded id, or null if id is null.
+     * @see DoxiaUtils#encodeId(java.lang.String,boolean)
+     */
+    public static String encodeId( String id )
+    {
+<span class="fc" id="L394">        return DoxiaUtils.encodeId( id, false );</span>
+    }
+
+    /**
+     * Determines if the specified text is a valid id according to the rules
+     * laid out in {@link #encodeId(String)}.
+     *
+     * @param text The text to be tested.
+     * @return &lt;code&gt;true&lt;/code&gt; if the text is a valid id, otherwise &lt;code&gt;false&lt;/code&gt;.
+     * @see #encodeId(String).
+     */
+    public static boolean isId( String text )
+    {
+<span class="fc" id="L407">        return DoxiaUtils.isValidId( text );</span>
+    }
+
+    private HtmlTools()
+    {
+        // utility class
+    }
+
+//
+// Imported code from ASF Harmony project rev 770909
+// http://svn.apache.org/repos/asf/harmony/enhanced/classlib/trunk/modules/luni/src/main/java/java/lang/Character.java
+//
+
+    private static final char LUNATE_SIGMA = 0x3FF;
+    private static final char NON_PRIVATE_USE_HIGH_SURROGATE = 0xD800;
+    private static final char LOW_SURROGATE = 0xDC00;
+
+    private static int toCodePoint( char high, char low )
+    {
+        // See RFC 2781, Section 2.2
+        // http://www.faqs.org/rfcs/rfc2781.html
+<span class="fc" id="L428">        int h = ( high &amp; LUNATE_SIGMA ) &lt;&lt; 10;</span>
+<span class="fc" id="L429">        int l = low &amp; LUNATE_SIGMA;</span>
+<span class="fc" id="L430">        return ( h | l ) + MIN_SUPPLEMENTARY_CODE_POINT;</span>
+    }
+
+    private static final char MIN_HIGH_SURROGATE = '\uD800';
+    private static final char MAX_HIGH_SURROGATE = '\uDBFF';
+
+    private static boolean isHighSurrogate( char ch )
+    {
+<span class="pc bpc" id="L438" title="1 of 4 branches missed.">        return ( MIN_HIGH_SURROGATE &lt;= ch &amp;&amp; MAX_HIGH_SURROGATE &gt;= ch );</span>
+    }
+
+    private static final int MIN_CODE_POINT = 0x000000;
+    private static final int MAX_CODE_POINT = 0x10FFFF;
+    private static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x10000;
+
+    private static boolean isValidCodePoint( int codePoint )
+    {
+<span class="pc bpc" id="L447" title="2 of 4 branches missed.">        return ( MIN_CODE_POINT &lt;= codePoint &amp;&amp; MAX_CODE_POINT &gt;= codePoint );</span>
+    }
+
+    private static boolean isSupplementaryCodePoint( int codePoint )
+    {
+<span class="pc bpc" id="L452" title="2 of 4 branches missed.">        return ( MIN_SUPPLEMENTARY_CODE_POINT &lt;= codePoint &amp;&amp; MAX_CODE_POINT &gt;= codePoint );</span>
+    }
+
+    /**
+     * Converts the given code point to an equivalent character array.
+     *
+     * @param codePoint the code point to convert.
+     * @return If codePoint is a supplementary code point, returns a character array of length 2,
+     * otherwise a character array of length 1 containing only the original int as a char.
+     */
+    public static char[] toChars( int codePoint )
+    {
+<span class="pc bpc" id="L464" title="1 of 2 branches missed.">        if ( !isValidCodePoint( codePoint ) )</span>
+        {
+<span class="nc" id="L466">            throw new IllegalArgumentException();</span>
+        }
+
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">        if ( isSupplementaryCodePoint( codePoint ) )</span>
+        {
+<span class="fc" id="L471">            int cpPrime = codePoint - MIN_SUPPLEMENTARY_CODE_POINT;</span>
+<span class="fc" id="L472">            int high = NON_PRIVATE_USE_HIGH_SURROGATE | ( ( cpPrime &gt;&gt; 10 ) &amp; LUNATE_SIGMA );</span>
+<span class="fc" id="L473">            int low = LOW_SURROGATE | ( cpPrime &amp; LUNATE_SIGMA );</span>
+<span class="fc" id="L474">            return new char[] { (char) high, (char) low };</span>
+        }
+<span class="nc" id="L476">        return new char[] { (char) codePoint };</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

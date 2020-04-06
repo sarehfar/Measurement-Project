@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ParseException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.parser</a> &gt; <span class="el_source">ParseException.java</span></div><h1>ParseException.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Encapsulate a Doxia parse error.
+ *
+ * @author &lt;a href=&quot;mailto:jason@maven.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+public class ParseException
+    extends Exception
+{
+    /** serialVersionUID */
+    static final long serialVersionUID = 295967936746221567L;
+
+    /** The file that caused the ParseException. */
+    private String fileName;
+
+    /** Line number where the parse exception occurred. */
+    private int lineNumber;
+
+    /** Column number where the parse exception occurred. */
+    private int columnNumber;
+
+    /**
+     * Construct a new &lt;code&gt;ParseException&lt;/code&gt; with the specified detail message.
+     * &lt;br/&gt;
+     * &lt;b&gt;Note&lt;/b&gt;: no line or column number will be used.
+     *
+     * @param message The detailed message.
+     * This can later be retrieved by the &lt;code&gt;Throwable.getMessage()&lt;/code&gt; method.
+     */
+    public ParseException( String message )
+    {
+<span class="nc" id="L54">        this( null, message, null, -1, -1 );</span>
+<span class="nc" id="L55">    }</span>
+
+    /**
+     * Construct a new &lt;code&gt;ParseException&lt;/code&gt; with the specified detail message and cause.
+     * &lt;br/&gt;
+     * &lt;b&gt;Note&lt;/b&gt;: no line or column number will be used.
+     *
+     * @param message The detailed message.
+     * This can later be retrieved by the &lt;code&gt;Throwable.getMessage()&lt;/code&gt; method.
+     * @param e the cause. This can be retrieved later by the &lt;code&gt;Throwable.getCause()&lt;/code&gt; method.
+     * (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     */
+    public ParseException( String message, Exception e )
+    {
+<span class="nc" id="L69">        this( e, message, null, -1, -1 );</span>
+<span class="nc" id="L70">    }</span>
+
+    /**
+     * Construct a new &lt;code&gt;ParseException&lt;/code&gt; with the specified detail message,
+     * line number and column number.
+     *
+     * @param message The detailed message.
+     * This can later be retrieved by the &lt;code&gt;Throwable.getMessage()&lt;/code&gt; method.
+     * @param line The line number where the parsing failed.
+     * This can later be retrieved by the getLineNumber() method.
+     * @param column The column number where the parsing failed.
+     * This can later be retrieved by the getColumnNumber() method.
+     * @since 1.1
+     */
+    public ParseException( String message, int line, int column )
+    {
+<span class="nc" id="L86">        this( null, message, null, line, column );</span>
+<span class="nc" id="L87">    }</span>
+
+    /**
+     * Construct a new &lt;code&gt;ParseException&lt;/code&gt; with the specified detail message and cause,
+     * line number and column number.
+     *
+     * @param message The detailed message.
+     * This can later be retrieved by the &lt;code&gt;Throwable.getMessage()&lt;/code&gt; method.
+     * @param e the cause. This can be retrieved later by the &lt;code&gt;Throwable.getCause()&lt;/code&gt; method.
+     * (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * @param line The line number where the parsing failed.
+     * This can later be retrieved by the getLineNumber() method.
+     * @param column The column number where the parsing failed.
+     * This can later be retrieved by the getColumnNumber() method.
+     * @since 1.1
+     */
+    public ParseException( String message, Exception e, int line, int column )
+    {
+<span class="nc" id="L105">        this( e, message, null, line, column );</span>
+<span class="nc" id="L106">    }</span>
+
+    /**
+     * Constructs a new exception with the specified cause. The error message is
+     *  (cause == null ? null : cause.toString() ).
+     *
+     * @param e the cause. This can be retrieved later by the &lt;code&gt;Throwable.getCause()&lt;/code&gt; method.
+     * (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * @deprecated Using {@link #ParseException(Exception, int, int)} to specify the line and column number.
+     */
+    public ParseException( Exception e )
+    {
+<span class="nc" id="L118">        this( e, null, null, -1, -1 );</span>
+<span class="nc" id="L119">    }</span>
+
+    /**
+     * Constructs a new exception with the specified cause, line number and column number. The error message is
+     *  (cause == null ? null : cause.toString() ).
+     *
+     * @param e the cause. This can be retrieved later by the &lt;code&gt;Throwable.getCause()&lt;/code&gt; method.
+     * (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * @param line The line number where the parsing failed.
+     * This can later be retrieved by the getLineNumber() method.
+     * @param column The column number where the parsing failed.
+     * This can later be retrieved by the getColumnNumber() method.
+     * @since 1.1
+     */
+    public ParseException( Exception e, int line, int column )
+    {
+<span class="nc" id="L135">        this( e, null, null, line, column );</span>
+<span class="nc" id="L136">    }</span>
+
+    /**
+     * Construct a new &lt;code&gt;ParseException&lt;/code&gt; with the specified cause,
+     * filename and linenumber.
+     *
+     * @param e the cause. This can be retrieved later by the &lt;code&gt;Throwable.getCause()&lt;/code&gt; method.
+     * (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * @param file Name of a file that couldn't be parsed.
+     * This can later be retrieved by the getFileName() method.
+     * @param line The line number where the parsing failed.
+     * This can later be retrieved by the getLineNumber() method.
+     * @deprecated Using {@link #ParseException(Exception, String, int, int)} to specify the column number.
+     */
+    public ParseException( Exception e, String file, int line )
+    {
+<span class="nc" id="L152">        this( e, null, file, line, -1 );</span>
+<span class="nc" id="L153">    }</span>
+
+    /**
+     * Construct a new &lt;code&gt;ParseException&lt;/code&gt; with the specified cause,
+     * filename, line number and column number.
+     *
+     * @param e the cause. This can be retrieved later by the &lt;code&gt;Throwable.getCause()&lt;/code&gt; method.
+     * (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * @param file Name of a file that couldn't be parsed.
+     * This can later be retrieved by the getFileName() method.
+     * @param line The line number where the parsing failed.
+     * This can later be retrieved by the getLineNumber() method.
+     * @param column The column number where the parsing failed.
+     * This can later be retrieved by the getColumnNumber() method.
+     */
+    public ParseException( Exception e, String file, int line, int column )
+    {
+<span class="nc" id="L170">        this( e, null, file, line, column );</span>
+<span class="nc" id="L171">    }</span>
+
+    /**
+     * Construct a new &lt;code&gt;ParseException&lt;/code&gt; with the specified cause, detail message,
+     * filename, line number and column number.
+     *
+     * @param e the cause. This can be retrieved later by the &lt;code&gt;Throwable.getCause()&lt;/code&gt; method.
+     * (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     * @param message The detailed message.
+     * This can later be retrieved by the &lt;code&gt;Throwable.getMessage()&lt;/code&gt; method.
+     * @param file Name of a file that couldn't be parsed.
+     * This can later be retrieved by the getFileName() method.
+     * @param line The line number where the parsing failed.
+     * This can later be retrieved by the getLineNumber() method.
+     * @param column The column number where the parsing failed.
+     * This can later be retrieved by the getColumnNumber() method.
+     * @since 1.1
+     */
+    public ParseException( Exception e, String message, String file, int line, int column )
+    {
+<span class="nc bnc" id="L191" title="All 4 branches missed.">        super( ( message == null ) ? ( ( e == null ) ? null : e.getMessage() ) : message, e );</span>
+
+<span class="nc" id="L193">        this.fileName = file;</span>
+<span class="nc" id="L194">        this.lineNumber = line;</span>
+<span class="nc" id="L195">        this.columnNumber = column;</span>
+<span class="nc" id="L196">    }</span>
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;fileName&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return the file name that caused the &lt;code&gt;ParseException&lt;/code&gt;.
+     */
+    public String getFileName()
+    {
+<span class="nc" id="L205">        return fileName;</span>
+    }
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;lineNumber&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return the line number where the &lt;code&gt;ParseException&lt;/code&gt; occurred.
+     */
+    public int getLineNumber()
+    {
+<span class="nc" id="L215">        return lineNumber;</span>
+    }
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;columnNumber&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return the column number where the &lt;code&gt;ParseException&lt;/code&gt; occurred.
+     * @since 1.1
+     */
+    public int getColumnNumber()
+    {
+<span class="nc" id="L226">        return columnNumber;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

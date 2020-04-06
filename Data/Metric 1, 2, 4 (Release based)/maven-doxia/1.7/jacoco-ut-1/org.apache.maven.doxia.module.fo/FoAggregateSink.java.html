@@ -1,0 +1,1326 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoAggregateSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: FO Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.fo</a> &gt; <span class="el_source">FoAggregateSink.java</span></div><h1>FoAggregateSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.fo;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.IOException;
+import java.io.Writer;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.Stack;
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.html.HTML.Tag;
+
+import org.apache.maven.doxia.document.DocumentCover;
+import org.apache.maven.doxia.document.DocumentMeta;
+import org.apache.maven.doxia.document.DocumentModel;
+import org.apache.maven.doxia.document.DocumentTOC;
+import org.apache.maven.doxia.document.DocumentTOCItem;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.util.DoxiaUtils;
+import org.apache.maven.doxia.util.HtmlTools;
+
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * A Doxia Sink that produces an aggregated FO model. The usage is similar to the following:
+ * &lt;p/&gt;
+ * &lt;pre&gt;
+ * FoAggregateSink sink = new FoAggregateSink( writer );
+ * sink.setDocumentModel( documentModel );
+ * sink.beginDocument();
+ * sink.coverPage();
+ * sink.toc();
+ * ...
+ * sink.endDocument();
+ * &lt;/pre&gt;
+ * &lt;p/&gt;
+ * &lt;b&gt;Note&lt;/b&gt;: the documentModel object contains several
+ * &lt;a href=&quot;http://maven.apache.org/doxia/doxia/doxia-core/document.html&quot;&gt;document metadata&lt;/a&gt;, but only a few
+ * of them are used in this sink (i.e. author, confidential, date and title), the others are ignored.
+ *
+ * @author ltheussl
+ * @version $Id$
+ * @since 1.1
+ */
+public class FoAggregateSink
+    extends FoSink
+{
+    /**
+     * No Table Of Content.
+     *
+     * @see #setDocumentModel(DocumentModel, int)
+     */
+    public static final int TOC_NONE = 0;
+
+    /**
+     * Table Of Content at the start of the document.
+     *
+     * @see #setDocumentModel(DocumentModel, int)
+     */
+    public static final int TOC_START = 1;
+
+    /**
+     * Table Of Content at the end of the document.
+     *
+     * @see #setDocumentModel(DocumentModel, int)
+     */
+    public static final int TOC_END = 2;
+
+    // TODO: make configurable
+    private static final String COVER_HEADER_HEIGHT = &quot;1.5in&quot;;
+
+    /**
+     * The document model to be used by this sink.
+     */
+    private DocumentModel docModel;
+
+    /**
+     * Counts the current chapter level.
+     */
+<span class="fc" id="L104">    private int chapter = 0;</span>
+
+    /**
+     * Name of the source file of the current document, relative to the source root.
+     */
+    private String docName;
+
+    /**
+     * Title of the chapter, used in the page header.
+     */
+<span class="fc" id="L114">    private String docTitle = &quot;&quot;;</span>
+
+    /**
+     * Content in head is ignored in aggregated documents.
+     */
+    private boolean ignoreText;
+
+    /**
+     * Current position of the TOC, see {@link #TOC_POSITION}
+     */
+    private int tocPosition;
+
+    /**
+     * Used to get the current position in the TOC.
+     */
+<span class="fc" id="L129">    private final Stack&lt;NumberedListItem&gt; tocStack = new Stack&lt;NumberedListItem&gt;();</span>
+
+    /**
+     * Constructor.
+     *
+     * @param writer The writer for writing the result.
+     */
+    public FoAggregateSink( Writer writer )
+    {
+<span class="fc" id="L138">        super( writer );</span>
+<span class="fc" id="L139">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void head()
+    {
+<span class="fc" id="L146">        head( null );</span>
+<span class="fc" id="L147">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void head( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L154">        init();</span>
+
+<span class="fc" id="L156">        ignoreText = true;</span>
+<span class="fc" id="L157">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void head_()
+    {
+<span class="fc" id="L164">        ignoreText = false;</span>
+<span class="fc" id="L165">        writeEOL();</span>
+<span class="fc" id="L166">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void title()
+    {
+<span class="fc" id="L173">        title( null );</span>
+<span class="fc" id="L174">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void title( SinkEventAttributes attributes )
+    {
+        // ignored
+<span class="fc" id="L182">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void title_()
+    {
+        // ignored
+<span class="fc" id="L190">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void author()
+    {
+<span class="fc" id="L197">        author( null );</span>
+<span class="fc" id="L198">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void author( SinkEventAttributes attributes )
+    {
+        // ignored
+<span class="fc" id="L206">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void author_()
+    {
+        // ignored
+<span class="fc" id="L214">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void date()
+    {
+<span class="fc" id="L221">        date( null );</span>
+<span class="fc" id="L222">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void date( SinkEventAttributes attributes )
+    {
+        // ignored
+<span class="fc" id="L230">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void date_()
+    {
+        // ignored
+<span class="fc" id="L238">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void body()
+    {
+<span class="fc" id="L245">        body( null );</span>
+<span class="fc" id="L246">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void body( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L253">        chapter++;</span>
+
+<span class="fc" id="L255">        resetSectionCounter();</span>
+
+<span class="fc" id="L257">        startPageSequence( getHeaderText(), getFooterText() );</span>
+
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">        if ( docName == null )</span>
+        {
+<span class="nc" id="L261">            getLog().warn( &quot;No document root specified, local links will not be resolved correctly!&quot; );</span>
+        }
+        else
+        {
+<span class="fc" id="L265">            writeStartTag( BLOCK_TAG, &quot;id&quot;, docName );</span>
+        }
+
+<span class="fc" id="L268">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void body_()
+    {
+<span class="fc" id="L275">        writeEOL();</span>
+<span class="fc" id="L276">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L277">        writeEndTag( FLOW_TAG );</span>
+<span class="fc" id="L278">        writeEndTag( PAGE_SEQUENCE_TAG );</span>
+
+        // reset document name
+<span class="fc" id="L281">        docName = null;</span>
+<span class="fc" id="L282">    }</span>
+
+    /**
+     * Sets the title of the current document. This is used as a chapter title in the page header.
+     *
+     * @param title the title of the current document.
+     */
+    public void setDocumentTitle( String title )
+    {
+<span class="fc" id="L291">        this.docTitle = title;</span>
+
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">        if ( title == null )</span>
+        {
+<span class="nc" id="L295">            this.docTitle = &quot;&quot;;</span>
+        }
+<span class="fc" id="L297">    }</span>
+
+    /**
+     * Sets the name of the current source document, relative to the source root.
+     * Used to resolve links to other source documents.
+     *
+     * @param name the name for the current document.
+     */
+    public void setDocumentName( String name )
+    {
+<span class="fc" id="L307">        this.docName = getIdName( name );</span>
+<span class="fc" id="L308">    }</span>
+
+    /**
+     * Sets the DocumentModel to be used by this sink. The DocumentModel provides all the meta-information
+     * required to render a document, eg settings for the cover page, table of contents, etc.
+     * &lt;br/&gt;
+     * By default, a TOC will be added at the beginning of the document.
+     *
+     * @param model the DocumentModel.
+     * @see #setDocumentModel(DocumentModel, String)
+     * @see #TOC_START
+     */
+    public void setDocumentModel( DocumentModel model )
+    {
+<span class="fc" id="L322">        setDocumentModel( model, TOC_START );</span>
+<span class="fc" id="L323">    }</span>
+
+    /**
+     * Sets the DocumentModel to be used by this sink. The DocumentModel provides all the meta-information
+     * required to render a document, eg settings for the cover page, table of contents, etc.
+     *
+     * @param model  the DocumentModel, could be null.
+     * @param tocPos should be one of these values: {@link #TOC_NONE}, {@link #TOC_START} and {@link #TOC_END}.
+     * @since 1.1.2
+     */
+    public void setDocumentModel( DocumentModel model, int tocPos )
+    {
+<span class="fc" id="L335">        this.docModel = model;</span>
+<span class="pc bpc" id="L336" title="4 of 6 branches missed.">        if ( !( tocPos == TOC_NONE || tocPos == TOC_START || tocPos == TOC_END ) )</span>
+        {
+<span class="nc bnc" id="L338" title="All 2 branches missed.">            if ( getLog().isDebugEnabled() )</span>
+            {
+<span class="nc" id="L340">                getLog().debug( &quot;Unrecognized value for tocPosition: &quot; + tocPos + &quot;, using no toc.&quot; );</span>
+            }
+<span class="nc" id="L342">            tocPos = TOC_NONE;</span>
+        }
+<span class="fc" id="L344">        this.tocPosition = tocPos;</span>
+
+<span class="pc bpc" id="L346" title="2 of 6 branches missed.">        if ( this.docModel != null &amp;&amp; this.docModel.getToc() != null &amp;&amp; this.tocPosition != TOC_NONE )</span>
+        {
+<span class="fc" id="L348">            DocumentTOCItem tocItem = new DocumentTOCItem();</span>
+<span class="fc" id="L349">            tocItem.setName( this.docModel.getToc().getName() );</span>
+<span class="fc" id="L350">            tocItem.setRef( &quot;./toc&quot; );</span>
+<span class="fc" id="L351">            List&lt;DocumentTOCItem&gt; items = new LinkedList&lt;DocumentTOCItem&gt;();</span>
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">            if ( this.tocPosition == TOC_START )</span>
+            {
+<span class="fc" id="L354">                items.add( tocItem );</span>
+            }
+<span class="fc" id="L356">            items.addAll( this.docModel.getToc().getItems() );</span>
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">            if ( this.tocPosition == TOC_END )</span>
+            {
+<span class="nc" id="L359">                items.add( tocItem );</span>
+            }
+
+<span class="fc" id="L362">            this.docModel.getToc().setItems( items );</span>
+        }
+<span class="fc" id="L364">    }</span>
+
+    /**
+     * Translates the given name to a usable id.
+     * Prepends &quot;./&quot; and strips any extension.
+     *
+     * @param name the name for the current document.
+     * @return String
+     */
+    private String getIdName( String name )
+    {
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">        if ( StringUtils.isEmpty( name ) )</span>
+        {
+<span class="nc" id="L377">            getLog().warn( &quot;Empty document reference, links will not be resolved correctly!&quot; );</span>
+<span class="nc" id="L378">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L381">        String idName = name.replace( '\\', '/' );</span>
+
+        // prepend &quot;./&quot; and strip extension
+<span class="fc bfc" id="L384" title="All 2 branches covered.">        if ( !idName.startsWith( &quot;./&quot; ) )</span>
+        {
+<span class="fc" id="L386">            idName = &quot;./&quot; + idName;</span>
+        }
+
+<span class="fc bfc" id="L389" title="All 2 branches covered.">        if ( idName.substring( 2 ).lastIndexOf( &quot;.&quot; ) != -1 )</span>
+        {
+<span class="fc" id="L391">            idName = idName.substring( 0, idName.lastIndexOf( &quot;.&quot; ) );</span>
+        }
+
+<span class="fc bfc" id="L394" title="All 2 branches covered.">        while ( idName.indexOf( &quot;//&quot; ) != -1 )</span>
+        {
+<span class="fc" id="L396">            idName = StringUtils.replace( idName, &quot;//&quot;, &quot;/&quot; );</span>
+        }
+
+<span class="fc" id="L399">        return idName;</span>
+    }
+
+    // -----------------------------------------------------------------------
+    //
+    // -----------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figureGraphics( String name )
+    {
+<span class="nc" id="L411">        figureGraphics( name, null );</span>
+<span class="nc" id="L412">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void figureGraphics( String src, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L419">        String anchor = src;</span>
+
+<span class="fc bfc" id="L421" title="All 2 branches covered.">        while ( anchor.startsWith( &quot;./&quot; ) )</span>
+        {
+<span class="fc" id="L423">            anchor = anchor.substring( 2 );</span>
+        }
+
+<span class="pc bpc" id="L426" title="1 of 4 branches missed.">        if ( anchor.startsWith( &quot;../&quot; ) &amp;&amp; docName != null )</span>
+        {
+<span class="fc" id="L428">            anchor = resolveLinkRelativeToBase( anchor );</span>
+        }
+
+<span class="fc" id="L431">        super.figureGraphics( anchor, attributes );</span>
+<span class="fc" id="L432">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void anchor( String name )
+    {
+<span class="fc" id="L439">        anchor( name, null );</span>
+<span class="fc" id="L440">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void anchor( String name, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L447" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L449">            throw new NullPointerException( &quot;Anchor name cannot be null!&quot; );</span>
+        }
+
+<span class="fc" id="L452">        String anchor = name;</span>
+
+<span class="fc bfc" id="L454" title="All 2 branches covered.">        if ( !DoxiaUtils.isValidId( anchor ) )</span>
+        {
+<span class="fc" id="L456">            anchor = DoxiaUtils.encodeId( name, true );</span>
+
+<span class="fc" id="L458">            String msg = &quot;Modified invalid anchor name: '&quot; + name + &quot;' to '&quot; + anchor + &quot;'&quot;;</span>
+<span class="fc" id="L459">            logMessage( &quot;modifiedLink&quot;, msg );</span>
+        }
+
+<span class="fc" id="L462">        anchor = &quot;#&quot; + anchor;</span>
+
+<span class="fc bfc" id="L464" title="All 2 branches covered.">        if ( docName != null )</span>
+        {
+<span class="fc" id="L466">            anchor = docName + anchor;</span>
+        }
+
+<span class="fc" id="L469">        writeStartTag( INLINE_TAG, &quot;id&quot;, anchor );</span>
+<span class="fc" id="L470">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void link( String name )
+    {
+<span class="fc" id="L477">        link( name, null );</span>
+<span class="fc" id="L478">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void link( String name, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L485" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L487">            throw new NullPointerException( &quot;Link name cannot be null!&quot; );</span>
+        }
+
+<span class="fc bfc" id="L490" title="All 2 branches covered.">        if ( DoxiaUtils.isExternalLink( name ) )</span>
+        {
+            // external links
+<span class="fc" id="L493">            writeStartTag( BASIC_LINK_TAG, &quot;external-destination&quot;, HtmlTools.escapeHTML( name ) );</span>
+<span class="fc" id="L494">            writeStartTag( INLINE_TAG, &quot;href.external&quot; );</span>
+<span class="fc" id="L495">            return;</span>
+        }
+
+<span class="fc bfc" id="L498" title="All 2 branches covered.">        while ( name.indexOf( &quot;//&quot; ) != -1 )</span>
+        {
+<span class="fc" id="L500">            name = StringUtils.replace( name, &quot;//&quot;, &quot;/&quot; );</span>
+        }
+
+<span class="fc bfc" id="L503" title="All 2 branches covered.">        if ( DoxiaUtils.isInternalLink( name ) )</span>
+        {
+            // internal link (ie anchor is in the same source document)
+<span class="fc" id="L506">            String anchor = name.substring( 1 );</span>
+
+<span class="pc bpc" id="L508" title="1 of 2 branches missed.">            if ( !DoxiaUtils.isValidId( anchor ) )</span>
+            {
+<span class="nc" id="L510">                String tmp = anchor;</span>
+<span class="nc" id="L511">                anchor = DoxiaUtils.encodeId( anchor, true );</span>
+
+<span class="nc" id="L513">                String msg = &quot;Modified invalid anchor name: '&quot; + tmp + &quot;' to '&quot; + anchor + &quot;'&quot;;</span>
+<span class="nc" id="L514">                logMessage( &quot;modifiedLink&quot;, msg );</span>
+            }
+
+<span class="pc bpc" id="L517" title="1 of 2 branches missed.">            if ( docName != null )</span>
+            {
+<span class="fc" id="L519">                anchor = docName + &quot;#&quot; + anchor;</span>
+            }
+
+<span class="fc" id="L522">            writeStartTag( BASIC_LINK_TAG, &quot;internal-destination&quot;, HtmlTools.escapeHTML( anchor ) );</span>
+<span class="fc" id="L523">            writeStartTag( INLINE_TAG, &quot;href.internal&quot; );</span>
+<span class="fc" id="L524">        }</span>
+<span class="fc bfc" id="L525" title="All 2 branches covered.">        else if ( name.startsWith( &quot;../&quot; ) )</span>
+        {
+            // local link (ie anchor is not in the same source document)
+
+<span class="pc bpc" id="L529" title="1 of 2 branches missed.">            if ( docName == null )</span>
+            {
+                // can't resolve link without base, fop will issue a warning
+<span class="nc" id="L532">                writeStartTag( BASIC_LINK_TAG, &quot;internal-destination&quot;, HtmlTools.escapeHTML( name ) );</span>
+<span class="nc" id="L533">                writeStartTag( INLINE_TAG, &quot;href.internal&quot; );</span>
+
+<span class="nc" id="L535">                return;</span>
+            }
+
+<span class="fc" id="L538">            String anchor = resolveLinkRelativeToBase( chopExtension( name ) );</span>
+
+<span class="fc" id="L540">            writeStartTag( BASIC_LINK_TAG, &quot;internal-destination&quot;, HtmlTools.escapeHTML( anchor ) );</span>
+<span class="fc" id="L541">            writeStartTag( INLINE_TAG, &quot;href.internal&quot; );</span>
+<span class="fc" id="L542">        }</span>
+        else
+        {
+            // local link (ie anchor is not in the same source document)
+
+<span class="fc" id="L547">            String anchor = name;</span>
+
+<span class="fc bfc" id="L549" title="All 2 branches covered.">            if ( anchor.startsWith( &quot;./&quot; ) )</span>
+            {
+<span class="fc" id="L551">                this.link( anchor.substring( 2 ) );</span>
+<span class="fc" id="L552">                return;</span>
+            }
+
+<span class="fc" id="L555">            anchor = chopExtension( anchor );</span>
+
+<span class="fc" id="L557">            String base = docName.substring( 0, docName.lastIndexOf( &quot;/&quot; ) );</span>
+<span class="fc" id="L558">            anchor = base + &quot;/&quot; + anchor;</span>
+
+<span class="fc" id="L560">            writeStartTag( BASIC_LINK_TAG, &quot;internal-destination&quot;, HtmlTools.escapeHTML( anchor ) );</span>
+<span class="fc" id="L561">            writeStartTag( INLINE_TAG, &quot;href.internal&quot; );</span>
+        }
+<span class="fc" id="L563">    }</span>
+
+    // only call this if docName != null !!!
+    private String resolveLinkRelativeToBase( String name )
+    {
+<span class="fc" id="L568">        String anchor = name;</span>
+
+<span class="fc" id="L570">        String base = docName.substring( 0, docName.lastIndexOf( &quot;/&quot; ) );</span>
+
+<span class="pc bpc" id="L572" title="1 of 2 branches missed.">        if ( base.indexOf( &quot;/&quot; ) != -1 )</span>
+        {
+<span class="pc bpc" id="L574" title="1 of 2 branches missed.">            while ( anchor.startsWith( &quot;../&quot; ) )</span>
+            {
+<span class="fc" id="L576">                base = base.substring( 0, base.lastIndexOf( &quot;/&quot; ) );</span>
+
+<span class="fc" id="L578">                anchor = anchor.substring( 3 );</span>
+
+<span class="fc bfc" id="L580" title="All 2 branches covered.">                if ( base.lastIndexOf( &quot;/&quot; ) == -1 )</span>
+                {
+<span class="fc bfc" id="L582" title="All 2 branches covered.">                    while ( anchor.startsWith( &quot;../&quot; ) )</span>
+                    {
+<span class="fc" id="L584">                        anchor = anchor.substring( 3 );</span>
+                    }
+                    break;
+                }
+            }
+        }
+
+<span class="fc" id="L591">        return base + &quot;/&quot; + anchor;</span>
+    }
+
+    private String chopExtension( String name )
+    {
+<span class="fc" id="L596">        String anchor = name;</span>
+
+<span class="fc" id="L598">        int dot = anchor.lastIndexOf( &quot;.&quot; );</span>
+
+<span class="pc bpc" id="L600" title="3 of 6 branches missed.">        if ( dot != -1 &amp;&amp; dot != anchor.length() &amp;&amp; anchor.charAt( dot + 1 ) != '/' )</span>
+        {
+<span class="fc" id="L602">            int hash = anchor.indexOf( &quot;#&quot;, dot );</span>
+
+<span class="pc bpc" id="L604" title="1 of 2 branches missed.">            if ( hash != -1 )</span>
+            {
+<span class="nc" id="L606">                int dot2 = anchor.indexOf( &quot;.&quot;, hash );</span>
+
+<span class="nc bnc" id="L608" title="All 2 branches missed.">                if ( dot2 != -1 )</span>
+                {
+<span class="nc" id="L610">                    anchor =</span>
+<span class="nc" id="L611">                        anchor.substring( 0, dot ) + &quot;#&quot; + HtmlTools.encodeId( anchor.substring( hash + 1, dot2 ) );</span>
+                }
+                else
+                {
+<span class="nc" id="L615">                    anchor = anchor.substring( 0, dot ) + &quot;#&quot; + HtmlTools.encodeId(</span>
+<span class="nc" id="L616">                        anchor.substring( hash + 1, anchor.length() ) );</span>
+                }
+<span class="nc" id="L618">            }</span>
+            else
+            {
+<span class="fc" id="L621">                anchor = anchor.substring( 0, dot );</span>
+            }
+        }
+
+<span class="fc" id="L625">        return anchor;</span>
+    }
+
+    // ----------------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a start tag, prepending EOL.
+     */
+    protected void writeStartTag( Tag tag, String attributeId )
+    {
+<span class="pc bpc" id="L639" title="1 of 2 branches missed.">        if ( !ignoreText )</span>
+        {
+<span class="fc" id="L641">            super.writeStartTag( tag, attributeId );</span>
+        }
+<span class="fc" id="L643">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a start tag, prepending EOL.
+     */
+    protected void writeStartTag( Tag tag, String id, String name )
+    {
+<span class="pc bpc" id="L652" title="1 of 2 branches missed.">        if ( !ignoreText )</span>
+        {
+<span class="fc" id="L654">            super.writeStartTag( tag, id, name );</span>
+        }
+<span class="fc" id="L656">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes an end tag, appending EOL.
+     */
+    protected void writeEndTag( Tag t )
+    {
+<span class="pc bpc" id="L665" title="1 of 2 branches missed.">        if ( !ignoreText )</span>
+        {
+<span class="fc" id="L667">            super.writeEndTag( t );</span>
+        }
+<span class="fc" id="L669">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a simple tag, appending EOL.
+     */
+    protected void writeEmptyTag( Tag tag, String attributeId )
+    {
+<span class="pc bpc" id="L678" title="1 of 2 branches missed.">        if ( !ignoreText )</span>
+        {
+<span class="fc" id="L680">            super.writeEmptyTag( tag, attributeId );</span>
+        }
+<span class="fc" id="L682">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a text, swallowing any exceptions.
+     */
+    protected void write( String text )
+    {
+<span class="pc bpc" id="L691" title="1 of 2 branches missed.">        if ( !ignoreText )</span>
+        {
+<span class="fc" id="L693">            super.write( text );</span>
+        }
+<span class="fc" id="L695">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a text, appending EOL.
+     */
+    protected void writeln( String text )
+    {
+<span class="pc bpc" id="L704" title="1 of 2 branches missed.">        if ( !ignoreText )</span>
+        {
+<span class="fc" id="L706">            super.writeln( text );</span>
+        }
+<span class="fc" id="L708">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes content, escaping special characters.
+     */
+    protected void content( String text )
+    {
+<span class="fc bfc" id="L717" title="All 2 branches covered.">        if ( !ignoreText )</span>
+        {
+<span class="fc" id="L719">            super.content( text );</span>
+        }
+<span class="fc" id="L721">    }</span>
+
+    /**
+     * Writes EOL.
+     */
+    protected void newline()
+    {
+<span class="nc bnc" id="L728" title="All 2 branches missed.">        if ( !ignoreText )</span>
+        {
+<span class="nc" id="L730">            writeEOL();</span>
+        }
+<span class="nc" id="L732">    }</span>
+
+    /**
+     * Starts a page sequence, depending on the current chapter.
+     *
+     * @param headerText The text to write in the header, if null, nothing is written.
+     * @param footerText The text to write in the footer, if null, nothing is written.
+     */
+    protected void startPageSequence( String headerText, String footerText )
+    {
+<span class="fc bfc" id="L742" title="All 2 branches covered.">        if ( chapter == 1 )</span>
+        {
+<span class="fc" id="L744">            startPageSequence( &quot;0&quot;, headerText, footerText );</span>
+        }
+        else
+        {
+<span class="fc" id="L748">            startPageSequence( &quot;auto&quot;, headerText, footerText );</span>
+        }
+<span class="fc" id="L750">    }</span>
+
+    /**
+     * Returns the text to write in the header of each page.
+     *
+     * @return String
+     */
+    protected String getHeaderText()
+    {
+<span class="fc" id="L759">        return Integer.toString( chapter ) + &quot;   &quot; + docTitle;</span>
+    }
+
+    /**
+     * Returns the text to write in the footer of each page.
+     *
+     * @return String
+     */
+    protected String getFooterText()
+    {
+        int actualYear;
+<span class="fc" id="L770">        String add = &quot; &amp;#8226; &quot; + getBundle( Locale.US ).getString( &quot;footer.rights&quot; );</span>
+<span class="fc" id="L771">        String companyName = &quot;&quot;;</span>
+
+<span class="pc bpc" id="L773" title="2 of 6 branches missed.">        if ( docModel != null &amp;&amp; docModel.getMeta() != null &amp;&amp; docModel.getMeta().isConfidential() )</span>
+        {
+<span class="nc" id="L775">            add = add + &quot; &amp;#8226; &quot; + getBundle( Locale.US ).getString( &quot;footer.confidential&quot; );</span>
+        }
+
+<span class="pc bpc" id="L778" title="3 of 6 branches missed.">        if ( docModel != null &amp;&amp; docModel.getCover() != null &amp;&amp; docModel.getCover().getCompanyName() != null )</span>
+        {
+<span class="nc" id="L780">            companyName = docModel.getCover().getCompanyName();</span>
+        }
+
+<span class="pc bpc" id="L783" title="2 of 6 branches missed.">        if ( docModel != null &amp;&amp; docModel.getMeta() != null &amp;&amp; docModel.getMeta().getDate() != null )</span>
+        {
+<span class="nc" id="L785">            Calendar date = Calendar.getInstance();</span>
+<span class="nc" id="L786">            date.setTime( docModel.getMeta().getDate() );</span>
+<span class="nc" id="L787">            actualYear = date.get( Calendar.YEAR );</span>
+<span class="nc" id="L788">        }</span>
+        else
+        {
+<span class="fc" id="L791">            actualYear = Calendar.getInstance().get( Calendar.YEAR );</span>
+        }
+
+<span class="fc" id="L794">        return &quot;&amp;#169;&quot; + actualYear + &quot;, &quot; + escaped( companyName, false ) + add;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Returns the current chapter number as a string.
+     */
+    protected String getChapterString()
+    {
+<span class="fc" id="L804">        return Integer.toString( chapter ) + &quot;.&quot;;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a 'xsl-region-before' block.
+     */
+    protected void regionBefore( String headerText )
+    {
+<span class="fc" id="L814">        writeStartTag( STATIC_CONTENT_TAG, &quot;flow-name&quot;, &quot;xsl-region-before&quot; );</span>
+<span class="fc" id="L815">        writeln( &quot;&lt;fo:table table-layout=\&quot;fixed\&quot; width=\&quot;100%\&quot; &gt;&quot; );</span>
+<span class="fc" id="L816">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;5.625in&quot; );</span>
+<span class="fc" id="L817">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;0.625in&quot; );</span>
+<span class="fc" id="L818">        writeStartTag( TABLE_BODY_TAG, &quot;&quot; );</span>
+<span class="fc" id="L819">        writeStartTag( TABLE_ROW_TAG, &quot;&quot; );</span>
+<span class="fc" id="L820">        writeStartTag( TABLE_CELL_TAG, &quot;&quot; );</span>
+<span class="fc" id="L821">        writeStartTag( BLOCK_TAG, &quot;header.style&quot; );</span>
+
+<span class="pc bpc" id="L823" title="1 of 2 branches missed.">        if ( headerText != null )</span>
+        {
+<span class="fc" id="L825">            write( headerText );</span>
+        }
+
+<span class="fc" id="L828">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L829">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L830">        writeStartTag( TABLE_CELL_TAG, &quot;&quot; );</span>
+<span class="fc" id="L831">        writeStartTag( BLOCK_TAG, &quot;page.number&quot; );</span>
+<span class="fc" id="L832">        writeEmptyTag( PAGE_NUMBER_TAG, &quot;&quot; );</span>
+<span class="fc" id="L833">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L834">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L835">        writeEndTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L836">        writeEndTag( TABLE_BODY_TAG );</span>
+<span class="fc" id="L837">        writeEndTag( TABLE_TAG );</span>
+<span class="fc" id="L838">        writeEndTag( STATIC_CONTENT_TAG );</span>
+<span class="fc" id="L839">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a 'xsl-region-after' block.
+     */
+    protected void regionAfter( String footerText )
+    {
+<span class="fc" id="L848">        writeStartTag( STATIC_CONTENT_TAG, &quot;flow-name&quot;, &quot;xsl-region-after&quot; );</span>
+<span class="fc" id="L849">        writeStartTag( BLOCK_TAG, &quot;footer.style&quot; );</span>
+
+<span class="pc bpc" id="L851" title="1 of 2 branches missed.">        if ( footerText != null )</span>
+        {
+<span class="fc" id="L853">            write( footerText );</span>
+        }
+
+<span class="fc" id="L856">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L857">        writeEndTag( STATIC_CONTENT_TAG );</span>
+<span class="fc" id="L858">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a chapter heading.
+     */
+    protected void chapterHeading( String headerText, boolean chapterNumber )
+    {
+<span class="fc" id="L867">        writeStartTag( BLOCK_TAG, &quot;&quot; );</span>
+<span class="fc" id="L868">        writeStartTag( LIST_BLOCK_TAG, &quot;&quot; );</span>
+<span class="fc" id="L869">        writeStartTag( LIST_ITEM_TAG, &quot;&quot; );</span>
+<span class="fc" id="L870">        writeln( &quot;&lt;fo:list-item-label end-indent=\&quot;6.375in\&quot; start-indent=\&quot;-1in\&quot;&gt;&quot; );</span>
+<span class="fc" id="L871">        writeStartTag( BLOCK_TAG, &quot;outdented.number.style&quot; );</span>
+
+<span class="fc bfc" id="L873" title="All 2 branches covered.">        if ( chapterNumber )</span>
+        {
+<span class="fc" id="L875">            writeStartTag( BLOCK_TAG, &quot;chapter.title&quot; );</span>
+<span class="fc" id="L876">            write( Integer.toString( chapter ) );</span>
+<span class="fc" id="L877">            writeEndTag( BLOCK_TAG );</span>
+        }
+
+<span class="fc" id="L880">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L881">        writeEndTag( LIST_ITEM_LABEL_TAG );</span>
+<span class="fc" id="L882">        writeln( &quot;&lt;fo:list-item-body end-indent=\&quot;1in\&quot; start-indent=\&quot;0in\&quot;&gt;&quot; );</span>
+<span class="fc" id="L883">        writeStartTag( BLOCK_TAG, &quot;chapter.title&quot; );</span>
+
+<span class="fc bfc" id="L885" title="All 2 branches covered.">        if ( headerText == null )</span>
+        {
+<span class="fc" id="L887">            text( docTitle );</span>
+        }
+        else
+        {
+<span class="fc" id="L891">            text( headerText );</span>
+        }
+
+<span class="fc" id="L894">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L895">        writeEndTag( LIST_ITEM_BODY_TAG );</span>
+<span class="fc" id="L896">        writeEndTag( LIST_ITEM_TAG );</span>
+<span class="fc" id="L897">        writeEndTag( LIST_BLOCK_TAG );</span>
+<span class="fc" id="L898">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L899">        writeStartTag( BLOCK_TAG, &quot;space-after.optimum&quot;, &quot;0em&quot; );</span>
+<span class="fc" id="L900">        writeEmptyTag( LEADER_TAG, &quot;chapter.rule&quot; );</span>
+<span class="fc" id="L901">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L902">    }</span>
+
+    /**
+     * Writes a table of contents. The DocumentModel has to contain a DocumentTOC for this to work.
+     */
+    public void toc()
+    {
+<span class="pc bpc" id="L909" title="4 of 8 branches missed.">        if ( docModel == null || docModel.getToc() == null || docModel.getToc().getItems() == null</span>
+            || this.tocPosition == TOC_NONE )
+        {
+<span class="nc" id="L912">            return;</span>
+        }
+
+<span class="fc" id="L915">        DocumentTOC toc = docModel.getToc();</span>
+
+<span class="fc" id="L917">        writeln( &quot;&lt;fo:page-sequence master-reference=\&quot;toc\&quot; initial-page-number=\&quot;1\&quot; format=\&quot;i\&quot;&gt;&quot; );</span>
+<span class="fc" id="L918">        regionBefore( toc.getName() );</span>
+<span class="fc" id="L919">        regionAfter( getFooterText() );</span>
+<span class="fc" id="L920">        writeStartTag( FLOW_TAG, &quot;flow-name&quot;, &quot;xsl-region-body&quot; );</span>
+<span class="fc" id="L921">        writeStartTag( BLOCK_TAG, &quot;id&quot;, &quot;./toc&quot; );</span>
+<span class="fc" id="L922">        chapterHeading( toc.getName(), false );</span>
+<span class="fc" id="L923">        writeln( &quot;&lt;fo:table table-layout=\&quot;fixed\&quot; width=\&quot;100%\&quot; &gt;&quot; );</span>
+<span class="fc" id="L924">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;0.45in&quot; );</span>
+<span class="fc" id="L925">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;0.4in&quot; );</span>
+<span class="fc" id="L926">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;0.4in&quot; );</span>
+<span class="fc" id="L927">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;5in&quot; ); // TODO {$maxBodyWidth - 1.25}in</span>
+<span class="fc" id="L928">        writeStartTag( TABLE_BODY_TAG );</span>
+
+<span class="fc" id="L930">        writeTocItems( toc.getItems(), 1 );</span>
+
+<span class="fc" id="L932">        writeEndTag( TABLE_BODY_TAG );</span>
+<span class="fc" id="L933">        writeEndTag( TABLE_TAG );</span>
+<span class="fc" id="L934">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L935">        writeEndTag( FLOW_TAG );</span>
+<span class="fc" id="L936">        writeEndTag( PAGE_SEQUENCE_TAG );</span>
+<span class="fc" id="L937">    }</span>
+
+    private void writeTocItems( List&lt;DocumentTOCItem&gt; tocItems, int level )
+    {
+<span class="fc" id="L941">        final int maxTocLevel = 4;</span>
+
+<span class="pc bpc" id="L943" title="2 of 4 branches missed.">        if ( level &lt; 1 || level &gt; maxTocLevel )</span>
+        {
+<span class="nc" id="L945">            return;</span>
+        }
+
+<span class="fc" id="L948">        tocStack.push( new NumberedListItem( NUMBERING_DECIMAL ) );</span>
+
+<span class="fc bfc" id="L950" title="All 2 branches covered.">        for ( DocumentTOCItem tocItem : tocItems )</span>
+        {
+<span class="fc" id="L952">            String ref = getIdName( tocItem.getRef() );</span>
+
+<span class="fc" id="L954">            writeStartTag( TABLE_ROW_TAG, &quot;keep-with-next&quot;, &quot;auto&quot; );</span>
+
+<span class="pc bpc" id="L956" title="1 of 2 branches missed.">            if ( level &gt; 2 )</span>
+            {
+<span class="nc bnc" id="L958" title="All 2 branches missed.">                for ( int i = 0; i &lt; level - 2; i++ )</span>
+                {
+<span class="nc" id="L960">                    writeStartTag( TABLE_CELL_TAG );</span>
+<span class="nc" id="L961">                    writeSimpleTag( BLOCK_TAG );</span>
+<span class="nc" id="L962">                    writeEndTag( TABLE_CELL_TAG );</span>
+                }
+            }
+
+<span class="fc" id="L966">            writeStartTag( TABLE_CELL_TAG, &quot;toc.cell&quot; );</span>
+<span class="fc" id="L967">            writeStartTag( BLOCK_TAG, &quot;toc.number.style&quot; );</span>
+
+<span class="fc" id="L969">            NumberedListItem current = tocStack.peek();</span>
+<span class="fc" id="L970">            current.next();</span>
+<span class="fc" id="L971">            write( currentTocNumber() );</span>
+
+<span class="fc" id="L973">            writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L974">            writeEndTag( TABLE_CELL_TAG );</span>
+
+<span class="fc" id="L976">            String span = &quot;3&quot;;</span>
+
+<span class="pc bpc" id="L978" title="1 of 2 branches missed.">            if ( level &gt; 2 )</span>
+            {
+<span class="nc" id="L980">                span = Integer.toString( 5 - level );</span>
+            }
+
+<span class="fc" id="L983">            writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, span, &quot;toc.cell&quot; );</span>
+<span class="fc" id="L984">            MutableAttributeSet atts = getFoConfiguration().getAttributeSet( &quot;toc.h&quot; + level + &quot;.style&quot; );</span>
+<span class="fc" id="L985">            atts.addAttribute( &quot;text-align-last&quot;, &quot;justify&quot; );</span>
+<span class="fc" id="L986">            writeStartTag( BLOCK_TAG, atts );</span>
+<span class="fc" id="L987">            writeStartTag( BASIC_LINK_TAG, &quot;internal-destination&quot;, ref );</span>
+<span class="fc" id="L988">            text( tocItem.getName() );</span>
+<span class="fc" id="L989">            writeEndTag( BASIC_LINK_TAG );</span>
+<span class="fc" id="L990">            writeEmptyTag( LEADER_TAG, &quot;toc.leader.style&quot; );</span>
+<span class="fc" id="L991">            writeStartTag( INLINE_TAG, &quot;page.number&quot; );</span>
+<span class="fc" id="L992">            writeEmptyTag( PAGE_NUMBER_CITATION_TAG, &quot;ref-id&quot;, ref );</span>
+<span class="fc" id="L993">            writeEndTag( INLINE_TAG );</span>
+<span class="fc" id="L994">            writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L995">            writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L996">            writeEndTag( TABLE_ROW_TAG );</span>
+
+<span class="pc bpc" id="L998" title="1 of 2 branches missed.">            if ( tocItem.getItems() != null )</span>
+            {
+<span class="fc" id="L1000">                writeTocItems( tocItem.getItems(), level + 1 );</span>
+            }
+<span class="fc" id="L1002">        }</span>
+
+<span class="fc" id="L1004">        tocStack.pop();</span>
+<span class="fc" id="L1005">    }</span>
+
+    private String currentTocNumber()
+    {
+<span class="fc" id="L1009">        StringBuilder ch = new StringBuilder( tocStack.get( 0 ).getListItemSymbol() );</span>
+
+<span class="pc bpc" id="L1011" title="1 of 2 branches missed.">        for ( int i = 1; i &lt; tocStack.size(); i++ )</span>
+        {
+<span class="nc" id="L1013">            ch.append( &quot;.&quot; + tocStack.get( i ).getListItemSymbol() );</span>
+        }
+
+<span class="fc" id="L1016">        return ch.toString();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p/&gt;
+     * Writes a fo:bookmark-tree. The DocumentModel has to contain a DocumentTOC for this to work.
+     */
+    protected void pdfBookmarks()
+    {
+<span class="pc bpc" id="L1026" title="1 of 4 branches missed.">        if ( docModel == null || docModel.getToc() == null )</span>
+        {
+<span class="fc" id="L1028">            return;</span>
+        }
+
+<span class="fc" id="L1031">        writeStartTag( BOOKMARK_TREE_TAG );</span>
+
+<span class="fc" id="L1033">        renderBookmarkItems( docModel.getToc().getItems() );</span>
+
+<span class="fc" id="L1035">        writeEndTag( BOOKMARK_TREE_TAG );</span>
+<span class="fc" id="L1036">    }</span>
+
+    private void renderBookmarkItems( List&lt;DocumentTOCItem&gt; items )
+    {
+<span class="fc bfc" id="L1040" title="All 2 branches covered.">        for ( DocumentTOCItem tocItem : items )</span>
+        {
+<span class="fc" id="L1042">            String ref = getIdName( tocItem.getRef() );</span>
+
+<span class="fc" id="L1044">            writeStartTag( BOOKMARK_TAG, &quot;internal-destination&quot;, ref );</span>
+<span class="fc" id="L1045">            writeStartTag( BOOKMARK_TITLE_TAG );</span>
+<span class="fc" id="L1046">            text( tocItem.getName() );</span>
+<span class="fc" id="L1047">            writeEndTag( BOOKMARK_TITLE_TAG );</span>
+
+<span class="pc bpc" id="L1049" title="1 of 2 branches missed.">            if ( tocItem.getItems() != null )</span>
+            {
+<span class="fc" id="L1051">                renderBookmarkItems( tocItem.getItems() );</span>
+            }
+
+<span class="fc" id="L1054">            writeEndTag( BOOKMARK_TAG );</span>
+<span class="fc" id="L1055">        }</span>
+<span class="fc" id="L1056">    }</span>
+
+    /**
+     * Writes a cover page. The DocumentModel has to contain a DocumentMeta for this to work.
+     */
+    public void coverPage()
+    {
+<span class="pc bpc" id="L1063" title="1 of 2 branches missed.">        if ( this.docModel == null )</span>
+        {
+<span class="nc" id="L1065">            return;</span>
+        }
+
+<span class="fc" id="L1068">        DocumentCover cover = docModel.getCover();</span>
+<span class="fc" id="L1069">        DocumentMeta meta = docModel.getMeta();</span>
+
+<span class="pc bpc" id="L1071" title="1 of 4 branches missed.">        if ( cover == null &amp;&amp; meta == null )</span>
+        {
+<span class="nc" id="L1073">            return; // no information for cover page: ignore</span>
+        }
+
+        // TODO: remove hard-coded settings
+
+<span class="fc" id="L1078">        writeStartTag( PAGE_SEQUENCE_TAG, &quot;master-reference&quot;, &quot;cover-page&quot; );</span>
+<span class="fc" id="L1079">        writeStartTag( FLOW_TAG, &quot;flow-name&quot;, &quot;xsl-region-body&quot; );</span>
+<span class="fc" id="L1080">        writeStartTag( BLOCK_TAG, &quot;text-align&quot;, &quot;center&quot; );</span>
+<span class="fc" id="L1081">        writeln( &quot;&lt;fo:table table-layout=\&quot;fixed\&quot; width=\&quot;100%\&quot; &gt;&quot; );</span>
+<span class="fc" id="L1082">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;3.125in&quot; );</span>
+<span class="fc" id="L1083">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;3.125in&quot; );</span>
+<span class="fc" id="L1084">        writeStartTag( TABLE_BODY_TAG );</span>
+
+<span class="fc" id="L1086">        writeCoverHead( cover );</span>
+<span class="fc" id="L1087">        writeCoverBody( cover, meta );</span>
+<span class="fc" id="L1088">        writeCoverFooter( cover, meta );</span>
+
+<span class="fc" id="L1090">        writeEndTag( TABLE_BODY_TAG );</span>
+<span class="fc" id="L1091">        writeEndTag( TABLE_TAG );</span>
+<span class="fc" id="L1092">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1093">        writeEndTag( FLOW_TAG );</span>
+<span class="fc" id="L1094">        writeEndTag( PAGE_SEQUENCE_TAG );</span>
+<span class="fc" id="L1095">    }</span>
+
+    private void writeCoverHead( DocumentCover cover )
+    {
+<span class="fc bfc" id="L1099" title="All 2 branches covered.">        if ( cover == null )</span>
+        {
+<span class="fc" id="L1101">            return;</span>
+        }
+
+<span class="fc" id="L1104">        String compLogo = cover.getCompanyLogo();</span>
+<span class="fc" id="L1105">        String projLogo = cover.getProjectLogo();</span>
+
+<span class="fc" id="L1107">        writeStartTag( TABLE_ROW_TAG, &quot;height&quot;, COVER_HEADER_HEIGHT );</span>
+<span class="fc" id="L1108">        writeStartTag( TABLE_CELL_TAG );</span>
+
+<span class="pc bpc" id="L1110" title="1 of 2 branches missed.">        if ( StringUtils.isNotEmpty( compLogo ) )</span>
+        {
+<span class="nc" id="L1112">            SinkEventAttributeSet atts = new SinkEventAttributeSet();</span>
+<span class="nc" id="L1113">            atts.addAttribute( &quot;text-align&quot;, &quot;left&quot; );</span>
+<span class="nc" id="L1114">            atts.addAttribute( &quot;vertical-align&quot;, &quot;top&quot; );</span>
+<span class="nc" id="L1115">            writeStartTag( BLOCK_TAG, atts );</span>
+<span class="nc" id="L1116">            figureGraphics( compLogo, getGraphicsAttributes( compLogo ) );</span>
+<span class="nc" id="L1117">            writeEndTag( BLOCK_TAG );</span>
+        }
+
+<span class="fc" id="L1120">        writeSimpleTag( BLOCK_TAG );</span>
+<span class="fc" id="L1121">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1122">        writeStartTag( TABLE_CELL_TAG );</span>
+
+<span class="pc bpc" id="L1124" title="1 of 2 branches missed.">        if ( StringUtils.isNotEmpty( projLogo ) )</span>
+        {
+<span class="nc" id="L1126">            SinkEventAttributeSet atts = new SinkEventAttributeSet();</span>
+<span class="nc" id="L1127">            atts.addAttribute( &quot;text-align&quot;, &quot;right&quot; );</span>
+<span class="nc" id="L1128">            atts.addAttribute( &quot;vertical-align&quot;, &quot;top&quot; );</span>
+<span class="nc" id="L1129">            writeStartTag( BLOCK_TAG, atts );</span>
+<span class="nc" id="L1130">            figureGraphics( projLogo, getGraphicsAttributes( projLogo ) );</span>
+<span class="nc" id="L1131">            writeEndTag( BLOCK_TAG );</span>
+        }
+
+<span class="fc" id="L1134">        writeSimpleTag( BLOCK_TAG );</span>
+<span class="fc" id="L1135">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1136">        writeEndTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1137">    }</span>
+
+    private void writeCoverBody( DocumentCover cover, DocumentMeta meta )
+    {
+<span class="pc bpc" id="L1141" title="1 of 4 branches missed.">        if ( cover == null &amp;&amp; meta == null )</span>
+        {
+<span class="nc" id="L1143">            return;</span>
+        }
+
+<span class="fc" id="L1146">        String subtitle = null;</span>
+<span class="fc" id="L1147">        String title = null;</span>
+<span class="fc" id="L1148">        String type = null;</span>
+<span class="fc" id="L1149">        String version = null;</span>
+<span class="fc bfc" id="L1150" title="All 2 branches covered.">        if ( cover == null )</span>
+        {
+            // aleady checked that meta != null
+<span class="fc" id="L1153">            getLog().debug( &quot;The DocumentCover is not defined, using the DocumentMeta title as cover title.&quot; );</span>
+<span class="fc" id="L1154">            title = meta.getTitle();</span>
+        }
+        else
+        {
+<span class="fc" id="L1158">            subtitle = cover.getCoverSubTitle();</span>
+<span class="fc" id="L1159">            title = cover.getCoverTitle();</span>
+<span class="fc" id="L1160">            type = cover.getCoverType();</span>
+<span class="fc" id="L1161">            version = cover.getCoverVersion();</span>
+        }
+
+<span class="fc" id="L1164">        writeln( &quot;&lt;fo:table-row keep-with-previous=\&quot;always\&quot; height=\&quot;0.014in\&quot;&gt;&quot; );</span>
+<span class="fc" id="L1165">        writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, &quot;2&quot; );</span>
+<span class="fc" id="L1166">        writeStartTag( BLOCK_TAG, &quot;line-height&quot;, &quot;0.014in&quot; );</span>
+<span class="fc" id="L1167">        writeEmptyTag( LEADER_TAG, &quot;chapter.rule&quot; );</span>
+<span class="fc" id="L1168">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1169">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1170">        writeEndTag( TABLE_ROW_TAG );</span>
+
+<span class="fc" id="L1172">        writeStartTag( TABLE_ROW_TAG, &quot;height&quot;, &quot;7.447in&quot; );</span>
+<span class="fc" id="L1173">        writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, &quot;2&quot; );</span>
+<span class="fc" id="L1174">        writeln( &quot;&lt;fo:table table-layout=\&quot;fixed\&quot; width=\&quot;100%\&quot; &gt;&quot; );</span>
+<span class="fc" id="L1175">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;2.083in&quot; );</span>
+<span class="fc" id="L1176">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;2.083in&quot; );</span>
+<span class="fc" id="L1177">        writeEmptyTag( TABLE_COLUMN_TAG, &quot;column-width&quot;, &quot;2.083in&quot; );</span>
+
+<span class="fc" id="L1179">        writeStartTag( TABLE_BODY_TAG );</span>
+
+<span class="fc" id="L1181">        writeStartTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1182">        writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, &quot;3&quot; );</span>
+<span class="fc" id="L1183">        writeSimpleTag( BLOCK_TAG );</span>
+<span class="fc" id="L1184">        writeEmptyTag( BLOCK_TAG, &quot;space-before&quot;, &quot;3.2235in&quot; );</span>
+<span class="fc" id="L1185">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1186">        writeEndTag( TABLE_ROW_TAG );</span>
+
+<span class="fc" id="L1188">        writeStartTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1189">        writeStartTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1190">        writeEmptyTag( BLOCK_TAG, &quot;space-after&quot;, &quot;0.5in&quot; );</span>
+<span class="fc" id="L1191">        writeEndTag( TABLE_CELL_TAG );</span>
+
+<span class="fc" id="L1193">        writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, &quot;2&quot;, &quot;cover.border.left&quot; );</span>
+<span class="fc" id="L1194">        writeStartTag( BLOCK_TAG, &quot;cover.title&quot; );</span>
+<span class="pc bpc" id="L1195" title="1 of 2 branches missed.">        text( title == null ? &quot;&quot; : title );</span>
+<span class="fc" id="L1196">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1197">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1198">        writeEndTag( TABLE_ROW_TAG );</span>
+
+<span class="fc" id="L1200">        writeStartTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1201">        writeStartTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1202">        writeSimpleTag( BLOCK_TAG );</span>
+<span class="fc" id="L1203">        writeEndTag( TABLE_CELL_TAG );</span>
+
+<span class="fc" id="L1205">        writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, &quot;2&quot;, &quot;cover.border.left.bottom&quot; );</span>
+<span class="fc" id="L1206">        writeStartTag( BLOCK_TAG, &quot;cover.subtitle&quot; );</span>
+<span class="pc bpc" id="L1207" title="1 of 4 branches missed.">        text( subtitle == null ? ( version == null ? &quot;&quot; : &quot; v. &quot; + version ) : subtitle );</span>
+<span class="fc" id="L1208">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1209">        writeStartTag( BLOCK_TAG, &quot;cover.subtitle&quot; );</span>
+<span class="pc bpc" id="L1210" title="1 of 2 branches missed.">        text( type == null ? &quot;&quot; : type );</span>
+<span class="fc" id="L1211">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1212">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1213">        writeEndTag( TABLE_ROW_TAG );</span>
+
+<span class="fc" id="L1215">        writeEndTag( TABLE_BODY_TAG );</span>
+<span class="fc" id="L1216">        writeEndTag( TABLE_TAG );</span>
+
+<span class="fc" id="L1218">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1219">        writeEndTag( TABLE_ROW_TAG );</span>
+
+<span class="fc" id="L1221">        writeStartTag( TABLE_ROW_TAG, &quot;height&quot;, &quot;0.014in&quot; );</span>
+<span class="fc" id="L1222">        writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, &quot;2&quot; );</span>
+<span class="fc" id="L1223">        writeln( &quot;&lt;fo:block space-after=\&quot;0.2in\&quot; line-height=\&quot;0.014in\&quot;&gt;&quot; );</span>
+<span class="fc" id="L1224">        writeEmptyTag( LEADER_TAG, &quot;chapter.rule&quot; );</span>
+<span class="fc" id="L1225">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1226">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1227">        writeEndTag( TABLE_ROW_TAG );</span>
+
+<span class="fc" id="L1229">        writeStartTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1230">        writeStartTag( TABLE_CELL_TAG, &quot;number-columns-spanned&quot;, &quot;2&quot; );</span>
+<span class="fc" id="L1231">        writeSimpleTag( BLOCK_TAG );</span>
+<span class="fc" id="L1232">        writeEmptyTag( BLOCK_TAG, &quot;space-before&quot;, &quot;0.2in&quot; );</span>
+<span class="fc" id="L1233">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1234">        writeEndTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1235">    }</span>
+
+    private void writeCoverFooter( DocumentCover cover, DocumentMeta meta )
+    {
+<span class="pc bpc" id="L1239" title="1 of 4 branches missed.">        if ( cover == null &amp;&amp; meta == null )</span>
+        {
+<span class="nc" id="L1241">            return;</span>
+        }
+
+<span class="fc" id="L1244">        String date = null;</span>
+<span class="fc" id="L1245">        String compName = null;</span>
+<span class="fc bfc" id="L1246" title="All 2 branches covered.">        if ( cover == null )</span>
+        {
+            // aleady checked that meta != null
+<span class="fc" id="L1249">            getLog().debug( &quot;The DocumentCover is not defined, using the DocumentMeta author as company name.&quot; );</span>
+<span class="fc" id="L1250">            compName = meta.getAuthor();</span>
+        }
+        else
+        {
+<span class="fc" id="L1254">            compName = cover.getCompanyName();</span>
+
+<span class="pc bpc" id="L1256" title="1 of 2 branches missed.">            if ( cover.getCoverdate() == null )</span>
+            {
+<span class="fc" id="L1258">                cover.setCoverDate( new Date() );</span>
+<span class="fc" id="L1259">                date = cover.getCoverdate();</span>
+<span class="fc" id="L1260">                cover.setCoverDate( null );</span>
+            }
+            else
+            {
+<span class="nc" id="L1264">                date = cover.getCoverdate();</span>
+            }
+        }
+
+<span class="fc" id="L1268">        writeStartTag( TABLE_ROW_TAG, &quot;height&quot;, &quot;0.3in&quot; );</span>
+
+<span class="fc" id="L1270">        writeStartTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1271">        MutableAttributeSet att = getFoConfiguration().getAttributeSet( &quot;cover.subtitle&quot; );</span>
+<span class="fc" id="L1272">        att.addAttribute( &quot;height&quot;, &quot;0.3in&quot; );</span>
+<span class="fc" id="L1273">        att.addAttribute( &quot;text-align&quot;, &quot;left&quot; );</span>
+<span class="fc" id="L1274">        writeStartTag( BLOCK_TAG, att );</span>
+<span class="pc bpc" id="L1275" title="3 of 4 branches missed.">        text( compName == null ? ( cover.getAuthor() == null ? &quot;&quot; : cover.getAuthor() ) : compName );</span>
+<span class="fc" id="L1276">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1277">        writeEndTag( TABLE_CELL_TAG );</span>
+
+<span class="fc" id="L1279">        writeStartTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1280">        att = getFoConfiguration().getAttributeSet( &quot;cover.subtitle&quot; );</span>
+<span class="fc" id="L1281">        att.addAttribute( &quot;height&quot;, &quot;0.3in&quot; );</span>
+<span class="fc" id="L1282">        att.addAttribute( &quot;text-align&quot;, &quot;right&quot; );</span>
+<span class="fc" id="L1283">        writeStartTag( BLOCK_TAG, att );</span>
+<span class="fc bfc" id="L1284" title="All 2 branches covered.">        text( date == null ? &quot;&quot; : date );</span>
+<span class="fc" id="L1285">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1286">        writeEndTag( TABLE_CELL_TAG );</span>
+
+<span class="fc" id="L1288">        writeEndTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1289">    }</span>
+
+    private ResourceBundle getBundle( Locale locale )
+    {
+<span class="fc" id="L1293">        return ResourceBundle.getBundle( &quot;doxia-fo&quot;, locale, this.getClass().getClassLoader() );</span>
+    }
+
+    private SinkEventAttributeSet getGraphicsAttributes( String logo )
+    {
+<span class="nc" id="L1298">        MutableAttributeSet atts = null;</span>
+
+        try
+        {
+<span class="nc" id="L1302">            atts = DoxiaUtils.getImageAttributes( logo );</span>
+        }
+<span class="nc" id="L1304">        catch ( IOException e )</span>
+        {
+<span class="nc" id="L1306">            getLog().debug( e );</span>
+<span class="nc" id="L1307">        }</span>
+
+<span class="nc bnc" id="L1309" title="All 2 branches missed.">        if ( atts == null )</span>
+        {
+<span class="nc" id="L1311">            return new SinkEventAttributeSet( new String[]{ SinkEventAttributes.HEIGHT, COVER_HEADER_HEIGHT } );</span>
+        }
+
+        // FOP dpi: 72
+        // Max width : 3.125 inch, table cell size, see #coverPage()
+<span class="nc" id="L1316">        final int maxWidth = 225; // 3.125 * 72</span>
+
+<span class="nc bnc" id="L1318" title="All 2 branches missed.">        if ( Integer.parseInt( atts.getAttribute( SinkEventAttributes.WIDTH ).toString() ) &gt; maxWidth )</span>
+        {
+<span class="nc" id="L1320">            atts.addAttribute( &quot;content-width&quot;, &quot;3.125in&quot; );</span>
+        }
+
+<span class="nc" id="L1323">        return new SinkEventAttributeSet( atts );</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

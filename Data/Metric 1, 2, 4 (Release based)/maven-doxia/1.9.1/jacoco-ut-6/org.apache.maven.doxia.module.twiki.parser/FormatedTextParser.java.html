@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormatedTextParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki.parser</a> &gt; <span class="el_source">FormatedTextParser.java</span></div><h1>FormatedTextParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Parse looking for formated text (bold, italic, ...)
+ *
+ * @author Juan F. Codagnone
+ */
+<span class="fc" id="L32">public class FormatedTextParser</span>
+{
+    /**
+     * parser used to parse text...
+     */
+    private TextParser textParser;
+
+    /**
+     * map used to create blocks dependening on the text format
+     */
+<span class="fc" id="L42">    private static final Map&lt;String, FormatBlockFactory&gt; FACTORY_MAP = new HashMap&lt;&gt;();</span>
+
+    /**
+     * creates bold blocks
+     */
+<span class="fc" id="L47">    private static final FormatBlockFactory BOLD_FACTORY = new FormatBlockFactory()</span>
+<span class="fc" id="L48">    {</span>
+        /** {@inheritDoc} */
+        public Block createBlock( final Block[] childrens )
+        {
+<span class="fc" id="L52">            return new BoldBlock( childrens );</span>
+        }
+    };
+
+    /**
+     * creates italic blocks
+     */
+<span class="fc" id="L59">    private static final FormatBlockFactory ITALIC_FACTORY = new FormatBlockFactory()</span>
+<span class="fc" id="L60">    {</span>
+        /** {@inheritDoc} */
+        public Block createBlock( final Block[] childrens )
+        {
+<span class="fc" id="L64">            return new ItalicBlock( childrens );</span>
+        }
+    };
+
+    /**
+     * creates monospaced blocks
+     */
+<span class="fc" id="L71">    private static final FormatBlockFactory MONOSPACED_FACTORY = new FormatBlockFactory()</span>
+<span class="fc" id="L72">    {</span>
+        /** {@inheritDoc} */
+        public Block createBlock( final Block[] childrens )
+        {
+<span class="fc" id="L76">            return new MonospaceBlock( childrens );</span>
+        }
+    };
+
+    /**
+     * creates bold italic blocks
+     */
+<span class="fc" id="L83">    private static final FormatBlockFactory BOLDITALIC_FACTORY = new FormatBlockFactory()</span>
+<span class="fc" id="L84">    {</span>
+        /** {@inheritDoc} */
+        public Block createBlock( final Block[] childrens )
+        {
+<span class="fc" id="L88">            return new BoldBlock( new Block[] { new ItalicBlock( childrens ) } );</span>
+        }
+    };
+
+    /**
+     * creates bold monospace blocks
+     */
+<span class="fc" id="L95">    private static final FormatBlockFactory BOLDMONO_FACTORY = new FormatBlockFactory()</span>
+<span class="fc" id="L96">    {</span>
+        /** {@inheritDoc} */
+        public Block createBlock( final Block[] childrens )
+        {
+<span class="fc" id="L100">            return new BoldBlock( new Block[] { new MonospaceBlock( childrens ) } );</span>
+        }
+    };
+
+    /**
+     * format characters
+     */
+<span class="fc" id="L107">    private static final String[] SPECIAL_CHAR = new String[] { &quot;__&quot;, &quot;==&quot;, &quot;*&quot;, &quot;_&quot;, &quot;=&quot; };</span>
+
+    static
+    {
+<span class="fc" id="L111">        FACTORY_MAP.put( &quot;*&quot;, BOLD_FACTORY );</span>
+<span class="fc" id="L112">        FACTORY_MAP.put( &quot;_&quot;, ITALIC_FACTORY );</span>
+<span class="fc" id="L113">        FACTORY_MAP.put( &quot;=&quot;, MONOSPACED_FACTORY );</span>
+<span class="fc" id="L114">        FACTORY_MAP.put( &quot;__&quot;, BOLDITALIC_FACTORY );</span>
+<span class="fc" id="L115">        FACTORY_MAP.put( &quot;==&quot;, BOLDMONO_FACTORY );</span>
+<span class="fc" id="L116">    }</span>
+
+    /**
+     * @param line line to parse
+     * @return TextBlock, ItalicBlock, BoldBlock, MonospacedBlock, ...
+     */
+    final Block[] parse( final String line )
+    {
+<span class="fc" id="L124">        return parseFormat( line ).toArray( new Block[] {} );</span>
+    }
+
+    /**
+     * @param c character to test
+     * @return &lt;code&gt;true&lt;/code&gt; if c is a space character
+     */
+    static boolean isSpace( final char c )
+    {
+<span class="fc bfc" id="L133" title="All 4 branches covered.">        return c == ' ' || c == '\t';</span>
+    }
+
+    /**
+     * @param c character to test
+     * @return &lt;code&gt;true&lt;/code&gt; if c is a character that limits the formats
+     */
+    static boolean isSpecial( final char c )
+    {
+<span class="fc" id="L142">        boolean ret = false;</span>
+
+<span class="fc bfc" id="L144" title="All 4 branches covered.">        for ( int i = 0; !ret &amp;&amp; i &lt; SPECIAL_CHAR.length; i++ )</span>
+        {
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if ( SPECIAL_CHAR[i].charAt( 0 ) == c )</span>
+            {
+<span class="fc" id="L148">                ret = true;</span>
+            }
+        }
+
+<span class="fc" id="L152">        return ret;</span>
+    }
+
+    /**
+     * Parse text format (bold, italic...)
+     * &lt;p/&gt;
+     * TODO too many lines!!
+     *
+     * @param line line to parse
+     * @return list of blocks
+     */
+    private List&lt;Block&gt; parseFormat( final String line )
+    {
+<span class="fc" id="L165">        final List&lt;Block&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L166">        final int[] lhOffsets = new int[SPECIAL_CHAR.length];</span>
+<span class="fc" id="L167">        final int[] rhOffsets = new int[SPECIAL_CHAR.length];</span>
+
+        // for each text format markers...
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        for ( int i = 0; i &lt; SPECIAL_CHAR.length; i++ )</span>
+        {
+<span class="fc" id="L172">            final int specialLen = SPECIAL_CHAR[i].length();</span>
+<span class="fc" id="L173">            int t = 0;</span>
+            // search the nearset instance of this marker...
+<span class="fc bfc" id="L175" title="All 4 branches covered.">            while ( t != -1 &amp;&amp; ( t = line.indexOf( SPECIAL_CHAR[i], t ) ) != -1 )</span>
+            {
+                // and check if it at the begining of a word.
+<span class="fc bfc" id="L178" title="All 6 branches covered.">                if ( t == 0 || isSpace( line.charAt( t - 1 ) ) || isParenthesis( line.charAt( t - 1 ) ) )</span>
+                {
+                    // if it is, and if, check to avoid going beyond the string
+<span class="fc bfc" id="L181" title="All 2 branches covered.">                    if ( t + specialLen &lt; line.length() )</span>
+                    {
+                        // and if character after the format marker is another
+                        // marker, is an error, and should be ignored
+<span class="fc bfc" id="L185" title="All 2 branches covered.">                        if ( isSpecial( line.charAt( t + specialLen ) ) )</span>
+                        {
+<span class="fc" id="L187">                            t += specialLen;</span>
+                        }
+                        else
+                        {
+                            // else we find a starter!
+                            break;
+                        }
+                    }
+                    else
+                    {
+<span class="fc" id="L197">                        t = -1;</span>
+                    }
+                }
+                else
+                {
+<span class="fc" id="L202">                    t += specialLen;</span>
+                }
+            }
+<span class="fc" id="L205">            lhOffsets[i] = t;</span>
+        }
+
+        // for each text format markers...
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        for ( int i = 0; i &lt; lhOffsets.length; i++ )</span>
+        {
+<span class="fc" id="L211">            final int specialLen = SPECIAL_CHAR[i].length();</span>
+            // if we found a text format beginning
+<span class="fc bfc" id="L213" title="All 2 branches covered.">            if ( lhOffsets[i] != -1 )</span>
+            {
+<span class="fc" id="L215">                int t = lhOffsets[i] + specialLen;</span>
+                // search for a text format ending
+<span class="fc bfc" id="L217" title="All 2 branches covered.">                while ( ( t = line.indexOf( SPECIAL_CHAR[i], t ) ) != -1 )</span>
+                {
+                    // must be side by side to a word
+<span class="fc" id="L220">                    final char c = line.charAt( t - 1 );</span>
+<span class="pc bpc" id="L221" title="1 of 6 branches missed.">                    if ( t &gt; 0 &amp;&amp; !isSpace( c ) &amp;&amp; !isSpecial( c ) )</span>
+                    {
+<span class="fc" id="L223">                        break;</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L227">                        t += specialLen;</span>
+                    }
+<span class="fc" id="L229">                }</span>
+<span class="fc" id="L230">                rhOffsets[i] = t;</span>
+            }
+        }
+
+        // find the nearest index
+<span class="fc" id="L235">        int minIndex = -1;</span>
+<span class="fc" id="L236">        int charType = 0;</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">        for ( int i = 0; i &lt; lhOffsets.length; i++ )</span>
+        {
+<span class="pc bpc" id="L239" title="1 of 4 branches missed.">            if ( lhOffsets[i] != -1 &amp;&amp; rhOffsets[i] != 1 )</span>
+            {
+<span class="fc bfc" id="L241" title="All 4 branches covered.">                if ( minIndex == -1 || lhOffsets[i] &lt; minIndex )</span>
+                {
+<span class="fc bfc" id="L243" title="All 2 branches covered.">                    if ( rhOffsets[i] &gt; lhOffsets[i] )</span>
+                    {
+                        // ej: &quot;mary *has a little lamb&quot;
+<span class="fc" id="L246">                        minIndex = lhOffsets[i];</span>
+<span class="fc" id="L247">                        charType = i;</span>
+                    }
+                }
+            }
+        }
+
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        if ( minIndex == -1 )</span>
+        {
+<span class="fc" id="L255">            ret.addAll( textParser.parse( line ) );</span>
+        }
+        else
+        {
+<span class="fc" id="L259">            int len = SPECIAL_CHAR[charType].length();</span>
+<span class="fc" id="L260">            ret.addAll( parseFormat( line.substring( 0, minIndex ) ) );</span>
+<span class="fc" id="L261">            ret.add( FACTORY_MAP.get( SPECIAL_CHAR[charType] )</span>
+<span class="fc" id="L262">                     .createBlock( parseFormat( line.substring( minIndex + len, rhOffsets[charType] ) )</span>
+<span class="fc" id="L263">                                   .toArray( new Block[] {} ) ) );</span>
+<span class="fc" id="L264">            ret.addAll( parseFormat( line.substring( rhOffsets[charType] + len ) ) );</span>
+        }
+
+        // profit
+<span class="fc" id="L268">        return ret;</span>
+    }
+
+    /**
+     * @param c character to test
+     * @return &lt;code&gt;true&lt;/code&gt; if c is a parenthesis
+     */
+    private boolean isParenthesis( final char c )
+    {
+<span class="pc bpc" id="L277" title="1 of 4 branches missed.">        return c == '(' || c == ')';</span>
+    }
+
+    /**
+     * Sets the formatTextParser.
+     *
+     * @param textParser text parser to use
+     *                   &lt;code&gt;TextParser&lt;/code&gt; with the formatTextParser.
+     */
+    public final void setTextParser( final TextParser textParser )
+    {
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">        if ( textParser == null )</span>
+        {
+<span class="nc" id="L290">            throw new IllegalArgumentException( &quot;argument can't be null&quot; );</span>
+        }
+
+<span class="fc" id="L293">        this.textParser = textParser;</span>
+<span class="fc" id="L294">    }</span>
+}
+
+/**
+ * @author Juan F. Codagnone
+ */
+interface FormatBlockFactory
+{
+    /**
+     * factory method of format &lt;code&gt;Block&lt;/code&gt;
+     *
+     * @param childrens children of the format block
+     * @return a format block
+     */
+    Block createBlock( final Block[] childrens );
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

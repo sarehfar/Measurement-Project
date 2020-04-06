@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="iso-8859-1"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TreeUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Configuration</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.configuration2.tree</a> &gt; <span class="el_source">TreeUtils.java</span></div><h1>TreeUtils.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.configuration2.tree;
+
+import java.io.PrintStream;
+import java.util.Map;
+
+/**
+ * Utility methods.
+ *
+ * @since 1.7
+ */
+public final class TreeUtils
+{
+    /** Prevent creating this class. */
+    private TreeUtils()
+    {
+    }
+
+    /**
+     * Print out the data in the configuration.
+     * @param stream The OutputStream.
+     * @param result The root node of the tree.
+     */
+    public static void printTree(final PrintStream stream, final ImmutableNode result)
+    {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (stream != null)</span>
+        {
+<span class="fc" id="L43">            printTree(stream, &quot;&quot;, result);</span>
+        }
+<span class="fc" id="L45">    }</span>
+
+    private static void printTree(final PrintStream stream, final String indent, final ImmutableNode result)
+    {
+<span class="fc" id="L49">        final StringBuilder buffer = new StringBuilder(indent).append(&quot;&lt;&quot;).append(result.getNodeName());</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (final Map.Entry&lt;String, Object&gt; e : result.getAttributes().entrySet())</span>
+        {
+<span class="fc" id="L52">            buffer.append(' ').append(e.getKey()).append(&quot;='&quot;).append(e.getValue()).append(&quot;'&quot;);</span>
+<span class="fc" id="L53">        }</span>
+<span class="fc" id="L54">        buffer.append(&quot;&gt;&quot;);</span>
+<span class="fc" id="L55">        stream.print(buffer.toString());</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (result.getValue() != null)</span>
+        {
+<span class="fc" id="L58">            stream.print(result.getValue());</span>
+        }
+<span class="fc" id="L60">        boolean newline = false;</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (!result.getChildren().isEmpty())</span>
+        {
+<span class="fc" id="L63">            stream.print(&quot;\n&quot;);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            for (final ImmutableNode child : result.getChildren())</span>
+            {
+<span class="fc" id="L66">                printTree(stream, indent + &quot;  &quot;, child);</span>
+<span class="fc" id="L67">            }</span>
+<span class="fc" id="L68">            newline = true;</span>
+        }
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (newline)</span>
+        {
+<span class="fc" id="L72">            stream.print(indent);</span>
+        }
+<span class="fc" id="L74">        stream.println(&quot;&lt;/&quot; + result.getNodeName() + &quot;&gt;&quot;);</span>
+<span class="fc" id="L75">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

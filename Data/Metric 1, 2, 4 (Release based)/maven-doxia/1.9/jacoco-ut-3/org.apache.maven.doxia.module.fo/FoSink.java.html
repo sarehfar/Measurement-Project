@@ -1,0 +1,1882 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: FO Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.fo</a> &gt; <span class="el_source">FoSink.java</span></div><h1>FoSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.fo;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.html.HTML.Attribute;
+import javax.swing.text.html.HTML.Tag;
+
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.AbstractXmlSink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.sink.impl.SinkUtils;
+import org.apache.maven.doxia.util.DoxiaUtils;
+import org.apache.maven.doxia.util.HtmlTools;
+
+import org.codehaus.plexus.util.xml.PrettyPrintXMLWriter;
+
+import static org.apache.maven.doxia.util.HtmlTools.escapeHTML;
+
+/**
+ * A Doxia Sink that produces a FO model. The usage is similar to the following:
+ *
+ * &lt;pre&gt;
+ * FoSink sink = new FoSink( writer );
+ * sink.beginDocument();
+ * ...
+ * sink.endDocument();
+ * &lt;/pre&gt;
+ *
+ * @author ltheussl
+ * @version $Id$
+ * @since 1.1
+ */
+public class FoSink
+    extends AbstractXmlSink
+    implements FoMarkup
+{
+    /** For writing the result. */
+    private final PrintWriter out;
+
+    /** Used to get the current position in numbered lists. */
+    private final Stack&lt;NumberedListItem&gt; listStack;
+
+    /** Used to get attributes for a given FO element. */
+    private final FoConfiguration config;
+
+    /** Counts the current section level. */
+<span class="fc" id="L80">    private int section = 0;</span>
+
+    /** Counts the current subsection level. */
+<span class="fc" id="L83">    private int subsection = 0;</span>
+
+    /** Counts the current subsubsection level. */
+<span class="fc" id="L86">    private int subsubsection = 0;</span>
+
+    /** Verbatim flag. */
+    private boolean verbatim;
+
+    /** figure flag. */
+    private boolean inFigure;
+
+    private final String encoding;
+
+    private final String languageId;
+
+    /** Stack of drawing borders on table cells. */
+    private final LinkedList&lt;Boolean&gt; tableGridStack;
+
+    /** Stack of alignment int[] of table cells. */
+    private final LinkedList&lt;int[]&gt; cellJustifStack;
+
+    /** Stack of justification of table cells. */
+    private final LinkedList&lt;Boolean&gt; isCellJustifStack;
+
+    /** Stack of current table cell. */
+    private final LinkedList&lt;Integer&gt; cellCountStack;
+
+    /** The stack of StringWriter to write the table result temporary, so we could play with the output and fix fo. */
+    private final LinkedList&lt;StringWriter&gt; tableContentWriterStack;
+
+    private final LinkedList&lt;StringWriter&gt; tableCaptionWriterStack;
+
+    private final LinkedList&lt;PrettyPrintXMLWriter&gt; tableCaptionXMLWriterStack;
+
+    /** The stack of table caption */
+    private final LinkedList&lt;String&gt; tableCaptionStack;
+
+    /** Keep track of the closing tags for inline events. */
+<span class="fc" id="L121">    protected Stack&lt;List&lt;Tag&gt;&gt; inlineStack = new Stack&lt;&gt;();</span>
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    protected Map&lt;String, Set&lt;String&gt;&gt; warnMessages;
+
+    /**
+     * Constructor, initialize the Writer.
+     *
+     * @param writer not null writer to write the result. &lt;b&gt;Should&lt;/b&gt; be an UTF-8 Writer.
+     * You could use &lt;code&gt;newXmlWriter&lt;/code&gt; methods from {@link org.codehaus.plexus.util.WriterFactory}.
+     */
+    protected FoSink( Writer writer )
+    {
+<span class="fc" id="L135">        this( writer, &quot;UTF-8&quot; );</span>
+<span class="fc" id="L136">    }</span>
+
+    /**
+     * Constructor, initialize the Writer and tells which encoding is used.
+     *
+     * @param writer not null writer to write the result.
+     * @param encoding the encoding used, that should be written to the generated HTML content
+     * if not &lt;code&gt;null&lt;/code&gt;.
+     */
+    protected FoSink( Writer writer, String encoding )
+    {
+<span class="fc" id="L147">        this( writer, encoding, null );</span>
+<span class="fc" id="L148">    }</span>
+
+    /**
+     * Constructor, initialize the Writer and tells which encoding and languageId are used.
+     *
+     * @param writer not null writer to write the result.
+     * @param encoding the encoding used, that should be written to the generated HTML content
+     * if not &lt;code&gt;null&lt;/code&gt;.
+     * @param languageId language identifier for the root element as defined by
+     * &lt;a href=&quot;ftp://ftp.isi.edu/in-notes/bcp/bcp47.txt&quot;&gt;IETF BCP 47&lt;/a&gt;, Tags for the Identification of Languages;
+     * in addition, the empty string may be specified.
+     */
+    protected FoSink( Writer writer, String encoding, String languageId )
+<span class="fc" id="L161">    {</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        if ( writer == null )</span>
+        {
+<span class="nc" id="L164">            throw new NullPointerException( &quot;Null writer in FO Sink!&quot; );</span>
+        }
+
+<span class="fc" id="L167">        this.out = new PrintWriter( writer );</span>
+<span class="fc" id="L168">        this.encoding = encoding;</span>
+<span class="fc" id="L169">        this.languageId = languageId;</span>
+<span class="fc" id="L170">        this.config = new FoConfiguration();</span>
+
+<span class="fc" id="L172">        this.listStack = new Stack&lt;&gt;();</span>
+<span class="fc" id="L173">        this.tableGridStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L174">        this.cellJustifStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L175">        this.isCellJustifStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L176">        this.cellCountStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L177">        this.tableContentWriterStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L178">        this.tableCaptionWriterStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L179">        this.tableCaptionXMLWriterStack = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L180">        this.tableCaptionStack = new LinkedList&lt;&gt;();</span>
+
+<span class="fc" id="L182">        setNameSpace( &quot;fo&quot; );</span>
+<span class="fc" id="L183">    }</span>
+
+    // TODO add FOP compliance mode?
+
+    /**
+     * Load configuration parameters from a File.
+     *
+     * @param configFile the configuration file.
+     *
+     * @throws java.io.IOException if the File cannot be read
+     *  or some error occurs when initializing the configuration parameters.
+     *
+     * @since 1.1.1
+     */
+    public void load( File configFile )
+            throws IOException
+    {
+<span class="nc" id="L200">        config.load( configFile );</span>
+<span class="nc" id="L201">    }</span>
+
+    /** {@inheritDoc} */
+    public void head( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L206">        init();</span>
+
+<span class="fc" id="L208">        startPageSequence( &quot;0&quot;, null, null );</span>
+<span class="fc" id="L209">    }</span>
+
+    /** {@inheritDoc} */
+    public void head()
+    {
+<span class="fc" id="L214">        head( null );</span>
+<span class="fc" id="L215">    }</span>
+
+    /** {@inheritDoc} */
+    public void head_()
+    {
+<span class="fc" id="L220">        writeEOL();</span>
+<span class="fc" id="L221">    }</span>
+
+    /** {@inheritDoc} */
+    public void title( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L226">        writeStartTag( BLOCK_TAG, &quot;doc.header.title&quot; );</span>
+<span class="fc" id="L227">    }</span>
+
+    /** {@inheritDoc} */
+    public void title()
+    {
+<span class="fc" id="L232">        title( null );</span>
+<span class="fc" id="L233">    }</span>
+
+    /** {@inheritDoc} */
+    public void title_()
+    {
+<span class="fc" id="L238">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L239">        writeEOL();</span>
+<span class="fc" id="L240">    }</span>
+
+    /** {@inheritDoc} */
+    public void author( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L245">        writeStartTag( BLOCK_TAG, &quot;doc.header.author&quot; );</span>
+<span class="fc" id="L246">    }</span>
+
+    /** {@inheritDoc} */
+    public void author()
+    {
+<span class="fc" id="L251">        author( null );</span>
+<span class="fc" id="L252">    }</span>
+
+    /** {@inheritDoc} */
+    public void author_()
+    {
+<span class="fc" id="L257">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L258">        writeEOL();</span>
+<span class="fc" id="L259">    }</span>
+
+    /** {@inheritDoc} */
+    public void date( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L264">        writeStartTag( BLOCK_TAG, &quot;doc.header.date&quot; );</span>
+<span class="fc" id="L265">    }</span>
+
+    /** {@inheritDoc} */
+    public void date()
+    {
+<span class="fc" id="L270">        date( null );</span>
+<span class="fc" id="L271">    }</span>
+
+    /** {@inheritDoc} */
+    public void date_()
+    {
+<span class="fc" id="L276">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L277">        writeEOL();</span>
+<span class="fc" id="L278">    }</span>
+
+    /** {@inheritDoc} */
+    public void body( SinkEventAttributes attributes )
+    {
+        // noop
+<span class="fc" id="L284">    }</span>
+
+    /** {@inheritDoc} */
+    public void body()
+    {
+<span class="fc" id="L289">        body( null );</span>
+<span class="fc" id="L290">    }</span>
+
+    /** {@inheritDoc} */
+    public void body_()
+    {
+<span class="fc" id="L295">        writeEOL();</span>
+<span class="fc" id="L296">        writeEndTag( FLOW_TAG );</span>
+<span class="fc" id="L297">        writeEOL();</span>
+<span class="fc" id="L298">        writeEndTag( PAGE_SEQUENCE_TAG );</span>
+<span class="fc" id="L299">        writeEOL();</span>
+<span class="fc" id="L300">        endDocument();</span>
+<span class="fc" id="L301">    }</span>
+
+    // -----------------------------------------------------------------------
+    //
+    // -----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void sectionTitle()
+    {
+        // nop
+<span class="fc" id="L311">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle_()
+    {
+        // nop
+<span class="fc" id="L317">    }</span>
+
+    /** {@inheritDoc} */
+    public void section( int level, SinkEventAttributes attributes )
+    {
+<span class="fc bfc" id="L322" title="All 2 branches covered.">        if ( level == SECTION_LEVEL_1 )</span>
+        {
+<span class="fc" id="L324">            section++;</span>
+<span class="fc" id="L325">            subsection = 0;</span>
+<span class="fc" id="L326">            subsubsection = 0;</span>
+        }
+<span class="fc bfc" id="L328" title="All 2 branches covered.">        else if ( level == SECTION_LEVEL_2 )</span>
+        {
+<span class="fc" id="L330">            subsection++;</span>
+<span class="fc" id="L331">            subsubsection = 0;</span>
+        }
+<span class="fc bfc" id="L333" title="All 2 branches covered.">        else if ( level == SECTION_LEVEL_3 )</span>
+        {
+<span class="fc" id="L335">            subsubsection++;</span>
+        }
+
+<span class="fc" id="L338">        onSection();</span>
+<span class="fc" id="L339">    }</span>
+
+    /** {@inheritDoc} */
+    public void section_( int level )
+    {
+<span class="fc" id="L344">        onSection_();</span>
+<span class="fc" id="L345">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle( int level, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L350">        onSectionTitle( level );</span>
+<span class="fc" id="L351">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle_( int level )
+    {
+<span class="fc" id="L356">        onSectionTitle_();</span>
+<span class="fc" id="L357">    }</span>
+
+    /** {@inheritDoc} */
+    public void section1()
+    {
+<span class="fc" id="L362">        section( SECTION_LEVEL_1, null );</span>
+<span class="fc" id="L363">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle1()
+    {
+<span class="fc" id="L368">        sectionTitle( SECTION_LEVEL_1, null );</span>
+<span class="fc" id="L369">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle1_()
+    {
+<span class="fc" id="L374">        sectionTitle_( SECTION_LEVEL_1 );</span>
+<span class="fc" id="L375">    }</span>
+
+    /** {@inheritDoc} */
+    public void section1_()
+    {
+<span class="fc" id="L380">        section_( SECTION_LEVEL_1 );</span>
+<span class="fc" id="L381">    }</span>
+
+    /** {@inheritDoc} */
+    public void section2()
+    {
+<span class="fc" id="L386">        section( SECTION_LEVEL_2, null );</span>
+<span class="fc" id="L387">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle2()
+    {
+<span class="fc" id="L392">        sectionTitle( SECTION_LEVEL_2, null );</span>
+<span class="fc" id="L393">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle2_()
+    {
+<span class="fc" id="L398">        sectionTitle_( SECTION_LEVEL_2 );</span>
+<span class="fc" id="L399">    }</span>
+
+    /** {@inheritDoc} */
+    public void section2_()
+    {
+<span class="fc" id="L404">        section_( SECTION_LEVEL_2 );</span>
+<span class="fc" id="L405">    }</span>
+
+    /** {@inheritDoc} */
+    public void section3()
+    {
+<span class="fc" id="L410">        section( SECTION_LEVEL_3, null );</span>
+<span class="fc" id="L411">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle3()
+    {
+<span class="fc" id="L416">        sectionTitle( SECTION_LEVEL_3, null );</span>
+<span class="fc" id="L417">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle3_()
+    {
+<span class="fc" id="L422">        sectionTitle_( SECTION_LEVEL_3 );</span>
+<span class="fc" id="L423">    }</span>
+
+    /** {@inheritDoc} */
+    public void section3_()
+    {
+<span class="fc" id="L428">        section_( SECTION_LEVEL_3 );</span>
+<span class="fc" id="L429">    }</span>
+
+    /** {@inheritDoc} */
+    public void section4()
+    {
+<span class="fc" id="L434">        section( SECTION_LEVEL_4, null );</span>
+<span class="fc" id="L435">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle4()
+    {
+<span class="fc" id="L440">        sectionTitle( SECTION_LEVEL_4, null );</span>
+<span class="fc" id="L441">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle4_()
+    {
+<span class="fc" id="L446">        sectionTitle_( SECTION_LEVEL_4 );</span>
+<span class="fc" id="L447">    }</span>
+
+    /** {@inheritDoc} */
+    public void section4_()
+    {
+<span class="fc" id="L452">        section_( SECTION_LEVEL_4 );</span>
+<span class="fc" id="L453">    }</span>
+
+    /** {@inheritDoc} */
+    public void section5()
+    {
+<span class="fc" id="L458">        section( SECTION_LEVEL_5, null );</span>
+<span class="fc" id="L459">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle5()
+    {
+<span class="fc" id="L464">        sectionTitle( SECTION_LEVEL_5, null );</span>
+<span class="fc" id="L465">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle5_()
+    {
+<span class="fc" id="L470">        sectionTitle_( SECTION_LEVEL_5 );</span>
+<span class="fc" id="L471">    }</span>
+
+    /** {@inheritDoc} */
+    public void section5_()
+    {
+<span class="fc" id="L476">        section_( SECTION_LEVEL_5 );</span>
+<span class="fc" id="L477">    }</span>
+
+    /** Starts a section/subsection. */
+    private void onSection()
+    {
+<span class="fc" id="L482">        writeEOL();</span>
+<span class="fc" id="L483">        writeStartTag( BLOCK_TAG, &quot;body.text&quot; );</span>
+<span class="fc" id="L484">    }</span>
+
+    /**
+     * Starts a section title.
+     *
+     * @param depth The section level.
+     */
+    private void onSectionTitle( int depth )
+    {
+<span class="fc" id="L493">        StringBuilder title = new StringBuilder( 16 );</span>
+
+<span class="fc" id="L495">        title.append( getChapterString() );</span>
+
+<span class="fc" id="L497">        writeEOL();</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">        if ( depth == SECTION_LEVEL_1 )</span>
+        {
+<span class="fc" id="L500">            writeStartTag( BLOCK_TAG, &quot;body.h1&quot; );</span>
+<span class="fc" id="L501">            title.append( section ).append( &quot;   &quot; );</span>
+        }
+<span class="fc bfc" id="L503" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_2 )</span>
+        {
+<span class="fc" id="L505">            writeStartTag( BLOCK_TAG, &quot;body.h2&quot; );</span>
+<span class="fc" id="L506">            title.append( section ).append( &quot;.&quot; );</span>
+<span class="fc" id="L507">            title.append( subsection ).append( &quot;   &quot; );</span>
+        }
+<span class="fc bfc" id="L509" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_3 )</span>
+        {
+<span class="fc" id="L511">            writeStartTag( BLOCK_TAG, &quot;body.h3&quot; );</span>
+<span class="fc" id="L512">            title.append( section ).append( &quot;.&quot; );</span>
+<span class="fc" id="L513">            title.append( subsection ).append( &quot;.&quot; );</span>
+<span class="fc" id="L514">            title.append( subsubsection ).append( &quot;   &quot; );</span>
+        }
+<span class="fc bfc" id="L516" title="All 2 branches covered.">        else if ( depth == SECTION_LEVEL_4 )</span>
+        {
+<span class="fc" id="L518">            writeStartTag( BLOCK_TAG, &quot;body.h4&quot; );</span>
+        }
+        else
+        {
+<span class="fc" id="L522">            writeStartTag( BLOCK_TAG, &quot;body.h5&quot; );</span>
+        }
+
+<span class="fc" id="L525">        write( title.toString() );</span>
+<span class="fc" id="L526">    }</span>
+
+    /** Ends a section title. */
+    private void onSectionTitle_()
+    {
+<span class="fc" id="L531">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L532">        writeEOL();</span>
+<span class="fc" id="L533">    }</span>
+
+    /** Ends a section/subsection. */
+    private void onSection_()
+    {
+<span class="fc" id="L538">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L539">        writeEOL();</span>
+<span class="fc" id="L540">    }</span>
+
+    /**
+     * Resets the section counter to 0.
+     * Only useful for overriding classes, like AggregateSink, the FoSink puts everything into one chapter.
+     */
+    protected void resetSectionCounter()
+    {
+<span class="fc" id="L548">        this.section = 0;</span>
+<span class="fc" id="L549">    }</span>
+
+    /**
+     * Returns the current chapter number as a string.
+     * By default does nothing, gets overridden by AggregateSink.
+     *
+     * @return an empty String.
+     */
+    protected String getChapterString()
+    {
+<span class="fc" id="L559">        return &quot;&quot;;</span>
+    }
+
+    // -----------------------------------------------------------------------
+    //
+    // -----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void list( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L569">        writeEOL();</span>
+<span class="fc" id="L570">        writeStartTag( LIST_BLOCK_TAG, &quot;list&quot; );</span>
+<span class="fc" id="L571">    }</span>
+
+    /** {@inheritDoc} */
+    public void list()
+    {
+<span class="fc" id="L576">        list( null );</span>
+<span class="fc" id="L577">    }</span>
+
+    /** {@inheritDoc} */
+    public void list_()
+    {
+<span class="fc" id="L582">        writeEndTag( LIST_BLOCK_TAG );</span>
+<span class="fc" id="L583">        writeEOL();</span>
+<span class="fc" id="L584">    }</span>
+
+    /** {@inheritDoc} */
+    public void listItem( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L589">        writeStartTag( LIST_ITEM_TAG, &quot;list.item&quot; );</span>
+<span class="fc" id="L590">        writeStartTag( LIST_ITEM_LABEL_TAG );</span>
+<span class="fc" id="L591">        writeStartTag( BLOCK_TAG );</span>
+<span class="fc" id="L592">        write( &quot;&amp;#8226;&quot; ); // TODO customize?</span>
+<span class="fc" id="L593">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L594">        writeEndTag( LIST_ITEM_LABEL_TAG );</span>
+<span class="fc" id="L595">        writeEOL();</span>
+<span class="fc" id="L596">        writeStartTag( LIST_ITEM_BODY_TAG, &quot;list.item&quot; );</span>
+<span class="fc" id="L597">        writeEOL();</span>
+<span class="fc" id="L598">        writeStartTag( BLOCK_TAG );</span>
+<span class="fc" id="L599">    }</span>
+
+    /** {@inheritDoc} */
+    public void listItem()
+    {
+<span class="fc" id="L604">        listItem( null );</span>
+<span class="fc" id="L605">    }</span>
+
+    /** {@inheritDoc} */
+    public void listItem_()
+    {
+<span class="fc" id="L610">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L611">        writeEOL();</span>
+<span class="fc" id="L612">        writeEndTag( LIST_ITEM_BODY_TAG );</span>
+<span class="fc" id="L613">        writeEOL();</span>
+<span class="fc" id="L614">        writeEndTag( LIST_ITEM_TAG );</span>
+<span class="fc" id="L615">        writeEOL();</span>
+<span class="fc" id="L616">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList( int numbering, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L621">        this.listStack.push( new NumberedListItem( numbering ) );</span>
+<span class="fc" id="L622">        writeEOL();</span>
+<span class="fc" id="L623">        writeStartTag( LIST_BLOCK_TAG, &quot;list&quot; );</span>
+<span class="fc" id="L624">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList( int numbering )
+    {
+<span class="fc" id="L629">        numberedList( numbering, null );</span>
+<span class="fc" id="L630">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList_()
+    {
+<span class="fc" id="L635">        this.listStack.pop();</span>
+<span class="fc" id="L636">        writeEndTag( LIST_BLOCK_TAG );</span>
+<span class="fc" id="L637">        writeEOL();</span>
+<span class="fc" id="L638">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedListItem( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L643">        NumberedListItem current = this.listStack.peek();</span>
+<span class="fc" id="L644">        current.next();</span>
+
+<span class="fc" id="L646">        writeStartTag( LIST_ITEM_TAG, &quot;list.item&quot; );</span>
+
+<span class="fc" id="L648">        writeEOL();</span>
+<span class="fc" id="L649">        writeStartTag( LIST_ITEM_LABEL_TAG );</span>
+<span class="fc" id="L650">        writeEOL();</span>
+<span class="fc" id="L651">        writeStartTag( BLOCK_TAG );</span>
+<span class="fc" id="L652">        write( current.getListItemSymbol() );</span>
+<span class="fc" id="L653">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L654">        writeEOL();</span>
+<span class="fc" id="L655">        writeEndTag( LIST_ITEM_LABEL_TAG );</span>
+<span class="fc" id="L656">        writeEOL();</span>
+
+<span class="fc" id="L658">        writeStartTag( LIST_ITEM_BODY_TAG, &quot;list.item&quot; );</span>
+<span class="fc" id="L659">        writeEOL();</span>
+<span class="fc" id="L660">        writeStartTag( BLOCK_TAG );</span>
+<span class="fc" id="L661">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedListItem()
+    {
+<span class="fc" id="L666">        numberedListItem( null );</span>
+<span class="fc" id="L667">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedListItem_()
+    {
+<span class="fc" id="L672">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L673">        writeEOL();</span>
+<span class="fc" id="L674">        writeEndTag( LIST_ITEM_BODY_TAG );</span>
+<span class="fc" id="L675">        writeEOL();</span>
+<span class="fc" id="L676">        writeEndTag( LIST_ITEM_TAG );</span>
+<span class="fc" id="L677">        writeEOL();</span>
+<span class="fc" id="L678">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionList( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L683">        writeEOL();</span>
+<span class="fc" id="L684">        writeStartTag( BLOCK_TAG, &quot;dl&quot; );</span>
+<span class="fc" id="L685">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionList()
+    {
+<span class="fc" id="L690">        definitionList( null );</span>
+<span class="fc" id="L691">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionList_()
+    {
+<span class="fc" id="L696">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L697">        writeEOL();</span>
+<span class="fc" id="L698">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionListItem( SinkEventAttributes attributes )
+    {
+        // nop
+<span class="fc" id="L704">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionListItem()
+    {
+<span class="fc" id="L709">        definitionListItem( null );</span>
+<span class="fc" id="L710">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionListItem_()
+    {
+        // nop
+<span class="fc" id="L716">    }</span>
+
+    /** {@inheritDoc} */
+    public void definedTerm( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L721">        writeStartTag( BLOCK_TAG, &quot;dt&quot; );</span>
+<span class="fc" id="L722">    }</span>
+
+    /** {@inheritDoc} */
+    public void definedTerm()
+    {
+<span class="fc" id="L727">        definedTerm( null );</span>
+<span class="fc" id="L728">    }</span>
+
+    /** {@inheritDoc} */
+    public void definedTerm_()
+    {
+<span class="fc" id="L733">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L734">        writeEOL();</span>
+<span class="fc" id="L735">    }</span>
+
+    /** {@inheritDoc} */
+    public void definition( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L740">        writeEOL();</span>
+<span class="fc" id="L741">        writeStartTag( BLOCK_TAG, &quot;dd&quot; );</span>
+<span class="fc" id="L742">    }</span>
+
+    /** {@inheritDoc} */
+    public void definition()
+    {
+<span class="fc" id="L747">        definition( null );</span>
+<span class="fc" id="L748">    }</span>
+
+    /** {@inheritDoc} */
+    public void definition_()
+    {
+<span class="fc" id="L753">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L754">        writeEOL();</span>
+<span class="fc" id="L755">    }</span>
+
+    /** {@inheritDoc} */
+    public void figure( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L760">        this.inFigure = true;</span>
+<span class="fc" id="L761">        writeEOL();</span>
+<span class="fc" id="L762">        writeStartTag( BLOCK_TAG, &quot;figure.display&quot; );</span>
+<span class="fc" id="L763">    }</span>
+
+    /** {@inheritDoc} */
+    public void figure()
+    {
+<span class="fc" id="L768">        figure( null );</span>
+<span class="fc" id="L769">    }</span>
+
+    /** {@inheritDoc} */
+    public void figure_()
+    {
+<span class="fc" id="L774">        this.inFigure = false;</span>
+<span class="fc" id="L775">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L776">        writeEOL();</span>
+<span class="fc" id="L777">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureGraphics( String name )
+    {
+<span class="fc" id="L782">        figureGraphics( name, null );</span>
+<span class="fc" id="L783">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureGraphics( String src, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L788">        MutableAttributeSet atts = config.getAttributeSet( &quot;figure.graphics&quot; );</span>
+<span class="fc" id="L789">        atts.addAttribute( Attribute.SRC.toString(), escapeHTML( src ) );</span>
+
+        // https://xmlgraphics.apache.org/fop/trunk/graphics.html#resolution
+
+<span class="fc" id="L793">        final String[] valids = new String[] {&quot;content-height&quot;, &quot;content-width&quot;, &quot;height&quot;, &quot;width&quot;};</span>
+<span class="fc" id="L794">        final MutableAttributeSet filtered = SinkUtils.filterAttributes( attributes, valids );</span>
+
+<span class="pc bpc" id="L796" title="1 of 2 branches missed.">        if ( filtered != null )</span>
+        {
+<span class="nc" id="L798">            atts.addAttributes( filtered );</span>
+        }
+
+<span class="fc" id="L801">        writeln( &quot;&lt;fo:external-graphic&quot; + SinkUtils.getAttributeString( atts ) + &quot;/&gt;&quot; );</span>
+<span class="fc" id="L802">    }</span>
+
+    /**
+     * Flags if we are inside a figure.
+     *
+     * @return True if we are between {@link #figure()} and {@link #figure_()} calls.
+     */
+    protected boolean isFigure()
+    {
+<span class="nc" id="L811">        return this.inFigure;</span>
+    }
+
+    /** {@inheritDoc} */
+    public void figureCaption( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L817">        writeStartTag( BLOCK_TAG, &quot;figure.caption&quot; );</span>
+<span class="fc" id="L818">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureCaption()
+    {
+<span class="fc" id="L823">        figureCaption( null );</span>
+<span class="fc" id="L824">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureCaption_()
+    {
+<span class="fc" id="L829">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L830">        writeEOL();</span>
+<span class="fc" id="L831">    }</span>
+
+    /** {@inheritDoc} */
+    public void paragraph()
+    {
+<span class="fc" id="L836">        paragraph( null );</span>
+<span class="fc" id="L837">    }</span>
+
+    /** {@inheritDoc} */
+    public void paragraph( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L842">        MutableAttributeSet atts = config.getAttributeSet( &quot;normal.paragraph&quot; );</span>
+
+<span class="pc bpc" id="L844" title="1 of 4 branches missed.">        if ( attributes != null &amp;&amp; attributes.isDefined( SinkEventAttributes.ALIGN ) )</span>
+        {
+<span class="fc" id="L846">            atts.addAttribute( &quot;text-align&quot;, attributes.getAttribute( SinkEventAttributes.ALIGN ) );</span>
+        }
+
+<span class="fc" id="L849">        writeEOL();</span>
+<span class="fc" id="L850">        writeStartTag( BLOCK_TAG, atts );</span>
+<span class="fc" id="L851">    }</span>
+
+    /** {@inheritDoc} */
+    public void paragraph_()
+    {
+<span class="fc" id="L856">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L857">        writeEOL();</span>
+<span class="fc" id="L858">    }</span>
+
+    /** {@inheritDoc} */
+    public void verbatim( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L863">        this.verbatim = true;</span>
+
+<span class="fc" id="L865">        boolean boxed = false;</span>
+
+<span class="pc bpc" id="L867" title="2 of 4 branches missed.">        if ( attributes != null &amp;&amp; attributes.isDefined( SinkEventAttributes.DECORATION ) )</span>
+        {
+<span class="fc" id="L869">            boxed =</span>
+<span class="fc" id="L870">                &quot;boxed&quot;.equals( attributes.getAttribute( SinkEventAttributes.DECORATION ).toString() );</span>
+        }
+
+<span class="pc bpc" id="L873" title="1 of 2 branches missed.">        if ( boxed )</span>
+        {
+<span class="fc" id="L875">            writeStartTag( BLOCK_TAG, &quot;body.source&quot; );</span>
+        }
+        else
+        {
+<span class="nc" id="L879">            writeStartTag( BLOCK_TAG, &quot;body.pre&quot; );</span>
+        }
+<span class="fc" id="L881">    }</span>
+
+    /** {@inheritDoc} */
+    public void verbatim( boolean boxed )
+    {
+<span class="nc bnc" id="L886" title="All 2 branches missed.">        verbatim( boxed ? SinkEventAttributeSet.BOXED : null );</span>
+<span class="nc" id="L887">    }</span>
+
+    /** {@inheritDoc} */
+    public void verbatim_()
+    {
+<span class="fc" id="L892">        this.verbatim = false;</span>
+<span class="fc" id="L893">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L894">        writeEOL();</span>
+<span class="fc" id="L895">    }</span>
+
+    /** {@inheritDoc} */
+    public void horizontalRule( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L900">        writeEOL();</span>
+<span class="fc" id="L901">        writeEOL();</span>
+<span class="fc" id="L902">        writeStartTag( BLOCK_TAG );</span>
+<span class="fc" id="L903">        writeEmptyTag( LEADER_TAG, &quot;body.rule&quot; );</span>
+<span class="fc" id="L904">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L905">        writeEOL();</span>
+<span class="fc" id="L906">    }</span>
+
+    /** {@inheritDoc} */
+    public void horizontalRule()
+    {
+<span class="fc" id="L911">        horizontalRule( null );</span>
+<span class="fc" id="L912">    }</span>
+
+    /** {@inheritDoc} */
+    public void pageBreak()
+    {
+<span class="fc" id="L917">        writeEmptyTag( BLOCK_TAG, &quot;break-before&quot;, &quot;page&quot; );</span>
+<span class="fc" id="L918">        writeEOL();</span>
+<span class="fc" id="L919">    }</span>
+
+    /** {@inheritDoc} */
+    public void table( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L924">        writeEOL();</span>
+<span class="fc" id="L925">        writeStartTag( BLOCK_TAG, &quot;table.padding&quot; );</span>
+
+        // &lt;fo:table-and-caption&gt; is XSL-FO 1.0 standard but still not implemented in FOP 0.95
+        //writeStartTag( TABLE_AND_CAPTION_TAG );
+
+<span class="fc" id="L930">        this.tableContentWriterStack.addLast( new StringWriter() );</span>
+<span class="fc" id="L931">        writeStartTag( TABLE_TAG, &quot;table.layout&quot; );</span>
+<span class="fc" id="L932">    }</span>
+
+    /** {@inheritDoc} */
+    public void table()
+    {
+<span class="fc" id="L937">        table( null );</span>
+<span class="fc" id="L938">    }</span>
+
+    /** {@inheritDoc} */
+    public void table_()
+    {
+<span class="fc" id="L943">        String content = this.tableContentWriterStack.removeLast().toString();</span>
+
+<span class="fc" id="L945">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L946">        int cellCount = Integer.parseInt( this.cellCountStack.removeLast().toString() );</span>
+<span class="fc bfc" id="L947" title="All 2 branches covered.">        for ( int i = 0; i &lt; cellCount; i++ )</span>
+        {
+<span class="fc" id="L949">            sb.append( &quot;&lt;fo:table-column column-width=\&quot;proportional-column-width(1)\&quot;/&gt;&quot; );</span>
+<span class="fc" id="L950">            sb.append( EOL );</span>
+        }
+
+<span class="fc" id="L953">        int index = content.indexOf( &quot;&gt;&quot; ) + 1;</span>
+<span class="fc" id="L954">        writeln( content.substring( 0, index ) );</span>
+<span class="fc" id="L955">        write( sb.toString() );</span>
+<span class="fc" id="L956">        write( content.substring( index ) );</span>
+
+<span class="fc" id="L958">        writeEndTag( TABLE_TAG );</span>
+<span class="fc" id="L959">        writeEOL();</span>
+
+        // &lt;fo:table-and-caption&gt; is XSL-FO 1.0 standard but still not implemented in FOP 0.95
+        //writeEndTag( TABLE_AND_CAPTION_TAG );
+
+<span class="fc" id="L964">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L965">        writeEOL();</span>
+
+<span class="pc bpc" id="L967" title="1 of 4 branches missed.">        if ( !this.tableCaptionStack.isEmpty() &amp;&amp; this.tableCaptionStack.getLast() != null )</span>
+        {
+<span class="fc" id="L969">            paragraph( SinkEventAttributeSet.CENTER );</span>
+<span class="fc" id="L970">            write( this.tableCaptionStack.removeLast() );</span>
+<span class="fc" id="L971">            paragraph_();</span>
+        }
+<span class="fc" id="L973">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRows( int[] justification, boolean grid )
+    {
+<span class="fc" id="L978">        this.tableGridStack.addLast( grid );</span>
+<span class="fc" id="L979">        this.cellJustifStack.addLast( justification );</span>
+<span class="fc" id="L980">        this.isCellJustifStack.addLast( Boolean.TRUE );</span>
+<span class="fc" id="L981">        this.cellCountStack.addLast( 0 );</span>
+<span class="fc" id="L982">        writeEOL();</span>
+<span class="fc" id="L983">        writeStartTag( TABLE_BODY_TAG );</span>
+<span class="fc" id="L984">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRows_()
+    {
+<span class="fc" id="L989">        this.tableGridStack.removeLast();</span>
+<span class="fc" id="L990">        this.cellJustifStack.removeLast();</span>
+<span class="fc" id="L991">        this.isCellJustifStack.removeLast();</span>
+<span class="fc" id="L992">        writeEndTag( TABLE_BODY_TAG );</span>
+<span class="fc" id="L993">        writeEOL();</span>
+<span class="fc" id="L994">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRow( SinkEventAttributes attributes )
+    {
+        // TODO spacer rows
+<span class="fc" id="L1000">        writeStartTag( TABLE_ROW_TAG, &quot;table.body.row&quot; );</span>
+<span class="fc" id="L1001">        this.cellCountStack.removeLast();</span>
+<span class="fc" id="L1002">        this.cellCountStack.addLast( 0 );</span>
+<span class="fc" id="L1003">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRow()
+    {
+<span class="fc" id="L1008">        tableRow( null );</span>
+<span class="fc" id="L1009">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRow_()
+    {
+<span class="fc" id="L1014">        writeEndTag( TABLE_ROW_TAG );</span>
+<span class="fc" id="L1015">        writeEOL();</span>
+<span class="fc" id="L1016">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1021">        tableCell( false, attributes );</span>
+<span class="fc" id="L1022">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell()
+    {
+<span class="fc" id="L1027">        tableCell( (SinkEventAttributes) null );</span>
+<span class="fc" id="L1028">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell( String width )
+    {
+        // TODO: fop can't handle cell width
+<span class="nc" id="L1034">        tableCell();</span>
+<span class="nc" id="L1035">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1040">        tableCell( true, attributes );</span>
+<span class="fc" id="L1041">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell()
+    {
+<span class="fc" id="L1046">        tableHeaderCell( (SinkEventAttributes) null );</span>
+<span class="fc" id="L1047">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell( String width )
+    {
+        // TODO: fop can't handle cell width
+<span class="nc" id="L1053">        tableHeaderCell();</span>
+<span class="nc" id="L1054">    }</span>
+
+    /**
+     * Writes a table cell.
+     *
+     * @param headerRow true if this is a header cell.
+     * @param attributes the cell attributes, could be null.
+     */
+    private void tableCell( boolean headerRow, SinkEventAttributes attributes )
+    {
+<span class="fc bfc" id="L1064" title="All 2 branches covered.">        MutableAttributeSet cellAtts = headerRow</span>
+<span class="fc" id="L1065">                 ? config.getAttributeSet( &quot;table.heading.cell&quot; )</span>
+<span class="fc" id="L1066">                 : config.getAttributeSet( &quot;table.body.cell&quot; );</span>
+
+        // the column-number is needed for the hack to center the table, see tableRows.
+<span class="fc" id="L1069">        int cellCount = Integer.parseInt( this.cellCountStack.getLast().toString() );</span>
+<span class="fc" id="L1070">        cellAtts.addAttribute( &quot;column-number&quot;, String.valueOf( cellCount + 1 ) );</span>
+
+<span class="fc bfc" id="L1072" title="All 2 branches covered.">        if ( this.tableGridStack.getLast().equals( Boolean.TRUE ) )</span>
+        {
+<span class="fc" id="L1074">            cellAtts.addAttributes( config.getAttributeSet( &quot;table.body.cell.grid&quot; ) );</span>
+        }
+
+<span class="fc bfc" id="L1077" title="All 2 branches covered.">        MutableAttributeSet blockAtts = headerRow</span>
+<span class="fc" id="L1078">                 ? config.getAttributeSet( &quot;table.heading.block&quot; )</span>
+<span class="fc" id="L1079">                 : config.getAttributeSet( &quot;table.body.block&quot; );</span>
+
+<span class="fc" id="L1081">        String justif = null;</span>
+<span class="fc bfc" id="L1082" title="All 2 branches covered.">        if ( attributes == null )</span>
+        {
+<span class="fc" id="L1084">            attributes = new SinkEventAttributeSet( 0 );</span>
+        }
+
+<span class="pc bpc" id="L1087" title="1 of 2 branches missed.">        if ( attributes.isDefined( Attribute.ALIGN.toString() ) )</span>
+        {
+<span class="nc" id="L1089">            justif = attributes.getAttribute( Attribute.ALIGN.toString() ).toString();</span>
+        }
+
+<span class="fc" id="L1092">        int[] cellJustif = this.cellJustifStack.getLast();</span>
+<span class="pc bpc" id="L1093" title="3 of 6 branches missed.">        if ( justif == null &amp;&amp; cellJustif != null &amp;&amp; cellJustif.length &gt; 0</span>
+<span class="pc bpc" id="L1094" title="1 of 2 branches missed.">            &amp;&amp; this.isCellJustifStack.getLast().equals( Boolean.TRUE ) )</span>
+        {
+<span class="fc bfc" id="L1096" title="All 3 branches covered.">            switch ( cellJustif[Math.min( cellCount, cellJustif.length - 1 )] )</span>
+            {
+                case JUSTIFY_LEFT:
+<span class="fc" id="L1099">                    justif = &quot;left&quot;;</span>
+<span class="fc" id="L1100">                    break;</span>
+                case JUSTIFY_RIGHT:
+<span class="fc" id="L1102">                    justif = &quot;right&quot;;</span>
+<span class="fc" id="L1103">                    break;</span>
+                case JUSTIFY_CENTER:
+                default:
+<span class="fc" id="L1106">                    justif = &quot;center&quot;;</span>
+            }
+        }
+
+<span class="pc bpc" id="L1110" title="1 of 2 branches missed.">        if ( justif != null )</span>
+        {
+<span class="fc" id="L1112">            blockAtts.addAttribute( &quot;text-align&quot;, justif );</span>
+        }
+
+<span class="fc" id="L1115">        writeStartTag( TABLE_CELL_TAG, cellAtts );</span>
+<span class="fc" id="L1116">        writeEOL();</span>
+<span class="fc" id="L1117">        writeStartTag( BLOCK_TAG, blockAtts );</span>
+<span class="fc" id="L1118">        writeEOL();</span>
+<span class="fc" id="L1119">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell_()
+    {
+<span class="fc" id="L1124">        writeEndTag( BLOCK_TAG );</span>
+<span class="fc" id="L1125">        writeEOL();</span>
+<span class="fc" id="L1126">        writeEndTag( TABLE_CELL_TAG );</span>
+<span class="fc" id="L1127">        writeEOL();</span>
+
+<span class="pc bpc" id="L1129" title="1 of 2 branches missed.">        if ( this.isCellJustifStack.getLast().equals( Boolean.TRUE ) )</span>
+        {
+<span class="fc" id="L1131">            int cellCount = Integer.parseInt( this.cellCountStack.removeLast().toString() );</span>
+<span class="fc" id="L1132">            this.cellCountStack.addLast( ++cellCount );</span>
+        }
+<span class="fc" id="L1134">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell_()
+    {
+<span class="fc" id="L1139">        tableCell_();</span>
+<span class="fc" id="L1140">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCaption( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1145">        StringWriter sw = new StringWriter();</span>
+<span class="fc" id="L1146">        this.tableCaptionWriterStack.addLast( sw );</span>
+<span class="fc" id="L1147">        this.tableCaptionXMLWriterStack.addLast( new PrettyPrintXMLWriter( sw ) );</span>
+
+        // &lt;fo:table-caption&gt; is XSL-FO 1.0 standard but not implemented in FOP 0.95
+        //writeStartTag( TABLE_CAPTION_TAG );
+
+        // TODO: how to implement this otherwise?
+        // table-footer doesn't work because it has to be declared before table-body.
+<span class="fc" id="L1154">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCaption()
+    {
+<span class="fc" id="L1159">        tableCaption( null );</span>
+<span class="fc" id="L1160">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCaption_()
+    {
+<span class="pc bpc" id="L1165" title="2 of 4 branches missed.">        if ( !this.tableCaptionXMLWriterStack.isEmpty() &amp;&amp; this.tableCaptionXMLWriterStack.getLast() != null )</span>
+        {
+<span class="fc" id="L1167">            this.tableCaptionStack.addLast( this.tableCaptionWriterStack.removeLast().toString() );</span>
+<span class="fc" id="L1168">            this.tableCaptionXMLWriterStack.removeLast();</span>
+        }
+        // &lt;fo:table-caption&gt; is XSL-FO 1.0 standard but not implemented in FOP 0.95
+        //writeEndTag( TABLE_CAPTION_TAG );
+<span class="fc" id="L1172">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor( String name, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L1177" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L1179">            throw new NullPointerException( &quot;Anchor name cannot be null!&quot; );</span>
+        }
+
+<span class="fc" id="L1182">        String anchor = name;</span>
+
+<span class="pc bpc" id="L1184" title="1 of 2 branches missed.">        if ( !DoxiaUtils.isValidId( anchor ) )</span>
+        {
+<span class="nc" id="L1186">            anchor = DoxiaUtils.encodeId( name, true );</span>
+
+<span class="nc" id="L1188">            String msg = &quot;Modified invalid anchor name: '&quot; + name + &quot;' to '&quot; + anchor + &quot;'&quot;;</span>
+<span class="nc" id="L1189">            logMessage( &quot;modifiedLink&quot;, msg );</span>
+        }
+
+<span class="fc" id="L1192">        anchor = &quot;#&quot; + name;</span>
+
+<span class="fc" id="L1194">        writeStartTag( INLINE_TAG, &quot;id&quot;, anchor );</span>
+<span class="fc" id="L1195">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor( String name )
+    {
+<span class="fc" id="L1200">        anchor( name, null );</span>
+<span class="fc" id="L1201">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor_()
+    {
+<span class="fc" id="L1206">        writeEndTag( INLINE_TAG );</span>
+<span class="fc" id="L1207">    }</span>
+
+    /** {@inheritDoc} */
+    public void link( String name, SinkEventAttributes attributes )
+    {
+<span class="pc bpc" id="L1212" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L1214">            throw new NullPointerException( &quot;Link name cannot be null!&quot; );</span>
+        }
+
+<span class="fc bfc" id="L1217" title="All 2 branches covered.">        if ( DoxiaUtils.isExternalLink( name ) )</span>
+        {
+<span class="fc" id="L1219">            writeStartTag( BASIC_LINK_TAG, &quot;external-destination&quot;, HtmlTools.escapeHTML( name ) );</span>
+<span class="fc" id="L1220">            writeStartTag( INLINE_TAG, &quot;href.external&quot; );</span>
+        }
+<span class="pc bpc" id="L1222" title="1 of 2 branches missed.">        else if ( DoxiaUtils.isInternalLink( name ) )</span>
+        {
+<span class="fc" id="L1224">            String anchor = name.substring( 1 );</span>
+
+<span class="pc bpc" id="L1226" title="1 of 2 branches missed.">            if ( !DoxiaUtils.isValidId( anchor ) )</span>
+            {
+<span class="nc" id="L1228">                anchor = DoxiaUtils.encodeId( anchor, true );</span>
+
+<span class="nc" id="L1230">                String msg = &quot;Modified invalid anchor name: '&quot; + name + &quot;' to '&quot; + anchor + &quot;'&quot;;</span>
+<span class="nc" id="L1231">                logMessage( &quot;modifiedLink&quot;, msg );</span>
+            }
+
+<span class="fc" id="L1234">            anchor = &quot;#&quot; + anchor;</span>
+
+<span class="fc" id="L1236">            writeStartTag( BASIC_LINK_TAG, &quot;internal-destination&quot;, HtmlTools.escapeHTML( anchor ) );</span>
+<span class="fc" id="L1237">            writeStartTag( INLINE_TAG, &quot;href.internal&quot; );</span>
+<span class="fc" id="L1238">        }</span>
+        else
+        {
+            // treat everything else as is
+<span class="nc" id="L1242">            writeStartTag( BASIC_LINK_TAG, &quot;internal-destination&quot;, HtmlTools.escapeHTML( name ) );</span>
+<span class="nc" id="L1243">            writeStartTag( INLINE_TAG, &quot;href.internal&quot; );</span>
+        }
+<span class="fc" id="L1245">    }</span>
+
+    /** {@inheritDoc} */
+    public void link( String name )
+    {
+<span class="fc" id="L1250">        link( name, null );</span>
+<span class="fc" id="L1251">    }</span>
+
+    /** {@inheritDoc} */
+    public void link_()
+    {
+<span class="fc" id="L1256">        writeEndTag( INLINE_TAG );</span>
+<span class="fc" id="L1257">        writeEndTag( BASIC_LINK_TAG );</span>
+<span class="fc" id="L1258">    }</span>
+
+    /** {@inheritDoc} */
+    public void inline()
+    {
+<span class="fc" id="L1263">        inline( null );</span>
+<span class="fc" id="L1264">    }</span>
+
+    /** {@inheritDoc} */
+    public void inline( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1269">        List&lt;Tag&gt; tags = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L1271" title="All 2 branches covered.">        if ( attributes != null )</span>
+        {
+
+<span class="fc bfc" id="L1274" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;italic&quot; ) )</span>
+            {
+<span class="fc" id="L1276">                writeStartTag( INLINE_TAG, &quot;italic&quot; );</span>
+<span class="fc" id="L1277">                tags.add( 0, INLINE_TAG );</span>
+            }
+
+<span class="fc bfc" id="L1280" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;bold&quot; ) )</span>
+            {
+<span class="fc" id="L1282">                writeStartTag( INLINE_TAG, &quot;bold&quot; );</span>
+<span class="fc" id="L1283">                tags.add( 0, INLINE_TAG );</span>
+            }
+
+<span class="fc bfc" id="L1286" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;code&quot; ) )</span>
+            {
+<span class="fc" id="L1288">                writeStartTag( INLINE_TAG, &quot;monospace&quot; );</span>
+<span class="fc" id="L1289">                tags.add( 0, INLINE_TAG );</span>
+            }
+
+        }
+
+<span class="fc" id="L1294">        inlineStack.push( tags );</span>
+<span class="fc" id="L1295">    }</span>
+
+    /** {@inheritDoc} */
+    public void inline_()
+    {
+<span class="fc bfc" id="L1300" title="All 2 branches covered.">        for ( Tag tag: inlineStack.pop() )</span>
+        {
+<span class="fc" id="L1302">            writeEndTag( tag );</span>
+<span class="fc" id="L1303">        }</span>
+<span class="fc" id="L1304">    }</span>
+
+    /** {@inheritDoc} */
+    public void italic()
+    {
+<span class="nc" id="L1309">        inline( SinkEventAttributeSet.Semantics.ITALIC );</span>
+<span class="nc" id="L1310">    }</span>
+
+    /** {@inheritDoc} */
+    public void italic_()
+    {
+<span class="nc" id="L1315">        inline_();</span>
+<span class="nc" id="L1316">    }</span>
+
+    /** {@inheritDoc} */
+    public void bold()
+    {
+<span class="nc" id="L1321">        inline( SinkEventAttributeSet.Semantics.BOLD );</span>
+<span class="nc" id="L1322">    }</span>
+
+    /** {@inheritDoc} */
+    public void bold_()
+    {
+<span class="nc" id="L1327">        inline_();</span>
+<span class="nc" id="L1328">    }</span>
+
+    /** {@inheritDoc} */
+    public void monospaced()
+    {
+<span class="nc" id="L1333">        inline( SinkEventAttributeSet.Semantics.CODE );</span>
+<span class="nc" id="L1334">    }</span>
+
+    /** {@inheritDoc} */
+    public void monospaced_()
+    {
+<span class="nc" id="L1339">        inline_();</span>
+<span class="nc" id="L1340">    }</span>
+
+    /** {@inheritDoc} */
+    public void lineBreak( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1345">        writeEOL();</span>
+<span class="fc" id="L1346">        writeEOL();</span>
+<span class="fc" id="L1347">        writeSimpleTag( BLOCK_TAG );</span>
+<span class="fc" id="L1348">    }</span>
+
+    /** {@inheritDoc} */
+    public void lineBreak()
+    {
+<span class="fc" id="L1353">        lineBreak( null );</span>
+<span class="fc" id="L1354">    }</span>
+
+    /** {@inheritDoc} */
+    public void nonBreakingSpace()
+    {
+<span class="fc" id="L1359">        write( &quot;&amp;#160;&quot; );</span>
+<span class="fc" id="L1360">    }</span>
+
+    /** {@inheritDoc} */
+    public void text( String text, SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1365">        content( text );</span>
+<span class="fc" id="L1366">    }</span>
+
+    /** {@inheritDoc} */
+    public void text( String text )
+    {
+<span class="fc" id="L1371">        text( text, null );</span>
+<span class="fc" id="L1372">    }</span>
+
+    /** {@inheritDoc} */
+    public void rawText( String text )
+    {
+<span class="fc" id="L1377">        write( text );</span>
+<span class="fc" id="L1378">    }</span>
+
+    /** {@inheritDoc} */
+    public void flush()
+    {
+<span class="fc" id="L1383">        out.flush();</span>
+<span class="fc" id="L1384">    }</span>
+
+    /** {@inheritDoc} */
+    public void close()
+    {
+<span class="fc" id="L1389">        out.close();</span>
+
+<span class="pc bpc" id="L1391" title="1 of 4 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null )</span>
+        {
+<span class="fc bfc" id="L1393" title="All 2 branches covered.">            for ( Map.Entry&lt;String, Set&lt;String&gt;&gt; entry : this.warnMessages.entrySet() )</span>
+            {
+<span class="fc bfc" id="L1395" title="All 2 branches covered.">                for ( String msg : entry.getValue() )</span>
+                {
+<span class="fc" id="L1397">                    getLog().warn( msg );</span>
+<span class="fc" id="L1398">                }</span>
+<span class="fc" id="L1399">            }</span>
+
+<span class="fc" id="L1401">            this.warnMessages = null;</span>
+        }
+
+<span class="fc" id="L1404">        init();</span>
+<span class="fc" id="L1405">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Unkown events just log a warning message but are ignored otherwise.
+     * @see org.apache.maven.doxia.sink.Sink#unknown(String,Object[],SinkEventAttributes)
+     */
+    public void unknown( String name, Object[] requiredParams, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L1415">        String msg = &quot;Unknown Sink event: '&quot; + name + &quot;', ignoring!&quot;;</span>
+<span class="nc" id="L1416">        logMessage( &quot;unknownEvent&quot;, msg );</span>
+<span class="nc" id="L1417">    }</span>
+
+    /** {@inheritDoc} */
+    public void comment( String comment )
+    {
+<span class="pc bpc" id="L1422" title="1 of 2 branches missed.">        if ( comment != null )</span>
+        {
+<span class="fc" id="L1424">            final String originalComment = comment;</span>
+
+            // http://www.w3.org/TR/2000/REC-xml-20001006#sec-comments
+<span class="fc bfc" id="L1427" title="All 2 branches covered.">            while ( comment.contains( &quot;--&quot; ) )</span>
+            {
+<span class="fc" id="L1429">                comment = comment.replace( &quot;--&quot;, &quot;- -&quot; );</span>
+            }
+
+<span class="fc bfc" id="L1432" title="All 2 branches covered.">            if ( comment.endsWith( &quot;-&quot; ) )</span>
+            {
+<span class="fc" id="L1434">                comment += &quot; &quot;;</span>
+            }
+
+<span class="fc bfc" id="L1437" title="All 2 branches covered.">            if ( !originalComment.equals( comment ) )</span>
+            {
+<span class="fc" id="L1439">                String msg = &quot;Modified invalid comment: '&quot; + originalComment + &quot;' to '&quot; + comment + &quot;'&quot;;</span>
+<span class="fc" id="L1440">                logMessage( &quot;modifyComment&quot;, msg );</span>
+            }
+
+<span class="fc" id="L1443">            final StringBuilder buffer = new StringBuilder( comment.length() + 7 );</span>
+
+<span class="fc" id="L1445">            buffer.append( LESS_THAN ).append( BANG ).append( MINUS ).append( MINUS );</span>
+<span class="fc" id="L1446">            buffer.append( comment );</span>
+<span class="fc" id="L1447">            buffer.append( MINUS ).append( MINUS ).append( GREATER_THAN );</span>
+
+<span class="fc" id="L1449">            write( buffer.toString() );</span>
+        }
+<span class="fc" id="L1451">    }</span>
+
+    /**
+     * Writes the beginning of a FO document.
+     */
+    public void beginDocument()
+    {
+<span class="fc" id="L1458">        write( &quot;&lt;?xml version=\&quot;1.0\&quot;&quot; );</span>
+<span class="pc bpc" id="L1459" title="1 of 2 branches missed.">        if ( encoding != null )</span>
+        {
+<span class="fc" id="L1461">            write( &quot; encoding=\&quot;&quot; + encoding + &quot;\&quot;&quot; );</span>
+        }
+<span class="fc" id="L1463">        write( &quot;?&gt;&quot; );</span>
+<span class="fc" id="L1464">        writeEOL();</span>
+
+<span class="fc" id="L1466">        MutableAttributeSet atts = new SinkEventAttributeSet();</span>
+<span class="fc" id="L1467">        atts.addAttribute( &quot;xmlns:&quot; + getNameSpace(), FO_NAMESPACE );</span>
+
+<span class="pc bpc" id="L1469" title="1 of 2 branches missed.">        if ( languageId != null )</span>
+        {
+<span class="nc" id="L1471">            atts.addAttribute( &quot;language&quot;, languageId );</span>
+        }
+
+<span class="fc" id="L1474">        writeStartTag( ROOT_TAG, atts );</span>
+
+<span class="fc" id="L1476">        writeStartTag( LAYOUT_MASTER_SET_TAG );</span>
+
+<span class="fc" id="L1478">        writeStartTag( SIMPLE_PAGE_MASTER_TAG, &quot;layout.master.set.cover-page&quot; );</span>
+<span class="fc" id="L1479">        writeEmptyTag( REGION_BODY_TAG, &quot;layout.master.set.cover-page.region-body&quot; );</span>
+<span class="fc" id="L1480">        writeEndTag( SIMPLE_PAGE_MASTER_TAG );</span>
+<span class="fc" id="L1481">        writeEOL();</span>
+
+<span class="fc" id="L1483">        writeStartTag( SIMPLE_PAGE_MASTER_TAG, &quot;layout.master.set.toc&quot; );</span>
+<span class="fc" id="L1484">        writeEmptyTag( REGION_BODY_TAG, &quot;layout.master.set.toc.region-body&quot; );</span>
+<span class="fc" id="L1485">        writeEmptyTag( REGION_BEFORE_TAG, &quot;layout.master.set.toc.region-before&quot; );</span>
+<span class="fc" id="L1486">        writeEmptyTag( REGION_AFTER_TAG, &quot;layout.master.set.toc.region-after&quot; );</span>
+<span class="fc" id="L1487">        writeEndTag( SIMPLE_PAGE_MASTER_TAG );</span>
+<span class="fc" id="L1488">        writeEOL();</span>
+
+<span class="fc" id="L1490">        writeStartTag( SIMPLE_PAGE_MASTER_TAG, &quot;layout.master.set.body&quot; );</span>
+<span class="fc" id="L1491">        writeEmptyTag( REGION_BODY_TAG, &quot;layout.master.set.body.region-body&quot; );</span>
+<span class="fc" id="L1492">        writeEmptyTag( REGION_BEFORE_TAG, &quot;layout.master.set.body.region-before&quot; );</span>
+<span class="fc" id="L1493">        writeEmptyTag( REGION_AFTER_TAG, &quot;layout.master.set.body.region-after&quot; );</span>
+<span class="fc" id="L1494">        writeEndTag( SIMPLE_PAGE_MASTER_TAG );</span>
+<span class="fc" id="L1495">        writeEOL();</span>
+
+<span class="fc" id="L1497">        writeEndTag( LAYOUT_MASTER_SET_TAG );</span>
+<span class="fc" id="L1498">        writeEOL();</span>
+
+<span class="fc" id="L1500">        pdfBookmarks();</span>
+<span class="fc" id="L1501">    }</span>
+
+    /**
+     * Writes the end of a FO document, flushes and closes the stream.
+     */
+    public void endDocument()
+    {
+<span class="fc" id="L1508">        writeEndTag( ROOT_TAG );</span>
+<span class="fc" id="L1509">        writeEOL();</span>
+
+<span class="fc" id="L1511">        flush();</span>
+<span class="fc" id="L1512">        close();</span>
+<span class="fc" id="L1513">    }</span>
+
+    // ----------------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------------
+
+    /**
+     * Returns the configuration object of this sink.
+     *
+     * @return The configuration object of this sink.
+     */
+    protected FoConfiguration getFoConfiguration()
+    {
+<span class="fc" id="L1526">        return config;</span>
+    }
+
+    /**
+     * Writes a start tag, prepending EOL.
+     *
+     * @param tag The tag.
+     * @param attributeId An id identifying the attribute set.
+     */
+    protected void writeStartTag( Tag tag, String attributeId )
+    {
+<span class="fc" id="L1537">        writeEOL();</span>
+<span class="fc" id="L1538">        writeStartTag( tag, config.getAttributeSet( attributeId ) );</span>
+<span class="fc" id="L1539">    }</span>
+
+    /**
+     * Writes a start tag, prepending EOL.
+     *
+     * @param tag The tag.
+     * @param id An id to add.
+     * @param name The name (value) of the id.
+     */
+    protected void writeStartTag( Tag tag, String id, String name )
+    {
+<span class="fc" id="L1550">        writeEOL();</span>
+<span class="fc" id="L1551">        MutableAttributeSet att = new SinkEventAttributeSet( id, name );</span>
+
+<span class="fc" id="L1553">        writeStartTag( tag, att );</span>
+<span class="fc" id="L1554">    }</span>
+
+    /**
+     * Writes a start tag, prepending EOL.
+     *
+     * @param tag The tag.
+     * @param id An id to add.
+     * @param name The name (value) of the id.
+     * @param attributeId An id identifying the attribute set.
+     */
+    protected void writeStartTag( Tag tag, String id, String name, String attributeId )
+    {
+<span class="fc" id="L1566">        MutableAttributeSet att = config.getAttributeSet( attributeId );</span>
+
+        // make sure we don't add it twice
+<span class="pc bpc" id="L1569" title="1 of 2 branches missed.">        if ( att.isDefined( id ) )</span>
+        {
+<span class="nc" id="L1571">            att.removeAttribute( id );</span>
+        }
+
+<span class="fc" id="L1574">        att.addAttribute( id, name );</span>
+
+<span class="fc" id="L1576">        writeEOL();</span>
+<span class="fc" id="L1577">        writeStartTag( tag, att );</span>
+<span class="fc" id="L1578">    }</span>
+
+    /**
+     * Writes an empty tag, prepending EOL.
+     *
+     * @param tag The tag.
+     * @param id An id to add.
+     * @param name The name (value) of the id.
+     */
+    protected void writeEmptyTag( Tag tag, String id, String name )
+    {
+<span class="fc" id="L1589">        MutableAttributeSet att = new SinkEventAttributeSet( id, name );</span>
+
+<span class="fc" id="L1591">        writeEOL();</span>
+<span class="fc" id="L1592">        writeSimpleTag( tag, att );</span>
+<span class="fc" id="L1593">    }</span>
+
+    /**
+     * Writes a simple tag, appending EOL.
+     *
+     * @param tag The tag name.
+     * @param attributeId An id identifying the attribute set.
+     */
+    protected void writeEmptyTag( Tag tag, String attributeId )
+    {
+<span class="fc" id="L1603">        writeEOL();</span>
+<span class="fc" id="L1604">        writeSimpleTag( tag, config.getAttributeSet( attributeId ) );</span>
+<span class="fc" id="L1605">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Writes a text, swallowing any exceptions.
+     */
+    protected void write( String text )
+    {
+<span class="pc bpc" id="L1614" title="1 of 4 branches missed.">        if ( !this.tableCaptionXMLWriterStack.isEmpty() &amp;&amp; this.tableCaptionXMLWriterStack.getLast() != null )</span>
+        {
+<span class="fc" id="L1616">            this.tableCaptionXMLWriterStack.getLast().writeText( unifyEOLs( text ) );</span>
+        }
+<span class="pc bpc" id="L1618" title="1 of 4 branches missed.">        else if ( !this.tableContentWriterStack.isEmpty() &amp;&amp; this.tableContentWriterStack.getLast() != null )</span>
+        {
+<span class="fc" id="L1620">            this.tableContentWriterStack.getLast().write( unifyEOLs( text ) );</span>
+        }
+        else
+        {
+<span class="fc" id="L1624">            out.write( unifyEOLs( text ) );</span>
+        }
+<span class="fc" id="L1626">    }</span>
+
+    /**
+     * Writes a text, appending EOL.
+     *
+     * @param text The text to write.
+     */
+    protected void writeln( String text )
+    {
+<span class="fc" id="L1635">        write( text );</span>
+<span class="fc" id="L1636">        writeEOL();</span>
+<span class="fc" id="L1637">    }</span>
+
+    /**
+     * Writes content, escaping special characters.
+     *
+     * @param text The text to write.
+     */
+    protected void content( String text )
+    {
+<span class="fc" id="L1646">        write( escaped( text, verbatim ) );</span>
+<span class="fc" id="L1647">    }</span>
+
+    /**
+     * Escapes special characters so that the text can be included in a fo file.
+     *
+     * @param text The text to process.
+     * @param verb In verbatim mode, white space and newlines are escaped.
+     * @return The text with special characters escaped.
+     */
+    public static String escaped( String text, boolean verb )
+    {
+<span class="fc" id="L1658">        int length = text.length();</span>
+<span class="fc" id="L1659">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L1661" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L1663">            char c = text.charAt( i );</span>
+<span class="fc bfc" id="L1664" title="All 6 branches covered.">            switch ( c )</span>
+            {
+                case ' ':
+<span class="fc bfc" id="L1667" title="All 2 branches covered.">                    if ( verb )</span>
+                    {
+<span class="fc" id="L1669">                        buffer.append( &quot;&amp;#160;&quot; );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L1673">                        buffer.append( c );</span>
+                    }
+<span class="fc" id="L1675">                    break;</span>
+                case '&lt;':
+<span class="fc" id="L1677">                    buffer.append( &quot;&amp;lt;&quot; );</span>
+<span class="fc" id="L1678">                    break;</span>
+                case '&gt;':
+<span class="fc" id="L1680">                    buffer.append( &quot;&amp;gt;&quot; );</span>
+<span class="fc" id="L1681">                    break;</span>
+                case '&amp;':
+<span class="fc" id="L1683">                    buffer.append( &quot;&amp;amp;&quot; );</span>
+<span class="fc" id="L1684">                    break;</span>
+                case '\n':
+<span class="fc" id="L1686">                    buffer.append( EOL );</span>
+<span class="fc bfc" id="L1687" title="All 2 branches covered.">                    if ( verb )</span>
+                    {
+<span class="fc" id="L1689">                        buffer.append( &quot;&lt;fo:block/&gt;&quot; ).append( EOL );</span>
+                    }
+                    break;
+                default:
+<span class="pc bpc" id="L1693" title="1 of 2 branches missed.">                    if ( needsSymbolFont( c ) )</span>
+                    {
+                        // TODO: make font configurable?
+<span class="nc" id="L1696">                        buffer.append( &quot;&lt;fo:inline font-family=\&quot;Symbol\&quot;&gt;&quot; ).append( c ).append( &quot;&lt;/fo:inline&gt;&quot; );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L1700">                        buffer.append( c );</span>
+                    }
+            }
+        }
+
+<span class="fc" id="L1705">        return buffer.toString();</span>
+    }
+
+    /** {@inheritDoc} */
+    protected void writeStartTag( Tag t, MutableAttributeSet att, boolean isSimpleTag )
+    {
+<span class="pc bpc" id="L1711" title="1 of 2 branches missed.">        if ( this.tableCaptionXMLWriterStack.isEmpty() )</span>
+        {
+<span class="fc" id="L1713">            super.writeStartTag ( t, att, isSimpleTag );</span>
+        }
+        else
+        {
+<span class="nc bnc" id="L1717" title="All 2 branches missed.">            String tag = ( getNameSpace() != null ? getNameSpace() + &quot;:&quot; : &quot;&quot; ) + t.toString();</span>
+<span class="nc" id="L1718">            this.tableCaptionXMLWriterStack.getLast().startElement( tag );</span>
+
+<span class="nc bnc" id="L1720" title="All 2 branches missed.">            if ( att != null )</span>
+            {
+<span class="nc" id="L1722">                Enumeration&lt;?&gt; names = att.getAttributeNames();</span>
+<span class="nc bnc" id="L1723" title="All 2 branches missed.">                while ( names.hasMoreElements() )</span>
+                {
+<span class="nc" id="L1725">                    Object key = names.nextElement();</span>
+<span class="nc" id="L1726">                    Object value = att.getAttribute( key );</span>
+
+<span class="nc" id="L1728">                    this.tableCaptionXMLWriterStack.getLast().addAttribute( key.toString(), value.toString() );</span>
+<span class="nc" id="L1729">                }</span>
+            }
+
+<span class="nc bnc" id="L1732" title="All 2 branches missed.">            if ( isSimpleTag )</span>
+            {
+<span class="nc" id="L1734">                this.tableCaptionXMLWriterStack.getLast().endElement();</span>
+            }
+        }
+<span class="fc" id="L1737">    }</span>
+
+    /** {@inheritDoc} */
+    protected void writeEndTag( Tag t )
+    {
+<span class="pc bpc" id="L1742" title="1 of 2 branches missed.">        if ( this.tableCaptionXMLWriterStack.isEmpty() )</span>
+        {
+<span class="fc" id="L1744">            super.writeEndTag( t );</span>
+        }
+        else
+        {
+<span class="nc" id="L1748">            this.tableCaptionXMLWriterStack.getLast().endElement();</span>
+        }
+<span class="fc" id="L1750">    }</span>
+
+    private static final char UPPER_ALPHA = 0x391;
+    private static final char PIV = 0x3d6;
+    private static final char OLINE = 0x203e;
+    private static final char DIAMS = 0x2666;
+    private static final char EURO = 0x20ac;
+    private static final char TRADE = 0x2122;
+    private static final char PRIME = 0x2032;
+    private static final char PPRIME = 0x2033;
+
+    private static boolean needsSymbolFont( char c )
+    {
+        // greek characters and mathematical symbols, except the euro and trade symbols
+        // symbols I couldn't get to display in any font:
+        // zwnj (0x200C), zwj (0x200D), lrm (0x200E), rlm (0x200F), oline (0x203E),
+        // lceil (0x2038), rceil (0x2039), lfloor (0x203A), rfloor (0x203B)
+<span class="pc bpc" id="L1767" title="12 of 16 branches missed.">        return ( c &gt;= UPPER_ALPHA &amp;&amp; c &lt;= PIV )</span>
+                || ( c == PRIME || c == PPRIME )
+                || ( c &gt;= OLINE &amp;&amp; c &lt;= DIAMS &amp;&amp; c != EURO &amp;&amp; c != TRADE );
+    }
+
+    /**
+     * Starts a page sequence.
+     *
+     * @param initPageNumber The initial page number. Should be either &quot;0&quot; (for the first page) or &quot;auto&quot;.
+     * @param headerText The text to write in the header, if null, nothing is written.
+     * @param footerText The text to write in the footer, if null, nothing is written.
+     */
+    protected void startPageSequence( String initPageNumber, String headerText, String footerText )
+    {
+<span class="fc" id="L1781">        writeln( &quot;&lt;fo:page-sequence initial-page-number=\&quot;&quot; + initPageNumber + &quot;\&quot; master-reference=\&quot;body\&quot;&gt;&quot; );</span>
+<span class="fc" id="L1782">        regionBefore( headerText );</span>
+<span class="fc" id="L1783">        regionAfter( footerText );</span>
+<span class="fc" id="L1784">        writeln( &quot;&lt;fo:flow flow-name=\&quot;xsl-region-body\&quot;&gt;&quot; );</span>
+<span class="fc" id="L1785">        chapterHeading( null, true );</span>
+<span class="fc" id="L1786">    }</span>
+
+    /**
+     * Writes a 'xsl-region-before' block.
+     *
+     * @param headerText The text to write in the header, if null, nothing is written.
+     */
+    protected void regionBefore( String headerText )
+    {
+        // do nothing, overridden by AggregateSink
+<span class="fc" id="L1796">    }</span>
+
+    /**
+     * Writes a 'xsl-region-after' block. By default does nothing, gets overridden by AggregateSink.
+     *
+     * @param footerText The text to write in the footer, if null, nothing is written.
+     */
+    protected void regionAfter( String footerText )
+    {
+        // do nothing, overridden by AggregateSink
+<span class="fc" id="L1806">    }</span>
+
+    /**
+     * Writes a chapter heading. By default does nothing, gets overridden by AggregateSink.
+     *
+     * @param headerText The text to write in the header, if null, the current document title is written.
+     * @param chapterNumber True if the chapter number should be written in front of the text.
+     */
+    protected void chapterHeading( String headerText, boolean chapterNumber )
+    {
+        // do nothing, overridden by AggregateSink
+<span class="fc" id="L1817">    }</span>
+
+    /**
+     * Writes a fo:bookmark-tree. By default does nothing, gets overridden by AggregateSink.
+     */
+    protected void pdfBookmarks()
+    {
+        // do nothing, overridden by AggregateSink
+<span class="fc" id="L1825">    }</span>
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #close()
+     * @since 1.1.1
+     */
+    protected void logMessage( String key, String msg )
+    {
+<span class="fc" id="L1837">        msg = &quot;[FO Sink] &quot; + msg;</span>
+<span class="pc bpc" id="L1838" title="1 of 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L1840">            getLog().debug( msg );</span>
+
+<span class="nc" id="L1842">            return;</span>
+        }
+
+<span class="pc bpc" id="L1845" title="1 of 2 branches missed.">        if ( warnMessages == null )</span>
+        {
+<span class="fc" id="L1847">            warnMessages = new HashMap&lt;&gt;();</span>
+        }
+
+<span class="fc" id="L1850">        Set&lt;String&gt; set = warnMessages.get( key );</span>
+<span class="pc bpc" id="L1851" title="1 of 2 branches missed.">        if ( set == null )</span>
+        {
+<span class="fc" id="L1853">            set = new TreeSet&lt;&gt;();</span>
+        }
+<span class="fc" id="L1855">        set.add( msg );</span>
+<span class="fc" id="L1856">        warnMessages.put( key, set );</span>
+<span class="fc" id="L1857">    }</span>
+
+    /** {@inheritDoc} */
+    protected void init()
+    {
+<span class="fc" id="L1862">        super.init();</span>
+
+<span class="fc" id="L1864">        this.listStack.clear();</span>
+<span class="fc" id="L1865">        this.tableGridStack.clear();</span>
+<span class="fc" id="L1866">        this.cellJustifStack.clear();</span>
+<span class="fc" id="L1867">        this.isCellJustifStack.clear();</span>
+<span class="fc" id="L1868">        this.cellCountStack.clear();</span>
+<span class="fc" id="L1869">        this.tableContentWriterStack.clear();</span>
+<span class="fc" id="L1870">        this.tableCaptionWriterStack.clear();</span>
+<span class="fc" id="L1871">        this.tableCaptionXMLWriterStack.clear();</span>
+<span class="fc" id="L1872">        this.tableCaptionStack.clear();</span>
+
+<span class="fc" id="L1874">        this.section = 0;</span>
+<span class="fc" id="L1875">        this.subsection = 0;</span>
+<span class="fc" id="L1876">        this.subsubsection = 0;</span>
+<span class="fc" id="L1877">        this.verbatim = false;</span>
+<span class="fc" id="L1878">        this.inFigure = false;</span>
+<span class="fc" id="L1879">        this.warnMessages = null;</span>
+<span class="fc" id="L1880">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

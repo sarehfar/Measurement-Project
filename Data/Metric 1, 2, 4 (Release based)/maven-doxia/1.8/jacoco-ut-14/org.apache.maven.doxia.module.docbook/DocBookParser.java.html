@@ -1,0 +1,1101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocBookParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Simplified DocBook Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.docbook</a> &gt; <span class="el_source">DocBookParser.java</span></div><h1>DocBookParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.docbook;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Stack;
+
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.markup.HtmlMarkup;
+import org.apache.maven.doxia.parser.AbstractXmlParser;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.util.xml.pull.XmlPullParser;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
+/**
+ * Parse a &lt;a href=&quot;http://www.docbook.org/schemas/simplified&quot;&gt;&lt;code&gt;Simplified DocBook&lt;/code&gt;&lt;/a&gt; document
+ * and emit events into the specified doxia Sink.
+ *
+ * @author &lt;a href=&quot;mailto:jason@maven.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+@Component( role = Parser.class, hint = &quot;docbook&quot; )
+<span class="fc" id="L46">public class DocBookParser</span>
+    extends AbstractXmlParser
+    implements DocbookMarkup, SimplifiedDocbookMarkup
+{
+    /**
+     * Level counter for calculating the section level.
+     */
+    private int level;
+
+    /**
+     * Used to distinguish italic from bold.
+     */
+    private boolean isBold;
+
+    private boolean inHead;
+
+    private boolean ignore;
+
+    private boolean simpleTag;
+
+    private char trademark;
+
+    /**
+     * A selective stack of parent elements
+     */
+<span class="fc" id="L71">    private final Stack&lt;String&gt; parent = new Stack&lt;String&gt;();</span>
+
+    /**
+     * The list of DocBook elements that introduce a new level of hierarchy.
+     */
+<span class="fc" id="L76">    private static final Collection&lt;String&gt; HIER_ELEMENTS = new HashSet&lt;String&gt;();</span>
+
+    /**
+     * Simplified DocBook elements that are direct children of &amp;lt;article&amp;gt;
+     * and that should be emitted into the Sink's head.
+     */
+<span class="fc" id="L82">    private static final Collection&lt;String&gt; META_ELEMENTS = new HashSet&lt;String&gt;();</span>
+
+    /**
+     * Simplified DocBook elements that occur within &amp;lt;articleinfo&amp;gt;
+     * and that are currently recognized by the parser.
+     */
+<span class="fc" id="L88">    private static final Collection&lt;String&gt; ARTICLEINFO_ELEMENTS = new HashSet&lt;String&gt;();</span>
+
+    /**
+     * The list of DocBook elements that will be rendered verbatim
+     */
+<span class="fc" id="L93">    private static final Collection&lt;String&gt; VERBATIM_ELEMENTS = new HashSet&lt;String&gt;();</span>
+
+    /**
+     * The list of DocBook elements that will be rendered inline and bold
+     */
+<span class="fc" id="L98">    private static final Collection&lt;String&gt; BOLD_ELEMENTS = new HashSet&lt;String&gt;();</span>
+
+    /**
+     * The list of DocBook elements that will be rendered inline and italic
+     */
+<span class="fc" id="L103">    private static final Collection&lt;String&gt; ITALIC_ELEMENTS = new HashSet&lt;String&gt;();</span>
+
+    /**
+     * The list of DocBook elements that will be rendered inline and monospace
+     */
+<span class="fc" id="L108">    private static final Collection&lt;String&gt; MONOSPACE_ELEMENTS = new HashSet&lt;String&gt;();</span>
+
+    /**
+     * The list of DocBook elements that may be ignored, either because they don't
+     * require any special processing or because they are not yet implemented.
+     */
+<span class="fc" id="L114">    private static final Collection&lt;String&gt; IGNORABLE_ELEMENTS = new HashSet&lt;String&gt;();</span>
+    static
+    {
+<span class="fc" id="L117">        META_ELEMENTS.add( SimplifiedDocbookMarkup.ARTICLEINFO_TAG.toString() );</span>
+<span class="fc" id="L118">        META_ELEMENTS.add( SimplifiedDocbookMarkup.AUTHORBLURB_TAG.toString() );</span>
+<span class="fc" id="L119">        META_ELEMENTS.add( SimplifiedDocbookMarkup.SUBTITLE_TAG.toString() );</span>
+<span class="fc" id="L120">        META_ELEMENTS.add( SimplifiedDocbookMarkup.TITLE_TAG.toString() );</span>
+<span class="fc" id="L121">        META_ELEMENTS.add( SimplifiedDocbookMarkup.TITLEABBREV_TAG.toString() );</span>
+
+<span class="fc" id="L123">        ARTICLEINFO_ELEMENTS.add( SimplifiedDocbookMarkup.TITLE_TAG.toString() );</span>
+<span class="fc" id="L124">        ARTICLEINFO_ELEMENTS.add( SimplifiedDocbookMarkup.CORPAUTHOR_TAG.toString() );</span>
+<span class="fc" id="L125">        ARTICLEINFO_ELEMENTS.add( SimplifiedDocbookMarkup.DATE_TAG.toString() );</span>
+
+<span class="fc" id="L127">        HIER_ELEMENTS.add( SimplifiedDocbookMarkup.SECTION_TAG.toString() );</span>
+<span class="fc" id="L128">        HIER_ELEMENTS.add( SimplifiedDocbookMarkup.APPENDIX_TAG.toString() );</span>
+<span class="fc" id="L129">        HIER_ELEMENTS.add( SimplifiedDocbookMarkup.BIBLIOGRAPHY_TAG.toString() );</span>
+<span class="fc" id="L130">        HIER_ELEMENTS.add( SimplifiedDocbookMarkup.BIBLIODIV_TAG.toString() );</span>
+
+<span class="fc" id="L132">        VERBATIM_ELEMENTS.add( SimplifiedDocbookMarkup.PROGRAMLISTING_TAG.toString() );</span>
+<span class="fc" id="L133">        VERBATIM_ELEMENTS.add( SimplifiedDocbookMarkup.LITERALLAYOUT_TAG.toString() );</span>
+
+<span class="fc" id="L135">        BOLD_ELEMENTS.add( SimplifiedDocbookMarkup.COMMAND_TAG.toString() );</span>
+<span class="fc" id="L136">        BOLD_ELEMENTS.add( SimplifiedDocbookMarkup.USERINPUT_TAG.toString() );</span>
+
+<span class="fc" id="L138">        ITALIC_ELEMENTS.add( SimplifiedDocbookMarkup.REPLACEABLE_TAG.toString() );</span>
+<span class="fc" id="L139">        ITALIC_ELEMENTS.add( SimplifiedDocbookMarkup.SYSTEMITEM_TAG.toString() );</span>
+<span class="fc" id="L140">        ITALIC_ELEMENTS.add( SimplifiedDocbookMarkup.CITETITLE_TAG.toString() );</span>
+<span class="fc" id="L141">        ITALIC_ELEMENTS.add( SimplifiedDocbookMarkup.EMPHASIS_TAG.toString() );</span>
+<span class="fc" id="L142">        ITALIC_ELEMENTS.add( SimplifiedDocbookMarkup.ATTRIBUTION_TAG.toString() );</span>
+<span class="fc" id="L143">        ITALIC_ELEMENTS.add( SimplifiedDocbookMarkup.LINEANNOTATION_TAG.toString() );</span>
+
+<span class="fc" id="L145">        MONOSPACE_ELEMENTS.add( SimplifiedDocbookMarkup.COMPUTEROUTPUT_TAG.toString() );</span>
+<span class="fc" id="L146">        MONOSPACE_ELEMENTS.add( SimplifiedDocbookMarkup.REPLACEABLE_TAG.toString() );</span>
+<span class="fc" id="L147">        MONOSPACE_ELEMENTS.add( SimplifiedDocbookMarkup.LITERAL_TAG.toString() );</span>
+<span class="fc" id="L148">        MONOSPACE_ELEMENTS.add( SimplifiedDocbookMarkup.OPTION_TAG.toString() );</span>
+<span class="fc" id="L149">        MONOSPACE_ELEMENTS.add( SimplifiedDocbookMarkup.SYSTEMITEM_TAG.toString() );</span>
+<span class="fc" id="L150">        MONOSPACE_ELEMENTS.add( SimplifiedDocbookMarkup.USERINPUT_TAG.toString() );</span>
+<span class="fc" id="L151">        MONOSPACE_ELEMENTS.add( SimplifiedDocbookMarkup.FILENAME_TAG.toString() );</span>
+
+<span class="fc" id="L153">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.ABBREV_TAG.toString() );</span>
+<span class="fc" id="L154">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.ABSTRACT_TAG.toString() );</span>
+<span class="fc" id="L155">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.BIBLIOMIXED_TAG.toString() );</span>
+<span class="fc" id="L156">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.BIBLIOMSET_TAG.toString() );</span>
+<span class="fc" id="L157">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.COLSPEC_TAG.toString() );</span>
+<span class="fc" id="L158">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.EPIGRAPH_TAG.toString() );</span>
+<span class="fc" id="L159">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.EXAMPLE_TAG.toString() );</span>
+<span class="fc" id="L160">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.FOOTNOTEREF_TAG.toString() );</span>
+<span class="fc" id="L161">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.IMAGEOBJECT_TAG.toString() );</span>
+<span class="fc" id="L162">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.INLINEMEDIAOBJECT_TAG.toString() );</span>
+<span class="fc" id="L163">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.ISSUENUM_TAG.toString() );</span>
+<span class="fc" id="L164">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.PHRASE_TAG.toString() );</span>
+<span class="fc" id="L165">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.PUBDATE_TAG.toString() );</span>
+<span class="fc" id="L166">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.PUBLISHERNAME_TAG.toString() );</span>
+<span class="fc" id="L167">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.SPANSPEC_TAG.toString() );</span>
+<span class="fc" id="L168">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.TEXTOBJECT_TAG.toString() );</span>
+<span class="fc" id="L169">        IGNORABLE_ELEMENTS.add( SimplifiedDocbookMarkup.VOLUMENUM_TAG.toString() );</span>
+<span class="fc" id="L170">    }</span>
+
+    /** {@inheritDoc} */
+    protected void init()
+    {
+<span class="fc" id="L175">        super.init();</span>
+
+<span class="fc" id="L177">        this.parent.clear();</span>
+<span class="fc" id="L178">        this.trademark = 0;</span>
+<span class="fc" id="L179">        this.level = 0;</span>
+<span class="fc" id="L180">        this.isBold = false;</span>
+<span class="fc" id="L181">        this.inHead = false;</span>
+<span class="fc" id="L182">        this.ignore = false;</span>
+<span class="fc" id="L183">        this.simpleTag = false;</span>
+<span class="fc" id="L184">    }</span>
+
+    // ----------------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    protected void handleStartTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L194" title="All 4 branches covered.">        if ( inHead &amp;&amp; !META_ELEMENTS.contains( parser.getName() )</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">                &amp;&amp; isParent( SimplifiedDocbookMarkup.ARTICLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L197">            sink.head_();</span>
+<span class="fc" id="L198">            inHead = false;</span>
+
+            // assume any element that is not meta starts the body
+<span class="fc" id="L201">            sink.body();</span>
+        }
+
+<span class="fc" id="L204">        final SinkEventAttributeSet attribs = getAttributesFromParser( parser );</span>
+<span class="fc" id="L205">        simpleTag = parser.isEmptyElementTag();</span>
+
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if ( parser.getName().equals( SimplifiedDocbookMarkup.ARTICLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L209">            handleArticleStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        else if ( isParent( SimplifiedDocbookMarkup.ARTICLEINFO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L213">            handleArticleInfoStartTags( parser.getName(), sink, attribs );</span>
+        }
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.ARTICLEINFO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L217">            parent.push( SimplifiedDocbookMarkup.ARTICLEINFO_TAG.toString() );</span>
+        }
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.FOOTNOTE_TAG.toString() )</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.SECTIONINFO_TAG.toString() )</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.VIDEOOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.AUDIOOBJECT_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L224">            parent.push( parser.getName() );</span>
+<span class="fc" id="L225">            ignore = true;</span>
+        }
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        else if ( isParent( ( SimplifiedDocbookMarkup.FOOTNOTE_TAG.toString() ) )</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.AUDIOOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.VIDEOOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.SECTIONINFO_TAG.toString() )</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.ENTRYTBL_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L233">            return; // TODO: implement footnotes, entrytbl</span>
+        }
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        else if ( HIER_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc" id="L237">            handleSectionElements( sink, parser.getName(), attribs );</span>
+        }
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        else if ( listStartTags ( parser.getName(), sink, attribs ) )</span>
+        {
+<span class="fc" id="L241">            return;</span>
+        }
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        else if ( mediaStartTag( parser.getName(), sink, attribs ) )</span>
+        {
+<span class="fc" id="L245">            return;</span>
+        }
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        else if ( tableStartTags( parser.getName(), sink, attribs ) )</span>
+        {
+<span class="fc" id="L249">            return;</span>
+        }
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.PARA_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L253">            handleParaStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        else if ( styleStartTags( parser.getName(), sink, attribs ) )</span>
+        {
+<span class="fc" id="L257">            return;</span>
+        }
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TITLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L261">            handleTitleStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.EMAIL_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L265">            handleEmailStart( parser, sink, attribs );</span>
+        }
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        else if ( linkStartTag( parser.getName(), sink, attribs ) )</span>
+        {
+<span class="fc" id="L269">            return;</span>
+        }
+<span class="fc bfc" id="L271" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.QUOTE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L273">            sink.text( &quot;\&quot;&quot;, null );</span>
+        }
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TRADEMARK_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L277">            trademark = '\u2122';</span>
+<span class="fc" id="L278">            final Object trade = attribs.getAttribute( &quot;class&quot; );</span>
+
+<span class="fc bfc" id="L280" title="All 2 branches covered.">            if ( trade != null )</span>
+            {
+<span class="fc" id="L282">                trademark = DocbookUtils.trademarkFromClass( trade.toString() );</span>
+            }
+<span class="fc" id="L284">        }</span>
+        else
+        {
+<span class="fc bfc" id="L287" title="All 2 branches covered.">            if ( !ignorable( parser.getName() ) )</span>
+            {
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">                if ( simpleTag )</span>
+                {
+<span class="nc" id="L291">                    handleUnknown( parser, sink, HtmlMarkup.TAG_TYPE_SIMPLE );</span>
+                }
+                else
+                {
+<span class="fc" id="L295">                    handleUnknown( parser, sink, HtmlMarkup.TAG_TYPE_START );</span>
+                }
+            }
+        }
+<span class="fc" id="L299">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleEndTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L305" title="All 2 branches covered.">        if ( parser.getName().equals( SimplifiedDocbookMarkup.ARTICLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L307">            sink.body_();</span>
+        }
+<span class="fc bfc" id="L309" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.ARTICLEINFO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L311">            parent.pop();</span>
+        }
+<span class="fc bfc" id="L313" title="All 2 branches covered.">        else if ( isParent( SimplifiedDocbookMarkup.ARTICLEINFO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L315">             handleArticleInfoEndTags( parser.getName(), sink );</span>
+        }
+<span class="fc bfc" id="L317" title="All 2 branches covered.">        else if ( HIER_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc" id="L319">            sink.section_( level );</span>
+
+            //decrease the nesting level
+<span class="fc" id="L322">            level--;</span>
+<span class="fc" id="L323">            parent.pop();</span>
+        }
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.FOOTNOTE_TAG.toString() )</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.AUDIOOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.VIDEOOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.SECTIONINFO_TAG.toString() )</span>
+<span class="fc bfc" id="L329" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.ENTRYTBL_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L331">            parent.pop();</span>
+<span class="fc" id="L332">            ignore = false;</span>
+        }
+<span class="fc bfc" id="L334" title="All 2 branches covered.">        else if ( isParent( ( SimplifiedDocbookMarkup.FOOTNOTE_TAG.toString() ) )</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.AUDIOOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.VIDEOOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.SECTIONINFO_TAG.toString() )</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">                || isParent( SimplifiedDocbookMarkup.ENTRYTBL_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L340">            return;</span>
+        }
+<span class="fc bfc" id="L342" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.ITEMIZEDLIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L344">            sink.list_();</span>
+<span class="fc" id="L345">            parent.pop();</span>
+        }
+<span class="fc bfc" id="L347" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.ORDEREDLIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L349">            sink.numberedList_();</span>
+<span class="fc" id="L350">            parent.pop();</span>
+        }
+<span class="fc bfc" id="L352" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.LISTITEM_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L354">            parent.pop();</span>
+
+<span class="fc bfc" id="L356" title="All 2 branches covered.">            if ( isParent( SimplifiedDocbookMarkup.VARIABLELIST_TAG.toString() ) )</span>
+            {
+<span class="fc" id="L358">                sink.definition_();</span>
+            }
+<span class="fc bfc" id="L360" title="All 2 branches covered.">            else if ( isParent( SimplifiedDocbookMarkup.ORDEREDLIST_TAG.toString() ) )</span>
+            {
+<span class="fc" id="L362">                sink.numberedListItem_();</span>
+            }
+            else
+            {
+<span class="fc" id="L366">                sink.listItem_();</span>
+            }
+        }
+<span class="fc bfc" id="L369" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.VARIABLELIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L371">            sink.definitionList_();</span>
+        }
+<span class="fc bfc" id="L373" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.VARLISTENTRY_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L375">            sink.definitionListItem_();</span>
+        }
+<span class="fc bfc" id="L377" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TERM_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L379">            sink.definedTerm_();</span>
+        }
+<span class="fc bfc" id="L381" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L383">            sink.figure_();</span>
+<span class="fc" id="L384">            parent.pop();</span>
+        }
+<span class="fc bfc" id="L386" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.IMAGEOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.FIGURE_TAG.toString() )</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.THEAD_TAG.toString() )</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.TFOOT_TAG.toString() )</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.TBODY_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L392">            parent.pop();</span>
+        }
+<span class="fc bfc" id="L394" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.CAPTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L396">            handleCaptionEnd( sink );</span>
+        }
+<span class="fc bfc" id="L398" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TABLE_TAG.toString() )</span>
+<span class="fc bfc" id="L399" title="All 2 branches covered.">            || parser.getName().equals( SimplifiedDocbookMarkup.INFORMALTABLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L401">            sink.table_();</span>
+
+<span class="fc" id="L403">            parent.pop();</span>
+        }
+<span class="pc bpc" id="L405" title="1 of 2 branches missed.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TR_TAG.toString() )</span>
+<span class="fc bfc" id="L406" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.ROW_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L408">            sink.tableRow_();</span>
+        }
+<span class="fc bfc" id="L410" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TGROUP_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L412">            sink.tableRows_();</span>
+        }
+<span class="fc bfc" id="L414" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.ENTRY_TAG.toString() )</span>
+<span class="fc bfc" id="L415" title="All 2 branches covered.">                &amp;&amp; isParent( SimplifiedDocbookMarkup.THEAD_TAG.toString() )</span>
+<span class="pc bpc" id="L416" title="1 of 2 branches missed.">            || parser.getName().equals( TH_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L418">            sink.tableHeaderCell_();</span>
+        }
+<span class="fc bfc" id="L420" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.ENTRY_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L422">            sink.tableCell_();</span>
+        }
+<span class="fc bfc" id="L424" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.PARA_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L426">            handleParaEnd( sink );</span>
+        }
+<span class="fc bfc" id="L428" title="All 2 branches covered.">        else if ( VERBATIM_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc" id="L430">            sink.verbatim_();</span>
+        }
+<span class="fc bfc" id="L432" title="All 2 branches covered.">        else if ( BOLD_ELEMENTS.contains( parser.getName() )</span>
+<span class="fc bfc" id="L433" title="All 2 branches covered.">            &amp;&amp; MONOSPACE_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc" id="L435">            sink.monospaced_();</span>
+<span class="fc" id="L436">            sink.bold_();</span>
+        }
+<span class="fc bfc" id="L438" title="All 2 branches covered.">        else if ( ITALIC_ELEMENTS.contains( parser.getName() )</span>
+<span class="fc bfc" id="L439" title="All 2 branches covered.">            &amp;&amp; MONOSPACE_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc" id="L441">            sink.monospaced_();</span>
+<span class="fc" id="L442">            sink.italic_();</span>
+        }
+<span class="fc bfc" id="L444" title="All 2 branches covered.">        else if ( BOLD_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc" id="L446">            sink.bold_();</span>
+        }
+<span class="fc bfc" id="L448" title="All 2 branches covered.">        else if ( ITALIC_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc bfc" id="L450" title="All 2 branches covered.">            if ( isBold )</span>
+            {
+<span class="fc" id="L452">                sink.bold_();</span>
+
+<span class="fc" id="L454">                isBold = false;</span>
+            }
+            else
+            {
+<span class="fc" id="L458">                sink.italic_();</span>
+            }
+        }
+<span class="fc bfc" id="L461" title="All 2 branches covered.">        else if ( MONOSPACE_ELEMENTS.contains( parser.getName() ) )</span>
+        {
+<span class="fc" id="L463">            sink.monospaced_();</span>
+        }
+<span class="fc bfc" id="L465" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TITLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L467">            handleTitleEnd( sink );</span>
+        }
+<span class="fc bfc" id="L469" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.ULINK_TAG.toString() )</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">                || parser.getName().equals( SimplifiedDocbookMarkup.LINK_TAG.toString() ) )</span>
+        {
+<span class="pc bpc" id="L472" title="1 of 2 branches missed.">            if ( isParent( parser.getName() ) )</span>
+            {
+<span class="fc" id="L474">                parent.pop();</span>
+<span class="fc" id="L475">                sink.link_();</span>
+            }
+        }
+<span class="fc bfc" id="L478" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.QUOTE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L480">            sink.text( &quot;\&quot;&quot;, null );</span>
+        }
+<span class="fc bfc" id="L482" title="All 2 branches covered.">        else if ( parser.getName().equals( SimplifiedDocbookMarkup.TRADEMARK_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L484">            sink.text( Character.toString( trademark ), null );</span>
+        }
+<span class="fc bfc" id="L486" title="All 4 branches covered.">        else if ( !simpleTag &amp;&amp; !ignorable( parser.getName() ) )</span>
+        {
+<span class="fc" id="L488">            handleUnknown( parser, sink, HtmlMarkup.TAG_TYPE_END );</span>
+        }
+<span class="fc" id="L490">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleComment( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L496">        final String text = parser.getText();</span>
+
+<span class="fc bfc" id="L498" title="All 2 branches covered.">        if ( &quot;PB&quot;.equals( text.trim() ) )</span>
+        {
+<span class="fc" id="L500">            sink.pageBreak();</span>
+        }
+<span class="fc bfc" id="L502" title="All 2 branches covered.">        else if ( &quot;HR&quot;.equals( text.trim() ) )</span>
+        {
+<span class="fc" id="L504">            sink.horizontalRule();</span>
+        }
+<span class="fc bfc" id="L506" title="All 2 branches covered.">        else if ( &quot;LB&quot;.equals( text.trim() ) )</span>
+        {
+<span class="fc" id="L508">            sink.lineBreak();</span>
+        }
+<span class="fc bfc" id="L510" title="All 2 branches covered.">        else if ( &quot;anchor_end&quot;.equals( text.trim() ) )</span>
+        {
+<span class="fc" id="L512">            sink.anchor_();</span>
+        }
+        else
+        {
+<span class="pc bpc" id="L516" title="1 of 2 branches missed.">            if ( isEmitComments() )</span>
+            {
+<span class="fc" id="L518">                sink.comment( text );</span>
+            }
+        }
+<span class="fc" id="L521">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleCdsect( XmlPullParser parser, Sink sink )
+            throws XmlPullParserException
+    {
+<span class="nc bnc" id="L527" title="All 2 branches missed.">        if ( !ignore )</span>
+        {
+<span class="nc" id="L529">            super.handleCdsect( parser, sink );</span>
+        }
+<span class="nc" id="L531">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleEntity( XmlPullParser parser, Sink sink )
+            throws XmlPullParserException
+    {
+<span class="pc bpc" id="L537" title="1 of 2 branches missed.">        if ( !ignore )</span>
+        {
+<span class="fc" id="L539">            super.handleEntity( parser, sink );</span>
+        }
+<span class="fc" id="L541">    }</span>
+
+    /** {@inheritDoc} */
+    protected void handleText( XmlPullParser parser, Sink sink )
+            throws XmlPullParserException
+    {
+<span class="fc bfc" id="L547" title="All 2 branches covered.">        if ( !ignore )</span>
+        {
+<span class="fc" id="L549">            super.handleText( parser, sink );</span>
+        }
+<span class="fc" id="L551">    }</span>
+
+    // ----------------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------------
+
+    private void handleArticleInfoStartTags( String name, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L559" title="All 2 branches covered.">        if ( !ARTICLEINFO_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L561">            ignore = true;</span>
+<span class="fc" id="L562">            return; // TODO: other meta data are ignored, implement!</span>
+        }
+
+<span class="fc bfc" id="L565" title="All 2 branches covered.">        if ( name.equals( SimplifiedDocbookMarkup.TITLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L567">            sink.title( attribs );</span>
+        }
+<span class="fc bfc" id="L569" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.CORPAUTHOR_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L571">            sink.author( attribs );</span>
+        }
+<span class="pc bpc" id="L573" title="1 of 2 branches missed.">        else if ( name.equals( SimplifiedDocbookMarkup.DATE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L575">            sink.date( attribs );</span>
+        }
+<span class="fc" id="L577">    }</span>
+
+    private void handleArticleInfoEndTags( String name, Sink sink )
+    {
+<span class="fc bfc" id="L581" title="All 2 branches covered.">        if ( !ARTICLEINFO_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L583">            ignore = false;</span>
+<span class="fc" id="L584">            return; // TODO: other meta data are ignored, implement!</span>
+        }
+
+<span class="fc bfc" id="L587" title="All 2 branches covered.">        if ( name.equals( SimplifiedDocbookMarkup.TITLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L589">            sink.title_();</span>
+        }
+<span class="fc bfc" id="L591" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.CORPAUTHOR_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L593">            sink.author_();</span>
+        }
+<span class="pc bpc" id="L595" title="1 of 2 branches missed.">        else if ( name.equals( SimplifiedDocbookMarkup.DATE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L597">            sink.date_();</span>
+        }
+<span class="fc" id="L599">    }</span>
+
+    private void handleCaptionStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="pc bpc" id="L603" title="1 of 2 branches missed.">        if ( isParent( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L605">            sink.figureCaption( attribs );</span>
+        }
+<span class="nc bnc" id="L607" title="All 2 branches missed.">        else if ( isParent( SimplifiedDocbookMarkup.INFORMALTABLE_TAG.toString() )</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">            || isParent( SimplifiedDocbookMarkup.TABLE_TAG.toString() ) )</span>
+        {
+<span class="nc" id="L610">            sink.tableCaption( attribs );</span>
+        }
+
+<span class="fc" id="L613">        parent.push( SimplifiedDocbookMarkup.CAPTION_TAG.toString() );</span>
+<span class="fc" id="L614">    }</span>
+
+    private void handleCaptionEnd( Sink sink )
+    {
+<span class="fc" id="L618">        parent.pop();</span>
+
+<span class="pc bpc" id="L620" title="1 of 2 branches missed.">        if ( isParent( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L622">            sink.figureCaption_();</span>
+        }
+<span class="nc bnc" id="L624" title="All 2 branches missed.">        else if ( isParent( SimplifiedDocbookMarkup.INFORMALTABLE_TAG.toString() )</span>
+<span class="nc bnc" id="L625" title="All 2 branches missed.">            || isParent( SimplifiedDocbookMarkup.TABLE_TAG.toString() ) )</span>
+        {
+<span class="nc" id="L627">            sink.tableCaption_();</span>
+        }
+<span class="fc" id="L629">    }</span>
+
+    private void handleEmailStart( XmlPullParser parser, Sink sink, SinkEventAttributeSet attribs )
+            throws XmlPullParserException
+    {
+        try
+        {
+<span class="fc" id="L636">            final String mailto = parser.nextText();</span>
+<span class="fc" id="L637">            sink.link( &quot;mailto:&quot; + mailto, attribs );</span>
+<span class="fc" id="L638">            sink.monospaced();</span>
+<span class="fc" id="L639">            sink.text( mailto, null );</span>
+<span class="fc" id="L640">            sink.monospaced_();</span>
+<span class="fc" id="L641">            sink.link_();</span>
+        }
+<span class="nc" id="L643">        catch ( IOException e )</span>
+        {
+<span class="nc" id="L645">            throw new XmlPullParserException( &quot;IOException: &quot; + e.getMessage(), parser, e );</span>
+<span class="fc" id="L646">        }</span>
+<span class="fc" id="L647">    }</span>
+
+    private void handleFigureStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L651">        sink.figure( attribs );</span>
+<span class="fc" id="L652">        parent.push( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG.toString() );</span>
+<span class="fc" id="L653">    }</span>
+
+    private void handleArticleStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L657">        sink.head( attribs );</span>
+<span class="fc" id="L658">        inHead = true;</span>
+
+<span class="fc" id="L660">        parent.push( SimplifiedDocbookMarkup.ARTICLE_TAG.toString() );</span>
+<span class="fc" id="L661">    }</span>
+
+    //If the element introduces a new level of hierarchy, raise the stack
+    private void handleSectionElements( Sink sink, String name, SinkEventAttributeSet attribs )
+    {
+        //increase the nesting level
+<span class="fc" id="L667">        level++;</span>
+
+<span class="fc" id="L669">        sink.section( level, attribs );</span>
+
+<span class="fc" id="L671">        parent.push( name );</span>
+<span class="fc" id="L672">    }</span>
+
+    private void handleAnchorStart( Sink sink, SinkEventAttributeSet attribs  )
+    {
+<span class="fc" id="L676">        final Object id = attribs.getAttribute( SimplifiedDocbookMarkup.ID_ATTRIBUTE );</span>
+
+<span class="pc bpc" id="L678" title="1 of 2 branches missed.">        if ( id != null )</span>
+        {
+<span class="fc" id="L680">            sink.anchor( id.toString(), attribs );</span>
+        }
+<span class="fc" id="L682">    }</span>
+
+    private void handleImageDataStart( Sink sink, SinkEventAttributeSet attribs )
+            throws XmlPullParserException
+    {
+<span class="fc" id="L687">        final Object fileref = attribs.getAttribute( SimplifiedDocbookMarkup.FILEREF_ATTRIBUTE );</span>
+
+<span class="pc bpc" id="L689" title="1 of 2 branches missed.">        if ( fileref == null )</span>
+        {
+<span class="nc" id="L691">            throw new XmlPullParserException( &quot;Missing fileref attribute in imagedata!&quot; );</span>
+        }
+
+<span class="fc" id="L694">        sink.figureGraphics( fileref.toString(), attribs );</span>
+<span class="fc" id="L695">    }</span>
+
+    private void handleItemizedListStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L699">        sink.list( attribs );</span>
+        //for itemizedlists in variablelists
+<span class="fc" id="L701">        parent.push( SimplifiedDocbookMarkup.ITEMIZEDLIST_TAG.toString() );</span>
+<span class="fc" id="L702">    }</span>
+
+    private void handleLinkStart( Sink sink, SinkEventAttributeSet attribs )
+            throws XmlPullParserException
+    {
+<span class="fc" id="L707">        final Object linkend = attribs.getAttribute( SimplifiedDocbookMarkup.LINKEND_ATTRIBUTE );</span>
+
+<span class="pc bpc" id="L709" title="1 of 2 branches missed.">        if ( linkend == null )</span>
+        {
+<span class="nc" id="L711">            throw new XmlPullParserException( &quot;Missing linkend attribute in link!&quot; );</span>
+        }
+
+<span class="fc" id="L714">        parent.push( SimplifiedDocbookMarkup.LINK_TAG.toString() );</span>
+<span class="fc" id="L715">        sink.link( &quot;#&quot; + linkend.toString(), attribs );</span>
+<span class="fc" id="L716">    }</span>
+
+    private void handleListItemStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L720" title="All 2 branches covered.">        if ( isParent( SimplifiedDocbookMarkup.VARIABLELIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L722">            sink.definition( attribs );</span>
+        }
+<span class="fc bfc" id="L724" title="All 2 branches covered.">        else if ( isParent( SimplifiedDocbookMarkup.ORDEREDLIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L726">            sink.numberedListItem( attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L730">            sink.listItem( attribs );</span>
+        }
+
+<span class="fc" id="L733">        parent.push( SimplifiedDocbookMarkup.LISTITEM_TAG.toString() );</span>
+<span class="fc" id="L734">    }</span>
+
+    private void handleOrderedListStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+        //default enumeration style is decimal
+<span class="fc" id="L739">        int numeration = Sink.NUMBERING_DECIMAL;</span>
+
+<span class="fc" id="L741">        final Object num = attribs.getAttribute( SimplifiedDocbookMarkup.NUMERATION_ATTRIBUTE );</span>
+
+<span class="pc bpc" id="L743" title="1 of 2 branches missed.">        if ( num != null )</span>
+        {
+<span class="fc" id="L745">            numeration = DocbookUtils.doxiaListNumbering( num.toString() );</span>
+        }
+
+<span class="fc" id="L748">        sink.numberedList( numeration, attribs );</span>
+<span class="fc" id="L749">        parent.push( SimplifiedDocbookMarkup.ORDEREDLIST_TAG.toString() );</span>
+<span class="fc" id="L750">    }</span>
+
+    private void handleParaEnd( Sink sink )
+    {
+<span class="fc bfc" id="L754" title="All 2 branches covered.">        if ( !isParent( SimplifiedDocbookMarkup.CAPTION_TAG.toString() )</span>
+<span class="fc bfc" id="L755" title="All 2 branches covered.">                &amp;&amp; ! isParent( SimplifiedDocbookMarkup.LISTITEM_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L757">            sink.paragraph_();</span>
+        }
+<span class="fc" id="L759">    }</span>
+
+    private void handleParaStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L763" title="All 2 branches covered.">        if ( !isParent( SimplifiedDocbookMarkup.CAPTION_TAG.toString() )</span>
+<span class="fc bfc" id="L764" title="All 2 branches covered.">                &amp;&amp; ! isParent( SimplifiedDocbookMarkup.LISTITEM_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L766">            sink.paragraph( attribs );</span>
+        }
+<span class="fc" id="L768">    }</span>
+
+    private void handleTableStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L772">        final Object frame = attribs.getAttribute( SimplifiedDocbookMarkup.FRAME_ATTRIBUTE );</span>
+<span class="pc bpc" id="L773" title="1 of 2 branches missed.">        if ( frame != null )</span>
+        {
+<span class="fc" id="L775">            attribs.addAttribute( SimplifiedDocbookMarkup.FRAME_ATTRIBUTE,</span>
+<span class="fc" id="L776">                    DocbookUtils.doxiaTableFrameAttribute( frame.toString() ) );</span>
+        }
+
+<span class="fc" id="L779">        sink.table( attribs );</span>
+
+<span class="fc" id="L781">        parent.push( SimplifiedDocbookMarkup.TABLE_TAG.toString() );</span>
+<span class="fc" id="L782">    }</span>
+
+    private void handleTitleStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L786" title="All 2 branches covered.">        if ( isParent( SimplifiedDocbookMarkup.TABLE_TAG.toString() )</span>
+<span class="pc bpc" id="L787" title="1 of 2 branches missed.">                || isParent( SimplifiedDocbookMarkup.INFORMALTABLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L789">            sink.tableCaption( attribs );</span>
+        }
+<span class="fc bfc" id="L791" title="All 2 branches covered.">        else if ( isParent( SimplifiedDocbookMarkup.ARTICLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L793">            sink.title( attribs );</span>
+        }
+<span class="fc bfc" id="L795" title="All 2 branches covered.">        else if ( isParent( SimplifiedDocbookMarkup.SECTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L797">            sink.sectionTitle( level, attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L801">            sink.bold();</span>
+        }
+<span class="fc" id="L803">    }</span>
+
+    private void handleTitleEnd( Sink sink )
+    {
+<span class="fc bfc" id="L807" title="All 2 branches covered.">        if ( isParent( SimplifiedDocbookMarkup.TABLE_TAG.toString() )</span>
+<span class="pc bpc" id="L808" title="1 of 2 branches missed.">                || isParent( SimplifiedDocbookMarkup.INFORMALTABLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L810">            sink.tableCaption_();</span>
+        }
+<span class="fc bfc" id="L812" title="All 2 branches covered.">        else if ( isParent( SimplifiedDocbookMarkup.SECTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L814">            sink.sectionTitle_( level );</span>
+        }
+<span class="fc bfc" id="L816" title="All 2 branches covered.">        else if ( isParent( SimplifiedDocbookMarkup.ARTICLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L818">            sink.title_();</span>
+        }
+        else
+        {
+<span class="fc" id="L822">            sink.bold_();</span>
+        }
+<span class="fc" id="L824">    }</span>
+
+    private void handleUlinkStart( Sink sink, SinkEventAttributeSet attribs )
+            throws XmlPullParserException
+    {
+<span class="fc" id="L829">        final Object url = attribs.getAttribute( SimplifiedDocbookMarkup.URL_ATTRIBUTE );</span>
+
+<span class="pc bpc" id="L831" title="1 of 2 branches missed.">        if ( url == null )</span>
+        {
+<span class="nc" id="L833">            throw new XmlPullParserException( &quot;Missing url attribute in ulink!&quot; );</span>
+        }
+
+<span class="fc" id="L836">        parent.push( SimplifiedDocbookMarkup.ULINK_TAG.toString() );</span>
+<span class="fc" id="L837">        sink.link( url.toString(), attribs );</span>
+<span class="fc" id="L838">    }</span>
+
+    private void handleVariableListStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L842">        sink.definitionList( attribs );</span>
+<span class="fc" id="L843">        parent.push( SimplifiedDocbookMarkup.VARIABLELIST_TAG.toString() );</span>
+<span class="fc" id="L844">    }</span>
+
+    private void handleXrefStart( Sink sink, SinkEventAttributeSet attribs )
+            throws XmlPullParserException
+    {
+<span class="fc" id="L849">        final Object linkend = attribs.getAttribute( SimplifiedDocbookMarkup.LINKEND_ATTRIBUTE );</span>
+
+<span class="pc bpc" id="L851" title="1 of 2 branches missed.">        if ( linkend == null )</span>
+        {
+<span class="nc" id="L853">            throw new XmlPullParserException( &quot;Missing linkend attribute in xref!&quot; );</span>
+        }
+
+<span class="fc" id="L856">        sink.link( &quot;#&quot; + linkend.toString(), attribs );</span>
+<span class="fc" id="L857">        sink.text( &quot;Link&quot; ); //TODO: determine text of link target</span>
+<span class="fc" id="L858">        sink.link_();</span>
+<span class="fc" id="L859">    }</span>
+
+    private boolean ignorable( String name )
+    {
+<span class="fc" id="L863">        return IGNORABLE_ELEMENTS.contains( name );</span>
+    }
+
+    /**
+     * Determines if the given element is a parent element.
+     *
+     * @param element the element to determine.
+     * @return true if the given element is a parent element.
+     */
+    private boolean isParent( String element )
+    {
+<span class="fc bfc" id="L874" title="All 2 branches covered.">        if ( parent.size() &gt; 0 )</span>
+        {
+<span class="fc" id="L876">            return parent.peek().equals( element );</span>
+        }
+
+<span class="fc" id="L879">        return false;</span>
+    }
+
+    private boolean linkStartTag( String name, Sink sink, SinkEventAttributeSet attribs )
+            throws XmlPullParserException
+    {
+<span class="fc bfc" id="L885" title="All 2 branches covered.">        if ( name.equals( SimplifiedDocbookMarkup.ULINK_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L887">            handleUlinkStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L889" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.LINK_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L891">            handleLinkStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L893" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.XREF_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L895">            handleXrefStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L897" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.ANCHOR_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L899">            handleAnchorStart( sink, attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L903">            return false;</span>
+        }
+
+<span class="fc" id="L906">        return true;</span>
+    }
+
+    private boolean listStartTags( String name, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L911" title="All 2 branches covered.">        if ( name.equals( SimplifiedDocbookMarkup.ITEMIZEDLIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L913">            handleItemizedListStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L915" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.ORDEREDLIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L917">            handleOrderedListStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L919" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.LISTITEM_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L921">            handleListItemStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L923" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.VARIABLELIST_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L925">            handleVariableListStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L927" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.VARLISTENTRY_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L929">            sink.definitionListItem( attribs );</span>
+        }
+<span class="fc bfc" id="L931" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.TERM_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L933">            sink.definedTerm( attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L937">            return false;</span>
+        }
+
+<span class="fc" id="L940">        return true;</span>
+    }
+
+    private boolean mediaStartTag( String name, Sink sink, SinkEventAttributeSet attribs )
+            throws XmlPullParserException
+    {
+<span class="fc bfc" id="L946" title="All 2 branches covered.">        if ( name.equals( SimplifiedDocbookMarkup.MEDIAOBJECT_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L948">            handleFigureStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L950" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.IMAGEOBJECT_TAG.toString() )</span>
+<span class="fc bfc" id="L951" title="All 2 branches covered.">                || name.equals( SimplifiedDocbookMarkup.FIGURE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L953">            parent.push( name );</span>
+        }
+<span class="fc bfc" id="L955" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.IMAGEDATA_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L957">            handleImageDataStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L959" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.CAPTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L961">            handleCaptionStart( sink, attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L965">            return false;</span>
+        }
+
+<span class="fc" id="L968">        return true;</span>
+    }
+
+    private boolean styleStartTags( String name, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L973" title="All 2 branches covered.">        if ( VERBATIM_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L975">            sink.verbatim( SinkEventAttributeSet.BOXED );</span>
+        }
+<span class="fc bfc" id="L977" title="All 4 branches covered.">        else if ( BOLD_ELEMENTS.contains( name ) &amp;&amp; MONOSPACE_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L979">            sink.bold();</span>
+<span class="fc" id="L980">            sink.monospaced();</span>
+        }
+<span class="fc bfc" id="L982" title="All 4 branches covered.">        else if ( ITALIC_ELEMENTS.contains( name ) &amp;&amp; MONOSPACE_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L984">            sink.italic();</span>
+<span class="fc" id="L985">            sink.monospaced();</span>
+        }
+<span class="fc bfc" id="L987" title="All 2 branches covered.">        else if ( BOLD_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L989">            sink.bold();</span>
+        }
+<span class="fc bfc" id="L991" title="All 4 branches covered.">        else if ( ITALIC_ELEMENTS.contains( name ) &amp;&amp; &quot;bold&quot;.equals( attribs.getAttribute( &quot;role&quot; ) ) )</span>
+        {
+<span class="fc" id="L993">            sink.bold();</span>
+<span class="fc" id="L994">            isBold = true;</span>
+        }
+<span class="fc bfc" id="L996" title="All 2 branches covered.">        else if ( ITALIC_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L998">            sink.italic();</span>
+        }
+<span class="fc bfc" id="L1000" title="All 2 branches covered.">        else if ( MONOSPACE_ELEMENTS.contains( name ) )</span>
+        {
+<span class="fc" id="L1002">            sink.monospaced();</span>
+        }
+        else
+        {
+<span class="fc" id="L1006">            return false;</span>
+        }
+
+<span class="fc" id="L1009">        return true;</span>
+    }
+
+    private boolean tableStartTags( String name, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L1014" title="All 2 branches covered.">        if ( name.equals( SimplifiedDocbookMarkup.ENTRYTBL_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L1016">            parent.push( name );</span>
+<span class="fc" id="L1017">            ignore = true;</span>
+            // insert empty table cell instead
+<span class="fc" id="L1019">            sink.tableCell( (SinkEventAttributeSet) null );</span>
+<span class="fc" id="L1020">            sink.tableCell_();</span>
+        }
+<span class="fc bfc" id="L1022" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.TABLE_TAG.toString() )</span>
+<span class="fc bfc" id="L1023" title="All 2 branches covered.">            || name.equals( SimplifiedDocbookMarkup.INFORMALTABLE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L1025">            handleTableStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L1027" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.THEAD_TAG.toString() )</span>
+<span class="fc bfc" id="L1028" title="All 2 branches covered.">                || name.equals( SimplifiedDocbookMarkup.TFOOT_TAG.toString() )</span>
+<span class="fc bfc" id="L1029" title="All 2 branches covered.">                || name.equals( SimplifiedDocbookMarkup.TBODY_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L1031">            parent.push( name );</span>
+        }
+<span class="fc bfc" id="L1033" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.TGROUP_TAG.toString() ) )</span>
+        {
+            // this is required by the DTD
+<span class="fc" id="L1036">            final int cols = Integer.parseInt( (String) attribs.getAttribute( &quot;cols&quot; ) );</span>
+<span class="fc" id="L1037">            int[] justification = new int[cols];</span>
+<span class="fc" id="L1038">            int justif = Sink.JUSTIFY_LEFT;</span>
+
+<span class="fc" id="L1040">            final Object align = attribs.getAttribute( SinkEventAttributeSet.ALIGN );</span>
+
+<span class="fc bfc" id="L1042" title="All 2 branches covered.">            if ( align != null )</span>
+            {
+<span class="fc" id="L1044">                final String al = align.toString();</span>
+
+<span class="pc bpc" id="L1046" title="1 of 2 branches missed.">                if ( &quot;right&quot;.equals( al ) )</span>
+                {
+<span class="nc" id="L1048">                    justif = Sink.JUSTIFY_RIGHT;</span>
+                }
+<span class="pc bpc" id="L1050" title="1 of 2 branches missed.">                else if ( &quot;center&quot;.equals( al ) )</span>
+                {
+<span class="nc" id="L1052">                    justif = Sink.JUSTIFY_CENTER;</span>
+                }
+            }
+
+<span class="fc bfc" id="L1056" title="All 2 branches covered.">            for ( int i = 0; i &lt; justification.length; i++ )</span>
+            {
+<span class="fc" id="L1058">                justification[i] = justif;</span>
+            }
+
+<span class="fc" id="L1061">            boolean grid = false;</span>
+<span class="fc" id="L1062">            final Object rowsep = attribs.getAttribute( &quot;rowsep&quot; );</span>
+
+<span class="pc bpc" id="L1064" title="1 of 4 branches missed.">            if ( rowsep != null &amp;&amp; Integer.parseInt( (String) rowsep ) == 1 )</span>
+            {
+<span class="fc" id="L1066">                grid = true;</span>
+            }
+
+<span class="fc" id="L1069">            final Object colsep = attribs.getAttribute( &quot;colsep&quot; );</span>
+
+<span class="pc bpc" id="L1071" title="1 of 4 branches missed.">            if ( colsep != null &amp;&amp; Integer.parseInt( (String) colsep ) == 1 )</span>
+            {
+<span class="fc" id="L1073">                grid = true;</span>
+            }
+
+<span class="fc" id="L1076">            sink.tableRows( justification, grid );</span>
+<span class="fc" id="L1077">        }</span>
+<span class="pc bpc" id="L1078" title="1 of 2 branches missed.">        else if ( name.equals( SimplifiedDocbookMarkup.TR_TAG.toString() )</span>
+<span class="fc bfc" id="L1079" title="All 2 branches covered.">                || name.equals( SimplifiedDocbookMarkup.ROW_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L1081">            sink.tableRow( attribs );</span>
+        }
+<span class="fc bfc" id="L1083" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.ENTRY_TAG.toString() )</span>
+<span class="fc bfc" id="L1084" title="All 2 branches covered.">                &amp;&amp; isParent( SimplifiedDocbookMarkup.THEAD_TAG.toString() )</span>
+<span class="pc bpc" id="L1085" title="1 of 2 branches missed.">                || name.equals( SimplifiedDocbookMarkup.TH_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L1087">            sink.tableHeaderCell( attribs );</span>
+        }
+<span class="fc bfc" id="L1089" title="All 2 branches covered.">        else if ( name.equals( SimplifiedDocbookMarkup.ENTRY_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L1091">            sink.tableCell( attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L1095">            return false;</span>
+        }
+
+<span class="fc" id="L1098">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

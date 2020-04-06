@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TableBlockParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Confluence Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.confluence.parser.table</a> &gt; <span class="el_source">TableBlockParser.java</span></div><h1>TableBlockParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.confluence.parser.table;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.maven.doxia.module.confluence.ConfluenceMarkup;
+import org.apache.maven.doxia.module.confluence.parser.Block;
+import org.apache.maven.doxia.module.confluence.parser.BlockParser;
+import org.apache.maven.doxia.module.confluence.parser.BoldBlock;
+import org.apache.maven.doxia.module.confluence.parser.FigureBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.ParagraphBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.SectionBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.list.ListBlockParser;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.util.ByLineReaderSource;
+import org.apache.maven.doxia.util.ByLineSource;
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * Parse tables
+ * 
+ * @author Juan F. Codagnone
+ * @version $Id$
+ */
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">public class TableBlockParser</span>
+    implements BlockParser
+{
+    private static final String EMPTY_STRING = &quot;&quot;;
+
+    private static final String ANY_CHARACTER = &quot;.*&quot;;
+
+    private static final String ESCAPE_CHARACTER = &quot;\\&quot;;
+
+    private BlockParser[] parsers;
+
+    /**
+     * Default constructor TableBlockParser.
+     */
+    public TableBlockParser()
+<span class="fc" id="L61">    {</span>
+<span class="fc" id="L62">        BlockParser headingParser = new SectionBlockParser();</span>
+<span class="fc" id="L63">        BlockParser figureParser = new FigureBlockParser();</span>
+<span class="fc" id="L64">        BlockParser listParser = new ListBlockParser();</span>
+
+<span class="fc" id="L66">        BlockParser[] subparsers = new BlockParser[] { headingParser, figureParser, listParser };</span>
+<span class="fc" id="L67">        BlockParser paragraphParser = new ParagraphBlockParser( subparsers );</span>
+
+<span class="fc" id="L69">        this.parsers = new BlockParser[] { headingParser, figureParser, listParser, paragraphParser };</span>
+
+<span class="fc" id="L71">    }</span>
+
+    /** {@inheritDoc} */
+    public boolean accept( String line, ByLineSource source )
+    {
+<span class="fc" id="L76">        return line.startsWith( &quot;|&quot; );</span>
+    }
+
+    /** {@inheritDoc} */
+    public Block visit( String line, ByLineSource source )
+        throws ParseException
+    {
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if ( !accept( line, source ) )</span>
+        {
+<span class="nc" id="L85">            throw new IllegalAccessError( &quot;call accept before this ;)&quot; );</span>
+        }
+
+<span class="fc" id="L88">        List&lt;Block&gt; rows = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L90">        String l = line;</span>
+
+        do
+        {
+<span class="fc" id="L94">            l = l.substring( 0, l.lastIndexOf( &quot;|&quot; ) );</span>
+
+<span class="fc" id="L96">            List&lt;Block&gt; cells = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L98" title="All 2 branches covered.">            if ( l.startsWith( &quot;||&quot; ) )</span>
+            {
+<span class="fc" id="L100">                String[] text = StringUtils.split( l, &quot;||&quot; );</span>
+
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                for ( String s : text )</span>
+                {
+<span class="fc" id="L104">                    List&lt;Block&gt; textBlocks = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L106">                    textBlocks.add( parseLine( s, new ByLineReaderSource( new StringReader( EMPTY_STRING ) ) ) );</span>
+
+<span class="fc" id="L108">                    List&lt;Block&gt; blocks = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L110">                    blocks.add( new BoldBlock( textBlocks ) );</span>
+
+<span class="fc" id="L112">                    cells.add( new TableCellHeaderBlock( blocks ) );</span>
+                }
+<span class="fc" id="L114">            }</span>
+            else
+            {
+<span class="fc" id="L117">                int it = 0;</span>
+<span class="fc" id="L118">                String[] text = StringUtils.split( l, &quot;|&quot; );</span>
+<span class="fc" id="L119">                List&lt;String&gt; texts = new LinkedList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                while ( it &lt; text.length )</span>
+                {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">                    if ( text[it].matches( ANY_CHARACTER + ESCAPE_CHARACTER + ConfluenceMarkup.LINK_START_MARKUP</span>
+                        + ANY_CHARACTER )
+<span class="fc bfc" id="L125" title="All 2 branches covered.">                        &amp;&amp; !text[it].matches( ANY_CHARACTER + ESCAPE_CHARACTER + ConfluenceMarkup.LINK_END_MARKUP</span>
+                            + ANY_CHARACTER ) )
+                    {
+<span class="fc" id="L128">                        texts.add( text[it] + ConfluenceMarkup.TABLE_CELL_MARKUP + text[it + 1] );</span>
+<span class="fc" id="L129">                        it += 2;</span>
+<span class="fc" id="L130">                        continue;</span>
+                    }
+<span class="fc" id="L132">                    texts.add( text[it] );</span>
+<span class="fc" id="L133">                    it++;</span>
+                }
+
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                for ( String pText : texts )</span>
+                {
+<span class="fc" id="L138">                    List&lt;Block&gt; blocks = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L140">                    blocks.add( parseLine( pText, new ByLineReaderSource( new StringReader( EMPTY_STRING ) ) ) );</span>
+
+<span class="fc" id="L142">                    cells.add( new TableCellBlock( blocks ) );</span>
+<span class="fc" id="L143">                }</span>
+            }
+
+<span class="fc" id="L146">            rows.add( new TableRowBlock( cells ) );</span>
+        }
+<span class="fc bfc" id="L148" title="All 4 branches covered.">        while ( ( l = source.getNextLine() ) != null &amp;&amp; accept( l, source ) );</span>
+
+<span class="pc bpc" id="L150" title="2 of 4 branches missed.">        assert rows.size() &gt;= 1;</span>
+
+<span class="fc" id="L152">        return new TableBlock( rows );</span>
+    }
+
+    private Block parseLine( String text, ByLineSource source )
+        throws ParseException
+    {
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if ( text.length() &gt; 0 )</span>
+        {
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">            for ( BlockParser parser : parsers )</span>
+            {
+<span class="fc bfc" id="L162" title="All 2 branches covered.">                if ( parser.accept( text, source ) )</span>
+                {
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                    if ( parser instanceof ParagraphBlockParser )</span>
+                    {
+<span class="fc" id="L166">                        return ( (ParagraphBlockParser) parser ).visit( text, source, false );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L170">                        return parser.visit( text, source );</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L175">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

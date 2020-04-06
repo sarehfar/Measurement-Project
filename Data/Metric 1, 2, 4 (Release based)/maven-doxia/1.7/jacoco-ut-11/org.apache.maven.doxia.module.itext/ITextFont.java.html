@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ITextFont.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: iText Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.itext</a> &gt; <span class="el_source">ITextFont.java</span></div><h1>ITextFont.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.itext;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.awt.Color;
+
+import com.lowagie.text.ExceptionConverter;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.markup.MarkupTags;
+import com.lowagie.text.pdf.BaseFont;
+
+/**
+ * &lt;code&gt;iText&lt;/code&gt; wrapper object for font.
+ *
+ * @see com.lowagie.text.Font
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ */
+public class ITextFont
+{
+    /** A normal font style */
+    public static final String NORMAL = MarkupTags.CSS_VALUE_NORMAL;
+
+    /** A bold font style */
+    public static final String BOLD = MarkupTags.CSS_VALUE_BOLD;
+
+    /** A italic font style */
+    public static final String ITALIC = MarkupTags.CSS_VALUE_ITALIC;
+
+    /** An underline font style */
+    public static final String UNDERLINE = MarkupTags.CSS_VALUE_UNDERLINE;
+
+    /** A default font name */
+    public static final String DEFAULT_FONT_NAME = FontFactory.HELVETICA;
+
+    /** A default font size */
+    public static final float DEFAULT_FONT_SIZE = 12;
+
+    /** A default font style */
+    public static final String DEFAULT_FONT_STYLE = NORMAL;
+
+    /** A default Black color definition */
+<span class="fc" id="L62">    public static final int DEFAULT_FONT_COLOR_RED = Color.BLACK.getRed();</span>
+
+    /** A default Black color definition */
+<span class="fc" id="L65">    public static final int DEFAULT_FONT_COLOR_GREEN = Color.BLACK.getGreen();</span>
+
+    /** A default Black color definition */
+<span class="fc" id="L68">    public static final int DEFAULT_FONT_COLOR_BLUE = Color.BLACK.getBlue();</span>
+
+    private static final int SECTION_FONT_SIZE_0 = 24;
+    private static final int SECTION_FONT_SIZE_1 = 22;
+    private static final int SECTION_FONT_SIZE_2 = 20;
+    private static final int SECTION_FONT_SIZE_3 = 18;
+    private static final int SECTION_FONT_SIZE_4 = 16;
+    private static final int SECTION_FONT_SIZE_DEFAULT = 14;
+
+<span class="fc" id="L77">    private boolean monoSpaced = false;</span>
+
+<span class="fc" id="L79">    private float currentSize = 12;</span>
+
+<span class="fc" id="L81">    private int currentStyle = Font.NORMAL;</span>
+
+<span class="fc" id="L83">    private Color currentColor = Color.BLACK;</span>
+
+    /**
+     * Default constructor
+     */
+    public ITextFont()
+<span class="fc" id="L89">    {</span>
+        // nop
+<span class="fc" id="L91">    }</span>
+
+    /**
+     * Add bold style to the current style
+     */
+    public void addBold()
+    {
+<span class="fc" id="L98">        this.currentStyle += Font.BOLD;</span>
+<span class="fc" id="L99">    }</span>
+
+    /**
+     * Remove bold style to the current style
+     */
+    public void removeBold()
+    {
+<span class="fc" id="L106">        this.currentStyle -= Font.BOLD;</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if ( this.currentStyle &lt; 0 )</span>
+        {
+<span class="nc" id="L109">            this.currentStyle = Font.NORMAL;</span>
+        }
+<span class="fc" id="L111">    }</span>
+
+    /**
+     * Add italic style to the current style
+     */
+    public void addItalic()
+    {
+<span class="fc" id="L118">        this.currentStyle += Font.ITALIC;</span>
+<span class="fc" id="L119">    }</span>
+
+    /**
+     * Remove italic style to the current style
+     */
+    public void removeItalic()
+    {
+<span class="fc" id="L126">        this.currentStyle -= Font.ITALIC;</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if ( this.currentStyle &lt; 0 )</span>
+        {
+<span class="nc" id="L129">            this.currentStyle = Font.NORMAL;</span>
+        }
+<span class="fc" id="L131">    }</span>
+
+    /**
+     * Add italic style to the current style
+     */
+    public void addUnderlined()
+    {
+<span class="fc" id="L138">        this.currentStyle += Font.UNDERLINE;</span>
+<span class="fc" id="L139">    }</span>
+
+    /**
+     * Remove italic style to the current style
+     */
+    public void removeUnderlined()
+    {
+<span class="fc" id="L146">        this.currentStyle -= Font.UNDERLINE;</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if ( this.currentStyle &lt; 0 )</span>
+        {
+<span class="nc" id="L149">            this.currentStyle = Font.NORMAL;</span>
+        }
+<span class="fc" id="L151">    }</span>
+
+    /**
+     * Add monospaced style to the current style
+     *
+     * @param monoSpaced true for monospaced style
+     */
+    public void setMonoSpaced( boolean monoSpaced )
+    {
+<span class="fc" id="L160">        this.monoSpaced = monoSpaced;</span>
+<span class="fc" id="L161">    }</span>
+
+    /**
+     * Set a new font color
+     *
+     * @param color a new color
+     */
+    public void setColor( Color color )
+    {
+<span class="fc" id="L170">        this.currentColor = color;</span>
+<span class="fc" id="L171">    }</span>
+
+    /**
+     * Set a new font color
+     *
+     * @param size a new size
+     */
+    public void setSize( float size )
+    {
+<span class="fc" id="L180">        this.currentSize = size;</span>
+<span class="fc" id="L181">    }</span>
+
+    /**
+     * Return the font name
+     *
+     * @return the font name
+     */
+    public String getFontName()
+    {
+<span class="fc" id="L190">        Font font = getCurrentFont();</span>
+
+<span class="fc" id="L192">        return font.getFamilyname();</span>
+    }
+
+    /**
+     * Return the font style
+     *
+     * @return the font style
+     */
+    public String getFontStyle()
+    {
+<span class="fc" id="L202">        Font font = getCurrentFont();</span>
+<span class="fc" id="L203">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if ( font.isBold() )</span>
+        {
+<span class="fc" id="L207">            sb.append( BOLD );</span>
+        }
+
+<span class="fc bfc" id="L210" title="All 2 branches covered.">        if ( font.isItalic() )</span>
+        {
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">            if ( sb.length() == 0 )</span>
+            {
+<span class="fc" id="L214">                sb.append( ITALIC );</span>
+            }
+            else
+            {
+<span class="nc" id="L218">                sb.append( &quot;,&quot; );</span>
+<span class="nc" id="L219">                sb.append( ITALIC );</span>
+            }
+        }
+
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        if ( font.isUnderlined() )</span>
+        {
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">            if ( sb.length() == 0 )</span>
+            {
+<span class="fc" id="L227">                sb.append( UNDERLINE );</span>
+            }
+            else
+            {
+<span class="nc" id="L231">                sb.append( &quot;,&quot; );</span>
+<span class="nc" id="L232">                sb.append( UNDERLINE );</span>
+            }
+        }
+
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        if ( sb.length() == 0 )</span>
+        {
+<span class="fc" id="L238">            return NORMAL;</span>
+        }
+
+<span class="fc" id="L241">        return sb.toString();</span>
+    }
+
+    /**
+     * Return the font name
+     *
+     * @return the font name
+     */
+    public String getFontSize()
+    {
+<span class="fc" id="L251">        Font font = getCurrentFont();</span>
+
+<span class="fc" id="L253">        return String.valueOf( font.getCalculatedSize() );</span>
+    }
+
+    /**
+     * Return the font color blue
+     *
+     * @return the font color blue
+     */
+    public String getFontColorBlue()
+    {
+<span class="fc" id="L263">        Font font = getCurrentFont();</span>
+
+<span class="fc" id="L265">        return String.valueOf( font.color().getBlue() );</span>
+    }
+
+    /**
+     * Return the font color green
+     *
+     * @return the font color green
+     */
+    public String getFontColorGreen()
+    {
+<span class="fc" id="L275">        Font font = getCurrentFont();</span>
+
+<span class="fc" id="L277">        return String.valueOf( font.color().getGreen() );</span>
+    }
+
+    /**
+     * Return the font color red
+     *
+     * @return the font color red
+     */
+    public String getFontColorRed()
+    {
+<span class="fc" id="L287">        Font font = getCurrentFont();</span>
+
+<span class="fc" id="L289">        return String.valueOf( font.color().getRed() );</span>
+    }
+
+    /**
+     * Get a section font size depending the section number.
+     * &lt;dl&gt;
+     * &lt;dt&gt;0&lt;/dt&gt;
+     * &lt;dd&gt;Chapter: font size = 24&lt;/dd&gt;
+     * &lt;dt&gt;1&lt;/dt&gt;
+     * &lt;dd&gt;Section 1: font size = 22&lt;/dd&gt;
+     * &lt;dt&gt;2&lt;/dt&gt;
+     * &lt;dd&gt;Section 2: font size = 20&lt;/dd&gt;
+     * &lt;dt&gt;3&lt;/dt&gt;
+     * &lt;dd&gt;Section 3: font size = 18&lt;/dd&gt;
+     * &lt;dt&gt;4&lt;/dt&gt;
+     * &lt;dd&gt;Section 4: font size = 16&lt;/dd&gt;
+     * &lt;dt&gt;5 ot otherwise&lt;/dt&gt;
+     * &lt;dd&gt;Section 5: font size = 14&lt;/dd&gt;
+     * &lt;/dl&gt;
+     *
+     * @param sectionNumber a section number
+     * @return a font size.
+     */
+    public static int getSectionFontSize( int sectionNumber )
+    {
+<span class="fc bfc" id="L314" title="All 6 branches covered.">        switch ( sectionNumber )</span>
+        {
+            case 0:
+<span class="fc" id="L317">                return SECTION_FONT_SIZE_0;</span>
+
+            case 1:
+<span class="fc" id="L320">                return SECTION_FONT_SIZE_1;</span>
+
+            case 2:
+<span class="fc" id="L323">                return SECTION_FONT_SIZE_2;</span>
+
+            case 3:
+<span class="fc" id="L326">                return SECTION_FONT_SIZE_3;</span>
+
+            case 4:
+<span class="fc" id="L329">                return SECTION_FONT_SIZE_4;</span>
+
+            case 5:
+            default:
+<span class="fc" id="L333">                return SECTION_FONT_SIZE_DEFAULT;</span>
+        }
+    }
+
+    /**
+     * Convenience method to get a defined MonoSpaced font depending the wanted style and size.
+     *
+     * @param style the font style.
+     * @param size the font size.
+     * @param color the font color.
+     * @return a font the font.
+     */
+    public static Font getMonoSpacedFont( int style, float size, Color color )
+    {
+        try
+        {
+<span class="fc" id="L349">            return new Font( BaseFont.createFont( BaseFont.COURIER, BaseFont.CP1252, false ), size, style, color );</span>
+        }
+<span class="nc" id="L351">        catch ( Exception e )</span>
+        {
+<span class="nc" id="L353">            throw new ExceptionConverter( e );</span>
+        }
+    }
+
+    /**
+     * Convenience method to get a defined font depending the wanted style and size.
+     *
+     * @param style the font style.
+     * @param size the font size.
+     * @param color the font color.
+     * @return a font the font.
+     */
+    public static Font getFont( int style, float size, Color color )
+    {
+<span class="fc" id="L367">        Font font = new Font();</span>
+<span class="fc" id="L368">        font.setFamily( DEFAULT_FONT_NAME );</span>
+<span class="fc" id="L369">        font.setStyle( style );</span>
+<span class="fc" id="L370">        font.setSize( size );</span>
+<span class="fc" id="L371">        font.setColor( color );</span>
+<span class="fc" id="L372">        return font;</span>
+    }
+
+    /**
+     * Convenience method to return the current font
+     *
+     * @return the current font
+     */
+    private Font getCurrentFont()
+    {
+<span class="fc bfc" id="L382" title="All 2 branches covered.">        if ( this.monoSpaced )</span>
+        {
+<span class="fc" id="L384">            return getMonoSpacedFont( this.currentStyle, this.currentSize, this.currentColor );</span>
+        }
+
+<span class="fc" id="L387">        return getFont( this.currentStyle, this.currentSize, this.currentColor );</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

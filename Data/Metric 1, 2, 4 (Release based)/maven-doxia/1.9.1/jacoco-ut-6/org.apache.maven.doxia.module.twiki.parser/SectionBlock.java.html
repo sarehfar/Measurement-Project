@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SectionBlock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki.parser</a> &gt; <span class="el_source">SectionBlock.java</span></div><h1>SectionBlock.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.lang.reflect.Method;
+
+import org.apache.maven.doxia.sink.Sink;
+
+/**
+ * Block that represents a section
+ *
+ * @author Juan F. Codagnone
+ */
+public class SectionBlock
+    extends AbstractFatherBlock
+{
+    /** {@inheritDoc} */
+    private final String title;
+
+    /** {@inheritDoc} */
+    private final int level;
+
+    /**
+     * Creates the SectionBlock.
+     *
+     * @param title  the section title, cannot be {@code null}
+     * @param level  the section level: 0 &amp;lt; level &amp;lt; 6
+     * @param blocks child blocks, cannot be {@code null}
+     */
+    public SectionBlock( final String title, final int level, final Block[] blocks )
+    {
+<span class="fc" id="L49">        super( blocks );</span>
+<span class="fc" id="L50">        final int maxLevel = 5;</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        if ( title == null )</span>
+        {
+<span class="nc" id="L53">            throw new IllegalArgumentException( &quot;title cant be null&quot; );</span>
+        }
+<span class="fc bfc" id="L55" title="All 4 branches covered.">        else if ( level &lt; 1 || level &gt; maxLevel )</span>
+        {
+<span class="fc" id="L57">            throw new IllegalArgumentException( &quot;invalid level: &quot; + level );</span>
+        }
+
+<span class="fc" id="L60">        this.title = title;</span>
+<span class="fc" id="L61">        this.level = level;</span>
+<span class="fc" id="L62">    }</span>
+
+    /** {@inheritDoc} */
+    final void before( final Sink sink )
+    {
+<span class="fc" id="L67">        sectionStart( sink );</span>
+<span class="fc" id="L68">        sectionTitle( sink );</span>
+<span class="fc" id="L69">        sink.text( title );</span>
+<span class="fc" id="L70">        sectionTitle_( sink );</span>
+
+<span class="fc" id="L72">    }</span>
+
+    /** {@inheritDoc} */
+    final void after( final Sink sink )
+    {
+<span class="fc" id="L77">        sectionEnd( sink );</span>
+<span class="fc" id="L78">    }</span>
+
+    /**
+     * call to sink.section&lt;Level&gt;()
+     *
+     * @param sink sink
+     */
+    private void sectionStart( final Sink sink )
+    {
+<span class="fc" id="L87">        invokeVoidVoid( sink, &quot;section&quot; + level );</span>
+<span class="fc" id="L88">    }</span>
+
+    /**
+     * call to sink.section&lt;Level&gt;_()
+     *
+     * @param sink sink
+     */
+    private void sectionEnd( final Sink sink )
+    {
+<span class="fc" id="L97">        invokeVoidVoid( sink, &quot;section&quot; + level + &quot;_&quot; );</span>
+<span class="fc" id="L98">    }</span>
+
+    /**
+     * Let you call sink's methods that returns &lt;code&gt;null&lt;/code&gt; and have
+     * no parameters.
+     *
+     * @param sink the Sink
+     * @param name the name of the method to call
+     */
+    private void invokeVoidVoid( final Sink sink, final String name )
+    {
+        try
+        {
+<span class="fc" id="L111">            final Method m = sink.getClass().getMethod( name );</span>
+<span class="fc" id="L112">            m.invoke( sink );</span>
+        }
+<span class="nc" id="L114">        catch ( Exception e )</span>
+        {
+            // FIXME
+<span class="nc" id="L117">            throw new IllegalArgumentException( &quot;invoking sink's &quot; + name + &quot; method: &quot; + e.getMessage() );</span>
+<span class="fc" id="L118">        }</span>
+<span class="fc" id="L119">    }</span>
+
+    /**
+     * Returns the level.
+     *
+     * @return &lt;code&gt;int&lt;/code&gt; with the level.
+     */
+    public final int getLevel()
+    {
+<span class="fc" id="L128">        return level;</span>
+    }
+
+    /**
+     * Returns the title.
+     *
+     * @return &lt;code&gt;String&lt;/code&gt; with the title.
+     */
+    public final String getTitle()
+    {
+<span class="fc" id="L138">        return title;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public final String toString()
+    {
+<span class="nc" id="L148">        final StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc" id="L150">        sb.append( &quot;Section  {title: '&quot; );</span>
+<span class="nc" id="L151">        sb.append( getTitle() );</span>
+<span class="nc" id="L152">        sb.append( &quot;' level: &quot; );</span>
+<span class="nc" id="L153">        sb.append( getLevel() );</span>
+<span class="nc" id="L154">        sb.append( &quot;}: [&quot; );</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        for ( int i = 0; i &lt; getBlocks().length; i++ )</span>
+        {
+<span class="nc" id="L157">            final Block block = getBlocks()[i];</span>
+
+<span class="nc" id="L159">            sb.append( block.toString() );</span>
+<span class="nc" id="L160">            sb.append( &quot;, &quot; );</span>
+        }
+<span class="nc" id="L162">        sb.append( &quot;]&quot; );</span>
+<span class="nc" id="L163">        return sb.toString();</span>
+    }
+
+    /** @param sink */
+    private void sectionTitle( final Sink sink )
+    {
+<span class="fc" id="L169">        invokeVoidVoid( sink, &quot;sectionTitle&quot; + level );</span>
+<span class="fc" id="L170">    }</span>
+
+    /** @param sink */
+    private void sectionTitle_( final Sink sink )
+    {
+<span class="fc" id="L175">        invokeVoidVoid( sink, &quot;sectionTitle&quot; + level + &quot;_&quot; );</span>
+<span class="fc" id="L176">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AptUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: APT Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.apt</a> &gt; <span class="el_source">AptUtils.java</span></div><h1>AptUtils.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.apt;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.util.DoxiaUtils;
+
+/**
+ * A collection of utility methods for dealing with APT documents.
+ *
+ * @author ltheussl
+ * @since 1.1
+ * @version $Id$
+ */
+public class AptUtils
+{
+
+    /**
+     * Replace all characters in a text.
+     *
+     * &lt;pre&gt;
+     * AptTools.encodeFragment( null ) = null
+     * AptTools.encodeFragment( &quot;&quot; ) = &quot;&quot;
+     * AptTools.encodeFragment( &quot;http://www.google.com&quot; ) = &quot;httpwwwgooglecom&quot;
+     * &lt;/pre&gt;
+     *
+     * @param text the String to check, may be null.
+     * @return the text with only letter and digit, null if null String input.
+     * @deprecated This method was used for the original apt format, which
+     * removed all non alphanumeric characters from anchors.
+     * Use {@link #encodeAnchor(String)} instead.
+     */
+    public static String encodeFragment( String text )
+    {
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if ( text == null )</span>
+        {
+<span class="fc" id="L53">            return null;</span>
+        }
+
+<span class="fc" id="L56">        return linkToKey( text );</span>
+    }
+
+    /**
+     * Checks if the given string corresponds to an external URI,
+     * ie is not a link within the same document nor a link to another
+     * document within the same site. This forwards to
+     * {@link org.apache.maven.doxia.util.DoxiaUtils#isExternalLink(String)}.
+     *
+     * @param link The link to check.
+     * @return True if DoxiaUtils.isExternalLink(link) returns true.
+     *
+     * @see org.apache.maven.doxia.util.DoxiaUtils#isExternalLink(String)
+     * @see #isInternalLink(String)
+     * @see #isLocalLink(String)
+     */
+    public static boolean isExternalLink( String link )
+    {
+<span class="fc" id="L74">        return DoxiaUtils.isExternalLink( link );</span>
+    }
+
+    /**
+     * Checks if the given string corresponds to an internal link,
+     * ie it is a link to an anchor within the same document.
+     *
+     * @param link The link to check.
+     * @return True if link is neither an {@link #isExternalLink(String) external}
+     * nor a {@link #isLocalLink(String) local} link.
+     *
+     * @see org.apache.maven.doxia.util.DoxiaUtils#isInternalLink(String)
+     * @see #isExternalLink(String)
+     * @see #isLocalLink(String)
+     */
+    public static boolean isInternalLink( String link )
+    {
+<span class="fc bfc" id="L91" title="All 4 branches covered.">        return ( !isExternalLink( link ) &amp;&amp; !isLocalLink( link ) );</span>
+    }
+
+    /**
+     * Checks if the given string corresponds to a relative link to another document
+     * within the same site.
+     *
+     * @param link The link to check.
+     * @return True if the link starts with either &quot;/&quot;, &quot;./&quot; or &quot;../&quot;.
+     *
+     * @see org.apache.maven.doxia.util.DoxiaUtils#isLocalLink(String)
+     * @see #isExternalLink(String)
+     * @see #isInternalLink(String)
+     */
+    public static boolean isLocalLink( String link )
+    {
+<span class="fc bfc" id="L107" title="All 6 branches covered.">        return ( link.startsWith( &quot;/&quot; ) || link.startsWith( &quot;./&quot; ) || link.startsWith( &quot;../&quot; ) );</span>
+    }
+
+    /**
+     * Transforms the given text such that it can be used as a link.
+     * All non-LetterOrDigit characters are removed and the remaining
+     * characters are transformed to lower-case.
+     *
+     * @param text The text to transform.
+     * @return The text with all non-LetterOrDigit characters removed.
+     * @deprecated This method was used for the original apt format, which
+     * removed all non alphanumeric characters from anchors.
+     * Use {@link #encodeAnchor(String)} instead.
+     */
+    public static String linkToKey( String text )
+    {
+<span class="fc" id="L123">        int length = text.length();</span>
+<span class="fc" id="L124">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L128">            char c = text.charAt( i );</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            if ( Character.isLetterOrDigit( c ) )</span>
+            {
+<span class="fc" id="L131">                buffer.append( Character.toLowerCase( c ) );</span>
+            }
+        }
+
+<span class="fc" id="L135">        return buffer.toString();</span>
+    }
+
+    /**
+     * Construct a valid anchor. This is a simplified version of
+     * {@link org.apache.maven.doxia.util.DoxiaUtils#encodeId(String)}
+     * to ensure the anchor is a valid Doxia id.
+     * The procedure is identical to the one in
+     * {@link org.apache.maven.doxia.util.HtmlTools#encodeId(String)}:
+     *
+     * &lt;ol&gt;
+     *   &lt;li&gt; Trim the id&lt;/li&gt;
+     *   &lt;li&gt; If the first character is not a letter, prepend the letter 'a'&lt;/li&gt;
+     *   &lt;li&gt; Any space is replaced with an underscore '_'&lt;/li&gt;
+     *   &lt;li&gt; Remove any non alphanumeric characters  except ':', '_', '.', '-'.&lt;/li&gt;
+     * &lt;/ol&gt;
+     *
+     * @param id The id to be encoded.
+     * @return The trimmed and encoded id, or null if id is null.
+     */
+    public static String encodeAnchor( String id )
+    {
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if ( id == null )</span>
+        {
+<span class="fc" id="L159">            return null;</span>
+        }
+
+<span class="fc" id="L162">        id = id.trim();</span>
+
+<span class="fc" id="L164">        int length = id.length();</span>
+<span class="fc" id="L165">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L169">            char c = id.charAt( i );</span>
+
+<span class="fc bfc" id="L171" title="All 4 branches covered.">            if ( ( i == 0 ) &amp;&amp; ( !Character.isLetter( c ) ) )</span>
+            {
+<span class="fc" id="L173">                buffer.append( 'a' );</span>
+            }
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">            if ( c == ' ' )</span>
+            {
+<span class="fc" id="L178">                buffer.append( '_' );</span>
+            }
+<span class="fc bfc" id="L180" title="All 10 branches covered.">            else if ( ( Character.isLetterOrDigit( c ) ) || ( c == '-' ) || ( c == '_' ) || ( c == ':' )</span>
+                            || ( c == '.' ) )
+            {
+<span class="fc" id="L183">                buffer.append( c );</span>
+            }
+        }
+
+<span class="fc" id="L187">        return buffer.toString();</span>
+    }
+
+    private AptUtils()
+    {
+        // utility class
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

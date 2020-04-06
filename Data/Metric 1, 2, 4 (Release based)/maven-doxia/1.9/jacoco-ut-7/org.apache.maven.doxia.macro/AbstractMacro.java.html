@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractMacro.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.macro</a> &gt; <span class="el_source">AbstractMacro.java</span></div><h1>AbstractMacro.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.macro;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.Map;
+
+import org.apache.maven.doxia.logging.Log;
+import org.apache.maven.doxia.logging.SystemStreamLog;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * Abstract base class to execute &lt;code&gt;Macro&lt;/code&gt;.
+ *
+ * @author &lt;a href=&quot;mailto:jason@maven.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+<span class="fc" id="L37">public abstract class AbstractMacro</span>
+    implements Macro
+{
+    /** Log instance. */
+    private Log logger;
+
+    /** {@inheritDoc} */
+    public void enableLogging( Log log )
+    {
+<span class="fc" id="L46">        this.logger = log;</span>
+<span class="fc" id="L47">    }</span>
+
+    /**
+     * Returns a logger for this macro.
+     * If no logger has been configured, a new SystemStreamLog is returned.
+     *
+     * @return Log
+     * @since 1.1
+     */
+    protected Log getLog()
+    {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if ( logger == null )</span>
+        {
+<span class="fc" id="L60">            logger = new SystemStreamLog();</span>
+        }
+
+<span class="fc" id="L63">        return logger;</span>
+    }
+
+    /**
+     * Check if the given parameter is required. Throws an
+     * IllegalArgumentException if paramValue is null or empty.
+     *
+     * @param paramName The name of the parameter to check.
+     * @param paramValue The parameter value.
+     * @since 1.1
+     */
+    protected void required( String paramName, String paramValue )
+    {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if ( StringUtils.isEmpty( paramValue ) )</span>
+        {
+<span class="fc" id="L78">            throw new IllegalArgumentException( paramName + &quot; is a required parameter!&quot; );</span>
+        }
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * Convert the Map of macro parameters to an AttributeSet.
+     * No check of validity is done, all parameters are added.
+     *
+     * @param parameters the macro parameters.
+     * @return a SinkEventAttributeSet containing the same parameters,
+     *  or null if parameters is null.
+     *
+     * @since 1.1.1.
+     */
+    protected static SinkEventAttributes getAttributesFromMap( Map&lt;?, ?&gt; parameters )
+    {
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if ( parameters == null )</span>
+        {
+<span class="nc" id="L96">            return null;</span>
+        }
+
+<span class="fc" id="L99">        final int count = parameters.size();</span>
+
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if ( count &lt;= 0 )</span>
+        {
+<span class="nc" id="L103">            return null;</span>
+        }
+
+<span class="fc" id="L106">        final SinkEventAttributeSet atts = new SinkEventAttributeSet( count );</span>
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        for ( Map.Entry&lt;?, ?&gt; entry : parameters.entrySet() )</span>
+        {
+<span class="fc" id="L110">            atts.addAttribute( entry.getKey(), entry.getValue() );</span>
+<span class="fc" id="L111">        }</span>
+
+<span class="fc" id="L113">        return atts;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

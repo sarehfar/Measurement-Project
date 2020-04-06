@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfluenceParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Confluence Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.confluence</a> &gt; <span class="el_source">ConfluenceParser.java</span></div><h1>ConfluenceParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.confluence;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.maven.doxia.module.confluence.parser.Block;
+import org.apache.maven.doxia.module.confluence.parser.BlockParser;
+import org.apache.maven.doxia.module.confluence.parser.DefinitionListBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.FigureBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.HorizontalRuleBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.ParagraphBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.SectionBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.VerbatimBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.list.ListBlockParser;
+import org.apache.maven.doxia.module.confluence.parser.table.TableBlockParser;
+import org.apache.maven.doxia.parser.AbstractTextParser;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.util.ByLineReaderSource;
+import org.apache.maven.doxia.util.ByLineSource;
+import org.codehaus.plexus.component.annotations.Component;
+
+/**
+ * Parse the &lt;a href=&quot;http://www.atlassian.com/software/confluence/&quot;&gt;Confluence&lt;/a&gt;.
+ * See &lt;a href=&quot;http://confluence.atlassian.com/display/CONF25/Confluence+Notation+Guide+Overview&quot;&gt;
+ * Confluence Notation Guide Overview&lt;/a&gt;
+ *
+ * @version $Id$
+ * @since 1.0
+ */
+@Component( role = Parser.class, hint = &quot;confluence&quot; )
+public class ConfluenceParser
+    extends AbstractTextParser
+{
+    private BlockParser[] parsers;
+
+    /**
+     * &lt;p&gt;Constructor for ConfluenceParser.&lt;/p&gt;
+     */
+    public ConfluenceParser()
+<span class="fc" id="L62">    {</span>
+<span class="fc" id="L63">        init();</span>
+<span class="fc" id="L64">    }</span>
+
+    private List&lt;Block&gt; parse( ByLineSource source )
+        throws ParseException
+    {
+<span class="fc" id="L69">        init();</span>
+
+<span class="fc" id="L71">        List&lt;Block&gt; blocks = new ArrayList&lt;Block&gt;();</span>
+
+        String line;
+
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        while ( ( line = source.getNextLine() ) != null )</span>
+        {
+            //boolean accepted = false;
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            for ( BlockParser parser : parsers )</span>
+            {
+<span class="fc bfc" id="L81" title="All 2 branches covered.">                if ( line.trim().length() == 0 )</span>
+                {
+<span class="fc" id="L83">                    continue;</span>
+                }
+
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                if ( parser.accept( line, source ) )</span>
+                {
+                    //accepted = true;
+
+<span class="fc" id="L90">                    blocks.add( parser.visit( line, source ) );</span>
+
+<span class="fc" id="L92">                    break;</span>
+                }
+            }
+
+/*
+            if ( !accepted )
+            {
+                throw new ParseException( &quot;don't know how to handle line: &quot; + source.getLineNumber() + &quot;: &quot; + line );
+            }
+*/
+        }
+
+<span class="fc" id="L104">        return blocks;</span>
+    }
+
+    @Override
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L111">        parse( source, sink, &quot;&quot; );</span>
+<span class="fc" id="L112">    }</span>
+
+    @Override
+    public synchronized void parse( Reader source, Sink sink, String reference )
+        throws ParseException
+    {
+<span class="fc" id="L118">        ByLineSource src = new ByLineReaderSource( source, reference );</span>
+
+        try
+        {
+<span class="fc" id="L122">            List&lt;Block&gt; blocks = parse( src );</span>
+
+<span class="fc" id="L124">            sink.head();</span>
+
+<span class="fc" id="L126">            sink.head_();</span>
+
+<span class="fc" id="L128">            sink.body();</span>
+
+<span class="fc bfc" id="L130" title="All 2 branches covered.">            for ( Block block : blocks )</span>
+            {
+<span class="fc" id="L132">                block.traverse( sink );</span>
+<span class="fc" id="L133">            }</span>
+
+<span class="fc" id="L135">            sink.body_();</span>
+        }
+<span class="nc" id="L137">        catch ( Exception e )</span>
+        {
+            // TODO handle column number
+<span class="nc" id="L140">            throw new ParseException( e, src.getName(), src.getLineNumber(), -1 );</span>
+        }
+        finally
+        {
+<span class="fc" id="L144">            setSecondParsing( false );</span>
+<span class="fc" id="L145">            init();</span>
+        }
+<span class="fc" id="L147">    }</span>
+
+    /** {@inheritDoc} */
+    protected void init()
+    {
+<span class="fc" id="L152">        super.init();</span>
+
+<span class="fc" id="L154">        BlockParser headingParser = new SectionBlockParser();</span>
+<span class="fc" id="L155">        BlockParser figureParser = new FigureBlockParser();</span>
+<span class="fc" id="L156">        BlockParser verbatimParser = new VerbatimBlockParser();</span>
+<span class="fc" id="L157">        BlockParser definitionParser = new DefinitionListBlockParser();</span>
+<span class="fc" id="L158">        BlockParser horizontalRuleParser = new HorizontalRuleBlockParser();</span>
+<span class="fc" id="L159">        BlockParser listParser = new ListBlockParser();</span>
+<span class="fc" id="L160">        BlockParser tableParser = new TableBlockParser();</span>
+
+<span class="fc" id="L162">        BlockParser[] subparsers =</span>
+                new BlockParser[] { headingParser, figureParser, listParser, tableParser, verbatimParser };
+<span class="fc" id="L164">        BlockParser paragraphParser = new ParagraphBlockParser( subparsers );</span>
+
+<span class="fc" id="L166">        this.parsers =</span>
+            new BlockParser[] { headingParser, figureParser, verbatimParser, definitionParser, horizontalRuleParser,
+                listParser, tableParser, paragraphParser };
+<span class="fc" id="L169">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

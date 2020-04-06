@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SectionBlockParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki.parser</a> &gt; <span class="el_source">SectionBlockParser.java</span></div><h1>SectionBlockParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.maven.doxia.util.ByLineSource;
+import org.apache.maven.doxia.parser.ParseException;
+
+/**
+ * Parse looking for sections
+ *
+ * @author Juan F. Codagnone
+ * @version $Id$
+ */
+<span class="fc" id="L35">public class SectionBlockParser</span>
+    implements BlockParser
+{
+    /**
+     * '---++ Header', '---## Header'
+     */
+<span class="fc" id="L41">    private static final Pattern HEADER_DA = Pattern.compile( &quot;^---([+]+)\\s*(.+)\\s*$&quot; );</span>
+
+    /**
+     * {@link ParagraphBlockParser} to use. injected
+     */
+    private ParagraphBlockParser paraParser;
+
+    /**
+     * {@link ParagraphBlockParser} to use. injected
+     */
+    private HRuleBlockParser hrulerParser;
+
+    /** {@link VerbatimBlockParser} */
+    private VerbatimBlockParser verbatimBlockParser;
+
+    /**
+     * {@inheritDoc}
+     */
+    public final boolean accept( final String line )
+    {
+<span class="fc" id="L61">        return HEADER_DA.matcher( line ).lookingAt();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public final Block visit( final String line, final ByLineSource source )
+        throws ParseException
+    {
+<span class="fc" id="L70">        final Matcher m = HEADER_DA.matcher( line );</span>
+
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if ( !m.lookingAt() )</span>
+        {
+<span class="nc" id="L74">            throw new IllegalArgumentException( &quot;don't know how to handle: &quot; + line );</span>
+        }
+
+        String newLine;
+<span class="fc" id="L78">        final ArrayList&lt;Block&gt; blocks = new ArrayList&lt;Block&gt;();</span>
+
+<span class="fc bfc" id="L80" title="All 4 branches covered.">        while ( ( newLine = source.getNextLine() ) != null &amp;&amp; !accept( newLine ) )</span>
+        {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            if ( hrulerParser.accept( newLine ) )</span>
+            {
+<span class="fc" id="L84">                blocks.add( hrulerParser.visit( newLine, source ) );</span>
+            }
+            else
+            {
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                if ( verbatimBlockParser.accept( newLine ) )</span>
+                {
+<span class="fc" id="L90">                    blocks.add( verbatimBlockParser.visit( newLine, source ) );</span>
+                }
+                else
+                {
+<span class="fc" id="L94">                    blocks.add( paraParser.visit( newLine, source ) );</span>
+                }
+            }
+        }
+
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if ( newLine != null )</span>
+        {
+<span class="fc" id="L101">            source.ungetLine();</span>
+        }
+
+<span class="fc" id="L104">        return new SectionBlock( m.group( 2 ), getLevel( m.group( 1 ) ), blocks.toArray( new Block[] {} ) );</span>
+    }
+
+    /**
+     * @param s &quot;++&quot;
+     * @return tha level of the section
+     * @throws IllegalArgumentException on error
+     */
+    static int getLevel( final String s )
+        throws IllegalArgumentException
+    {
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        for ( int i = 0, n = s.length(); i &lt; n; i++ )</span>
+        {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if ( s.charAt( i ) != '+' )</span>
+            {
+<span class="fc" id="L119">                throw new IllegalArgumentException( &quot;the argument must have only&quot; + &quot; '+' characters&quot; );</span>
+            }
+        }
+<span class="fc" id="L122">        return s.length();</span>
+    }
+
+    /**
+     * Sets the paraParser.
+     *
+     * @param paraParser &lt;code&gt;ParagraphBlockParser&lt;/code&gt; with the paraParser.
+     */
+    public final void setParaParser( final ParagraphBlockParser paraParser )
+    {
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if ( paraParser == null )</span>
+        {
+<span class="nc" id="L134">            throw new IllegalArgumentException( &quot;argument can't be null&quot; );</span>
+        }
+<span class="fc" id="L136">        this.paraParser = paraParser;</span>
+<span class="fc" id="L137">    }</span>
+
+    /**
+     * Sets the hrulerParser.
+     *
+     * @param hrulerParser &lt;code&gt;HRuleBlockParser&lt;/code&gt; with the hrulerParser.
+     */
+    public final void setHrulerParser( final HRuleBlockParser hrulerParser )
+    {
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if ( hrulerParser == null )</span>
+        {
+<span class="nc" id="L148">            throw new IllegalArgumentException( &quot;argument can't be null&quot; );</span>
+        }
+<span class="fc" id="L150">        this.hrulerParser = hrulerParser;</span>
+<span class="fc" id="L151">    }</span>
+
+    /**
+     * Sets the verbatimBlockParser.
+     *
+     * @param verbatimBlockParser &lt;code&gt;VerbatimBlockParser&lt;/code&gt; with the verbatimBlockParser.
+     * @since 1.1
+     */
+    public final void setVerbatimBlockParser( VerbatimBlockParser verbatimBlockParser )
+    {
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if ( verbatimBlockParser == null )</span>
+        {
+<span class="nc" id="L163">            throw new IllegalArgumentException( &quot;argument can't be null&quot; );</span>
+        }
+<span class="fc" id="L165">        this.verbatimBlockParser = verbatimBlockParser;</span>
+<span class="fc" id="L166">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

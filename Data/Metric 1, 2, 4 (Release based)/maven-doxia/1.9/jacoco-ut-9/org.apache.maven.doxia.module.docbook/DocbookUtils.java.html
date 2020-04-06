@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocbookUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Simplified DocBook Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.docbook</a> &gt; <span class="el_source">DocbookUtils.java</span></div><h1>DocbookUtils.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.docbook;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.sink.Sink;
+
+/**
+ * Utility methods for Doxia Docbook Parser and Sink.
+ *
+ * @author ltheussl
+ * @version $Id$
+ * @since 1.1.1
+ */
+public final class DocbookUtils
+{
+    /**
+     * Translate a given Docbook table frame attribute value to a valid
+     * Doxia table frame attribute value.
+     *
+     * &lt;p&gt;The input has to be one of &lt;code&gt;&quot;all&quot;&lt;/code&gt;, &lt;code&gt;&quot;bottom&quot;&lt;/code&gt;,
+     * &lt;code&gt;&quot;none&quot;&lt;/code&gt;, &lt;code&gt;&quot;sides&quot;&lt;/code&gt;, &lt;code&gt;&quot;top&quot;&lt;/code&gt; or &lt;code&gt;&quot;topbot&quot;&lt;/code&gt;,
+     * otherwise an IllegalArgumentException is thrown.&lt;/p&gt;
+     *
+     * &lt;p&gt;The corresponding output values are &lt;code&gt;&quot;box&quot;&lt;/code&gt;, &lt;code&gt;&quot;below&quot;&lt;/code&gt;,
+     * &lt;code&gt;&quot;void&quot;&lt;/code&gt;, &lt;code&gt;&quot;vsides&quot;&lt;/code&gt;, &lt;code&gt;&quot;above&quot;&lt;/code&gt; and &lt;code&gt;&quot;hsides&quot;&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param frame a valid docbook table frame attribute as specified above,
+     * otherwise an IllegalArgumentException is thrown.
+     * @return a valid Doxia table frame attribute as specified above.
+     */
+    public static String doxiaTableFrameAttribute( final String frame )
+    {
+<span class="fc" id="L50">        String fr = frame;</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if ( &quot;all&quot;.equals( fr ) )</span>
+        {
+<span class="fc" id="L54">            fr = &quot;box&quot;;</span>
+        }
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        else if ( &quot;bottom&quot;.equals( fr ) )</span>
+        {
+<span class="fc" id="L58">            fr = &quot;below&quot;;</span>
+        }
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        else if ( &quot;none&quot;.equals( fr ) )</span>
+        {
+<span class="fc" id="L62">            fr = &quot;void&quot;;</span>
+        }
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        else if ( &quot;sides&quot;.equals( fr ) )</span>
+        {
+<span class="fc" id="L66">            fr = &quot;vsides&quot;;</span>
+        }
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        else if ( &quot;top&quot;.equals( fr ) )</span>
+        {
+<span class="fc" id="L70">            fr = &quot;above&quot;;</span>
+        }
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        else if ( &quot;topbot&quot;.equals( fr ) )</span>
+        {
+<span class="fc" id="L74">            fr = &quot;hsides&quot;;</span>
+        }
+        else
+        {
+<span class="fc" id="L78">            throw new IllegalArgumentException( &quot;Not a valid frame attribute: &quot; + fr );</span>
+        }
+
+<span class="fc" id="L81">        return fr;</span>
+    }
+
+    /**
+     * Convert a docbook ordered-list numbering style to a doxia numbering style.
+     *
+     * &lt;p&gt;The input has to be one of the style constants defined in {@link SimplifiedDocbookMarkup},
+     * otherwise an IllegalArgumentException is thrown.&lt;/p&gt;
+     *
+     * &lt;p&gt;The output is one of the numbering constants defined in {@link Sink}.&lt;/p&gt;
+     * @param style a docbook ordered-list numbering style.
+     * @return a doxia numbering style.
+     */
+    public static int doxiaListNumbering( final String style )
+    {
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if ( SimplifiedDocbookMarkup.LOWERALPHA_STYLE.equals( style ) )</span>
+        {
+<span class="fc" id="L98">            return Sink.NUMBERING_LOWER_ALPHA;</span>
+        }
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        else if ( SimplifiedDocbookMarkup.LOWERROMAN_STYLE.equals( style ) )</span>
+        {
+<span class="fc" id="L102">            return Sink.NUMBERING_LOWER_ROMAN;</span>
+        }
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        else if ( SimplifiedDocbookMarkup.UPPERALPHA_STYLE.equals( style ) )</span>
+        {
+<span class="fc" id="L106">            return Sink.NUMBERING_UPPER_ALPHA;</span>
+        }
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        else if ( SimplifiedDocbookMarkup.UPPERROMAN_STYLE.equals( style ) )</span>
+        {
+<span class="fc" id="L110">            return Sink.NUMBERING_UPPER_ROMAN;</span>
+        }
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        else if ( SimplifiedDocbookMarkup.ARABIC_STYLE.equals( style ) )</span>
+        {
+<span class="fc" id="L114">            return Sink.NUMBERING_DECIMAL;</span>
+        }
+        else
+        {
+<span class="fc" id="L118">            throw new IllegalArgumentException( &quot;Not a valid numbering style: &quot; + style );</span>
+        }
+    }
+
+    /**
+     * Convert a doxia numbering style to a docbook ordered-list numbering style.
+     *
+     * &lt;p&gt;The input has to be one of the numbering constants defined in {@link Sink},
+     * otherwise an IllegalArgumentException is thrown.&lt;/p&gt;
+     *
+     * &lt;p&gt;The output is one of the style constants defined in {@link SimplifiedDocbookMarkup}.&lt;/p&gt;
+     * @param numbering a doxia numbering style.
+     * @return a docbook ordered-list numbering style.
+     */
+    public static String docbookListNumbering( final int numbering )
+    {
+<span class="fc bfc" id="L134" title="All 6 branches covered.">        switch ( numbering )</span>
+        {
+            case Sink.NUMBERING_UPPER_ALPHA:
+<span class="fc" id="L137">                return SimplifiedDocbookMarkup.UPPERALPHA_STYLE;</span>
+            case Sink.NUMBERING_LOWER_ALPHA:
+<span class="fc" id="L139">                return SimplifiedDocbookMarkup.LOWERALPHA_STYLE;</span>
+            case Sink.NUMBERING_UPPER_ROMAN:
+<span class="fc" id="L141">                return SimplifiedDocbookMarkup.UPPERROMAN_STYLE;</span>
+            case Sink.NUMBERING_LOWER_ROMAN:
+<span class="fc" id="L143">                return SimplifiedDocbookMarkup.LOWERROMAN_STYLE;</span>
+            case Sink.NUMBERING_DECIMAL:
+<span class="fc" id="L145">                return SimplifiedDocbookMarkup.ARABIC_STYLE;</span>
+            default:
+<span class="fc" id="L147">                throw new IllegalArgumentException( &quot;Not a valid numbering: &quot; + numbering );</span>
+        }
+    }
+
+    /**
+     * Get a trademark character from a class attribute.
+     *
+     * &lt;p&gt;The input String has to be one of &lt;code&gt;&quot;registered&quot;&lt;/code&gt;, &lt;code&gt;&quot;copyright&quot;&lt;/code&gt;,
+     * &lt;code&gt;&quot;service&quot;&lt;/code&gt; or &lt;code&gt;&quot;trade&quot;&lt;/code&gt; otherwise an IllegalArgumentException is thrown.&lt;/p&gt;
+     *
+     * &lt;p&gt;The corresponding output is &lt;code&gt;'\u00AE'&lt;/code&gt;, &lt;code&gt;'\u00A9'&lt;/code&gt;,
+     * &lt;code&gt;'\u2120'&lt;/code&gt; or &lt;code&gt;'\u2122'&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param trade a valid class atribute for the docbook &lt;code&gt;&amp;lt;trademark&amp;gt;&lt;/code&gt; tag.
+     * @return the corresponding unicode character.
+     */
+    public static char trademarkFromClass( final String trade )
+    {
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if ( &quot;registered&quot;.equals( trade ) )</span>
+        {
+<span class="fc" id="L167">            return '\u00AE';</span>
+        }
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        else if ( &quot;copyright&quot;.equals( trade ) )</span>
+        {
+<span class="fc" id="L171">            return '\u00A9';</span>
+        }
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        else if ( &quot;service&quot;.equals( trade ) )</span>
+        {
+<span class="fc" id="L175">            return '\u2120';</span>
+        }
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        else if ( &quot;trade&quot;.equals( trade ) )</span>
+        {
+<span class="fc" id="L179">            return '\u2122';</span>
+        }
+        else
+        {
+<span class="fc" id="L183">            throw new IllegalArgumentException( &quot;Not a trademark class: &quot; + trade );</span>
+        }
+    }
+
+    private DocbookUtils()
+    {
+        // utility class
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

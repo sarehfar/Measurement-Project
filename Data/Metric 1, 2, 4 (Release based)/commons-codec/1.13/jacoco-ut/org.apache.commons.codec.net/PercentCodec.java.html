@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PercentCodec.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Codec</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.codec.net</a> &gt; <span class="el_source">PercentCodec.java</span></div><h1>PercentCodec.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.commons.codec.net;
+
+import java.nio.ByteBuffer;
+import java.util.BitSet;
+import org.apache.commons.codec.BinaryDecoder;
+import org.apache.commons.codec.BinaryEncoder;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.EncoderException;
+
+/**
+ * Implements the Percent-Encoding scheme, as described in HTTP 1.1 specification. For extensibility, an array of
+ * special US-ASCII characters can be specified in order to perform proper URI encoding for the different parts
+ * of the URI.
+ * &lt;p&gt;
+ * This class is immutable. It is also thread-safe besides using BitSet which is not thread-safe, but its public
+ * interface only call the access
+ * &lt;/p&gt;
+ *
+ * @see &lt;a href=&quot;https://tools.ietf.org/html/rfc3986#section-2.1&quot;&gt;Percent-Encoding&lt;/a&gt;
+ * @since 1.12
+ */
+public class PercentCodec implements BinaryEncoder, BinaryDecoder {
+
+    /**
+     * The escape character used by the Percent-Encoding in order to introduce an encoded character.
+     */
+
+    private static final byte ESCAPE_CHAR = '%';
+
+    /**
+     * The bit set used to store the character that should be always encoded
+     */
+<span class="fc" id="L50">    private final BitSet alwaysEncodeChars = new BitSet();</span>
+
+    /**
+     * The flag defining if the space character should be encoded as '+'
+     */
+    private final boolean plusForSpace;
+
+    /**
+     * The minimum and maximum code of the bytes that is inserted in the bit set, used to prevent look-ups
+     */
+<span class="fc" id="L60">    private int alwaysEncodeCharsMin = Integer.MAX_VALUE, alwaysEncodeCharsMax = Integer.MIN_VALUE;</span>
+
+    /**
+     * Constructs a Percent coded that will encode all the non US-ASCII characters using the Percent-Encoding
+     * while it will not encode all the US-ASCII characters, except for character '%' that is used as escape
+     * character for Percent-Encoding.
+     */
+<span class="fc" id="L67">    public PercentCodec() {</span>
+<span class="fc" id="L68">        this.plusForSpace = false;</span>
+<span class="fc" id="L69">        insertAlwaysEncodeChar(ESCAPE_CHAR);</span>
+<span class="fc" id="L70">    }</span>
+
+    /**
+     * Constructs a Percent codec by specifying the characters that belong to US-ASCII that should
+     * always be encoded. The rest US-ASCII characters will not be encoded, except for character '%' that
+     * is used as escape character for Percent-Encoding.
+     *
+     * @param alwaysEncodeChars the unsafe characters that should always be encoded
+     * @param plusForSpace      the flag defining if the space character should be encoded as '+'
+     */
+<span class="fc" id="L80">    public PercentCodec(final byte[] alwaysEncodeChars, final boolean plusForSpace) {</span>
+<span class="fc" id="L81">        this.plusForSpace = plusForSpace;</span>
+<span class="fc" id="L82">        insertAlwaysEncodeChars(alwaysEncodeChars);</span>
+<span class="fc" id="L83">    }</span>
+
+    /**
+     * Adds the byte array into a BitSet for faster lookup
+     *
+     * @param alwaysEncodeCharsArray
+     */
+    private void insertAlwaysEncodeChars(final byte[] alwaysEncodeCharsArray) {
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (alwaysEncodeCharsArray != null) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            for (final byte b : alwaysEncodeCharsArray) {</span>
+<span class="fc" id="L93">                insertAlwaysEncodeChar(b);</span>
+            }
+        }
+<span class="fc" id="L96">        insertAlwaysEncodeChar(ESCAPE_CHAR);</span>
+<span class="fc" id="L97">    }</span>
+
+    /**
+     * Inserts a single character into a BitSet and maintains the min and max of the characters of the
+     * {@code BitSet alwaysEncodeChars} in order to avoid look-ups when a byte is out of this range.
+     *
+     * @param b the byte that is candidate for min and max limit
+     */
+    private void insertAlwaysEncodeChar(final byte b) {
+<span class="fc" id="L106">        this.alwaysEncodeChars.set(b);</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (b &lt; alwaysEncodeCharsMin) {</span>
+<span class="fc" id="L108">            alwaysEncodeCharsMin = b;</span>
+        }
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (b &gt; alwaysEncodeCharsMax) {</span>
+<span class="fc" id="L111">            alwaysEncodeCharsMax = b;</span>
+        }
+<span class="fc" id="L113">    }</span>
+
+    /**
+     * Percent-Encoding based on RFC 3986. The non US-ASCII characters are encoded, as well as the
+     * US-ASCII characters that are configured to be always encoded.
+     */
+    @Override
+    public byte[] encode(final byte[] bytes) throws EncoderException {
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (bytes == null) {</span>
+<span class="fc" id="L122">            return null;</span>
+        }
+
+<span class="fc" id="L125">        final int expectedEncodingBytes = expectedEncodingBytes(bytes);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        final boolean willEncode = expectedEncodingBytes != bytes.length;</span>
+<span class="fc bfc" id="L127" title="All 6 branches covered.">        if (willEncode || (plusForSpace &amp;&amp; containsSpace(bytes))) {</span>
+<span class="fc" id="L128">            return doEncode(bytes, expectedEncodingBytes, willEncode);</span>
+        }
+<span class="fc" id="L130">        return bytes;</span>
+    }
+
+    private byte[] doEncode(final byte[] bytes, final int expectedLength, final boolean willEncode) {
+<span class="fc" id="L134">        final ByteBuffer buffer = ByteBuffer.allocate(expectedLength);</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        for (final byte b : bytes) {</span>
+<span class="fc bfc" id="L136" title="All 4 branches covered.">            if (willEncode &amp;&amp; canEncode(b)) {</span>
+<span class="fc" id="L137">                byte bb = b;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">                if (bb &lt; 0) {</span>
+<span class="fc" id="L139">                    bb = (byte) (256 + bb);</span>
+                }
+<span class="fc" id="L141">                final char hex1 = Utils.hexDigit(bb &gt;&gt; 4);</span>
+<span class="fc" id="L142">                final char hex2 = Utils.hexDigit(bb);</span>
+<span class="fc" id="L143">                buffer.put(ESCAPE_CHAR);</span>
+<span class="fc" id="L144">                buffer.put((byte) hex1);</span>
+<span class="fc" id="L145">                buffer.put((byte) hex2);</span>
+<span class="fc" id="L146">            } else {</span>
+<span class="fc bfc" id="L147" title="All 4 branches covered.">                if (plusForSpace &amp;&amp; b == ' ') {</span>
+<span class="fc" id="L148">                    buffer.put((byte) '+');</span>
+                } else {
+<span class="fc" id="L150">                    buffer.put(b);</span>
+                }
+            }
+        }
+<span class="fc" id="L154">        return buffer.array();</span>
+    }
+
+    private int expectedEncodingBytes(final byte[] bytes) {
+<span class="fc" id="L158">        int byteCount = 0;</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (final byte b : bytes) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            byteCount += canEncode(b) ? 3: 1;</span>
+        }
+<span class="fc" id="L162">        return byteCount;</span>
+    }
+
+    private boolean containsSpace(final byte[] bytes) {
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        for (final byte b : bytes) {</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">            if (b == ' ') {</span>
+<span class="fc" id="L168">                return true;</span>
+            }
+        }
+<span class="fc" id="L171">        return false;</span>
+    }
+
+    private boolean canEncode(final byte c) {
+<span class="fc bfc" id="L175" title="All 6 branches covered.">        return !isAsciiChar(c) || (inAlwaysEncodeCharsRange(c) &amp;&amp; alwaysEncodeChars.get(c));</span>
+    }
+
+    private boolean inAlwaysEncodeCharsRange(final byte c) {
+<span class="fc bfc" id="L179" title="All 4 branches covered.">        return c &gt;= alwaysEncodeCharsMin &amp;&amp; c &lt;= alwaysEncodeCharsMax;</span>
+    }
+
+    private boolean isAsciiChar(final byte c) {
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        return c &gt;= 0;</span>
+    }
+
+    /**
+     * Decode bytes encoded with Percent-Encoding based on RFC 3986. The reverse process is performed in order to
+     * decode the encoded characters to Unicode.
+     */
+    @Override
+    public byte[] decode(final byte[] bytes) throws DecoderException {
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        if (bytes == null) {</span>
+<span class="fc" id="L193">            return null;</span>
+        }
+
+<span class="fc" id="L196">        final ByteBuffer buffer = ByteBuffer.allocate(expectedDecodingBytes(bytes));</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        for (int i = 0; i &lt; bytes.length; i++) {</span>
+<span class="fc" id="L198">            final byte b = bytes[i];</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (b == ESCAPE_CHAR) {</span>
+                try {
+<span class="fc" id="L201">                    final int u = Utils.digit16(bytes[++i]);</span>
+<span class="fc" id="L202">                    final int l = Utils.digit16(bytes[++i]);</span>
+<span class="fc" id="L203">                    buffer.put((byte) ((u &lt;&lt; 4) + l));</span>
+<span class="fc" id="L204">                } catch (final ArrayIndexOutOfBoundsException e) {</span>
+<span class="fc" id="L205">                    throw new DecoderException(&quot;Invalid percent decoding: &quot;, e);</span>
+<span class="fc" id="L206">                }</span>
+            } else {
+<span class="fc bfc" id="L208" title="All 4 branches covered.">                if (plusForSpace &amp;&amp; b == '+') {</span>
+<span class="fc" id="L209">                    buffer.put((byte) ' ');</span>
+                } else {
+<span class="fc" id="L211">                    buffer.put(b);</span>
+                }
+            }
+        }
+<span class="fc" id="L215">        return buffer.array();</span>
+    }
+
+    private int expectedDecodingBytes(final byte[] bytes) {
+<span class="fc" id="L219">        int byteCount = 0;</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        for (int i = 0; i &lt; bytes.length; ) {</span>
+<span class="fc" id="L221">            final byte b = bytes[i];</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">            i += b == ESCAPE_CHAR ? 3: 1;</span>
+<span class="fc" id="L223">            byteCount++;</span>
+<span class="fc" id="L224">        }</span>
+<span class="fc" id="L225">        return byteCount;</span>
+    }
+
+    /**
+     * Encodes an object into using the Percent-Encoding. Only byte[] objects are accepted.
+     *
+     * @param obj the object to encode
+     * @return the encoding result byte[] as Object
+     * @throws EncoderException if the object is not a byte array
+     */
+    @Override
+    public Object encode(final Object obj) throws EncoderException {
+<span class="fc bfc" id="L237" title="All 2 branches covered.">        if (obj == null) {</span>
+<span class="fc" id="L238">            return null;</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        } else if (obj instanceof byte[]) {</span>
+<span class="fc" id="L240">            return encode((byte[]) obj);</span>
+        } else {
+<span class="fc" id="L242">            throw new EncoderException(&quot;Objects of type &quot; + obj.getClass().getName() + &quot; cannot be Percent encoded&quot;);</span>
+        }
+    }
+
+    /**
+     * Decodes a byte[] Object, whose bytes are encoded with Percent-Encoding.
+     *
+     * @param obj the object to decode
+     * @return the decoding result byte[] as Object
+     * @throws DecoderException if the object is not a byte array
+     */
+    @Override
+    public Object decode(final Object obj) throws DecoderException {
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        if (obj == null) {</span>
+<span class="fc" id="L256">            return null;</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        } else if (obj instanceof byte[]) {</span>
+<span class="fc" id="L258">            return decode((byte[]) obj);</span>
+        } else {
+<span class="fc" id="L260">            throw new DecoderException(&quot;Objects of type &quot; + obj.getClass().getName() + &quot; cannot be Percent decoded&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

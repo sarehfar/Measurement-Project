@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndexEntry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.index</a> &gt; <span class="el_source">IndexEntry.java</span></div><h1>IndexEntry.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.index;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * &lt;p&gt;IndexEntry class.&lt;/p&gt;
+ *
+ * @author &lt;a href=&quot;mailto:trygvis@inamo.no&quot;&gt;Trygve Laugst&amp;oslash;l&lt;/a&gt;
+ */
+public class IndexEntry
+{
+    /**
+     * The parent entry.
+     */
+    private final IndexEntry parent;
+
+    /**
+     * The id of the entry.
+     */
+    private String id;
+
+    /**
+     * The entry title.
+     */
+    private String title;
+
+    /**
+     * The child entries.
+     */
+<span class="fc" id="L53">    private List&lt;IndexEntry&gt; childEntries = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * System-dependent EOL.
+     */
+<span class="fc" id="L58">    private static final String EOL = System.getProperty( &quot;line.separator&quot; );</span>
+
+    /**
+     * Constructor.
+     *
+     * @param newId The id. May be null.
+     */
+    public IndexEntry( String newId )
+    {
+<span class="fc" id="L67">        this( null, newId );</span>
+<span class="fc" id="L68">    }</span>
+
+    /**
+     * Constructor.
+     *
+     * @param newParent The parent. May be null.
+     * @param newId     The id. May be null.
+     */
+    public IndexEntry( IndexEntry newParent, String newId )
+<span class="fc" id="L77">    {</span>
+<span class="fc" id="L78">        this.parent = newParent;</span>
+<span class="fc" id="L79">        this.id = newId;</span>
+
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if ( parent != null )</span>
+        {
+<span class="fc" id="L83">            parent.childEntries.add( this );</span>
+        }
+<span class="fc" id="L85">    }</span>
+
+    /**
+     * Returns the parent entry.
+     *
+     * @return the parent entry.
+     */
+    public IndexEntry getParent()
+    {
+<span class="fc" id="L94">        return parent;</span>
+    }
+
+    /**
+     * Returns the id.
+     *
+     * @return the id.
+     */
+    public String getId()
+    {
+<span class="fc" id="L104">        return id;</span>
+    }
+
+    /**
+     * Set the id.
+     *
+     * @param id the id
+     * @since 1.1.2
+     */
+    protected void setId( String id )
+    {
+<span class="fc" id="L115">        this.id = id;</span>
+<span class="fc" id="L116">    }</span>
+
+    /**
+     * Returns the title.
+     *
+     * @return the title.
+     */
+    public String getTitle()
+    {
+<span class="fc" id="L125">        return title;</span>
+    }
+
+    /**
+     * Sets the title.
+     *
+     * @param newTitle the title.
+     */
+    public void setTitle( String newTitle )
+    {
+<span class="fc" id="L135">        this.title = newTitle;</span>
+<span class="fc" id="L136">    }</span>
+
+    /**
+     * Returns an unmodifiableList of the child entries.
+     *
+     * @return child entries.
+     */
+    public List&lt;IndexEntry&gt; getChildEntries()
+    {
+<span class="fc" id="L145">        return Collections.unmodifiableList( childEntries );</span>
+    }
+
+    /**
+     * Sets the child entries or creates a new ArrayList if entries == null.
+     *
+     * @param entries the entries.
+     */
+    public void setChildEntries( List&lt;IndexEntry&gt; entries )
+    {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        if ( entries == null )</span>
+        {
+<span class="nc" id="L157">            childEntries = new ArrayList&lt;&gt;();</span>
+        }
+
+<span class="nc" id="L160">        this.childEntries = entries;</span>
+<span class="nc" id="L161">    }</span>
+
+    // -----------------------------------------------------------------------
+    // Utils
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns the next entry.
+     *
+     * @return the next entry, or null if there is none.
+     */
+    public IndexEntry getNextEntry()
+    {
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if ( parent == null )</span>
+        {
+<span class="fc" id="L176">            return null;</span>
+        }
+
+<span class="fc" id="L179">        List&lt;IndexEntry&gt; entries = parent.getChildEntries();</span>
+
+<span class="fc" id="L181">        int index = entries.indexOf( this );</span>
+
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if ( index + 1 &gt;= entries.size() )</span>
+        {
+<span class="fc" id="L185">            return null;</span>
+        }
+
+<span class="fc" id="L188">        return entries.get( index + 1 );</span>
+    }
+
+    /**
+     * Returns the previous entry.
+     *
+     * @return the previous entry, or null if there is none.
+     */
+    public IndexEntry getPrevEntry()
+    {
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        if ( parent == null )</span>
+        {
+<span class="fc" id="L200">            return null;</span>
+        }
+
+<span class="fc" id="L203">        List&lt;IndexEntry&gt; entries = parent.getChildEntries();</span>
+
+<span class="fc" id="L205">        int index = entries.indexOf( this );</span>
+
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if ( index == 0 )</span>
+        {
+<span class="fc" id="L209">            return null;</span>
+        }
+
+<span class="fc" id="L212">        return entries.get( index - 1 );</span>
+    }
+
+    /**
+     * Returns the first entry.
+     *
+     * @return the first entry, or null if there is none.
+     */
+    public IndexEntry getFirstEntry()
+    {
+<span class="nc" id="L222">        List&lt;IndexEntry&gt; entries = getChildEntries();</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        if ( entries.size() == 0 )</span>
+        {
+<span class="nc" id="L226">            return null;</span>
+        }
+
+<span class="nc" id="L229">        return entries.get( 0 );</span>
+    }
+
+    /**
+     * Returns the last entry.
+     *
+     * @return the last entry, or null if there is none.
+     */
+    public IndexEntry getLastEntry()
+    {
+<span class="nc" id="L239">        List&lt;IndexEntry&gt; entries = getChildEntries();</span>
+
+<span class="nc bnc" id="L241" title="All 2 branches missed.">        if ( entries.size() == 0 )</span>
+        {
+<span class="nc" id="L243">            return null;</span>
+        }
+
+<span class="nc" id="L246">        return entries.get( entries.size() - 1 );</span>
+    }
+
+    /**
+     * Returns the root entry.
+     *
+     * @return the root entry, or null if there is none.
+     */
+    public IndexEntry getRootEntry()
+    {
+<span class="nc" id="L256">        List&lt;IndexEntry&gt; entries = getChildEntries();</span>
+
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        if ( entries.size() == 0 )</span>
+        {
+<span class="nc" id="L260">            return null;</span>
+        }
+<span class="nc bnc" id="L262" title="All 2 branches missed.">        else if ( entries.size() &gt; 1 )</span>
+        {
+<span class="nc" id="L264">            throw new RuntimeException( &quot;This index has more than one root entry&quot; );</span>
+        }
+        else
+        {
+<span class="nc" id="L268">            return entries.get( 0 );</span>
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Object Overrides
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns a string representation of the object.
+     *
+     * @return Returns a string representation of all objects
+     */
+    public String toString()
+    {
+<span class="fc" id="L283">        return toString( 0 );</span>
+    }
+
+    /**
+     * Returns a string representation of all objects to the given depth.
+     *
+     * @param depth The depth to descent to.
+     * @return A string.
+     */
+    public String toString( int depth )
+    {
+<span class="fc" id="L294">        StringBuilder message = new StringBuilder();</span>
+
+<span class="fc" id="L296">        message.append( &quot;Id: &quot; ).append( id );</span>
+
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">        if ( StringUtils.isNotEmpty( title ) )</span>
+        {
+<span class="fc" id="L300">            message.append( &quot;, title: &quot; ).append( title );</span>
+        }
+
+<span class="fc" id="L303">        message.append( EOL );</span>
+
+<span class="fc" id="L305">        StringBuilder indent = new StringBuilder();</span>
+
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">        for ( int i = 0; i &lt; depth; i++ )</span>
+        {
+<span class="nc" id="L309">            indent.append( &quot; &quot; );</span>
+        }
+
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">        for ( IndexEntry entry : getChildEntries() )</span>
+        {
+<span class="nc" id="L314">            message.append( indent ).append( entry.toString( depth + 1 ) );</span>
+<span class="nc" id="L315">        }</span>
+
+<span class="fc" id="L317">        return message.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

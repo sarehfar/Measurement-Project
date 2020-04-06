@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XhtmlSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: XHTML Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.xhtml</a> &gt; <span class="el_source">XhtmlSink.java</span></div><h1>XhtmlSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.xhtml;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.Writer;
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.html.HTML.Attribute;
+
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.sink.impl.XhtmlBaseSink;
+import org.apache.maven.doxia.util.HtmlTools;
+
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * &lt;a href=&quot;http://www.w3.org/TR/xhtml1/&quot;&gt;Xhtml 1.0 Transitional&lt;/a&gt; sink implementation.
+ * &lt;br&gt;
+ * It uses the DTD/xhtml1-transitional &lt;a href=&quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&quot;&gt;
+ * http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&lt;/a&gt;.
+ *
+ * @author Jason van Zyl
+ * @author ltheussl
+ * @since 1.0
+ */
+public class XhtmlSink
+    extends XhtmlBaseSink
+    implements XhtmlMarkup
+{
+    // ----------------------------------------------------------------------
+    // Instance fields
+    // ----------------------------------------------------------------------
+
+    private String encoding;
+
+    private String languageId;
+
+    /** An indication on if we're inside a head title. */
+    private boolean headTitleFlag;
+
+    // ----------------------------------------------------------------------
+    // Constructors
+    // ----------------------------------------------------------------------
+
+    /**
+     * Constructor, initialize the Writer.
+     *
+     * @param writer not null writer to write the result.
+     */
+    protected XhtmlSink( Writer writer )
+    {
+<span class="fc" id="L69">        super( writer );</span>
+<span class="fc" id="L70">    }</span>
+
+    /**
+     * Constructor, initialize the Writer and tells which encoding is used.
+     *
+     * @param writer not null writer to write the result.
+     * @param encoding the encoding used, that should be written to the generated HTML content
+     * if not &lt;code&gt;null&lt;/code&gt;.
+     */
+    protected XhtmlSink( Writer writer, String encoding )
+    {
+<span class="fc" id="L81">        super( writer );</span>
+
+<span class="fc" id="L83">        this.encoding = encoding;</span>
+<span class="fc" id="L84">    }</span>
+
+    /**
+     * Constructor, initialize the Writer and tells which encoding and languageId are used.
+     *
+     * @param writer not null writer to write the result.
+     * @param encoding the encoding used, that should be written to the generated HTML content
+     * if not &lt;code&gt;null&lt;/code&gt;.
+     * @param languageId language identifier for the root element as defined by
+     * &lt;a href=&quot;ftp://ftp.isi.edu/in-notes/bcp/bcp47.txt&quot;&gt;IETF BCP 47&lt;/a&gt;, Tags for the Identification of Languages;
+     * in addition, the empty string may be specified.
+     */
+    protected XhtmlSink( Writer writer, String encoding, String languageId )
+    {
+<span class="fc" id="L98">        this( writer, encoding );</span>
+
+<span class="fc" id="L100">        this.languageId = languageId;</span>
+<span class="fc" id="L101">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void head()
+    {
+<span class="fc" id="L108">        init();</span>
+
+<span class="fc" id="L110">        setHeadFlag( true );</span>
+
+<span class="fc" id="L112">        write( &quot;&lt;!DOCTYPE html PUBLIC \&quot;&quot; + XHTML_TRANSITIONAL_PUBLIC_ID + &quot;\&quot; \&quot;&quot; + XHTML_TRANSITIONAL_SYSTEM_ID</span>
+            + &quot;\&quot;&gt;&quot; );
+
+<span class="fc" id="L115">        MutableAttributeSet atts = new SinkEventAttributeSet();</span>
+<span class="fc" id="L116">        atts.addAttribute( &quot;xmlns&quot;, XHTML_NAMESPACE );</span>
+
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if ( languageId != null )</span>
+        {
+<span class="fc" id="L120">            atts.addAttribute( Attribute.LANG.toString(), languageId );</span>
+<span class="fc" id="L121">            atts.addAttribute( &quot;xml:lang&quot;, languageId );</span>
+        }
+
+<span class="fc" id="L124">        writeStartTag( HTML, atts );</span>
+
+<span class="fc" id="L126">        writeStartTag( HEAD );</span>
+<span class="fc" id="L127">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void head_()
+    {
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if ( !isHeadTitleFlag() )</span>
+        {
+            // The content of element type &quot;head&quot; must match
+            // &quot;((script|style|meta|link|object|isindex)*,
+            //  ((title,(script|style|meta|link|object|isindex)*,
+            //  (base,(script|style|meta|link|object|isindex)*)?)|(base,(script|style|meta|link|object|isindex)*,
+            //  (title,(script|style|meta|link|object|isindex)*))))&quot;
+<span class="nc" id="L141">            writeStartTag( TITLE );</span>
+<span class="nc" id="L142">            writeEndTag( TITLE );</span>
+        }
+
+<span class="fc" id="L145">        setHeadFlag( false );</span>
+<span class="fc" id="L146">        setHeadTitleFlag( false );</span>
+
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if ( encoding != null )</span>
+        {
+<span class="fc" id="L150">            write( &quot;&lt;meta http-equiv=\&quot;Content-Type\&quot; content=\&quot;text/html; charset=&quot; + encoding + &quot;\&quot;/&gt;&quot; );</span>
+        }
+
+<span class="fc" id="L153">        writeEndTag( HEAD );</span>
+<span class="fc" id="L154">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see javax.swing.text.html.HTML.Tag#TITLE
+     */
+    public void title()
+    {
+<span class="fc" id="L163">        setHeadTitleFlag( true );</span>
+
+<span class="fc" id="L165">        writeStartTag( TITLE );</span>
+<span class="fc" id="L166">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see javax.swing.text.html.HTML.Tag#TITLE
+     */
+    public void title_()
+    {
+<span class="fc" id="L175">        content( getTextBuffer().toString() );</span>
+
+<span class="fc" id="L177">        writeEndTag( TITLE );</span>
+
+<span class="fc" id="L179">        resetTextBuffer();</span>
+
+<span class="fc" id="L181">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see javax.swing.text.html.HTML.Tag#META
+     */
+    public void author_()
+    {
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        if ( getTextBuffer().length() &gt; 0 )</span>
+        {
+<span class="fc" id="L192">            MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="fc" id="L193">            att.addAttribute( Attribute.NAME, &quot;author&quot; );</span>
+<span class="fc" id="L194">            String text = HtmlTools.escapeHTML( getTextBuffer().toString() );</span>
+            // hack: un-escape numerical entities that have been escaped above
+            // note that numerical entities should really be added as one unicode character in the first place
+<span class="fc" id="L197">            text = StringUtils.replace( text, &quot;&amp;amp;#&quot;, &quot;&amp;#&quot; );</span>
+<span class="fc" id="L198">            att.addAttribute( Attribute.CONTENT, text );</span>
+
+<span class="fc" id="L200">            writeSimpleTag( META, att );</span>
+
+<span class="fc" id="L202">            resetTextBuffer();</span>
+        }
+<span class="fc" id="L204">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see javax.swing.text.html.HTML.Tag#META
+     */
+    public void date_()
+    {
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        if ( getTextBuffer().length() &gt; 0 )</span>
+        {
+<span class="fc" id="L215">            MutableAttributeSet att = new SinkEventAttributeSet();</span>
+<span class="fc" id="L216">            att.addAttribute( Attribute.NAME, &quot;date&quot; );</span>
+<span class="fc" id="L217">            att.addAttribute( Attribute.CONTENT, getTextBuffer().toString() );</span>
+
+<span class="fc" id="L219">            writeSimpleTag( META, att );</span>
+
+<span class="fc" id="L221">            resetTextBuffer();</span>
+        }
+<span class="fc" id="L223">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see javax.swing.text.html.HTML.Tag#BODY
+     */
+    public void body()
+    {
+<span class="fc" id="L232">        writeStartTag( BODY );</span>
+<span class="fc" id="L233">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see javax.swing.text.html.HTML.Tag#BODY
+     * @see javax.swing.text.html.HTML.Tag#HTML
+     */
+    public void body_()
+    {
+<span class="fc" id="L243">        writeEndTag( BODY );</span>
+
+<span class="fc" id="L245">        writeEndTag( HTML );</span>
+
+<span class="fc" id="L247">        flush();</span>
+
+<span class="fc" id="L249">        init();</span>
+<span class="fc" id="L250">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Public protected methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;headTitleFlag&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param headTitleFlag an header title flag.
+     * @since 1.1
+     */
+    protected void setHeadTitleFlag( boolean headTitleFlag )
+    {
+<span class="fc" id="L264">        this.headTitleFlag = headTitleFlag;</span>
+<span class="fc" id="L265">    }</span>
+
+    /**
+     * &lt;p&gt;isHeadTitleFlag.&lt;/p&gt;
+     *
+     * @return the current headTitleFlag.
+     * @since 1.1
+     */
+    protected boolean isHeadTitleFlag()
+    {
+<span class="fc" id="L275">        return this.headTitleFlag ;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

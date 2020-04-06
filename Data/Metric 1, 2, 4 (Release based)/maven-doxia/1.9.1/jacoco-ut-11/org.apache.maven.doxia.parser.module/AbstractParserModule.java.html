@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractParserModule.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.parser.module</a> &gt; <span class="el_source">AbstractParserModule.java</span></div><h1>AbstractParserModule.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.parser.module;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * An abstract base class that implements the ParserModule interface.
+ *
+ * @since 1.6
+ */
+public abstract class AbstractParserModule
+    implements ParserModule
+{
+    /** The source directory. */
+    private final String sourceDirectory;
+
+    /** The supported file extensions. */
+    private final String[] extensions;
+
+    /** The default file extension. */
+    private final String parserId;
+
+    /**
+     * Constructor with null.
+     */
+    public AbstractParserModule()
+    {
+<span class="nc" id="L44">        this( null, null, (String[]) null );</span>
+<span class="nc" id="L45">    }</span>
+
+    /**
+     * Constructor with same value for everything: source directory and file extension equal parserId.
+     *
+     * @param parserId the parser id
+     */
+    public AbstractParserModule( String parserId )
+    {
+<span class="nc" id="L54">        this( parserId, parserId, parserId );</span>
+<span class="nc" id="L55">    }</span>
+
+    /**
+     * Constructor with same value for parser id and source directory.
+     *
+     * @param parserId the parser id
+     * @param extension the file extension
+     */
+    public AbstractParserModule( String parserId, String extension )
+    {
+<span class="nc" id="L65">        this( parserId, parserId, new String[] { extension } );</span>
+<span class="nc" id="L66">    }</span>
+
+    /**
+     * &lt;p&gt;Constructor for AbstractParserModule.&lt;/p&gt;
+     *
+     * @param sourceDirectory not null
+     * @param extension not null
+     * @param parserId not null
+     * @since 1.1.1
+     * @deprecated can cause confusion with constructor with multiple extensions
+     */
+    protected AbstractParserModule( String sourceDirectory, String extension, String parserId )
+    {
+<span class="nc" id="L79">        super();</span>
+<span class="nc" id="L80">        this.sourceDirectory = sourceDirectory;</span>
+<span class="nc" id="L81">        this.extensions = new String[] { extension };</span>
+<span class="nc" id="L82">        this.parserId = parserId;</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * &lt;p&gt;Constructor for AbstractParserModule.&lt;/p&gt;
+     *
+     * @param sourceDirectory not null
+     * @param parserId not null (usually equals sourceDirectory)
+     * @param extensions not null
+     * @since 1.7
+     */
+    protected AbstractParserModule( String sourceDirectory, String parserId, String... extensions )
+    {
+<span class="nc" id="L95">        super();</span>
+<span class="nc" id="L96">        this.sourceDirectory = sourceDirectory;</span>
+<span class="nc" id="L97">        this.extensions = extensions;</span>
+<span class="nc" id="L98">        this.parserId = parserId;</span>
+<span class="nc" id="L99">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public String getSourceDirectory()
+    {
+<span class="nc" id="L108">        return sourceDirectory;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return an array of {@link java.lang.String} objects.
+     */
+    public String[] getExtensions()
+    {
+<span class="nc" id="L118">        return extensions;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public String getParserId()
+    {
+<span class="nc" id="L128">        return parserId;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

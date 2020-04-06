@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: FO Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.fo</a> &gt; <span class="el_source">FoConfiguration.java</span></div><h1>FoConfiguration.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.fo;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.maven.doxia.sink.impl.SinkUtils;
+import org.codehaus.plexus.util.ReaderFactory;
+
+/**
+ * A utility class to construct FO configuration parameters.
+ *
+ * @author ltheussl
+ * @since 1.1
+ */
+public class FoConfiguration
+{
+    /** Holds the single attributes. */
+    private MutableAttributeSet attributeSet;
+
+    /** The configuration instance. */
+    private final XMLConfiguration config;
+
+    /** The list of attribute sets. */
+    private List&lt;?&gt; sets;
+
+    /**
+     * Constructor.
+     */
+    public FoConfiguration()
+<span class="fc" id="L55">    {</span>
+<span class="fc" id="L56">        this.config = new XMLConfiguration();</span>
+
+        // necessary because some attributes contain commas:
+<span class="fc" id="L59">        config.setDelimiterParsingDisabled( true );</span>
+
+<span class="fc" id="L61">        loadDefaultConfig();</span>
+<span class="fc" id="L62">    }</span>
+
+    /**
+     * Load configuration parameters from a File.
+     *
+     * @param configFile the configuration file.
+     *
+     * @throws java.io.IOException if the File cannot be read
+     *  or some error occurs when initializing the configuration parameters.
+     *
+     * @since 1.1.1
+     */
+    public void load( File configFile )
+            throws IOException
+    {
+<span class="nc" id="L77">        config.clear();</span>
+
+        try
+        {
+<span class="nc" id="L81">            config.load( configFile );</span>
+        }
+<span class="nc" id="L83">        catch ( ConfigurationException cex )</span>
+        {
+<span class="nc" id="L85">            throw new IOException( cex );</span>
+<span class="nc" id="L86">        }</span>
+
+<span class="nc" id="L88">        loadDefaultConfig(); // this adds default values that are missing from above</span>
+<span class="nc" id="L89">    }</span>
+
+    /**
+     * Builds a list of attributes.
+     *
+     * @param attributeId A unique id to identify the set of attributes.
+     * This should correspond to the name of an attribute-set
+     * defined in the configuration file.
+     * @return A string that contains a list of attributes with
+     * the values configured for the current builder. Returns the
+     * empty string if attributeId is null or if attributeId
+     * is not a valid identifier.
+     */
+    public String getAttributeString( String attributeId )
+    {
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if ( attributeId == null )</span>
+        {
+<span class="fc" id="L106">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L109">        reset();</span>
+<span class="fc" id="L110">        addAttributes( attributeId );</span>
+
+<span class="fc" id="L112">        return SinkUtils.getAttributeString( attributeSet );</span>
+    }
+
+    /**
+     * Builds a set of attributes.
+     *
+     * @param attributeId A unique id to identify the set of attributes.
+     * This should correspond to the name of an attribute-set
+     * defined in the configuration file.
+     * @return A MutableAttributeSet that contains the attributes with
+     * the values configured for the current builder. Returns null
+     * if attributeId is null or empty, or if attributeId is not a valid identifier.
+     */
+    public MutableAttributeSet getAttributeSet( String attributeId )
+    {
+<span class="fc bfc" id="L127" title="All 4 branches covered.">        if ( attributeId == null || attributeId.length() == 0 )</span>
+        {
+<span class="fc" id="L129">            return null;</span>
+        }
+
+<span class="fc" id="L132">        reset();</span>
+<span class="fc" id="L133">        addAttributes( attributeId );</span>
+
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if ( attributeSet.getAttributeCount() == 0 )</span>
+        {
+<span class="fc" id="L137">            return null;</span>
+        }
+
+<span class="fc" id="L140">        return attributeSet;</span>
+    }
+
+    /**
+     * Adds an attribute to the current StringBuilder.
+     *
+     * @param attributeId A unique id to identify the set of attributes.
+     * This should correspond to the name of an attribute-set
+     * defined in the configuration file.
+     */
+    private void addAttributes( String attributeId )
+    {
+<span class="fc" id="L152">        int index = sets.indexOf( attributeId );</span>
+<span class="fc" id="L153">        String keybase = &quot;xsl:attribute-set(&quot; + index + &quot;)&quot;;</span>
+
+<span class="fc" id="L155">        Object prop = config.getProperty( keybase + &quot;.xsl:attribute&quot; );</span>
+
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if ( prop instanceof List&lt;?&gt; )</span>
+        {
+<span class="fc" id="L159">            List&lt;?&gt; values = (List&lt;?&gt;) prop;</span>
+<span class="fc" id="L160">            List&lt;?&gt; keys = config.getList( keybase + &quot;.xsl:attribute[@name]&quot; );</span>
+
+<span class="fc bfc" id="L162" title="All 2 branches covered.">            for ( int i = 0; i &lt; values.size(); i++ )</span>
+            {
+<span class="fc" id="L164">                attributeSet.addAttribute( keys.get( i ), values.get( i ) );</span>
+            }
+<span class="fc" id="L166">        }</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        else if ( prop instanceof String )</span>
+        {
+<span class="fc" id="L169">            String value = config.getString( keybase + &quot;.xsl:attribute&quot; );</span>
+<span class="fc" id="L170">            String key = config.getString( keybase + &quot;.xsl:attribute[@name]&quot; );</span>
+<span class="fc" id="L171">            attributeSet.addAttribute( key, value );</span>
+        }
+
+<span class="fc" id="L174">        String extend = config.getString( keybase + &quot;[@use-attribute-sets]&quot; );</span>
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        if ( extend != null )</span>
+        {
+<span class="fc" id="L178">            addAttributes( extend );</span>
+        }
+<span class="fc" id="L180">    }</span>
+
+    /** Load the default fo configuration file. */
+    private void loadDefaultConfig()
+    {
+        try
+        {
+<span class="fc" id="L187">            config.load( ReaderFactory.newXmlReader( getClass().getResourceAsStream( &quot;/fo-styles.xslt&quot; ) ) );</span>
+        }
+<span class="nc" id="L189">        catch ( ConfigurationException | IOException cex )</span>
+        {
+            // this should not happen
+<span class="nc" id="L192">            throw new RuntimeException( cex );</span>
+<span class="fc" id="L193">        }</span>
+
+<span class="fc" id="L195">        this.sets = config.getList( &quot;xsl:attribute-set[@name]&quot; );</span>
+<span class="fc" id="L196">        reset();</span>
+<span class="fc" id="L197">    }</span>
+
+    /**
+     * (Re-)initialize the AttributeSet.
+     */
+    private void reset()
+    {
+<span class="fc" id="L204">        this.attributeSet = new SimpleAttributeSet();</span>
+<span class="fc" id="L205">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

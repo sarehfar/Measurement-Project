@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LinkBlock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki.parser</a> &gt; <span class="el_source">LinkBlock.java</span></div><h1>LinkBlock.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.sink.Sink;
+
+/**
+ * Block that represents a link.
+ *
+ * @author Juan F. Codagnone
+ */
+class LinkBlock
+    implements Block
+{
+    /**
+     * link reference
+     */
+    private final String reference;
+
+    /**
+     * link text
+     */
+    private final Block content;
+
+    /**
+     * Creates the LinkBlock.
+     *
+     * @param reference reference anchor
+     * @param text text to display
+     * @deprecated
+     */
+    LinkBlock( final String reference, final String text )
+    {
+<span class="nc" id="L51">        this( reference, new TextBlock( text ) );</span>
+<span class="nc" id="L52">    }</span>
+
+    /**
+     * Creates the LinkBlock.
+     *
+     * @param reference reference anchor, not null.
+     * @param content block with the displayed content, not null.
+     */
+    LinkBlock( final String reference, final Block content )
+<span class="fc" id="L61">    {</span>
+<span class="pc bpc" id="L62" title="2 of 4 branches missed.">        if ( reference == null || content == null )</span>
+        {
+<span class="nc" id="L64">            throw new IllegalArgumentException( &quot;arguments can't be null&quot; );</span>
+        }
+<span class="fc" id="L66">        this.reference = reference;</span>
+<span class="fc" id="L67">        this.content = content;</span>
+<span class="fc" id="L68">    }</span>
+
+    /** {@inheritDoc} */
+    public final void traverse( final Sink sink )
+    {
+<span class="fc" id="L73">        sink.link( reference );</span>
+<span class="fc" id="L74">        content.traverse( sink );</span>
+<span class="fc" id="L75">        sink.link_();</span>
+
+<span class="fc" id="L77">    }</span>
+
+    /** {@inheritDoc} */
+    public final boolean equals( final Object obj )
+    {
+<span class="fc" id="L82">        boolean ret = false;</span>
+
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if ( obj == this )</span>
+        {
+<span class="fc" id="L86">            ret = true;</span>
+        }
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        else if ( obj instanceof LinkBlock )</span>
+        {
+<span class="fc" id="L90">            final LinkBlock l = (LinkBlock) obj;</span>
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">            ret = reference.equals( l.reference ) &amp;&amp; content.equals( l.content );</span>
+        }
+
+<span class="fc" id="L94">        return ret;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return a int.
+     */
+    public final int hashCode()
+    {
+<span class="fc" id="L104">        final int magic1 = 17;</span>
+<span class="fc" id="L105">        final int magic2 = 37;</span>
+
+<span class="fc" id="L107">        return magic1 + magic2 * reference.hashCode() + magic2 * content.hashCode();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

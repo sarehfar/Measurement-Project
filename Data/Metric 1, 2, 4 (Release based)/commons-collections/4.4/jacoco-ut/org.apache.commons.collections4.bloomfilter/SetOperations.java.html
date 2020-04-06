@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetOperations.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Collections</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.collections4.bloomfilter</a> &gt; <span class="el_source">SetOperations.java</span></div><h1>SetOperations.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.collections4.bloomfilter;
+
+import org.apache.commons.collections4.bloomfilter.hasher.Shape;
+
+/**
+ * Implementations of set operations on Bloom filters.
+ *
+ */
+public final class SetOperations {
+
+    /**
+     * Calculates the Cosine distance between two Bloom filters.
+     *
+     * &lt;p&gt;Cosine distance is defined as {@code 1 - Cosine similarity}&lt;/p&gt;
+     *
+     * @param first the first Bloom filter.
+     * @param second the second Bloom filter.
+     * @return the jaccard distance.
+     */
+    public static double cosineDistance(final BloomFilter first, final BloomFilter second) {
+<span class="fc" id="L37">        return 1.0 - cosineSimilarity(first, second);</span>
+    }
+
+    /**
+     * Calculates the Cosine similarity between two Bloom filters.
+     * &lt;p&gt; Also known as Orchini similarity and the Tucker coefficient of congruence or
+     * Ochiai similarity.&lt;/p&gt;
+     *
+     * &lt;p&gt;If either filter is empty (no enabled bits) the result is 0 (zero)&lt;/p&gt;
+     *
+     * @param first the first Bloom filter.
+     * @param second the second Bloom filter.
+     * @return the Cosine similarity.
+     */
+    public static double cosineSimilarity(final BloomFilter first, final BloomFilter second) {
+<span class="fc" id="L52">        verifyShape(first, second);</span>
+<span class="fc" id="L53">        final int numerator = first.andCardinality(second);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        return numerator == 0 ? 0 : numerator / (Math.sqrt(first.cardinality()) * Math.sqrt(second.cardinality()));</span>
+    }
+
+    /**
+     * Estimates the number of items in the intersection of the sets represented by two
+     * Bloom filters.
+     *
+     * @param first the first Bloom filter.
+     * @param second the second Bloom filter.
+     * @return an estimate of the size of the intersection between the two filters.
+     */
+    public static long estimateIntersectionSize(final BloomFilter first, final BloomFilter second) {
+<span class="fc" id="L66">        verifyShape(first, second);</span>
+        // do subtraction early to avoid Long overflow.
+<span class="fc" id="L68">        return estimateSize(first) - estimateUnionSize(first, second) + estimateSize(second);</span>
+    }
+
+    /**
+     * Estimates the number of items in the Bloom filter based on the shape and the number
+     * of bits that are enabled.
+     *
+     * @param filter the Bloom filter to estimate size for.
+     * @return an estimate of the number of items that were placed in the Bloom filter.
+     */
+    public static long estimateSize(final BloomFilter filter) {
+<span class="fc" id="L79">        final Shape shape = filter.getShape();</span>
+<span class="fc" id="L80">        final double estimate = -(shape.getNumberOfBits() *</span>
+<span class="fc" id="L81">            Math.log(1.0 - filter.cardinality() * 1.0 / shape.getNumberOfBits())) /</span>
+<span class="fc" id="L82">            shape.getNumberOfHashFunctions();</span>
+<span class="fc" id="L83">        return Math.round(estimate);</span>
+    }
+
+    /**
+     * Estimates the number of items in the union of the sets represented by two
+     * Bloom filters.
+     *
+     * @param first the first Bloom filter.
+     * @param second the second Bloom filter.
+     * @return an estimate of the size of the union between the two filters.
+     */
+    public static long estimateUnionSize(final BloomFilter first, final BloomFilter second) {
+<span class="fc" id="L95">        verifyShape(first, second);</span>
+<span class="fc" id="L96">        final Shape shape = first.getShape();</span>
+<span class="fc" id="L97">        final double estimate = -(shape.getNumberOfBits() *</span>
+<span class="fc" id="L98">            Math.log(1.0 - first.orCardinality(second) * 1.0 / shape.getNumberOfBits())) /</span>
+<span class="fc" id="L99">            shape.getNumberOfHashFunctions();</span>
+<span class="fc" id="L100">        return Math.round(estimate);</span>
+    }
+
+    /**
+     * Calculates the Hamming distance between two Bloom filters.
+     *
+     * @param first the first Bloom filter.
+     * @param second the second Bloom filter.
+     * @return the Hamming distance.
+     */
+    public static int hammingDistance(final BloomFilter first, final BloomFilter second) {
+<span class="fc" id="L111">        verifyShape(first, second);</span>
+<span class="fc" id="L112">        return first.xorCardinality(second);</span>
+    }
+
+    /**
+     * Calculates the Jaccard distance between two Bloom filters.
+     *
+     * &lt;p&gt;Jaccard distance is defined as {@code 1 - Jaccard similarity}&lt;/p&gt;
+     *
+     * @param first the first Bloom filter.
+     * @param second the second Bloom filter.
+     * @return the Jaccard distance.
+     */
+    public static double jaccardDistance(final BloomFilter first, final BloomFilter second) {
+<span class="fc" id="L125">        return 1.0 - jaccardSimilarity(first, second);</span>
+    }
+
+    /**
+     * Calculates the Jaccard similarity between two Bloom filters.
+     *
+     * &lt;p&gt;Also known as Jaccard index, Intersection over Union, and Jaccard similarity coefficient&lt;/p&gt;
+     *
+     * @param first the first Bloom filter.
+     * @param second the second Bloom filter.
+     * @return the Jaccard similarity.
+     */
+    public static double jaccardSimilarity(final BloomFilter first, final BloomFilter second) {
+<span class="fc" id="L138">        verifyShape(first, second);</span>
+<span class="fc" id="L139">        final int orCard = first.orCardinality(second);</span>
+        // if the orCard is zero then the hamming distance will also be zero.
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        return orCard == 0 ? 0 : hammingDistance(first, second) / (double) orCard;</span>
+    }
+
+    /**
+     * Verifies the Bloom filters have the same shape.
+     *
+     * @param first the first filter to check.
+     * @param second the second filter to check.
+     * @throws IllegalArgumentException if the shapes are not the same.
+     */
+    private static void verifyShape(final BloomFilter first, final BloomFilter second) {
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (!first.getShape().equals(second.getShape())) {</span>
+<span class="fc" id="L153">            throw new IllegalArgumentException(String.format(&quot;Shape %s is not the same as %s&quot;,</span>
+<span class="fc" id="L154">                first.getShape(), second.getShape()));</span>
+        }
+<span class="fc" id="L156">    }</span>
+
+    /**
+     * Do not instantiate.
+     */
+    private SetOperations() {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

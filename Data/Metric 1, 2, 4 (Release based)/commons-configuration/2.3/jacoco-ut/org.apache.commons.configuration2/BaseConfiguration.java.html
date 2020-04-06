@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="iso-8859-1"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BaseConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Configuration</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.configuration2</a> &gt; <span class="el_source">BaseConfiguration.java</span></div><h1>BaseConfiguration.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.commons.configuration2;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
+
+/**
+ * Basic configuration class. Stores the configuration data but does not
+ * provide any load or save functions. If you want to load your Configuration
+ * from a file use PropertiesConfiguration or XmlConfiguration.
+ *
+ * This class extends normal Java properties by adding the possibility
+ * to use the same key many times concatenating the value strings
+ * instead of overwriting them.
+ *
+ */
+<span class="fc" id="L39">public class BaseConfiguration extends AbstractConfiguration implements Cloneable</span>
+{
+    /** stores the configuration key-value pairs */
+<span class="fc" id="L42">    private Map&lt;String, Object&gt; store = new LinkedHashMap&lt;&gt;();</span>
+
+    /**
+     * Adds a key/value pair to the map.  This routine does no magic morphing.
+     * It ensures the keylist is maintained
+     *
+     * @param key key to use for mapping
+     * @param value object to store
+     */
+    @Override
+    protected void addPropertyDirect(final String key, final Object value)
+    {
+<span class="fc" id="L54">        final Object previousValue = getPropertyInternal(key);</span>
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (previousValue == null)</span>
+        {
+<span class="fc" id="L58">            store.put(key, value);</span>
+        }
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        else if (previousValue instanceof List)</span>
+        {
+            // safe to case because we have created the lists ourselves
+            @SuppressWarnings(&quot;unchecked&quot;)
+            final
+<span class="fc" id="L65">            List&lt;Object&gt; valueList = (List&lt;Object&gt;) previousValue;</span>
+            // the value is added to the existing list
+<span class="fc" id="L67">            valueList.add(value);</span>
+<span class="fc" id="L68">        }</span>
+        else
+        {
+            // the previous value is replaced by a list containing the previous value and the new value
+<span class="fc" id="L72">            final List&lt;Object&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L73">            list.add(previousValue);</span>
+<span class="fc" id="L74">            list.add(value);</span>
+
+<span class="fc" id="L76">            store.put(key, list);</span>
+        }
+<span class="fc" id="L78">    }</span>
+
+    /**
+     * Read property from underlying map.
+     *
+     * @param key key to use for mapping
+     *
+     * @return object associated with the given configuration key.
+     */
+    @Override
+    protected Object getPropertyInternal(final String key)
+    {
+<span class="fc" id="L90">        return store.get(key);</span>
+    }
+
+    /**
+     * Check if the configuration is empty
+     *
+     * @return {@code true} if Configuration is empty,
+     * {@code false} otherwise.
+     */
+    @Override
+    protected boolean isEmptyInternal()
+    {
+<span class="fc" id="L102">        return store.isEmpty();</span>
+    }
+
+    /**
+     * check if the configuration contains the key
+     *
+     * @param key the configuration key
+     *
+     * @return {@code true} if Configuration contain given key,
+     * {@code false} otherwise.
+     */
+    @Override
+    protected boolean containsKeyInternal(final String key)
+    {
+<span class="fc" id="L116">        return store.containsKey(key);</span>
+    }
+
+    /**
+     * Clear a property in the configuration.
+     *
+     * @param key the key to remove along with corresponding value.
+     */
+    @Override
+    protected void clearPropertyDirect(final String key)
+    {
+<span class="fc" id="L127">        store.remove(key);</span>
+<span class="fc" id="L128">    }</span>
+
+    @Override
+    protected void clearInternal()
+    {
+<span class="fc" id="L133">        store.clear();</span>
+<span class="fc" id="L134">    }</span>
+
+    /**
+     * {@inheritDoc} This implementation obtains the size directly from the map
+     * used as data store. So this is a rather efficient implementation.
+     */
+    @Override
+    protected int sizeInternal()
+    {
+<span class="fc" id="L143">        return store.size();</span>
+    }
+
+    /**
+     * Get the list of the keys contained in the configuration
+     * repository.
+     *
+     * @return An Iterator.
+     */
+    @Override
+    protected Iterator&lt;String&gt; getKeysInternal()
+    {
+<span class="fc" id="L155">        return store.keySet().iterator();</span>
+    }
+
+    /**
+     * Creates a copy of this object. This implementation will create a deep
+     * clone, i.e. the map that stores the properties is cloned, too. So changes
+     * performed at the copy won't affect the original and vice versa.
+     *
+     * @return the copy
+     * @since 1.3
+     */
+    @Override
+    public Object clone()
+    {
+        try
+        {
+<span class="fc" id="L171">            final BaseConfiguration copy = (BaseConfiguration) super.clone();</span>
+<span class="fc" id="L172">            cloneStore(copy);</span>
+<span class="fc" id="L173">            copy.cloneInterpolator(this);</span>
+
+<span class="fc" id="L175">            return copy;</span>
+        }
+<span class="nc" id="L177">        catch (final CloneNotSupportedException cex)</span>
+        {
+            // should not happen
+<span class="nc" id="L180">            throw new ConfigurationRuntimeException(cex);</span>
+        }
+    }
+
+    /**
+     * Clones the internal map with the data of this configuration.
+     *
+     * @param copy the copy created by the {@code clone()} method
+     * @throws CloneNotSupportedException if the map cannot be cloned
+     */
+    private void cloneStore(final BaseConfiguration copy)
+            throws CloneNotSupportedException
+    {
+        // This is safe because the type of the map is known
+        @SuppressWarnings(&quot;unchecked&quot;)
+        final
+<span class="fc" id="L196">        Map&lt;String, Object&gt; clonedStore = (Map&lt;String, Object&gt;) ConfigurationUtils.clone(store);</span>
+<span class="fc" id="L197">        copy.store = clonedStore;</span>
+
+        // Handle collections in the map; they have to be cloned, too
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        for (final Map.Entry&lt;String, Object&gt; e : store.entrySet())</span>
+        {
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            if (e.getValue() instanceof Collection)</span>
+            {
+                // This is safe because the collections were created by ourselves
+                @SuppressWarnings(&quot;unchecked&quot;)
+                final
+<span class="fc" id="L207">                Collection&lt;String&gt; strList = (Collection&lt;String&gt;) e.getValue();</span>
+<span class="fc" id="L208">                copy.store.put(e.getKey(), new ArrayList&lt;&gt;(strList));</span>
+            }
+<span class="fc" id="L210">        }</span>
+<span class="fc" id="L211">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

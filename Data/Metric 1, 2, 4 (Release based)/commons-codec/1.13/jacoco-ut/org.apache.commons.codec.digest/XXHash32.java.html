@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XXHash32.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Apache Commons Codec</a> &gt; <a href="index.source.html" class="el_package">org.apache.commons.codec.digest</a> &gt; <span class="el_source">XXHash32.java</span></div><h1>XXHash32.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.commons.codec.digest;
+
+import static java.lang.Integer.rotateLeft;
+
+import java.util.zip.Checksum;
+
+/**
+ * Implementation of the xxhash32 hash algorithm.
+ *
+ * &lt;p&gt;Copied from Commons Compress 1.14
+ * &lt;a href=&quot;https://git-wip-us.apache.org/repos/asf?p=commons-compress.git;a=blob;f=src/main/java/org/apache/commons/compress/compressors/lz4/XXHash32.java;h=a406ffc197449be594d46f0d2712b2d4786a1e68;hb=HEAD&quot;&gt;https://git-wip-us.apache.org/repos/asf?p=commons-compress.git;a=blob;f=src/main/java/org/apache/commons/compress/compressors/lz4/XXHash32.java;h=a406ffc197449be594d46f0d2712b2d4786a1e68;hb=HEAD&lt;/a&gt;&lt;/p&gt;
+ * &lt;p&gt;NotThreadSafe&lt;/p&gt;
+ * @see &lt;a href=&quot;http://cyan4973.github.io/xxHash/&quot;&gt;xxHash&lt;/a&gt;
+ * @since 1.11
+ */
+public class XXHash32 implements Checksum {
+
+    private static final int BUF_SIZE = 16;
+    private static final int ROTATE_BITS = 13;
+
+    private static final int PRIME1 = (int) 2654435761l;
+    private static final int PRIME2 = (int) 2246822519l;
+    private static final int PRIME3 = (int) 3266489917l;
+    private static final int PRIME4 =  668265263;
+    private static final int PRIME5 =  374761393;
+
+<span class="fc" id="L44">    private final byte[] oneByte = new byte[1];</span>
+<span class="fc" id="L45">    private final int[] state = new int[4];</span>
+    // Note: the code used to use ByteBuffer but the manual method is 50% faster
+    // See: http://git-wip-us.apache.org/repos/asf/commons-compress/diff/2f56fb5c
+<span class="fc" id="L48">    private final byte[] buffer = new byte[BUF_SIZE];</span>
+    private final int seed;
+
+    private int totalLen;
+    private int pos;
+
+    /**
+     * Creates an XXHash32 instance with a seed of 0.
+     */
+    public XXHash32() {
+<span class="fc" id="L58">        this(0);</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Creates an XXHash32 instance.
+     * @param seed the seed to use
+     */
+<span class="fc" id="L65">    public XXHash32(final int seed) {</span>
+<span class="fc" id="L66">        this.seed = seed;</span>
+<span class="fc" id="L67">        initializeState();</span>
+<span class="fc" id="L68">    }</span>
+
+    @Override
+    public void reset() {
+<span class="nc" id="L72">        initializeState();</span>
+<span class="nc" id="L73">        totalLen = 0;</span>
+<span class="nc" id="L74">        pos = 0;</span>
+<span class="nc" id="L75">    }</span>
+
+    @Override
+    public void update(final int b) {
+<span class="nc" id="L79">        oneByte[0] = (byte) (b &amp; 0xff);</span>
+<span class="nc" id="L80">        update(oneByte, 0, 1);</span>
+<span class="nc" id="L81">    }</span>
+
+    @Override
+    public void update(final byte[] b, int off, final int len) {
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (len &lt;= 0) {</span>
+<span class="nc" id="L86">            return;</span>
+        }
+<span class="fc" id="L88">        totalLen += len;</span>
+
+<span class="fc" id="L90">        final int end = off + len;</span>
+
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (pos + len &lt; BUF_SIZE) {</span>
+<span class="nc" id="L93">            System.arraycopy(b, off, buffer, pos, len);</span>
+<span class="nc" id="L94">            pos += len;</span>
+<span class="nc" id="L95">            return;</span>
+        }
+
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (pos &gt; 0) {</span>
+<span class="nc" id="L99">            final int size = BUF_SIZE - pos;</span>
+<span class="nc" id="L100">            System.arraycopy(b, off, buffer, pos, size);</span>
+<span class="nc" id="L101">            process(buffer, 0);</span>
+<span class="nc" id="L102">            off += size;</span>
+        }
+
+<span class="fc" id="L105">        final int limit = end - BUF_SIZE;</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        while (off &lt;= limit) {</span>
+<span class="fc" id="L107">            process(b, off);</span>
+<span class="fc" id="L108">            off += BUF_SIZE;</span>
+        }
+
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (off &lt; end) {</span>
+<span class="nc" id="L112">            pos = end - off;</span>
+<span class="nc" id="L113">            System.arraycopy(b, off, buffer, 0, pos);</span>
+        }
+<span class="fc" id="L115">    }</span>
+
+    @Override
+    public long getValue() {
+        int hash;
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (totalLen &gt; BUF_SIZE) {</span>
+<span class="fc" id="L121">            hash =</span>
+<span class="fc" id="L122">                rotateLeft(state[0],  1) +</span>
+<span class="fc" id="L123">                rotateLeft(state[1],  7) +</span>
+<span class="fc" id="L124">                rotateLeft(state[2], 12) +</span>
+<span class="fc" id="L125">                rotateLeft(state[3], 18);</span>
+        } else {
+<span class="nc" id="L127">            hash = state[2] + PRIME5;</span>
+        }
+<span class="fc" id="L129">        hash += totalLen;</span>
+
+<span class="fc" id="L131">        int idx = 0;</span>
+<span class="fc" id="L132">        final int limit = pos - 4;</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        for (; idx &lt;= limit; idx += 4) {</span>
+<span class="nc" id="L134">            hash = rotateLeft(hash + getInt(buffer, idx) * PRIME3, 17) * PRIME4;</span>
+        }
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        while (idx &lt; pos) {</span>
+<span class="nc" id="L137">            hash = rotateLeft(hash + (buffer[idx++] &amp; 0xff) * PRIME5, 11) * PRIME1;</span>
+        }
+
+<span class="fc" id="L140">        hash ^= hash &gt;&gt;&gt; 15;</span>
+<span class="fc" id="L141">        hash *= PRIME2;</span>
+<span class="fc" id="L142">        hash ^= hash &gt;&gt;&gt; 13;</span>
+<span class="fc" id="L143">        hash *= PRIME3;</span>
+<span class="fc" id="L144">        hash ^= hash &gt;&gt;&gt; 16;</span>
+<span class="fc" id="L145">        return hash &amp; 0xffffffffl;</span>
+    }
+
+    private static int getInt(final byte[] buffer, final int idx) {
+<span class="fc" id="L149">        return (int) (fromLittleEndian(buffer, idx, 4) &amp; 0xffffffffl);</span>
+    }
+
+    private void initializeState() {
+<span class="fc" id="L153">        state[0] = seed + PRIME1 + PRIME2;</span>
+<span class="fc" id="L154">        state[1] = seed + PRIME2;</span>
+<span class="fc" id="L155">        state[2] = seed;</span>
+<span class="fc" id="L156">        state[3] = seed - PRIME1;</span>
+<span class="fc" id="L157">    }</span>
+
+    private void process(final byte[] b, final int offset) {
+        // local shadows for performance
+<span class="fc" id="L161">        int s0 = state[0];</span>
+<span class="fc" id="L162">        int s1 = state[1];</span>
+<span class="fc" id="L163">        int s2 = state[2];</span>
+<span class="fc" id="L164">        int s3 = state[3];</span>
+
+<span class="fc" id="L166">        s0 = rotateLeft(s0 + getInt(b, offset) * PRIME2, ROTATE_BITS) * PRIME1;</span>
+<span class="fc" id="L167">        s1 = rotateLeft(s1 + getInt(b, offset + 4) * PRIME2, ROTATE_BITS) * PRIME1;</span>
+<span class="fc" id="L168">        s2 = rotateLeft(s2 + getInt(b, offset + 8) * PRIME2, ROTATE_BITS) * PRIME1;</span>
+<span class="fc" id="L169">        s3 = rotateLeft(s3 + getInt(b, offset + 12) * PRIME2, ROTATE_BITS) * PRIME1;</span>
+
+<span class="fc" id="L171">        state[0] = s0;</span>
+<span class="fc" id="L172">        state[1] = s1;</span>
+<span class="fc" id="L173">        state[2] = s2;</span>
+<span class="fc" id="L174">        state[3] = s3;</span>
+
+<span class="fc" id="L176">        pos = 0;</span>
+<span class="fc" id="L177">    }</span>
+
+    /**
+     * Reads the given byte array as a little endian long.
+     * @param bytes the byte array to convert
+     * @param off the offset into the array that starts the value
+     * @param length the number of bytes representing the value
+     * @return the number read
+     * @throws IllegalArgumentException if len is bigger than eight
+     */
+    private static long fromLittleEndian(final byte[] bytes, final int off, final int length) {
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">        if (length &gt; 8) {</span>
+<span class="nc" id="L189">            throw new IllegalArgumentException(&quot;can't read more than eight bytes into a long value&quot;);</span>
+        }
+<span class="fc" id="L191">        long l = 0;</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        for (int i = 0; i &lt; length; i++) {</span>
+<span class="fc" id="L193">            l |= (bytes[off + i] &amp; 0xffl) &lt;&lt; (8 * i);</span>
+        }
+<span class="fc" id="L195">        return l;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

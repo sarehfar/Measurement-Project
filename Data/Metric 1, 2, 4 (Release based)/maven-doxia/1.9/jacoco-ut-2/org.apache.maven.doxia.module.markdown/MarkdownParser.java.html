@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarkdownParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Markdown Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.markdown</a> &gt; <span class="el_source">MarkdownParser.java</span></div><h1>MarkdownParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.markdown;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import com.vladsch.flexmark.ast.Heading;
+import com.vladsch.flexmark.ast.HtmlCommentBlock;
+import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.ast.util.TextCollectingVisitor;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.profiles.pegdown.Extensions;
+import com.vladsch.flexmark.profiles.pegdown.PegdownOptionsAdapter;
+import com.vladsch.flexmark.util.builder.Extension;
+import com.vladsch.flexmark.util.options.MutableDataHolder;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.doxia.markup.HtmlMarkup;
+import org.apache.maven.doxia.module.xhtml.XhtmlParser;
+import org.apache.maven.doxia.parser.AbstractParser;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.sink.Sink;
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.component.annotations.Requirement;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.xml.pull.XmlPullParser;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * &lt;p&gt;
+ * Implementation of {@link org.apache.maven.doxia.parser.Parser} for Markdown documents.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * Defers effective parsing to the &lt;a href=&quot;https://github.com/vsch/flexmark-java&quot;&gt;flexmark-java library&lt;/a&gt;,
+ * which generates HTML content then delegates parsing of this content to a slightly modified Doxia Xhtml parser.
+ * (before 1.8, the &lt;a href=&quot;http://pegdown.org&quot;&gt;PegDown library&lt;/a&gt; was used)
+ * &lt;/p&gt;
+ *
+ * @author Vladimir Schneider
+ * @author Julien Nicoulaud
+ * @since 1.3
+ */
+@Component( role = Parser.class, hint = MarkdownParser.ROLE_HINT )
+<span class="fc" id="L66">public class MarkdownParser</span>
+    extends AbstractParser
+{
+
+    /**
+     * The role hint for the {@link MarkdownParser} Plexus component.
+     */
+    public static final String ROLE_HINT = &quot;markdown&quot;;
+
+    /**
+     * Regex that identifies a multimarkdown-style metadata section at the start of the document
+     */
+    private static final String MULTI_MARKDOWN_METADATA_SECTION =
+        &quot;^(((?:[^\\s:][^:]*):(?:.*(?:\r?\n\\p{Blank}+[^\\s].*)*\r?\n))+)(?:\\s*\r?\n)&quot;;
+
+    /**
+     * Regex that captures the key and value of a multimarkdown-style metadata entry.
+     */
+    private static final String MULTI_MARKDOWN_METADATA_ENTRY =
+        &quot;([^\\s:][^:]*):(.*(?:\r?\n\\p{Blank}+[^\\s].*)*)\r?\n&quot;;
+
+    /**
+     * In order to ensure that we have minimal risk of false positives when slurping metadata sections, the
+     * first key in the metadata section must be one of these standard keys or else the entire metadata section is
+     * ignored.
+     */
+<span class="fc" id="L92">    private static final String[] STANDARD_METADATA_KEYS =</span>
+        { &quot;title&quot;, &quot;author&quot;, &quot;date&quot;, &quot;address&quot;, &quot;affiliation&quot;, &quot;copyright&quot;, &quot;email&quot;, &quot;keywords&quot;, &quot;language&quot;, &quot;phone&quot;,
+            &quot;subtitle&quot; };
+
+    public int getType()
+    {
+<span class="nc" id="L98">        return TXT_TYPE;</span>
+    }
+
+    @Requirement
+    private MarkdownHtmlParser parser;
+
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+        try
+        {
+            // Markdown to HTML (using flexmark-java library)
+<span class="fc" id="L110">            String html = toHtml( source );</span>
+            // then HTML to Sink API
+<span class="fc" id="L112">            parser.parse( new StringReader( html ), sink );</span>
+        }
+<span class="nc" id="L114">        catch ( IOException e )</span>
+        {
+<span class="nc" id="L116">            throw new ParseException( &quot;Failed reading Markdown source document&quot;, e );</span>
+<span class="fc" id="L117">        }</span>
+<span class="fc" id="L118">    }</span>
+
+    /**
+     * uses flexmark-java library to parse content and generate HTML output.
+     *
+     * @param source the Markdown source
+     * @return HTML content generated by flexmark-java
+     * @throws IOException passed through
+     */
+    private String toHtml( Reader source )
+        throws IOException
+    {
+<span class="fc" id="L130">        String text = IOUtil.toString( source );</span>
+<span class="fc" id="L131">        MutableDataHolder flexmarkOptions = PegdownOptionsAdapter.flexmarkOptions(</span>
+<span class="fc" id="L132">                Extensions.ALL &amp; ~( Extensions.HARDWRAPS | Extensions.ANCHORLINKS ) ).toMutable();</span>
+<span class="fc" id="L133">        ArrayList&lt;Extension&gt; extensions = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        for ( Extension extension : flexmarkOptions.get( com.vladsch.flexmark.parser.Parser.EXTENSIONS ) )</span>
+        {
+<span class="fc" id="L136">            extensions.add( extension );</span>
+<span class="fc" id="L137">        }</span>
+
+<span class="fc" id="L139">        extensions.add( FlexmarkDoxiaExtension.create() );</span>
+<span class="fc" id="L140">        flexmarkOptions.set( com.vladsch.flexmark.parser.Parser.EXTENSIONS, extensions );</span>
+<span class="fc" id="L141">        flexmarkOptions.set( HtmlRenderer.HTML_BLOCK_OPEN_TAG_EOL, false );</span>
+<span class="fc" id="L142">        flexmarkOptions.set( HtmlRenderer.HTML_BLOCK_CLOSE_TAG_EOL, false );</span>
+<span class="fc" id="L143">        flexmarkOptions.set( HtmlRenderer.MAX_TRAILING_BLANK_LINES, -1 );</span>
+
+<span class="fc" id="L145">        com.vladsch.flexmark.parser.Parser parser = com.vladsch.flexmark.parser.Parser.builder( flexmarkOptions )</span>
+<span class="fc" id="L146">                .build();</span>
+<span class="fc" id="L147">        HtmlRenderer renderer = HtmlRenderer.builder( flexmarkOptions )</span>
+<span class="fc" id="L148">                                    .linkResolverFactory( new FlexmarkDoxiaLinkResolver.Factory() )</span>
+<span class="fc" id="L149">                                    .build();</span>
+
+
+<span class="fc" id="L152">        StringBuilder html = new StringBuilder( 1000 );</span>
+<span class="fc" id="L153">        html.append( &quot;&lt;html&gt;&quot; );</span>
+<span class="fc" id="L154">        html.append( &quot;&lt;head&gt;&quot; );</span>
+<span class="fc" id="L155">        Pattern metadataPattern = Pattern.compile( MULTI_MARKDOWN_METADATA_SECTION, Pattern.MULTILINE );</span>
+<span class="fc" id="L156">        Matcher metadataMatcher = metadataPattern.matcher( text );</span>
+<span class="fc" id="L157">        boolean haveTitle = false;</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if ( metadataMatcher.find() )</span>
+        {
+<span class="fc" id="L160">            metadataPattern = Pattern.compile( MULTI_MARKDOWN_METADATA_ENTRY, Pattern.MULTILINE );</span>
+<span class="fc" id="L161">            Matcher lineMatcher = metadataPattern.matcher( metadataMatcher.group( 1 ) );</span>
+<span class="fc" id="L162">            boolean first = true;</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            while ( lineMatcher.find() )</span>
+            {
+<span class="fc" id="L165">                String key = StringUtils.trimToEmpty( lineMatcher.group( 1 ) );</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                if ( first )</span>
+                {
+<span class="fc" id="L168">                    boolean found = false;</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                    for ( String k : STANDARD_METADATA_KEYS )</span>
+                    {
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                        if ( k.equalsIgnoreCase( key ) )</span>
+                        {
+<span class="fc" id="L173">                            found = true;</span>
+<span class="fc" id="L174">                            break;</span>
+                        }
+                    }
+<span class="fc bfc" id="L177" title="All 2 branches covered.">                    if ( !found )</span>
+                    {
+<span class="fc" id="L179">                        break;</span>
+                    }
+<span class="fc" id="L181">                    first = false;</span>
+                }
+<span class="fc" id="L183">                String value = StringUtils.trimToEmpty( lineMatcher.group( 2 ) );</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">                if ( &quot;title&quot;.equalsIgnoreCase( key ) )</span>
+                {
+<span class="fc" id="L186">                    haveTitle = true;</span>
+<span class="fc" id="L187">                    html.append( &quot;&lt;title&gt;&quot; );</span>
+<span class="fc" id="L188">                    html.append( StringEscapeUtils.escapeXml( value ) );</span>
+<span class="fc" id="L189">                    html.append( &quot;&lt;/title&gt;&quot; );</span>
+                }
+<span class="fc bfc" id="L191" title="All 2 branches covered.">                else if ( &quot;author&quot;.equalsIgnoreCase( key ) )</span>
+                {
+<span class="fc" id="L193">                    html.append( &quot;&lt;meta name=\'author\' content=\'&quot; );</span>
+<span class="fc" id="L194">                    html.append( StringEscapeUtils.escapeXml( value ) );</span>
+<span class="fc" id="L195">                    html.append( &quot;\' /&gt;&quot; );</span>
+                }
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">                else if ( &quot;date&quot;.equalsIgnoreCase( key ) )</span>
+                {
+<span class="fc" id="L199">                    html.append( &quot;&lt;meta name=\'date\' content=\'&quot; );</span>
+<span class="fc" id="L200">                    html.append( StringEscapeUtils.escapeXml( value ) );</span>
+<span class="fc" id="L201">                    html.append( &quot;\' /&gt;&quot; );</span>
+                }
+                else
+                {
+<span class="nc" id="L205">                    html.append( &quot;&lt;meta name=\'&quot; );</span>
+<span class="nc" id="L206">                    html.append( StringEscapeUtils.escapeXml( key ) );</span>
+<span class="nc" id="L207">                    html.append( &quot;\' content=\'&quot; );</span>
+<span class="nc" id="L208">                    html.append( StringEscapeUtils.escapeXml( value ) );</span>
+<span class="nc" id="L209">                    html.append( &quot;\' /&gt;&quot; );</span>
+                }
+<span class="fc" id="L211">            }</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            if ( !first )</span>
+            {
+<span class="fc" id="L214">                text = text.substring( metadataMatcher.end() );</span>
+            }
+        }
+
+<span class="fc" id="L218">        Node rootNode = parser.parse( text );</span>
+<span class="fc" id="L219">        String markdownHtml = renderer.render( rootNode );</span>
+
+<span class="pc bpc" id="L221" title="1 of 4 branches missed.">        if ( !haveTitle &amp;&amp; rootNode.hasChildren() )</span>
+        {
+            // use the first (non-comment) node only if it is a heading
+<span class="fc" id="L224">            Node firstNode = rootNode.getFirstChild();</span>
+<span class="pc bpc" id="L225" title="1 of 4 branches missed.">            while ( firstNode != null &amp;&amp; !( firstNode instanceof Heading ) )</span>
+            {
+<span class="fc bfc" id="L227" title="All 2 branches covered.">                if ( !( firstNode instanceof HtmlCommentBlock ) )</span>
+                {
+<span class="fc" id="L229">                    break;</span>
+                }
+<span class="fc" id="L231">                firstNode = firstNode.getNext();</span>
+            }
+
+<span class="fc bfc" id="L234" title="All 2 branches covered.">            if ( firstNode instanceof Heading )</span>
+            {
+<span class="fc" id="L236">                html.append( &quot;&lt;title&gt;&quot; );</span>
+<span class="fc" id="L237">                TextCollectingVisitor collectingVisitor = new TextCollectingVisitor();</span>
+<span class="fc" id="L238">                String headingText = collectingVisitor.collectAndGetText( firstNode );</span>
+<span class="fc" id="L239">                html.append( StringEscapeUtils.escapeXml( headingText ) );</span>
+<span class="fc" id="L240">                html.append( &quot;&lt;/title&gt;&quot; );</span>
+            }
+        }
+<span class="fc" id="L243">        html.append( &quot;&lt;/head&gt;&quot; );</span>
+<span class="fc" id="L244">        html.append( &quot;&lt;body&gt;&quot; );</span>
+<span class="fc" id="L245">        html.append( markdownHtml );</span>
+<span class="fc" id="L246">        html.append( &quot;&lt;/body&gt;&quot; );</span>
+<span class="fc" id="L247">        html.append( &quot;&lt;/html&gt;&quot; );</span>
+
+<span class="fc" id="L249">        return html.toString();</span>
+    }
+
+    /**
+     * Internal parser for HTML generated by the Markdown library.
+     */
+    @Component( role = MarkdownHtmlParser.class )
+    public static class MarkdownHtmlParser
+        extends XhtmlParser
+    {
+        public MarkdownHtmlParser()
+        {
+<span class="fc" id="L261">            super();</span>
+<span class="fc" id="L262">        }</span>
+
+        @Override
+        protected boolean baseEndTag( XmlPullParser parser, Sink sink )
+        {
+<span class="fc" id="L267">            boolean visited = super.baseEndTag( parser, sink );</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">            if ( !visited )</span>
+            {
+<span class="fc bfc" id="L270" title="All 2 branches covered.">                if ( parser.getName().equals( HtmlMarkup.DIV.toString() ) )</span>
+                {
+<span class="fc" id="L272">                    handleUnknown( parser, sink, TAG_TYPE_END );</span>
+<span class="fc" id="L273">                    visited = true;</span>
+                }
+            }
+<span class="fc" id="L276">            return visited;</span>
+        }
+
+        @Override
+        protected boolean baseStartTag( XmlPullParser parser, Sink sink )
+        {
+<span class="fc" id="L282">            boolean visited = super.baseStartTag( parser, sink );</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">            if ( !visited )</span>
+            {
+<span class="fc bfc" id="L285" title="All 2 branches covered.">                if ( parser.getName().equals( HtmlMarkup.DIV.toString() ) )</span>
+                {
+<span class="fc" id="L287">                    handleUnknown( parser, sink, TAG_TYPE_START );</span>
+<span class="fc" id="L288">                    visited = true;</span>
+                }
+            }
+<span class="fc" id="L291">            return visited;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

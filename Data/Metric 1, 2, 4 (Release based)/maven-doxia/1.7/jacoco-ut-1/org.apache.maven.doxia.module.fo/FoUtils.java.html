@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: FO Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.fo</a> &gt; <span class="el_source">FoUtils.java</span></div><h1>FoUtils.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.fo;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
+
+import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXResult;
+import javax.xml.transform.stream.StreamSource;
+
+import org.apache.fop.apps.FOPException;
+import org.apache.fop.apps.FOUserAgent;
+import org.apache.fop.apps.Fop;
+import org.apache.fop.apps.FopFactory;
+import org.apache.fop.apps.MimeConstants;
+import org.apache.maven.doxia.document.DocumentModel;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * &lt;code&gt;FO Sink&lt;/code&gt; utilities.
+ *
+ * @author ltheussl
+ * @version $Id$
+ * @since 1.1
+ */
+public class FoUtils
+{
+    /** To reuse the FopFactory **/
+<span class="fc" id="L56">    private static final FopFactory FOP_FACTORY = FopFactory.newInstance();</span>
+
+    /** To reuse the TransformerFactory **/
+<span class="fc" id="L59">    private static final TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();</span>
+
+    /**
+     * Converts an FO file to a PDF file using FOP.
+     *
+     * @param fo the FO file, not null.
+     * @param pdf the target PDF file, not null.
+     * @param resourceDir The base directory for relative path resolution, could be null.
+     * If null, defaults to the parent directory of fo.
+     * @param documentModel the document model to add PDF metadatas like author, title and keywords, could be null.
+     * @throws javax.xml.transform.TransformerException In case of a conversion problem.
+     * @since 1.1.1
+     */
+    public static void convertFO2PDF( File fo, File pdf, String resourceDir, DocumentModel documentModel )
+        throws TransformerException
+    {
+<span class="fc" id="L75">        FOUserAgent foUserAgent = getDefaultUserAgent( fo, resourceDir );</span>
+
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">        if ( documentModel != null &amp;&amp; documentModel.getMeta() != null )</span>
+        {
+            // http://xmlgraphics.apache.org/fop/embedding.html#user-agent
+<span class="nc" id="L80">            String authors = documentModel.getMeta().getAllAuthorNames();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if ( StringUtils.isNotEmpty( authors ) )</span>
+            {
+<span class="nc" id="L83">                foUserAgent.setAuthor( authors );</span>
+            }
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if ( StringUtils.isNotEmpty( documentModel.getMeta().getTitle() ) )</span>
+            {
+<span class="nc" id="L87">                foUserAgent.setTitle( documentModel.getMeta().getTitle() );</span>
+            }
+<span class="nc" id="L89">            String keywords = documentModel.getMeta().getAllKeyWords();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            if ( StringUtils.isNotEmpty( keywords ) )</span>
+            {
+<span class="nc" id="L92">                foUserAgent.setKeywords( keywords );</span>
+            }
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            if ( StringUtils.isNotEmpty( documentModel.getMeta().getCreator() ) )</span>
+            {
+<span class="nc" id="L96">                foUserAgent.setCreator( documentModel.getMeta().getCreator() );</span>
+            }
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if ( StringUtils.isNotEmpty( documentModel.getMeta().getGenerator() ) )</span>
+            {
+<span class="nc" id="L100">                foUserAgent.setProducer( documentModel.getMeta().getGenerator() );</span>
+            }
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if ( documentModel.getMeta().getCreationDate() != null )</span>
+            {
+<span class="nc" id="L104">                foUserAgent.setCreationDate( documentModel.getMeta().getCreationDate() );</span>
+            }
+        }
+
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if ( foUserAgent.getCreator() == null )</span>
+        {
+<span class="fc" id="L110">            foUserAgent.setCreator( System.getProperty( &quot;user.name&quot; ) );</span>
+        }
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if ( foUserAgent.getCreationDate() == null )</span>
+        {
+<span class="fc" id="L114">            foUserAgent.setCreationDate( new Date() );</span>
+        }
+
+<span class="fc" id="L117">        convertFO2PDF( fo, pdf, resourceDir, foUserAgent );</span>
+<span class="fc" id="L118">    }</span>
+
+    /**
+     * Converts an FO file to a PDF file using FOP.
+     *
+     * @param fo the FO file, not null.
+     * @param pdf the target PDF file, not null.
+     * @param resourceDir The base directory for relative path resolution, could be null.
+     * If null, defaults to the parent directory of fo.
+     * @param foUserAgent the FOUserAgent to use.
+     *      May be null, in which case a default user agent will be used.
+     * @throws javax.xml.transform.TransformerException In case of a conversion problem.
+     * @since 1.1.1
+     */
+    public static void convertFO2PDF( File fo, File pdf, String resourceDir, FOUserAgent foUserAgent )
+        throws TransformerException
+    {
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        FOUserAgent userAgent = ( foUserAgent == null ? getDefaultUserAgent( fo, resourceDir ) : foUserAgent );</span>
+
+<span class="fc" id="L137">        OutputStream out = null;</span>
+        try
+        {
+            try
+            {
+<span class="fc" id="L142">                out = new BufferedOutputStream( new FileOutputStream( pdf ) );</span>
+            }
+<span class="nc" id="L144">            catch ( IOException e )</span>
+            {
+<span class="nc" id="L146">                throw new TransformerException( e );</span>
+<span class="fc" id="L147">            }</span>
+
+<span class="fc" id="L149">            Result res = null;</span>
+            try
+            {
+<span class="fc" id="L152">                Fop fop = FOP_FACTORY.newFop( MimeConstants.MIME_PDF, userAgent, out );</span>
+<span class="fc" id="L153">                res = new SAXResult( fop.getDefaultHandler() );</span>
+            }
+<span class="nc" id="L155">            catch ( FOPException e )</span>
+            {
+<span class="nc" id="L157">                throw new TransformerException( e );</span>
+<span class="fc" id="L158">            }</span>
+
+<span class="fc" id="L160">            Transformer transformer = null;</span>
+            try
+            {
+                // identity transformer
+<span class="fc" id="L164">                transformer = TRANSFORMER_FACTORY.newTransformer();</span>
+            }
+<span class="nc" id="L166">            catch ( TransformerConfigurationException e )</span>
+            {
+<span class="nc" id="L168">                throw new TransformerException( e );</span>
+<span class="fc" id="L169">            }</span>
+
+<span class="fc" id="L171">            transformer.transform( new StreamSource( fo ), res );</span>
+        }
+        finally
+        {
+<span class="fc" id="L175">            IOUtil.close( out );</span>
+        }
+<span class="fc" id="L177">    }</span>
+
+    /**
+     * Converts an FO file to a PDF file using FOP.
+     *
+     * @param fo the FO file, not null.
+     * @param pdf the target PDF file, not null.
+     * @param resourceDir The base directory for relative path resolution, could be null.
+     * If null, defaults to the parent directory of fo.
+     * @throws javax.xml.transform.TransformerException In case of a conversion problem.
+     * @see #convertFO2PDF(File, File, String, DocumentModel)
+     */
+    public static void convertFO2PDF( File fo, File pdf, String resourceDir )
+        throws TransformerException
+    {
+<span class="fc" id="L192">        convertFO2PDF( fo, pdf, resourceDir, (DocumentModel) null );</span>
+<span class="fc" id="L193">    }</span>
+
+    /**
+     * Returns a base URL to be used by the FOUserAgent.
+     *
+     * @param fo the FO file.
+     * @param resourceDir the resource directory.
+     * @return String.
+     */
+    private static String getBaseURL( File fo, String resourceDir )
+    {
+<span class="fc" id="L204">        String url = null;</span>
+
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        if ( resourceDir == null )</span>
+        {
+<span class="fc" id="L208">            url = &quot;file:///&quot; + fo.getParent() + &quot;/&quot;;</span>
+        }
+        else
+        {
+<span class="fc" id="L212">            url = &quot;file:///&quot; + resourceDir + &quot;/&quot;;</span>
+        }
+
+<span class="fc" id="L215">        return url;</span>
+    }
+
+    private static FOUserAgent getDefaultUserAgent( File fo, String resourceDir )
+    {
+<span class="fc" id="L220">        FOUserAgent foUserAgent = FOP_FACTORY.newFOUserAgent();</span>
+<span class="fc" id="L221">        foUserAgent.setBaseURL( getBaseURL( fo, resourceDir ) );</span>
+
+<span class="fc" id="L223">        return foUserAgent;</span>
+    }
+
+    private FoUtils()
+    {
+        // Utility class
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

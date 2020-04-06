@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TableBlockParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki.parser</a> &gt; <span class="el_source">TableBlockParser.java</span></div><h1>TableBlockParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.maven.doxia.util.ByLineSource;
+import org.apache.maven.doxia.parser.ParseException;
+
+/**
+ * Parse tables
+ *
+ * @author Juan F. Codagnone
+ * @version $Id$
+ */
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">public class TableBlockParser</span>
+    implements BlockParser
+{
+    /**
+     * pattern to detect tables
+     */
+<span class="fc" id="L42">    private static final Pattern TABLE_PATTERN = Pattern.compile( &quot;^\\s*([|].*[|])+\\s*$&quot; );</span>
+
+    /**
+     * text parser
+     */
+    private FormatedTextParser textParser;
+
+    /** {@inheritDoc} */
+    public final boolean accept( final String line )
+    {
+<span class="fc" id="L52">        return TABLE_PATTERN.matcher( line ).lookingAt();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public final Block visit( final String line, final ByLineSource source )
+        throws ParseException
+    {
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if ( !accept( line ) )</span>
+        {
+<span class="nc" id="L63">            throw new IllegalAccessError( &quot;call accept before this ;)&quot; );</span>
+        }
+
+<span class="fc" id="L66">        final List&lt;Block&gt; rows = new ArrayList&lt;Block&gt;();</span>
+<span class="fc" id="L67">        String l = line;</span>
+
+        do
+        {
+<span class="fc" id="L71">            final Matcher m = TABLE_PATTERN.matcher( l );</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">            if ( m.lookingAt() )</span>
+            {
+<span class="fc" id="L74">                final List&lt;Block&gt; cells = new ArrayList&lt;Block&gt;();</span>
+
+                /* for each cell... */
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                for ( int lh = l.indexOf( '|' ) + 1, rh; ( rh = l.indexOf( '|', lh ) ) != -1; lh = rh + 1 )</span>
+                {
+<span class="fc" id="L79">                    final Block[] bs = textParser.parse( l.substring( lh, rh ).trim() );</span>
+<span class="pc bpc" id="L80" title="1 of 4 branches missed.">                    if ( bs.length == 1 &amp;&amp; bs[0] instanceof BoldBlock )</span>
+                    {
+<span class="fc" id="L82">                        final Block[] tmp = ( (BoldBlock) bs[0] ).getBlocks();</span>
+<span class="fc" id="L83">                        cells.add( new TableCellHeaderBlock( tmp ) );</span>
+<span class="fc" id="L84">                    }</span>
+                    else
+                    {
+<span class="fc" id="L87">                        cells.add( new TableCellBlock( bs ) );</span>
+                    }
+                }
+<span class="fc" id="L90">                rows.add( new TableRowBlock( (Block[]) cells.toArray( new Block[] {} ) ) );</span>
+            }
+
+        }
+<span class="fc bfc" id="L94" title="All 4 branches covered.">        while ( ( l = source.getNextLine() ) != null &amp;&amp; accept( l ) );</span>
+
+<span class="pc bpc" id="L96" title="2 of 4 branches missed.">        assert rows.size() &gt;= 1;</span>
+
+<span class="fc" id="L98">        return new TableBlock( rows.toArray( new Block[] {} ) );</span>
+    }
+
+    /**
+     * &lt;p&gt;Setter for the field &lt;code&gt;textParser&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @param textParser text parser to be set
+     */
+    public final void setTextParser( final FormatedTextParser textParser )
+    {
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if ( textParser == null )</span>
+        {
+<span class="nc" id="L110">            throw new IllegalArgumentException( &quot;argument can't be null&quot; );</span>
+        }
+
+<span class="fc" id="L113">        this.textParser = textParser;</span>
+<span class="fc" id="L114">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

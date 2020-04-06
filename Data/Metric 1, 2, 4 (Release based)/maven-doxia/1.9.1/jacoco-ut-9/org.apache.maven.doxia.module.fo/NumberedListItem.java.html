@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NumberedListItem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: FO Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.fo</a> &gt; <span class="el_source">NumberedListItem.java</span></div><h1>NumberedListItem.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.fo;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.sink.Sink;
+
+/**
+ * Used to count the position in a numbered list.
+ *
+ * @author ltheussl
+ * @since 1.1
+ */
+public class NumberedListItem
+{
+
+    /** Arabic decimals from 1 - 26. */
+<span class="fc" id="L34">    private static final String[] DECIMALS =</span>
+    {
+        &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &quot;10&quot;,
+        &quot;11&quot;, &quot;12&quot;, &quot;13&quot;, &quot;14&quot;, &quot;15&quot;, &quot;16&quot;, &quot;17&quot;, &quot;18&quot;, &quot;19&quot;, &quot;20&quot;,
+        &quot;21&quot;, &quot;22&quot;, &quot;23&quot;, &quot;24&quot;, &quot;25&quot;, &quot;26&quot;
+    };
+
+    /** Lower-case alphanumerics from a - z. */
+<span class="fc" id="L42">    private static final String[] LOWER_ALPHAS =</span>
+    {
+        &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;, &quot;e&quot;, &quot;f&quot;, &quot;g&quot;, &quot;h&quot;, &quot;i&quot;, &quot;j&quot;,
+        &quot;k&quot;, &quot;l&quot;, &quot;m&quot;, &quot;n&quot;, &quot;o&quot;, &quot;p&quot;, &quot;q&quot;, &quot;r&quot;, &quot;s&quot;, &quot;t&quot;,
+        &quot;u&quot;, &quot;v&quot;, &quot;w&quot;, &quot;x&quot;, &quot;y&quot;, &quot;z&quot;
+    };
+
+    /** Upper-case alphanumerics from A - Z. */
+<span class="fc" id="L50">    private static final String[] UPPER_ALPHAS =</span>
+    {
+        &quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;, &quot;F&quot;, &quot;G&quot;, &quot;H&quot;, &quot;I&quot;, &quot;J&quot;,
+        &quot;K&quot;, &quot;L&quot;, &quot;M&quot;, &quot;N&quot;, &quot;O&quot;, &quot;P&quot;, &quot;Q&quot;, &quot;R&quot;, &quot;S&quot;, &quot;T&quot;,
+        &quot;U&quot;, &quot;V&quot;, &quot;W&quot;, &quot;X&quot;, &quot;Y&quot;, &quot;Z&quot;
+    };
+
+    /** Lower-case roman numbers from i - xxvi. */
+<span class="fc" id="L58">    private static final String[] LOWER_ROMANS =</span>
+    {
+        &quot;i&quot;, &quot;ii&quot;, &quot;iii&quot;, &quot;iv&quot;, &quot;v&quot;, &quot;vi&quot;, &quot;vii&quot;, &quot;viii&quot;, &quot;ix&quot;, &quot;x&quot;,
+        &quot;xi&quot;, &quot;xii&quot;, &quot;xiii&quot;, &quot;xiv&quot;, &quot;xv&quot;, &quot;xvi&quot;, &quot;xvii&quot;, &quot;xviii&quot;, &quot;xix&quot;, &quot;xx&quot;,
+        &quot;xxi&quot;, &quot;xxii&quot;, &quot;xxiii&quot;, &quot;xxiv&quot;, &quot;xxv&quot;, &quot;xxvi&quot;
+    };
+
+    /** Upper-case roman numbers from I - XXVI. */
+<span class="fc" id="L66">    private static final String[] UPPER_ROMANS =</span>
+    {
+        &quot;I&quot;, &quot;II&quot;, &quot;III&quot;, &quot;IV&quot;, &quot;V&quot;, &quot;VI&quot;, &quot;VII&quot;, &quot;VIII&quot;, &quot;IX&quot;, &quot;X&quot;,
+        &quot;XI&quot;, &quot;XII&quot;, &quot;XIII&quot;, &quot;XIV&quot;, &quot;XV&quot;, &quot;XVI&quot;, &quot;XVII&quot;, &quot;XVIII&quot;, &quot;XIX&quot;, &quot;XX&quot;,
+        &quot;XXI&quot;, &quot;XXII&quot;, &quot;XXIII&quot;, &quot;XXIV&quot;, &quot;XXV&quot;, &quot;XXVI&quot;
+    };
+
+    /** The position in the list. */
+    private int count;
+
+    /** The numbering format. */
+    private final int format;
+
+    /**
+     * Constructor. Initializes count and format.
+     *
+     * @param itemFormat The numbering format of this List.
+     * Should be one of the formats defined in {@link org.apache.maven.doxia.sink.Sink}.
+     */
+    public NumberedListItem( int itemFormat )
+<span class="fc" id="L86">    {</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if ( !isValidItemFormat( itemFormat ) )</span>
+        {
+<span class="nc" id="L89">            throw new IllegalArgumentException( &quot;Unknown item format!&quot; );</span>
+        }
+
+<span class="fc" id="L92">        this.format = itemFormat;</span>
+<span class="fc" id="L93">        this.count = 0;</span>
+<span class="fc" id="L94">    }</span>
+
+    /**
+     * Returns the current count, ie the position in the list.
+     *
+     * @return The current count.
+     */
+    public int count()
+    {
+<span class="fc" id="L103">        return count;</span>
+    }
+
+    /**
+     * Returns the numbering format.
+     *
+     * @return The numbering format.
+     */
+    public int format()
+    {
+<span class="fc" id="L113">        return format;</span>
+    }
+
+    /**
+     * Increase the current count by 1.
+     */
+    public void next()
+    {
+<span class="fc" id="L121">        count++;</span>
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * Returns the symbol for the current list item.
+     *
+     * @return The symbol for the current list item.
+     */
+    public String getListItemSymbol()
+    {
+<span class="fc" id="L131">        int j = count() - 1;</span>
+
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if ( j &lt; 0 )</span>
+        {
+<span class="nc" id="L135">            j = 0;</span>
+        }
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        else if ( j &gt; DECIMALS.length - 1 )</span>
+        {
+<span class="nc" id="L139">            j = DECIMALS.length - 1;</span>
+        }
+
+        String symbol;
+
+<span class="pc bpc" id="L144" title="2 of 5 branches missed.">        switch ( format() )</span>
+        {
+            case Sink.NUMBERING_UPPER_ALPHA:
+<span class="fc" id="L147">                symbol = UPPER_ALPHAS[j];</span>
+<span class="fc" id="L148">                break;</span>
+            case Sink.NUMBERING_LOWER_ALPHA:
+<span class="nc" id="L150">                symbol = LOWER_ALPHAS[j];</span>
+<span class="nc" id="L151">                break;</span>
+            case Sink.NUMBERING_UPPER_ROMAN:
+<span class="nc" id="L153">                symbol = UPPER_ROMANS[j];</span>
+<span class="nc" id="L154">                break;</span>
+            case Sink.NUMBERING_LOWER_ROMAN:
+<span class="fc" id="L156">                symbol = LOWER_ROMANS[j];</span>
+<span class="fc" id="L157">                break;</span>
+            case Sink.NUMBERING_DECIMAL:
+            default:
+<span class="fc" id="L160">                symbol = DECIMALS[j];</span>
+        }
+
+<span class="fc" id="L163">        return symbol + &quot;.&quot;;</span>
+    }
+
+    /**
+     * Determines if the given format is one of the formats defined in
+     * {@link org.apache.maven.doxia.sink.Sink}.
+     *
+     * @param itemFormat the format to check.
+     * @return True if the format is a valid item format according to the Sink API.
+     */
+    private boolean isValidItemFormat( int itemFormat )
+    {
+<span class="pc bpc" id="L175" title="3 of 10 branches missed.">        return ( ( itemFormat == Sink.NUMBERING_UPPER_ALPHA )</span>
+            || ( itemFormat == Sink.NUMBERING_LOWER_ALPHA )
+            || ( itemFormat == Sink.NUMBERING_UPPER_ROMAN )
+            || ( itemFormat == Sink.NUMBERING_LOWER_ROMAN )
+            || ( itemFormat == Sink.NUMBERING_DECIMAL ) );
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

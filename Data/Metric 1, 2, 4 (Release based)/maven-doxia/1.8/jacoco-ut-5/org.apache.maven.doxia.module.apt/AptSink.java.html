@@ -1,0 +1,1020 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AptSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: APT Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.apt</a> &gt; <span class="el_source">AptSink.java</span></div><h1>AptSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.apt;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.Stack;
+
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.AbstractTextSink;
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * APT generator implementation.
+ * &lt;br/&gt;
+ * &lt;b&gt;Note&lt;/b&gt;: The encoding used is UTF-8.
+ *
+ * @author eredmond
+ * @version $Id$
+ * @since 1.0
+ */
+public class AptSink
+    extends AbstractTextSink
+    implements AptMarkup
+{
+    // ----------------------------------------------------------------------
+    // Instance fields
+    // ----------------------------------------------------------------------
+
+    /**  A buffer that holds the current text when headerFlag or bufferFlag set to &lt;code&gt;true&lt;/code&gt;. */
+    private StringBuffer buffer;
+
+    /**  A buffer that holds the table caption. */
+    private StringBuilder tableCaptionBuffer;
+
+    /**  author. */
+    private String author;
+
+    /**  title. */
+    private String title;
+
+    /**  date. */
+    private String date;
+
+    /** startFlag. */
+    private boolean startFlag;
+
+    /**  tableCaptionFlag. */
+    private boolean tableCaptionFlag;
+
+    /**  headerFlag. */
+    private boolean headerFlag;
+
+    /**  bufferFlag. */
+    private boolean bufferFlag;
+
+    /**  itemFlag. */
+    private boolean itemFlag;
+
+    /**  verbatimFlag. */
+    private boolean verbatimFlag;
+
+    /**  boxed verbatim. */
+    private boolean isBoxed;
+
+    /**  gridFlag for tables. */
+    private boolean gridFlag;
+
+    /**  number of cells in a table. */
+    private int cellCount;
+
+    /**  The writer to use. */
+    private final PrintWriter writer;
+
+    /**  justification of table cells. */
+    private int cellJustif[];
+
+    /**  a line of a row in a table. */
+    private String rowLine;
+
+    /**  listNestingIndent. */
+    private String listNestingIndent;
+
+    /**  listStyles. */
+    private final Stack&lt;String&gt; listStyles;
+
+    // ----------------------------------------------------------------------
+    // Public protected methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * Constructor, initialize the Writer and the variables.
+     *
+     * @param writer not null writer to write the result. &lt;b&gt;Should&lt;/b&gt; be an UTF-8 Writer.
+     * You could use &lt;code&gt;newWriter&lt;/code&gt; methods from {@link org.codehaus.plexus.util.WriterFactory}.
+     */
+    protected AptSink( Writer writer )
+<span class="fc" id="L115">    {</span>
+<span class="fc" id="L116">        this.writer = new PrintWriter( writer );</span>
+<span class="fc" id="L117">        this.listStyles = new Stack&lt;String&gt;();</span>
+
+<span class="fc" id="L119">        init();</span>
+<span class="fc" id="L120">    }</span>
+
+    /**
+     * Returns the buffer that holds the current text.
+     *
+     * @return A StringBuffer.
+     */
+    protected StringBuffer getBuffer()
+    {
+<span class="nc" id="L129">        return buffer;</span>
+    }
+
+    /**
+     * Used to determine whether we are in head mode.
+     *
+     * @param headFlag True for head mode.
+     */
+    protected void setHeadFlag( boolean headFlag )
+    {
+<span class="nc" id="L139">        this.headerFlag = headFlag;</span>
+<span class="nc" id="L140">    }</span>
+
+    /**
+     * Reset all variables.
+     *
+     * @deprecated since 1.1.2, use {@link #init()} instead of.
+     */
+    protected void resetState()
+    {
+<span class="nc" id="L149">        init();</span>
+<span class="nc" id="L150">    }</span>
+
+    /** {@inheritDoc} */
+    protected void init()
+    {
+<span class="fc" id="L155">        super.init();</span>
+
+<span class="fc" id="L157">        resetBuffer();</span>
+
+<span class="fc" id="L159">        this.tableCaptionBuffer = new StringBuilder();</span>
+<span class="fc" id="L160">        this.listNestingIndent = &quot;&quot;;</span>
+
+<span class="fc" id="L162">        this.author = null;</span>
+<span class="fc" id="L163">        this.title = null;</span>
+<span class="fc" id="L164">        this.date = null;</span>
+<span class="fc" id="L165">        this.startFlag = true;</span>
+<span class="fc" id="L166">        this.tableCaptionFlag = false;</span>
+<span class="fc" id="L167">        this.headerFlag = false;</span>
+<span class="fc" id="L168">        this.bufferFlag = false;</span>
+<span class="fc" id="L169">        this.itemFlag = false;</span>
+<span class="fc" id="L170">        this.verbatimFlag = false;</span>
+<span class="fc" id="L171">        this.isBoxed = false;</span>
+<span class="fc" id="L172">        this.gridFlag = false;</span>
+<span class="fc" id="L173">        this.cellCount = 0;</span>
+<span class="fc" id="L174">        this.cellJustif = null;</span>
+<span class="fc" id="L175">        this.rowLine = null;</span>
+<span class="fc" id="L176">        this.listStyles.clear();</span>
+<span class="fc" id="L177">    }</span>
+
+    /**
+     * Reset the StringBuilder.
+     */
+    protected void resetBuffer()
+    {
+<span class="fc" id="L184">        buffer = new StringBuffer();</span>
+<span class="fc" id="L185">    }</span>
+
+    /**
+     * Reset the TableCaptionBuffer.
+     */
+    protected void resetTableCaptionBuffer()
+    {
+<span class="fc" id="L192">        tableCaptionBuffer = new StringBuilder();</span>
+<span class="fc" id="L193">    }</span>
+
+    /** {@inheritDoc} */
+    public void head()
+    {
+<span class="fc" id="L198">        boolean startFlag = this.startFlag;</span>
+
+<span class="fc" id="L200">        init();</span>
+
+<span class="fc" id="L202">        headerFlag = true;</span>
+<span class="fc" id="L203">        this.startFlag = startFlag;</span>
+<span class="fc" id="L204">    }</span>
+
+    /** {@inheritDoc} */
+    public void head_()
+    {
+<span class="fc" id="L209">        headerFlag = false;</span>
+
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        if ( ! startFlag )</span>
+        {
+<span class="fc" id="L213">            write( EOL );</span>
+        }
+<span class="fc" id="L215">        write( HEADER_START_MARKUP + EOL );</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        if ( title != null )</span>
+        {
+<span class="fc" id="L218">            write( &quot; &quot; + title + EOL );</span>
+        }
+<span class="fc" id="L220">        write( HEADER_START_MARKUP + EOL );</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        if ( author != null )</span>
+        {
+<span class="fc" id="L223">            write( &quot; &quot; + author + EOL );</span>
+        }
+<span class="fc" id="L225">        write( HEADER_START_MARKUP + EOL );</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if ( date != null )</span>
+        {
+<span class="fc" id="L228">            write( &quot; &quot; + date + EOL );</span>
+        }
+<span class="fc" id="L230">        write( HEADER_START_MARKUP + EOL );</span>
+<span class="fc" id="L231">    }</span>
+
+    /** {@inheritDoc} */
+    public void title_()
+    {
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        if ( buffer.length() &gt; 0 )</span>
+        {
+<span class="fc" id="L238">            title = buffer.toString();</span>
+<span class="fc" id="L239">            resetBuffer();</span>
+        }
+<span class="fc" id="L241">    }</span>
+
+    /** {@inheritDoc} */
+    public void author_()
+    {
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if ( buffer.length() &gt; 0 )</span>
+        {
+<span class="fc" id="L248">            author = buffer.toString();</span>
+<span class="fc" id="L249">            resetBuffer();</span>
+        }
+<span class="fc" id="L251">    }</span>
+
+    /** {@inheritDoc} */
+    public void date_()
+    {
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if ( buffer.length() &gt; 0 )</span>
+        {
+<span class="fc" id="L258">            date = buffer.toString();</span>
+<span class="fc" id="L259">            resetBuffer();</span>
+        }
+<span class="fc" id="L261">    }</span>
+
+    /** {@inheritDoc} */
+    public void section1_()
+    {
+<span class="fc" id="L266">        write( EOL );</span>
+<span class="fc" id="L267">    }</span>
+
+    /** {@inheritDoc} */
+    public void section2_()
+    {
+<span class="fc" id="L272">        write( EOL );</span>
+<span class="fc" id="L273">    }</span>
+
+    /** {@inheritDoc} */
+    public void section3_()
+    {
+<span class="fc" id="L278">        write( EOL );</span>
+<span class="fc" id="L279">    }</span>
+
+    /** {@inheritDoc} */
+    public void section4_()
+    {
+<span class="fc" id="L284">        write( EOL );</span>
+<span class="fc" id="L285">    }</span>
+
+    /** {@inheritDoc} */
+    public void section5_()
+    {
+<span class="fc" id="L290">        write( EOL );</span>
+<span class="fc" id="L291">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle1()
+    {
+<span class="fc" id="L296">        write( EOL );</span>
+<span class="fc" id="L297">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle1_()
+    {
+<span class="fc" id="L302">        write( EOL + EOL );</span>
+<span class="fc" id="L303">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle2()
+    {
+<span class="fc" id="L308">        write( EOL + SECTION_TITLE_START_MARKUP );</span>
+<span class="fc" id="L309">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle2_()
+    {
+<span class="fc" id="L314">        write( EOL + EOL );</span>
+<span class="fc" id="L315">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle3()
+    {
+<span class="fc" id="L320">        write( EOL + StringUtils.repeat( SECTION_TITLE_START_MARKUP, 2 ) );</span>
+<span class="fc" id="L321">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle3_()
+    {
+<span class="fc" id="L326">        write( EOL + EOL );</span>
+<span class="fc" id="L327">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle4()
+    {
+<span class="fc" id="L332">        write( EOL + StringUtils.repeat( SECTION_TITLE_START_MARKUP, 3 ) );</span>
+<span class="fc" id="L333">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle4_()
+    {
+<span class="fc" id="L338">        write( EOL + EOL );</span>
+<span class="fc" id="L339">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle5()
+    {
+<span class="fc" id="L344">        write( EOL + StringUtils.repeat( SECTION_TITLE_START_MARKUP, 4 ) );</span>
+<span class="fc" id="L345">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle5_()
+    {
+<span class="fc" id="L350">        write( EOL + EOL );</span>
+<span class="fc" id="L351">    }</span>
+
+    /** {@inheritDoc} */
+    public void list()
+    {
+<span class="fc" id="L356">        listNestingIndent += &quot; &quot;;</span>
+<span class="fc" id="L357">        listStyles.push( LIST_START_MARKUP );</span>
+<span class="fc" id="L358">        write( EOL );</span>
+<span class="fc" id="L359">    }</span>
+
+    /** {@inheritDoc} */
+    public void list_()
+    {
+<span class="fc bfc" id="L364" title="All 2 branches covered.">        if ( listNestingIndent.length() &lt;= 1 )</span>
+        {
+<span class="fc" id="L366">            write( EOL + listNestingIndent + LIST_END_MARKUP + EOL );</span>
+        }
+        else
+        {
+<span class="fc" id="L370">            write( EOL );</span>
+        }
+<span class="fc" id="L372">        listNestingIndent = StringUtils.chomp( listNestingIndent, &quot; &quot; );</span>
+<span class="fc" id="L373">        listStyles.pop();</span>
+<span class="fc" id="L374">        itemFlag = false;</span>
+<span class="fc" id="L375">    }</span>
+
+    /** {@inheritDoc} */
+    public void listItem()
+    {
+        //if ( !numberedList )
+        //write( EOL + listNestingIndent + &quot;*&quot; );
+        //else
+<span class="fc" id="L383">        numberedListItem();</span>
+<span class="fc" id="L384">        itemFlag = true;</span>
+<span class="fc" id="L385">    }</span>
+
+    /** {@inheritDoc} */
+    public void listItem_()
+    {
+<span class="fc" id="L390">        write( EOL );</span>
+<span class="fc" id="L391">        itemFlag = false;</span>
+<span class="fc" id="L392">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList( int numbering )
+    {
+<span class="fc" id="L397">        listNestingIndent += &quot; &quot;;</span>
+<span class="fc" id="L398">        write( EOL );</span>
+
+        String style;
+<span class="pc bpc" id="L401" title="2 of 5 branches missed.">        switch ( numbering )</span>
+        {
+            case NUMBERING_UPPER_ALPHA:
+<span class="fc" id="L404">                style = String.valueOf( NUMBERING_UPPER_ALPHA_CHAR );</span>
+<span class="fc" id="L405">                break;</span>
+            case NUMBERING_LOWER_ALPHA:
+<span class="nc" id="L407">                style = String.valueOf( NUMBERING_LOWER_ALPHA_CHAR );</span>
+<span class="nc" id="L408">                break;</span>
+            case NUMBERING_UPPER_ROMAN:
+<span class="nc" id="L410">                style = String.valueOf( NUMBERING_UPPER_ROMAN_CHAR );</span>
+<span class="nc" id="L411">                break;</span>
+            case NUMBERING_LOWER_ROMAN:
+<span class="fc" id="L413">                style = String.valueOf( NUMBERING_LOWER_ROMAN_CHAR );</span>
+<span class="fc" id="L414">                break;</span>
+            case NUMBERING_DECIMAL:
+            default:
+<span class="fc" id="L417">                style = String.valueOf( NUMBERING );</span>
+        }
+
+<span class="fc" id="L420">        listStyles.push( style );</span>
+<span class="fc" id="L421">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList_()
+    {
+<span class="fc bfc" id="L426" title="All 2 branches covered.">        if ( listNestingIndent.length() &lt;= 1 )</span>
+        {
+<span class="fc" id="L428">            write( EOL + listNestingIndent + LIST_END_MARKUP + EOL );</span>
+        }
+        else
+        {
+<span class="fc" id="L432">            write( EOL );</span>
+        }
+<span class="fc" id="L434">        listNestingIndent = StringUtils.chomp( listNestingIndent, &quot; &quot; );</span>
+<span class="fc" id="L435">        listStyles.pop();</span>
+<span class="fc" id="L436">        itemFlag = false;</span>
+<span class="fc" id="L437">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedListItem()
+    {
+<span class="fc" id="L442">        String style = listStyles.peek();</span>
+<span class="fc bfc" id="L443" title="All 2 branches covered.">        if ( style.equals( String.valueOf( STAR ) ) )</span>
+        {
+<span class="fc" id="L445">            write( EOL + listNestingIndent + String.valueOf( STAR ) + String.valueOf( SPACE ) );</span>
+        }
+        else
+        {
+<span class="fc" id="L449">            write( EOL + listNestingIndent + String.valueOf( LEFT_SQUARE_BRACKET )</span>
+<span class="fc" id="L450">                + String.valueOf( LEFT_SQUARE_BRACKET ) + style + String.valueOf( RIGHT_SQUARE_BRACKET )</span>
+<span class="fc" id="L451">                + String.valueOf( RIGHT_SQUARE_BRACKET ) + String.valueOf( SPACE ) );</span>
+        }
+<span class="fc" id="L453">        itemFlag = true;</span>
+<span class="fc" id="L454">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedListItem_()
+    {
+<span class="fc" id="L459">        write( EOL );</span>
+<span class="fc" id="L460">        itemFlag = false;</span>
+<span class="fc" id="L461">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionList()
+    {
+<span class="fc" id="L466">        listNestingIndent += &quot; &quot;;</span>
+<span class="fc" id="L467">        listStyles.push( &quot;&quot; );</span>
+<span class="fc" id="L468">        write( EOL );</span>
+<span class="fc" id="L469">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionList_()
+    {
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">        if ( listNestingIndent.length() &lt;= 1 )</span>
+        {
+<span class="fc" id="L476">            write( EOL + listNestingIndent + LIST_END_MARKUP + EOL );</span>
+        }
+        else
+        {
+<span class="nc" id="L480">            write( EOL );</span>
+        }
+<span class="fc" id="L482">        listNestingIndent = StringUtils.chomp( listNestingIndent, &quot; &quot; );</span>
+<span class="fc" id="L483">        listStyles.pop();</span>
+<span class="fc" id="L484">        itemFlag = false;</span>
+<span class="fc" id="L485">    }</span>
+
+    /** {@inheritDoc} */
+    public void definedTerm()
+    {
+<span class="fc" id="L490">        write( EOL + &quot; [&quot; );</span>
+<span class="fc" id="L491">    }</span>
+
+    /** {@inheritDoc} */
+    public void definedTerm_()
+    {
+<span class="fc" id="L496">        write( &quot;] &quot; );</span>
+<span class="fc" id="L497">    }</span>
+
+    /** {@inheritDoc} */
+    public void definition()
+    {
+<span class="fc" id="L502">        itemFlag = true;</span>
+<span class="fc" id="L503">    }</span>
+
+    /** {@inheritDoc} */
+    public void definition_()
+    {
+<span class="fc" id="L508">        write( EOL );</span>
+<span class="fc" id="L509">        itemFlag = false;</span>
+<span class="fc" id="L510">    }</span>
+
+    /** {@inheritDoc} */
+    public void pageBreak()
+    {
+<span class="fc" id="L515">        write( EOL + PAGE_BREAK + EOL );</span>
+<span class="fc" id="L516">    }</span>
+
+    /** {@inheritDoc} */
+    public void paragraph()
+    {
+<span class="fc bfc" id="L521" title="All 2 branches covered.">        if ( itemFlag )</span>
+        {
+<span class="fc" id="L523">            write( EOL + EOL + &quot;  &quot; + listNestingIndent );</span>
+        }
+        else
+        {
+<span class="fc" id="L527">            write( EOL + &quot; &quot; );</span>
+        }
+<span class="fc" id="L529">    }</span>
+
+    /** {@inheritDoc} */
+    public void paragraph_()
+    {
+<span class="fc" id="L534">        write( EOL + EOL );</span>
+<span class="fc" id="L535">    }</span>
+
+    /** {@inheritDoc} */
+    public void verbatim( boolean boxed )
+    {
+<span class="fc" id="L540">        verbatimFlag = true;</span>
+<span class="fc" id="L541">        this.isBoxed = boxed;</span>
+<span class="fc" id="L542">        write( EOL );</span>
+<span class="pc bpc" id="L543" title="1 of 2 branches missed.">        if ( boxed )</span>
+        {
+<span class="fc" id="L545">            write( EOL + BOXED_VERBATIM_START_MARKUP + EOL );</span>
+        }
+        else
+        {
+<span class="nc" id="L549">            write( EOL + NON_BOXED_VERBATIM_START_MARKUP + EOL );</span>
+        }
+<span class="fc" id="L551">    }</span>
+
+    /** {@inheritDoc} */
+    public void verbatim_()
+    {
+<span class="pc bpc" id="L556" title="1 of 2 branches missed.">        if ( isBoxed )</span>
+        {
+<span class="fc" id="L558">            write( EOL + BOXED_VERBATIM_END_MARKUP + EOL );</span>
+        }
+        else
+        {
+<span class="nc" id="L562">            write( EOL + NON_BOXED_VERBATIM_END_MARKUP + EOL );</span>
+        }
+<span class="fc" id="L564">        isBoxed = false;</span>
+<span class="fc" id="L565">        verbatimFlag = false;</span>
+<span class="fc" id="L566">    }</span>
+
+    /** {@inheritDoc} */
+    public void horizontalRule()
+    {
+<span class="fc" id="L571">        write( EOL + HORIZONTAL_RULE_MARKUP + EOL );</span>
+<span class="fc" id="L572">    }</span>
+
+    /** {@inheritDoc} */
+    public void table()
+    {
+<span class="fc" id="L577">        write( EOL );</span>
+<span class="fc" id="L578">    }</span>
+
+    /** {@inheritDoc} */
+    public void table_()
+    {
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">        if ( rowLine != null )</span>
+        {
+<span class="fc" id="L585">            write( rowLine );</span>
+        }
+<span class="fc" id="L587">        rowLine = null;</span>
+
+<span class="fc bfc" id="L589" title="All 2 branches covered.">        if ( tableCaptionBuffer.length() &gt; 0 )</span>
+        {
+<span class="fc" id="L591">            text( tableCaptionBuffer.toString() + EOL );</span>
+        }
+
+<span class="fc" id="L594">        resetTableCaptionBuffer();</span>
+<span class="fc" id="L595">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRows( int justification[], boolean grid )
+    {
+<span class="fc" id="L600">        cellJustif = justification;</span>
+<span class="fc" id="L601">        gridFlag = grid;</span>
+<span class="fc" id="L602">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRows_()
+    {
+<span class="fc" id="L607">        cellJustif = null;</span>
+<span class="fc" id="L608">        gridFlag = false;</span>
+<span class="fc" id="L609">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRow()
+    {
+<span class="fc" id="L614">        bufferFlag = true;</span>
+<span class="fc" id="L615">        cellCount = 0;</span>
+<span class="fc" id="L616">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRow_()
+    {
+<span class="fc" id="L621">        bufferFlag = false;</span>
+
+        // write out the header row first, then the data in the buffer
+<span class="fc" id="L624">        buildRowLine();</span>
+
+<span class="fc" id="L626">        write( rowLine );</span>
+
+        // TODO: This will need to be more clever, for multi-line cells
+<span class="fc bfc" id="L629" title="All 2 branches covered.">        if ( gridFlag )</span>
+        {
+<span class="fc" id="L631">            write( TABLE_ROW_SEPARATOR_MARKUP );</span>
+        }
+
+<span class="fc" id="L634">        write( buffer.toString() );</span>
+
+<span class="fc" id="L636">        resetBuffer();</span>
+
+<span class="fc" id="L638">        write( EOL );</span>
+
+        // only reset cell count if this is the last row
+<span class="fc" id="L641">        cellCount = 0;</span>
+<span class="fc" id="L642">    }</span>
+
+    /** Construct a table row. */
+    private void buildRowLine()
+    {
+<span class="fc" id="L647">        StringBuilder rLine = new StringBuilder();</span>
+<span class="fc" id="L648">        rLine.append( TABLE_ROW_START_MARKUP );</span>
+
+<span class="fc bfc" id="L650" title="All 2 branches covered.">        for ( int i = 0; i &lt; cellCount; i++ )</span>
+        {
+<span class="pc bpc" id="L652" title="1 of 2 branches missed.">            if ( cellJustif != null )</span>
+            {
+<span class="fc bfc" id="L654" title="All 3 branches covered.">                switch ( cellJustif[i] )</span>
+                {
+                case 1:
+<span class="fc" id="L657">                    rLine.append( TABLE_COL_LEFT_ALIGNED_MARKUP );</span>
+<span class="fc" id="L658">                    break;</span>
+                case 2:
+<span class="fc" id="L660">                    rLine.append( TABLE_COL_RIGHT_ALIGNED_MARKUP );</span>
+<span class="fc" id="L661">                    break;</span>
+                default:
+<span class="fc" id="L663">                    rLine.append( TABLE_COL_CENTERED_ALIGNED_MARKUP );</span>
+                }
+            }
+            else
+            {
+<span class="nc" id="L668">                rLine.append( TABLE_COL_CENTERED_ALIGNED_MARKUP );</span>
+            }
+        }
+<span class="fc" id="L671">        rLine.append( EOL );</span>
+
+<span class="fc" id="L673">        this.rowLine = rLine.toString();</span>
+<span class="fc" id="L674">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell()
+    {
+<span class="fc" id="L679">        tableCell( false );</span>
+<span class="fc" id="L680">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell()
+    {
+<span class="fc" id="L685">        tableCell( true );</span>
+<span class="fc" id="L686">    }</span>
+
+    /**
+     * Starts a table cell.
+     *
+     * @param headerRow If this cell is part of a header row.
+     */
+    public void tableCell( boolean headerRow )
+    {
+<span class="fc bfc" id="L695" title="All 2 branches covered.">        if ( headerRow )</span>
+        {
+<span class="fc" id="L697">            buffer.append( TABLE_CELL_SEPARATOR_MARKUP );</span>
+        }
+<span class="fc" id="L699">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell_()
+    {
+<span class="fc" id="L704">        endTableCell();</span>
+<span class="fc" id="L705">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell_()
+    {
+<span class="fc" id="L710">        endTableCell();</span>
+<span class="fc" id="L711">    }</span>
+
+    /**
+     * Ends a table cell.
+     */
+    private void endTableCell()
+    {
+<span class="fc" id="L718">        buffer.append( TABLE_CELL_SEPARATOR_MARKUP );</span>
+<span class="fc" id="L719">        cellCount++;</span>
+<span class="fc" id="L720">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCaption()
+    {
+<span class="fc" id="L725">        tableCaptionFlag = true;</span>
+<span class="fc" id="L726">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCaption_()
+    {
+<span class="fc" id="L731">        tableCaptionFlag = false;</span>
+<span class="fc" id="L732">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureCaption_()
+    {
+<span class="fc" id="L737">        write( EOL );</span>
+<span class="fc" id="L738">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureGraphics( String name )
+    {
+<span class="fc" id="L743">        write( EOL + &quot;[&quot; + name + &quot;] &quot; );</span>
+<span class="fc" id="L744">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor( String name )
+    {
+<span class="fc" id="L749">        write( ANCHOR_START_MARKUP );</span>
+<span class="fc" id="L750">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor_()
+    {
+<span class="fc" id="L755">        write( ANCHOR_END_MARKUP );</span>
+<span class="fc" id="L756">    }</span>
+
+    /** {@inheritDoc} */
+    public void link( String name )
+    {
+<span class="pc bpc" id="L761" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L763">            write( LINK_START_1_MARKUP );</span>
+<span class="fc bfc" id="L764" title="All 2 branches covered.">            text( name.startsWith( &quot;#&quot; ) ? name.substring( 1 ) : name );</span>
+<span class="fc" id="L765">            write( LINK_START_2_MARKUP );</span>
+        }
+<span class="fc" id="L767">    }</span>
+
+    /** {@inheritDoc} */
+    public void link_()
+    {
+<span class="pc bpc" id="L772" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L774">            write( LINK_END_MARKUP );</span>
+        }
+<span class="fc" id="L776">    }</span>
+
+    /**
+     * A link with a target.
+     *
+     * @param name The name of the link.
+     * @param target The link target.
+     */
+    public void link( String name, String target )
+    {
+<span class="nc bnc" id="L786" title="All 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="nc" id="L788">            write( LINK_START_1_MARKUP );</span>
+<span class="nc" id="L789">            text( target );</span>
+<span class="nc" id="L790">            write( LINK_START_2_MARKUP );</span>
+<span class="nc" id="L791">            text( name );</span>
+        }
+<span class="nc" id="L793">    }</span>
+
+    /** {@inheritDoc} */
+    public void italic()
+    {
+<span class="pc bpc" id="L798" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L800">            write( ITALIC_START_MARKUP );</span>
+        }
+<span class="fc" id="L802">    }</span>
+
+    /** {@inheritDoc} */
+    public void italic_()
+    {
+<span class="pc bpc" id="L807" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L809">            write( ITALIC_END_MARKUP );</span>
+        }
+<span class="fc" id="L811">    }</span>
+
+    /** {@inheritDoc} */
+    public void bold()
+    {
+<span class="pc bpc" id="L816" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L818">            write( BOLD_START_MARKUP );</span>
+        }
+<span class="fc" id="L820">    }</span>
+
+    /** {@inheritDoc} */
+    public void bold_()
+    {
+<span class="pc bpc" id="L825" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L827">            write( BOLD_END_MARKUP );</span>
+        }
+<span class="fc" id="L829">    }</span>
+
+    /** {@inheritDoc} */
+    public void monospaced()
+    {
+<span class="pc bpc" id="L834" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L836">            write( MONOSPACED_START_MARKUP );</span>
+        }
+<span class="fc" id="L838">    }</span>
+
+    /** {@inheritDoc} */
+    public void monospaced_()
+    {
+<span class="pc bpc" id="L843" title="1 of 2 branches missed.">        if ( !headerFlag )</span>
+        {
+<span class="fc" id="L845">            write( MONOSPACED_END_MARKUP );</span>
+        }
+<span class="fc" id="L847">    }</span>
+
+    /** {@inheritDoc} */
+    public void lineBreak()
+    {
+<span class="pc bpc" id="L852" title="1 of 4 branches missed.">        if ( headerFlag || bufferFlag )</span>
+        {
+<span class="fc" id="L854">            buffer.append( EOL );</span>
+        }
+<span class="pc bpc" id="L856" title="1 of 2 branches missed.">        else if ( verbatimFlag )</span>
+        {
+<span class="nc" id="L858">            write( EOL );</span>
+        }
+        else
+        {
+<span class="fc" id="L862">            write( &quot;\\&quot; + EOL );</span>
+        }
+<span class="fc" id="L864">    }</span>
+
+    /** {@inheritDoc} */
+    public void nonBreakingSpace()
+    {
+<span class="pc bpc" id="L869" title="2 of 4 branches missed.">        if ( headerFlag || bufferFlag )</span>
+        {
+<span class="nc" id="L871">            buffer.append( NON_BREAKING_SPACE_MARKUP );</span>
+        }
+        else
+        {
+<span class="fc" id="L875">            write( NON_BREAKING_SPACE_MARKUP );</span>
+        }
+<span class="fc" id="L877">    }</span>
+
+    /** {@inheritDoc} */
+    public void text( String text )
+    {
+<span class="fc bfc" id="L882" title="All 2 branches covered.">        if ( tableCaptionFlag )</span>
+        {
+<span class="fc" id="L884">            tableCaptionBuffer.append( text );</span>
+        }
+<span class="fc bfc" id="L886" title="All 4 branches covered.">        else if ( headerFlag || bufferFlag )</span>
+        {
+<span class="fc" id="L888">            buffer.append( text );</span>
+        }
+<span class="fc bfc" id="L890" title="All 2 branches covered.">        else if ( verbatimFlag )</span>
+        {
+<span class="fc" id="L892">            verbatimContent( text );</span>
+        }
+        else
+        {
+<span class="fc" id="L896">            content( text );</span>
+        }
+<span class="fc" id="L898">    }</span>
+
+    /** {@inheritDoc} */
+    public void rawText( String text )
+    {
+<span class="fc" id="L903">        write( text );</span>
+<span class="fc" id="L904">    }</span>
+
+    /** {@inheritDoc} */
+    public void comment( String comment )
+    {
+<span class="fc bfc" id="L909" title="All 2 branches covered.">        rawText( ( startFlag ? &quot;&quot; : EOL ) + COMMENT + COMMENT + comment );</span>
+<span class="fc" id="L910">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Unkown events just log a warning message but are ignored otherwise.
+     * @see org.apache.maven.doxia.sink.Sink#unknown(String,Object[],SinkEventAttributes)
+     */
+    public void unknown( String name, Object[] requiredParams, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L920">        getLog().warn( &quot;[Apt Sink] Unknown Sink event: '&quot; + name + &quot;', ignoring!&quot; );</span>
+<span class="nc" id="L921">    }</span>
+
+    /**
+     * Write text to output.
+     *
+     * @param text The text to write.
+     */
+    protected void write( String text )
+    {
+<span class="fc" id="L930">        startFlag = false;</span>
+<span class="fc" id="L931">        writer.write( unifyEOLs( text ) );</span>
+<span class="fc" id="L932">    }</span>
+
+    /**
+     * Write Apt escaped text to output.
+     *
+     * @param text The text to write.
+     */
+    protected void content( String text )
+    {
+<span class="fc" id="L941">        write( escapeAPT( text ) );</span>
+<span class="fc" id="L942">    }</span>
+
+    /**
+     * Write Apt escaped text to output.
+     *
+     * @param text The text to write.
+     */
+    protected void verbatimContent( String text )
+    {
+<span class="fc" id="L951">        write( escapeAPT( text ) );</span>
+<span class="fc" id="L952">    }</span>
+
+    /** {@inheritDoc} */
+    public void flush()
+    {
+<span class="fc" id="L957">        writer.flush();</span>
+<span class="fc" id="L958">    }</span>
+
+    /** {@inheritDoc} */
+    public void close()
+    {
+<span class="fc" id="L963">        writer.close();</span>
+
+<span class="fc" id="L965">        init();</span>
+<span class="fc" id="L966">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Private methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * Escape special characters in a text in APT:
+     *
+     * &lt;pre&gt;
+     * \~, \=, \-, \+, \*, \[, \], \&lt;, \&gt;, \{, \}, \\
+     * &lt;/pre&gt;
+     *
+     * @param text the String to escape, may be null
+     * @return the text escaped, &quot;&quot; if null String input
+     */
+    private static String escapeAPT( String text )
+    {
+<span class="pc bpc" id="L984" title="1 of 2 branches missed.">        if ( text == null )</span>
+        {
+<span class="nc" id="L986">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L989">        int length = text.length();</span>
+<span class="fc" id="L990">        StringBuilder buffer = new StringBuilder( length );</span>
+
+<span class="fc bfc" id="L992" title="All 2 branches covered.">        for ( int i = 0; i &lt; length; ++i )</span>
+        {
+<span class="fc" id="L994">            char c = text.charAt( i );</span>
+<span class="fc bfc" id="L995" title="All 2 branches covered.">            switch ( c )</span>
+            { // 0080
+                case '\\':
+                case '~':
+                case '=':
+                case '-':
+                case '+':
+                case '*':
+                case '[':
+                case ']':
+                case '&lt;':
+                case '&gt;':
+                case '{':
+                case '}':
+<span class="fc" id="L1009">                    buffer.append( '\\' );</span>
+<span class="fc" id="L1010">                    buffer.append( c );</span>
+<span class="fc" id="L1011">                    break;</span>
+                default:
+<span class="fc" id="L1013">                    buffer.append( c );</span>
+            }
+        }
+
+<span class="fc" id="L1017">        return buffer.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

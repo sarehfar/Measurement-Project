@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TWikiMarkup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki</a> &gt; <span class="el_source">TWikiMarkup.java</span></div><h1>TWikiMarkup.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import javax.swing.text.html.HTML.Tag;
+
+import org.apache.maven.doxia.markup.TextMarkup;
+
+/**
+ * This interface defines all markups and syntaxes used by the &lt;b&gt;TWiki&lt;/b&gt; format.
+ *
+ * @see &lt;a href=&quot;http://twiki.org/cgi-bin/view/TWiki/TextFormattingRules&quot;&gt;http://twiki.org/cgi-bin/view/TWiki/TextFormattingRules&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+@SuppressWarnings( &quot;checkstyle:interfaceistype&quot; )
+public interface TWikiMarkup
+    extends TextMarkup
+{
+    // ----------------------------------------------------------------------
+    // Twiki markups
+    // ----------------------------------------------------------------------
+
+    /** Syntax for the anchor : '#' */
+    char ANCHOR_MARKUP = '#';
+
+    /** Syntax for the start line separator: &quot;   &quot; */
+    String THREE_SPACES_MARKUP = &quot;   &quot;;
+
+    /** Syntax for the bold markup: &quot;*&quot; */
+    String BOLD_END_MARKUP = &quot;*&quot;;
+
+    /** Syntax for the bold markup: &quot;*&quot; */
+    String BOLD_START_MARKUP = &quot;*&quot;;
+
+    /** Syntax for the bold italic markup: &quot;__&quot; */
+    String BOLD_ITALIC_END_MARKUP = &quot;__&quot;;
+
+    /** Syntax for the bold italic markup: &quot;__&quot; */
+    String BOLD_ITALIC_START_MARKUP = &quot;__&quot;;
+
+    /** Syntax for the bold monospaced markup: &quot;==&quot; */
+    String BOLD_MONOSPACED_END_MARKUP = &quot;==&quot;;
+
+    /** Syntax for the bold monospaced markup: &quot;==&quot; */
+    String BOLD_MONOSPACED_START_MARKUP = &quot;==&quot;;
+
+    /** Syntax for the definition list item: &quot;   $ &quot; */
+    String DEFINITION_LIST_ITEM_MARKUP = THREE_SPACES_MARKUP + &quot;$ &quot;;
+
+    /** Syntax for the definition list definition: &quot;: &quot; */
+    String DEFINITION_LIST_DEFINITION_MARKUP = &quot;: &quot;;
+
+    /** Syntax for the horizontal rule markup: &quot;---&quot; */
+    String HORIZONTAL_RULE_MARKUP = &quot;---&quot;;
+
+    /** Syntax for the italic markup: &quot;_&quot; */
+    String ITALIC_END_MARKUP = &quot;_&quot;;
+
+    /** Syntax for the italic markup: &quot;_&quot; */
+    String ITALIC_START_MARKUP = &quot;_&quot;;
+
+    /** Syntax for the link end markup: &quot;]]&quot; */
+    String LINK_END_MARKUP = &quot;]]&quot;;
+
+    /** Syntax for the link middle markup: &quot;][&quot; */
+    String LINK_MIDDLE_MARKUP = &quot;][&quot;;
+
+    /** Syntax for the link start markup: &quot;[[&quot; */
+    String LINK_START_MARKUP = &quot;[[&quot;;
+
+    /** Syntax for the list item markup: &quot;* */
+    String LIST_ITEM_MARKUP = &quot;* &quot;;
+
+    /** Syntax for the mono-spaced style end: &quot;=&quot; */
+    String MONOSPACED_END_MARKUP = &quot;=&quot;;
+
+    /** Syntax for the mono-spaced style start: &quot;=&quot; */
+    String MONOSPACED_START_MARKUP = &quot;=&quot;;
+
+    /** Syntax for the numbering decimal markup char: &quot;1.&quot; */
+    String NUMBERING_MARKUP = &quot;1.&quot;;
+
+    /** Syntax for the numbering lower alpha markup char: &quot;a.&quot; */
+    String NUMBERING_LOWER_ALPHA_MARKUP = &quot;a.&quot;;
+
+    /** Syntax for the numbering lower roman markup char: &quot;i.&quot; */
+    String NUMBERING_LOWER_ROMAN_MARKUP = &quot;i.&quot;;
+
+    /** Syntax for the numbering upper alpha markup char: &quot;A.&quot; */
+    String NUMBERING_UPPER_ALPHA_MARKUP = &quot;A.&quot;;
+
+    /** Syntax for the numbering upper roman markup char: &quot;I.&quot; */
+    String NUMBERING_UPPER_ROMAN_MARKUP = &quot;I.&quot;;
+
+    /** Syntax for the table cell header end markup: &quot;* |&quot; */
+    String TABLE_CELL_HEADER_END_MARKUP = &quot;* |&quot;;
+
+    /** Syntax for the table cell header start markup: &quot; *&quot; */
+    String TABLE_CELL_HEADER_START_MARKUP = &quot; *&quot;;
+
+    /** Syntax for the table cell markup: &quot;| &quot; */
+    String TABLE_CELL_MARKUP = &quot; |&quot;;
+
+    /** Syntax for the table row markup: &quot;|&quot; */
+    String TABLE_ROW_MARKUP = &quot;|&quot;;
+
+    // ----------------------------------------------------------------------
+    // Specific Twiki tags
+    // ----------------------------------------------------------------------
+
+    /** TWiki tag for &lt;code&gt;verbatim&lt;/code&gt; */
+<span class="fc" id="L131">    Tag VERBATIM_TAG = new Tag()</span>
+<span class="fc" id="L132">    {</span>
+        /** {@inheritDoc} */
+        public String toString()
+        {
+<span class="fc" id="L136">            return &quot;verbatim&quot;;</span>
+        }
+    };
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

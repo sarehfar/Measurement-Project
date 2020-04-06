@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ITextUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: iText Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.itext</a> &gt; <span class="el_source">ITextUtil.java</span></div><h1>ITextUtil.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.itext;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.xml.XmlToHtml;
+import com.lowagie.text.xml.XmlToPdf;
+import com.lowagie.text.xml.XmlToRtf;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.util.Locale;
+
+/**
+ * A set of util methods for the &lt;code&gt;iText&lt;/code&gt; framework
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ */
+<span class="nc" id="L40">public class ITextUtil</span>
+{
+    /**
+     * Set the default page size for the document depending the user's country.
+     * TODO Maybe more generic?
+     *
+     * @return the page size
+     * @see com.lowagie.text.PageSize
+     */
+    public static Rectangle getDefaultPageSize()
+    {
+<span class="fc" id="L51">        String defaultCountry = Locale.getDefault().getCountry();</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if ( defaultCountry != null</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            &amp;&amp; ( defaultCountry.equals( Locale.US.getCountry() )</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">                            || defaultCountry.equals( Locale.CANADA.getCountry() ) ) )</span>
+        {
+<span class="fc" id="L56">            return PageSize.LETTER;</span>
+        }
+
+<span class="fc" id="L59">        return PageSize.A4;</span>
+    }
+
+    /**
+     * Return a page size as String.
+     *
+     * @param rect a Rectangle defined in {@link PageSize}.
+     * @return a page size as String or A4 if not found.
+     * @see com.lowagie.text.PageSize
+     */
+    public static String getPageSize( Rectangle rect )
+    {
+<span class="fc" id="L71">        Field[] fields = PageSize.class.getFields();</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        for ( int i = 0; i &lt; fields.length; i++ )</span>
+        {
+<span class="fc" id="L74">            Field currentField = fields[i];</span>
+            try
+            {
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">                if ( currentField.getType().equals( Rectangle.class ) )</span>
+                {
+<span class="fc" id="L79">                    Rectangle fPageSize = (Rectangle) currentField.get( null );</span>
+<span class="fc bfc" id="L80" title="All 4 branches covered.">                    if ( ( rect.width() == fPageSize.width() ) &amp;&amp; ( rect.height() == fPageSize.height() ) )</span>
+                    {
+<span class="fc" id="L82">                        return currentField.getName();</span>
+                    }
+                }
+            }
+<span class="nc" id="L86">            catch ( Exception e )</span>
+            {
+                // nop
+<span class="fc" id="L89">            }</span>
+        }
+
+<span class="nc" id="L92">        return &quot;A4&quot;;</span>
+    }
+
+    /**
+     * Return &lt;code&gt;true&lt;/code&gt; if the page size is supported by {@link PageSize} class, &lt;code&gt;false&lt;/code&gt; otherwise.
+     *
+     * @param aPageSize a page size
+     * @return &lt;code&gt;true&lt;/code&gt; if the page size is supported, &lt;code&gt;false&lt;/code&gt; otherwise
+     * @see com.lowagie.text.PageSize
+     */
+    public static boolean isPageSizeSupported( String aPageSize )
+    {
+<span class="fc" id="L104">        Field[] fields = PageSize.class.getFields();</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        for ( int i = 0; i &lt; fields.length; i++ )</span>
+        {
+<span class="fc" id="L107">            Field currentField = fields[i];</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            if ( ( currentField.getName().equalsIgnoreCase( aPageSize ) )</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">                &amp;&amp; ( currentField.getType().equals( Rectangle.class ) ) )</span>
+            {
+<span class="fc" id="L111">                return true;</span>
+            }
+        }
+
+<span class="nc" id="L115">        return false;</span>
+    }
+
+    /**
+     * Parse an iText XML from the specified &lt;CODE&gt;InputStream&lt;/CODE&gt;, writing an Pdf document
+     * specified &lt;CODE&gt;OutputStream&lt;/CODE&gt;.
+     *
+     * @param is the &lt;CODE&gt;InputStream&lt;/CODE&gt; from which the XML is read.
+     * @param os the &lt;CODE&gt;OutputStream&lt;/CODE&gt; to which the result as Pdf is written.
+     * @see com.lowagie.text.xml.XmlToPdf
+     */
+    public static void writePdf( InputStream is, OutputStream os )
+    {
+        try
+        {
+<span class="fc" id="L130">            XmlToPdf x = new XmlToPdf();</span>
+
+<span class="fc" id="L132">            x.parse( is, os );</span>
+        }
+<span class="nc" id="L134">        catch ( DocumentException e )</span>
+        {
+<span class="nc" id="L136">            throw new RuntimeException( &quot;DocumentException : &quot; + e.getMessage(), e );</span>
+<span class="fc" id="L137">        }</span>
+<span class="fc" id="L138">    }</span>
+
+    /**
+     * Parse an iText XML from the specified &lt;CODE&gt;InputStream&lt;/CODE&gt;, writing an rtf document
+     * specified &lt;CODE&gt;OutputStream&lt;/CODE&gt;.
+     *
+     * @param is the &lt;CODE&gt;InputStream&lt;/CODE&gt; from which the XML is read.
+     * @param os the &lt;CODE&gt;OutputStream&lt;/CODE&gt; to which the result as RTF is written.
+     * @see com.lowagie.text.xml.XmlToRtf
+     */
+    public static void writeRtf( InputStream is, OutputStream os )
+    {
+        try
+        {
+<span class="fc" id="L152">            XmlToRtf x = new XmlToRtf();</span>
+<span class="fc" id="L153">            x.parse( is, os );</span>
+        }
+<span class="nc" id="L155">        catch ( DocumentException e )</span>
+        {
+<span class="nc" id="L157">            throw new RuntimeException( &quot;DocumentException : &quot; + e.getMessage(), e );</span>
+<span class="fc" id="L158">        }</span>
+<span class="fc" id="L159">    }</span>
+
+    /**
+     * Parse an iText XML from the specified &lt;CODE&gt;InputStream&lt;/CODE&gt;, writing an html document
+     * specified &lt;CODE&gt;OutputStream&lt;/CODE&gt;.
+     *
+     * @param is the &lt;CODE&gt;InputStream&lt;/CODE&gt; from which the XML is read.
+     * @param os the &lt;CODE&gt;OutputStream&lt;/CODE&gt; to which the result as Html is written.
+     * @see com.lowagie.text.xml.XmlToHtml
+     */
+    public static void writeHtml( InputStream is, OutputStream os )
+    {
+        try
+        {
+<span class="nc" id="L173">            XmlToHtml x = new XmlToHtml();</span>
+<span class="nc" id="L174">            x.parse( is, os );</span>
+        }
+<span class="nc" id="L176">        catch ( DocumentException e )</span>
+        {
+<span class="nc" id="L178">            throw new RuntimeException( &quot;DocumentException : &quot; + e.getMessage(), e );</span>
+<span class="nc" id="L179">        }</span>
+<span class="nc" id="L180">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

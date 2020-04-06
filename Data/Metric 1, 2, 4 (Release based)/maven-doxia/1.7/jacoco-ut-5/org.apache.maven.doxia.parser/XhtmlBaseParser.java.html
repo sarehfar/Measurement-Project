@@ -1,0 +1,1309 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XhtmlBaseParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.parser</a> &gt; <span class="el_source">XhtmlBaseParser.java</span></div><h1>XhtmlBaseParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.swing.text.html.HTML.Attribute;
+
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.markup.HtmlMarkup;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.util.DoxiaUtils;
+
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParser;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
+/**
+ * Common base parser for xhtml events.
+ *
+ * @author &lt;a href=&quot;mailto:jason@maven.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ * @author ltheussl
+ * @version $Id$
+ * @since 1.1
+ */
+<span class="fc" id="L49">public class XhtmlBaseParser</span>
+    extends AbstractXmlParser
+        implements HtmlMarkup
+{
+    /**
+     * True if a &amp;lt;script&amp;gt;&amp;lt;/script&amp;gt; or &amp;lt;style&amp;gt;&amp;lt;/style&amp;gt; block is read. CDATA sections within are
+     * handled as rawText.
+     */
+    private boolean scriptBlock;
+
+    /** Used to distinguish &amp;lt;a href=&quot;&quot;&amp;gt; from &amp;lt;a name=&quot;&quot;&amp;gt;. */
+    private boolean isLink;
+
+    /** Used to distinguish &amp;lt;a href=&quot;&quot;&amp;gt; from &amp;lt;a name=&quot;&quot;&amp;gt;. */
+    private boolean isAnchor;
+
+    /** Used for nested lists. */
+<span class="fc" id="L66">    private int orderedListDepth = 0;</span>
+
+    /** Counts section level. */
+    private int sectionLevel;
+
+    /** Verbatim flag, true whenever we are inside a &amp;lt;pre&amp;gt; tag. */
+    private boolean inVerbatim;
+
+    /** Used to recognize the case of img inside figure. */
+    private boolean inFigure;
+
+    /** Used to wrap the definedTerm with its definition, even when one is omitted */
+<span class="fc" id="L78">    boolean hasDefinitionListItem = false;</span>
+
+    /** Decoration properties, eg for texts. */
+<span class="fc" id="L81">    private final SinkEventAttributeSet decoration = new SinkEventAttributeSet();</span>
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    private Map&lt;String, Set&lt;String&gt;&gt; warnMessages;
+
+    /** {@inheritDoc} */
+    @Override
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L92">        init();</span>
+
+        try
+        {
+<span class="fc" id="L96">            super.parse( source, sink );</span>
+        }
+        finally
+        {
+<span class="fc" id="L100">            logWarnings();</span>
+
+<span class="fc" id="L102">            setSecondParsing( false );</span>
+<span class="fc" id="L103">            init();</span>
+        }
+<span class="fc" id="L105">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Adds all XHTML (HTML 4.0) entities to the parser so that they can be recognized and resolved
+     * without additional DTD.
+     */
+    @Override
+    protected void initXmlParser( XmlPullParser parser )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L117">        super.initXmlParser( parser );</span>
+
+        // the entities taken from org.apache.maven.doxia.document.io.xpp3.DocumentXpp3Reader,
+        // which is generated automatically
+
+        // ----------------------------------------------------------------------
+        // Latin 1 entities
+        // ----------------------------------------------------------------------
+
+<span class="fc" id="L126">        parser.defineEntityReplacementText( &quot;nbsp&quot;, &quot;\u00a0&quot; );</span>
+<span class="fc" id="L127">        parser.defineEntityReplacementText( &quot;iexcl&quot;, &quot;\u00a1&quot; );</span>
+<span class="fc" id="L128">        parser.defineEntityReplacementText( &quot;cent&quot;, &quot;\u00a2&quot; );</span>
+<span class="fc" id="L129">        parser.defineEntityReplacementText( &quot;pound&quot;, &quot;\u00a3&quot; );</span>
+<span class="fc" id="L130">        parser.defineEntityReplacementText( &quot;curren&quot;, &quot;\u00a4&quot; );</span>
+<span class="fc" id="L131">        parser.defineEntityReplacementText( &quot;yen&quot;, &quot;\u00a5&quot; );</span>
+<span class="fc" id="L132">        parser.defineEntityReplacementText( &quot;brvbar&quot;, &quot;\u00a6&quot; );</span>
+<span class="fc" id="L133">        parser.defineEntityReplacementText( &quot;sect&quot;, &quot;\u00a7&quot; );</span>
+<span class="fc" id="L134">        parser.defineEntityReplacementText( &quot;uml&quot;, &quot;\u00a8&quot; );</span>
+<span class="fc" id="L135">        parser.defineEntityReplacementText( &quot;copy&quot;, &quot;\u00a9&quot; );</span>
+<span class="fc" id="L136">        parser.defineEntityReplacementText( &quot;ordf&quot;, &quot;\u00aa&quot; );</span>
+<span class="fc" id="L137">        parser.defineEntityReplacementText( &quot;laquo&quot;, &quot;\u00ab&quot; );</span>
+<span class="fc" id="L138">        parser.defineEntityReplacementText( &quot;not&quot;, &quot;\u00ac&quot; );</span>
+<span class="fc" id="L139">        parser.defineEntityReplacementText( &quot;shy&quot;, &quot;\u00ad&quot; );</span>
+<span class="fc" id="L140">        parser.defineEntityReplacementText( &quot;reg&quot;, &quot;\u00ae&quot; );</span>
+<span class="fc" id="L141">        parser.defineEntityReplacementText( &quot;macr&quot;, &quot;\u00af&quot; );</span>
+<span class="fc" id="L142">        parser.defineEntityReplacementText( &quot;deg&quot;, &quot;\u00b0&quot; );</span>
+<span class="fc" id="L143">        parser.defineEntityReplacementText( &quot;plusmn&quot;, &quot;\u00b1&quot; );</span>
+<span class="fc" id="L144">        parser.defineEntityReplacementText( &quot;sup2&quot;, &quot;\u00b2&quot; );</span>
+<span class="fc" id="L145">        parser.defineEntityReplacementText( &quot;sup3&quot;, &quot;\u00b3&quot; );</span>
+<span class="fc" id="L146">        parser.defineEntityReplacementText( &quot;acute&quot;, &quot;\u00b4&quot; );</span>
+<span class="fc" id="L147">        parser.defineEntityReplacementText( &quot;micro&quot;, &quot;\u00b5&quot; );</span>
+<span class="fc" id="L148">        parser.defineEntityReplacementText( &quot;para&quot;, &quot;\u00b6&quot; );</span>
+<span class="fc" id="L149">        parser.defineEntityReplacementText( &quot;middot&quot;, &quot;\u00b7&quot; );</span>
+<span class="fc" id="L150">        parser.defineEntityReplacementText( &quot;cedil&quot;, &quot;\u00b8&quot; );</span>
+<span class="fc" id="L151">        parser.defineEntityReplacementText( &quot;sup1&quot;, &quot;\u00b9&quot; );</span>
+<span class="fc" id="L152">        parser.defineEntityReplacementText( &quot;ordm&quot;, &quot;\u00ba&quot; );</span>
+<span class="fc" id="L153">        parser.defineEntityReplacementText( &quot;raquo&quot;, &quot;\u00bb&quot; );</span>
+<span class="fc" id="L154">        parser.defineEntityReplacementText( &quot;frac14&quot;, &quot;\u00bc&quot; );</span>
+<span class="fc" id="L155">        parser.defineEntityReplacementText( &quot;frac12&quot;, &quot;\u00bd&quot; );</span>
+<span class="fc" id="L156">        parser.defineEntityReplacementText( &quot;frac34&quot;, &quot;\u00be&quot; );</span>
+<span class="fc" id="L157">        parser.defineEntityReplacementText( &quot;iquest&quot;, &quot;\u00bf&quot; );</span>
+<span class="fc" id="L158">        parser.defineEntityReplacementText( &quot;Agrave&quot;, &quot;\u00c0&quot; );</span>
+<span class="fc" id="L159">        parser.defineEntityReplacementText( &quot;Aacute&quot;, &quot;\u00c1&quot; );</span>
+<span class="fc" id="L160">        parser.defineEntityReplacementText( &quot;Acirc&quot;, &quot;\u00c2&quot; );</span>
+<span class="fc" id="L161">        parser.defineEntityReplacementText( &quot;Atilde&quot;, &quot;\u00c3&quot; );</span>
+<span class="fc" id="L162">        parser.defineEntityReplacementText( &quot;Auml&quot;, &quot;\u00c4&quot; );</span>
+<span class="fc" id="L163">        parser.defineEntityReplacementText( &quot;Aring&quot;, &quot;\u00c5&quot; );</span>
+<span class="fc" id="L164">        parser.defineEntityReplacementText( &quot;AElig&quot;, &quot;\u00c6&quot; );</span>
+<span class="fc" id="L165">        parser.defineEntityReplacementText( &quot;Ccedil&quot;, &quot;\u00c7&quot; );</span>
+<span class="fc" id="L166">        parser.defineEntityReplacementText( &quot;Egrave&quot;, &quot;\u00c8&quot; );</span>
+<span class="fc" id="L167">        parser.defineEntityReplacementText( &quot;Eacute&quot;, &quot;\u00c9&quot; );</span>
+<span class="fc" id="L168">        parser.defineEntityReplacementText( &quot;Ecirc&quot;, &quot;\u00ca&quot; );</span>
+<span class="fc" id="L169">        parser.defineEntityReplacementText( &quot;Euml&quot;, &quot;\u00cb&quot; );</span>
+<span class="fc" id="L170">        parser.defineEntityReplacementText( &quot;Igrave&quot;, &quot;\u00cc&quot; );</span>
+<span class="fc" id="L171">        parser.defineEntityReplacementText( &quot;Iacute&quot;, &quot;\u00cd&quot; );</span>
+<span class="fc" id="L172">        parser.defineEntityReplacementText( &quot;Icirc&quot;, &quot;\u00ce&quot; );</span>
+<span class="fc" id="L173">        parser.defineEntityReplacementText( &quot;Iuml&quot;, &quot;\u00cf&quot; );</span>
+<span class="fc" id="L174">        parser.defineEntityReplacementText( &quot;ETH&quot;, &quot;\u00d0&quot; );</span>
+<span class="fc" id="L175">        parser.defineEntityReplacementText( &quot;Ntilde&quot;, &quot;\u00d1&quot; );</span>
+<span class="fc" id="L176">        parser.defineEntityReplacementText( &quot;Ograve&quot;, &quot;\u00d2&quot; );</span>
+<span class="fc" id="L177">        parser.defineEntityReplacementText( &quot;Oacute&quot;, &quot;\u00d3&quot; );</span>
+<span class="fc" id="L178">        parser.defineEntityReplacementText( &quot;Ocirc&quot;, &quot;\u00d4&quot; );</span>
+<span class="fc" id="L179">        parser.defineEntityReplacementText( &quot;Otilde&quot;, &quot;\u00d5&quot; );</span>
+<span class="fc" id="L180">        parser.defineEntityReplacementText( &quot;Ouml&quot;, &quot;\u00d6&quot; );</span>
+<span class="fc" id="L181">        parser.defineEntityReplacementText( &quot;times&quot;, &quot;\u00d7&quot; );</span>
+<span class="fc" id="L182">        parser.defineEntityReplacementText( &quot;Oslash&quot;, &quot;\u00d8&quot; );</span>
+<span class="fc" id="L183">        parser.defineEntityReplacementText( &quot;Ugrave&quot;, &quot;\u00d9&quot; );</span>
+<span class="fc" id="L184">        parser.defineEntityReplacementText( &quot;Uacute&quot;, &quot;\u00da&quot; );</span>
+<span class="fc" id="L185">        parser.defineEntityReplacementText( &quot;Ucirc&quot;, &quot;\u00db&quot; );</span>
+<span class="fc" id="L186">        parser.defineEntityReplacementText( &quot;Uuml&quot;, &quot;\u00dc&quot; );</span>
+<span class="fc" id="L187">        parser.defineEntityReplacementText( &quot;Yacute&quot;, &quot;\u00dd&quot; );</span>
+<span class="fc" id="L188">        parser.defineEntityReplacementText( &quot;THORN&quot;, &quot;\u00de&quot; );</span>
+<span class="fc" id="L189">        parser.defineEntityReplacementText( &quot;szlig&quot;, &quot;\u00df&quot; );</span>
+<span class="fc" id="L190">        parser.defineEntityReplacementText( &quot;agrave&quot;, &quot;\u00e0&quot; );</span>
+<span class="fc" id="L191">        parser.defineEntityReplacementText( &quot;aacute&quot;, &quot;\u00e1&quot; );</span>
+<span class="fc" id="L192">        parser.defineEntityReplacementText( &quot;acirc&quot;, &quot;\u00e2&quot; );</span>
+<span class="fc" id="L193">        parser.defineEntityReplacementText( &quot;atilde&quot;, &quot;\u00e3&quot; );</span>
+<span class="fc" id="L194">        parser.defineEntityReplacementText( &quot;auml&quot;, &quot;\u00e4&quot; );</span>
+<span class="fc" id="L195">        parser.defineEntityReplacementText( &quot;aring&quot;, &quot;\u00e5&quot; );</span>
+<span class="fc" id="L196">        parser.defineEntityReplacementText( &quot;aelig&quot;, &quot;\u00e6&quot; );</span>
+<span class="fc" id="L197">        parser.defineEntityReplacementText( &quot;ccedil&quot;, &quot;\u00e7&quot; );</span>
+<span class="fc" id="L198">        parser.defineEntityReplacementText( &quot;egrave&quot;, &quot;\u00e8&quot; );</span>
+<span class="fc" id="L199">        parser.defineEntityReplacementText( &quot;eacute&quot;, &quot;\u00e9&quot; );</span>
+<span class="fc" id="L200">        parser.defineEntityReplacementText( &quot;ecirc&quot;, &quot;\u00ea&quot; );</span>
+<span class="fc" id="L201">        parser.defineEntityReplacementText( &quot;euml&quot;, &quot;\u00eb&quot; );</span>
+<span class="fc" id="L202">        parser.defineEntityReplacementText( &quot;igrave&quot;, &quot;\u00ec&quot; );</span>
+<span class="fc" id="L203">        parser.defineEntityReplacementText( &quot;iacute&quot;, &quot;\u00ed&quot; );</span>
+<span class="fc" id="L204">        parser.defineEntityReplacementText( &quot;icirc&quot;, &quot;\u00ee&quot; );</span>
+<span class="fc" id="L205">        parser.defineEntityReplacementText( &quot;iuml&quot;, &quot;\u00ef&quot; );</span>
+<span class="fc" id="L206">        parser.defineEntityReplacementText( &quot;eth&quot;, &quot;\u00f0&quot; );</span>
+<span class="fc" id="L207">        parser.defineEntityReplacementText( &quot;ntilde&quot;, &quot;\u00f1&quot; );</span>
+<span class="fc" id="L208">        parser.defineEntityReplacementText( &quot;ograve&quot;, &quot;\u00f2&quot; );</span>
+<span class="fc" id="L209">        parser.defineEntityReplacementText( &quot;oacute&quot;, &quot;\u00f3&quot; );</span>
+<span class="fc" id="L210">        parser.defineEntityReplacementText( &quot;ocirc&quot;, &quot;\u00f4&quot; );</span>
+<span class="fc" id="L211">        parser.defineEntityReplacementText( &quot;otilde&quot;, &quot;\u00f5&quot; );</span>
+<span class="fc" id="L212">        parser.defineEntityReplacementText( &quot;ouml&quot;, &quot;\u00f6&quot; );</span>
+<span class="fc" id="L213">        parser.defineEntityReplacementText( &quot;divide&quot;, &quot;\u00f7&quot; );</span>
+<span class="fc" id="L214">        parser.defineEntityReplacementText( &quot;oslash&quot;, &quot;\u00f8&quot; );</span>
+<span class="fc" id="L215">        parser.defineEntityReplacementText( &quot;ugrave&quot;, &quot;\u00f9&quot; );</span>
+<span class="fc" id="L216">        parser.defineEntityReplacementText( &quot;uacute&quot;, &quot;\u00fa&quot; );</span>
+<span class="fc" id="L217">        parser.defineEntityReplacementText( &quot;ucirc&quot;, &quot;\u00fb&quot; );</span>
+<span class="fc" id="L218">        parser.defineEntityReplacementText( &quot;uuml&quot;, &quot;\u00fc&quot; );</span>
+<span class="fc" id="L219">        parser.defineEntityReplacementText( &quot;yacute&quot;, &quot;\u00fd&quot; );</span>
+<span class="fc" id="L220">        parser.defineEntityReplacementText( &quot;thorn&quot;, &quot;\u00fe&quot; );</span>
+<span class="fc" id="L221">        parser.defineEntityReplacementText( &quot;yuml&quot;, &quot;\u00ff&quot; );</span>
+
+        // ----------------------------------------------------------------------
+        // Special entities
+        // ----------------------------------------------------------------------
+
+<span class="fc" id="L227">        parser.defineEntityReplacementText( &quot;OElig&quot;, &quot;\u0152&quot; );</span>
+<span class="fc" id="L228">        parser.defineEntityReplacementText( &quot;oelig&quot;, &quot;\u0153&quot; );</span>
+<span class="fc" id="L229">        parser.defineEntityReplacementText( &quot;Scaron&quot;, &quot;\u0160&quot; );</span>
+<span class="fc" id="L230">        parser.defineEntityReplacementText( &quot;scaron&quot;, &quot;\u0161&quot; );</span>
+<span class="fc" id="L231">        parser.defineEntityReplacementText( &quot;Yuml&quot;, &quot;\u0178&quot; );</span>
+<span class="fc" id="L232">        parser.defineEntityReplacementText( &quot;circ&quot;, &quot;\u02c6&quot; );</span>
+<span class="fc" id="L233">        parser.defineEntityReplacementText( &quot;tilde&quot;, &quot;\u02dc&quot; );</span>
+<span class="fc" id="L234">        parser.defineEntityReplacementText( &quot;ensp&quot;, &quot;\u2002&quot; );</span>
+<span class="fc" id="L235">        parser.defineEntityReplacementText( &quot;emsp&quot;, &quot;\u2003&quot; );</span>
+<span class="fc" id="L236">        parser.defineEntityReplacementText( &quot;thinsp&quot;, &quot;\u2009&quot; );</span>
+<span class="fc" id="L237">        parser.defineEntityReplacementText( &quot;zwnj&quot;, &quot;\u200c&quot; );</span>
+<span class="fc" id="L238">        parser.defineEntityReplacementText( &quot;zwj&quot;, &quot;\u200d&quot; );</span>
+<span class="fc" id="L239">        parser.defineEntityReplacementText( &quot;lrm&quot;, &quot;\u200e&quot; );</span>
+<span class="fc" id="L240">        parser.defineEntityReplacementText( &quot;rlm&quot;, &quot;\u200f&quot; );</span>
+<span class="fc" id="L241">        parser.defineEntityReplacementText( &quot;ndash&quot;, &quot;\u2013&quot; );</span>
+<span class="fc" id="L242">        parser.defineEntityReplacementText( &quot;mdash&quot;, &quot;\u2014&quot; );</span>
+<span class="fc" id="L243">        parser.defineEntityReplacementText( &quot;lsquo&quot;, &quot;\u2018&quot; );</span>
+<span class="fc" id="L244">        parser.defineEntityReplacementText( &quot;rsquo&quot;, &quot;\u2019&quot; );</span>
+<span class="fc" id="L245">        parser.defineEntityReplacementText( &quot;sbquo&quot;, &quot;\u201a&quot; );</span>
+<span class="fc" id="L246">        parser.defineEntityReplacementText( &quot;ldquo&quot;, &quot;\u201c&quot; );</span>
+<span class="fc" id="L247">        parser.defineEntityReplacementText( &quot;rdquo&quot;, &quot;\u201d&quot; );</span>
+<span class="fc" id="L248">        parser.defineEntityReplacementText( &quot;bdquo&quot;, &quot;\u201e&quot; );</span>
+<span class="fc" id="L249">        parser.defineEntityReplacementText( &quot;dagger&quot;, &quot;\u2020&quot; );</span>
+<span class="fc" id="L250">        parser.defineEntityReplacementText( &quot;Dagger&quot;, &quot;\u2021&quot; );</span>
+<span class="fc" id="L251">        parser.defineEntityReplacementText( &quot;permil&quot;, &quot;\u2030&quot; );</span>
+<span class="fc" id="L252">        parser.defineEntityReplacementText( &quot;lsaquo&quot;, &quot;\u2039&quot; );</span>
+<span class="fc" id="L253">        parser.defineEntityReplacementText( &quot;rsaquo&quot;, &quot;\u203a&quot; );</span>
+<span class="fc" id="L254">        parser.defineEntityReplacementText( &quot;euro&quot;, &quot;\u20ac&quot; );</span>
+
+        // ----------------------------------------------------------------------
+        // Symbol entities
+        // ----------------------------------------------------------------------
+
+<span class="fc" id="L260">        parser.defineEntityReplacementText( &quot;fnof&quot;, &quot;\u0192&quot; );</span>
+<span class="fc" id="L261">        parser.defineEntityReplacementText( &quot;Alpha&quot;, &quot;\u0391&quot; );</span>
+<span class="fc" id="L262">        parser.defineEntityReplacementText( &quot;Beta&quot;, &quot;\u0392&quot; );</span>
+<span class="fc" id="L263">        parser.defineEntityReplacementText( &quot;Gamma&quot;, &quot;\u0393&quot; );</span>
+<span class="fc" id="L264">        parser.defineEntityReplacementText( &quot;Delta&quot;, &quot;\u0394&quot; );</span>
+<span class="fc" id="L265">        parser.defineEntityReplacementText( &quot;Epsilon&quot;, &quot;\u0395&quot; );</span>
+<span class="fc" id="L266">        parser.defineEntityReplacementText( &quot;Zeta&quot;, &quot;\u0396&quot; );</span>
+<span class="fc" id="L267">        parser.defineEntityReplacementText( &quot;Eta&quot;, &quot;\u0397&quot; );</span>
+<span class="fc" id="L268">        parser.defineEntityReplacementText( &quot;Theta&quot;, &quot;\u0398&quot; );</span>
+<span class="fc" id="L269">        parser.defineEntityReplacementText( &quot;Iota&quot;, &quot;\u0399&quot; );</span>
+<span class="fc" id="L270">        parser.defineEntityReplacementText( &quot;Kappa&quot;, &quot;\u039a&quot; );</span>
+<span class="fc" id="L271">        parser.defineEntityReplacementText( &quot;Lambda&quot;, &quot;\u039b&quot; );</span>
+<span class="fc" id="L272">        parser.defineEntityReplacementText( &quot;Mu&quot;, &quot;\u039c&quot; );</span>
+<span class="fc" id="L273">        parser.defineEntityReplacementText( &quot;Nu&quot;, &quot;\u039d&quot; );</span>
+<span class="fc" id="L274">        parser.defineEntityReplacementText( &quot;Xi&quot;, &quot;\u039e&quot; );</span>
+<span class="fc" id="L275">        parser.defineEntityReplacementText( &quot;Omicron&quot;, &quot;\u039f&quot; );</span>
+<span class="fc" id="L276">        parser.defineEntityReplacementText( &quot;Pi&quot;, &quot;\u03a0&quot; );</span>
+<span class="fc" id="L277">        parser.defineEntityReplacementText( &quot;Rho&quot;, &quot;\u03a1&quot; );</span>
+<span class="fc" id="L278">        parser.defineEntityReplacementText( &quot;Sigma&quot;, &quot;\u03a3&quot; );</span>
+<span class="fc" id="L279">        parser.defineEntityReplacementText( &quot;Tau&quot;, &quot;\u03a4&quot; );</span>
+<span class="fc" id="L280">        parser.defineEntityReplacementText( &quot;Upsilon&quot;, &quot;\u03a5&quot; );</span>
+<span class="fc" id="L281">        parser.defineEntityReplacementText( &quot;Phi&quot;, &quot;\u03a6&quot; );</span>
+<span class="fc" id="L282">        parser.defineEntityReplacementText( &quot;Chi&quot;, &quot;\u03a7&quot; );</span>
+<span class="fc" id="L283">        parser.defineEntityReplacementText( &quot;Psi&quot;, &quot;\u03a8&quot; );</span>
+<span class="fc" id="L284">        parser.defineEntityReplacementText( &quot;Omega&quot;, &quot;\u03a9&quot; );</span>
+<span class="fc" id="L285">        parser.defineEntityReplacementText( &quot;alpha&quot;, &quot;\u03b1&quot; );</span>
+<span class="fc" id="L286">        parser.defineEntityReplacementText( &quot;beta&quot;, &quot;\u03b2&quot; );</span>
+<span class="fc" id="L287">        parser.defineEntityReplacementText( &quot;gamma&quot;, &quot;\u03b3&quot; );</span>
+<span class="fc" id="L288">        parser.defineEntityReplacementText( &quot;delta&quot;, &quot;\u03b4&quot; );</span>
+<span class="fc" id="L289">        parser.defineEntityReplacementText( &quot;epsilon&quot;, &quot;\u03b5&quot; );</span>
+<span class="fc" id="L290">        parser.defineEntityReplacementText( &quot;zeta&quot;, &quot;\u03b6&quot; );</span>
+<span class="fc" id="L291">        parser.defineEntityReplacementText( &quot;eta&quot;, &quot;\u03b7&quot; );</span>
+<span class="fc" id="L292">        parser.defineEntityReplacementText( &quot;theta&quot;, &quot;\u03b8&quot; );</span>
+<span class="fc" id="L293">        parser.defineEntityReplacementText( &quot;iota&quot;, &quot;\u03b9&quot; );</span>
+<span class="fc" id="L294">        parser.defineEntityReplacementText( &quot;kappa&quot;, &quot;\u03ba&quot; );</span>
+<span class="fc" id="L295">        parser.defineEntityReplacementText( &quot;lambda&quot;, &quot;\u03bb&quot; );</span>
+<span class="fc" id="L296">        parser.defineEntityReplacementText( &quot;mu&quot;, &quot;\u03bc&quot; );</span>
+<span class="fc" id="L297">        parser.defineEntityReplacementText( &quot;nu&quot;, &quot;\u03bd&quot; );</span>
+<span class="fc" id="L298">        parser.defineEntityReplacementText( &quot;xi&quot;, &quot;\u03be&quot; );</span>
+<span class="fc" id="L299">        parser.defineEntityReplacementText( &quot;omicron&quot;, &quot;\u03bf&quot; );</span>
+<span class="fc" id="L300">        parser.defineEntityReplacementText( &quot;pi&quot;, &quot;\u03c0&quot; );</span>
+<span class="fc" id="L301">        parser.defineEntityReplacementText( &quot;rho&quot;, &quot;\u03c1&quot; );</span>
+<span class="fc" id="L302">        parser.defineEntityReplacementText( &quot;sigmaf&quot;, &quot;\u03c2&quot; );</span>
+<span class="fc" id="L303">        parser.defineEntityReplacementText( &quot;sigma&quot;, &quot;\u03c3&quot; );</span>
+<span class="fc" id="L304">        parser.defineEntityReplacementText( &quot;tau&quot;, &quot;\u03c4&quot; );</span>
+<span class="fc" id="L305">        parser.defineEntityReplacementText( &quot;upsilon&quot;, &quot;\u03c5&quot; );</span>
+<span class="fc" id="L306">        parser.defineEntityReplacementText( &quot;phi&quot;, &quot;\u03c6&quot; );</span>
+<span class="fc" id="L307">        parser.defineEntityReplacementText( &quot;chi&quot;, &quot;\u03c7&quot; );</span>
+<span class="fc" id="L308">        parser.defineEntityReplacementText( &quot;psi&quot;, &quot;\u03c8&quot; );</span>
+<span class="fc" id="L309">        parser.defineEntityReplacementText( &quot;omega&quot;, &quot;\u03c9&quot; );</span>
+<span class="fc" id="L310">        parser.defineEntityReplacementText( &quot;thetasym&quot;, &quot;\u03d1&quot; );</span>
+<span class="fc" id="L311">        parser.defineEntityReplacementText( &quot;upsih&quot;, &quot;\u03d2&quot; );</span>
+<span class="fc" id="L312">        parser.defineEntityReplacementText( &quot;piv&quot;, &quot;\u03d6&quot; );</span>
+<span class="fc" id="L313">        parser.defineEntityReplacementText( &quot;bull&quot;, &quot;\u2022&quot; );</span>
+<span class="fc" id="L314">        parser.defineEntityReplacementText( &quot;hellip&quot;, &quot;\u2026&quot; );</span>
+<span class="fc" id="L315">        parser.defineEntityReplacementText( &quot;prime&quot;, &quot;\u2032&quot; );</span>
+<span class="fc" id="L316">        parser.defineEntityReplacementText( &quot;Prime&quot;, &quot;\u2033&quot; );</span>
+<span class="fc" id="L317">        parser.defineEntityReplacementText( &quot;oline&quot;, &quot;\u203e&quot; );</span>
+<span class="fc" id="L318">        parser.defineEntityReplacementText( &quot;frasl&quot;, &quot;\u2044&quot; );</span>
+<span class="fc" id="L319">        parser.defineEntityReplacementText( &quot;weierp&quot;, &quot;\u2118&quot; );</span>
+<span class="fc" id="L320">        parser.defineEntityReplacementText( &quot;image&quot;, &quot;\u2111&quot; );</span>
+<span class="fc" id="L321">        parser.defineEntityReplacementText( &quot;real&quot;, &quot;\u211c&quot; );</span>
+<span class="fc" id="L322">        parser.defineEntityReplacementText( &quot;trade&quot;, &quot;\u2122&quot; );</span>
+<span class="fc" id="L323">        parser.defineEntityReplacementText( &quot;alefsym&quot;, &quot;\u2135&quot; );</span>
+<span class="fc" id="L324">        parser.defineEntityReplacementText( &quot;larr&quot;, &quot;\u2190&quot; );</span>
+<span class="fc" id="L325">        parser.defineEntityReplacementText( &quot;uarr&quot;, &quot;\u2191&quot; );</span>
+<span class="fc" id="L326">        parser.defineEntityReplacementText( &quot;rarr&quot;, &quot;\u2192&quot; );</span>
+<span class="fc" id="L327">        parser.defineEntityReplacementText( &quot;darr&quot;, &quot;\u2193&quot; );</span>
+<span class="fc" id="L328">        parser.defineEntityReplacementText( &quot;harr&quot;, &quot;\u2194&quot; );</span>
+<span class="fc" id="L329">        parser.defineEntityReplacementText( &quot;crarr&quot;, &quot;\u21b5&quot; );</span>
+<span class="fc" id="L330">        parser.defineEntityReplacementText( &quot;lArr&quot;, &quot;\u21d0&quot; );</span>
+<span class="fc" id="L331">        parser.defineEntityReplacementText( &quot;uArr&quot;, &quot;\u21d1&quot; );</span>
+<span class="fc" id="L332">        parser.defineEntityReplacementText( &quot;rArr&quot;, &quot;\u21d2&quot; );</span>
+<span class="fc" id="L333">        parser.defineEntityReplacementText( &quot;dArr&quot;, &quot;\u21d3&quot; );</span>
+<span class="fc" id="L334">        parser.defineEntityReplacementText( &quot;hArr&quot;, &quot;\u21d4&quot; );</span>
+<span class="fc" id="L335">        parser.defineEntityReplacementText( &quot;forall&quot;, &quot;\u2200&quot; );</span>
+<span class="fc" id="L336">        parser.defineEntityReplacementText( &quot;part&quot;, &quot;\u2202&quot; );</span>
+<span class="fc" id="L337">        parser.defineEntityReplacementText( &quot;exist&quot;, &quot;\u2203&quot; );</span>
+<span class="fc" id="L338">        parser.defineEntityReplacementText( &quot;empty&quot;, &quot;\u2205&quot; );</span>
+<span class="fc" id="L339">        parser.defineEntityReplacementText( &quot;nabla&quot;, &quot;\u2207&quot; );</span>
+<span class="fc" id="L340">        parser.defineEntityReplacementText( &quot;isin&quot;, &quot;\u2208&quot; );</span>
+<span class="fc" id="L341">        parser.defineEntityReplacementText( &quot;notin&quot;, &quot;\u2209&quot; );</span>
+<span class="fc" id="L342">        parser.defineEntityReplacementText( &quot;ni&quot;, &quot;\u220b&quot; );</span>
+<span class="fc" id="L343">        parser.defineEntityReplacementText( &quot;prod&quot;, &quot;\u220f&quot; );</span>
+<span class="fc" id="L344">        parser.defineEntityReplacementText( &quot;sum&quot;, &quot;\u2211&quot; );</span>
+<span class="fc" id="L345">        parser.defineEntityReplacementText( &quot;minus&quot;, &quot;\u2212&quot; );</span>
+<span class="fc" id="L346">        parser.defineEntityReplacementText( &quot;lowast&quot;, &quot;\u2217&quot; );</span>
+<span class="fc" id="L347">        parser.defineEntityReplacementText( &quot;radic&quot;, &quot;\u221a&quot; );</span>
+<span class="fc" id="L348">        parser.defineEntityReplacementText( &quot;prop&quot;, &quot;\u221d&quot; );</span>
+<span class="fc" id="L349">        parser.defineEntityReplacementText( &quot;infin&quot;, &quot;\u221e&quot; );</span>
+<span class="fc" id="L350">        parser.defineEntityReplacementText( &quot;ang&quot;, &quot;\u2220&quot; );</span>
+<span class="fc" id="L351">        parser.defineEntityReplacementText( &quot;and&quot;, &quot;\u2227&quot; );</span>
+<span class="fc" id="L352">        parser.defineEntityReplacementText( &quot;or&quot;, &quot;\u2228&quot; );</span>
+<span class="fc" id="L353">        parser.defineEntityReplacementText( &quot;cap&quot;, &quot;\u2229&quot; );</span>
+<span class="fc" id="L354">        parser.defineEntityReplacementText( &quot;cup&quot;, &quot;\u222a&quot; );</span>
+<span class="fc" id="L355">        parser.defineEntityReplacementText( &quot;int&quot;, &quot;\u222b&quot; );</span>
+<span class="fc" id="L356">        parser.defineEntityReplacementText( &quot;there4&quot;, &quot;\u2234&quot; );</span>
+<span class="fc" id="L357">        parser.defineEntityReplacementText( &quot;sim&quot;, &quot;\u223c&quot; );</span>
+<span class="fc" id="L358">        parser.defineEntityReplacementText( &quot;cong&quot;, &quot;\u2245&quot; );</span>
+<span class="fc" id="L359">        parser.defineEntityReplacementText( &quot;asymp&quot;, &quot;\u2248&quot; );</span>
+<span class="fc" id="L360">        parser.defineEntityReplacementText( &quot;ne&quot;, &quot;\u2260&quot; );</span>
+<span class="fc" id="L361">        parser.defineEntityReplacementText( &quot;equiv&quot;, &quot;\u2261&quot; );</span>
+<span class="fc" id="L362">        parser.defineEntityReplacementText( &quot;le&quot;, &quot;\u2264&quot; );</span>
+<span class="fc" id="L363">        parser.defineEntityReplacementText( &quot;ge&quot;, &quot;\u2265&quot; );</span>
+<span class="fc" id="L364">        parser.defineEntityReplacementText( &quot;sub&quot;, &quot;\u2282&quot; );</span>
+<span class="fc" id="L365">        parser.defineEntityReplacementText( &quot;sup&quot;, &quot;\u2283&quot; );</span>
+<span class="fc" id="L366">        parser.defineEntityReplacementText( &quot;nsub&quot;, &quot;\u2284&quot; );</span>
+<span class="fc" id="L367">        parser.defineEntityReplacementText( &quot;sube&quot;, &quot;\u2286&quot; );</span>
+<span class="fc" id="L368">        parser.defineEntityReplacementText( &quot;supe&quot;, &quot;\u2287&quot; );</span>
+<span class="fc" id="L369">        parser.defineEntityReplacementText( &quot;oplus&quot;, &quot;\u2295&quot; );</span>
+<span class="fc" id="L370">        parser.defineEntityReplacementText( &quot;otimes&quot;, &quot;\u2297&quot; );</span>
+<span class="fc" id="L371">        parser.defineEntityReplacementText( &quot;perp&quot;, &quot;\u22a5&quot; );</span>
+<span class="fc" id="L372">        parser.defineEntityReplacementText( &quot;sdot&quot;, &quot;\u22c5&quot; );</span>
+<span class="fc" id="L373">        parser.defineEntityReplacementText( &quot;lceil&quot;, &quot;\u2308&quot; );</span>
+<span class="fc" id="L374">        parser.defineEntityReplacementText( &quot;rceil&quot;, &quot;\u2309&quot; );</span>
+<span class="fc" id="L375">        parser.defineEntityReplacementText( &quot;lfloor&quot;, &quot;\u230a&quot; );</span>
+<span class="fc" id="L376">        parser.defineEntityReplacementText( &quot;rfloor&quot;, &quot;\u230b&quot; );</span>
+<span class="fc" id="L377">        parser.defineEntityReplacementText( &quot;lang&quot;, &quot;\u2329&quot; );</span>
+<span class="fc" id="L378">        parser.defineEntityReplacementText( &quot;rang&quot;, &quot;\u232a&quot; );</span>
+<span class="fc" id="L379">        parser.defineEntityReplacementText( &quot;loz&quot;, &quot;\u25ca&quot; );</span>
+<span class="fc" id="L380">        parser.defineEntityReplacementText( &quot;spades&quot;, &quot;\u2660&quot; );</span>
+<span class="fc" id="L381">        parser.defineEntityReplacementText( &quot;clubs&quot;, &quot;\u2663&quot; );</span>
+<span class="fc" id="L382">        parser.defineEntityReplacementText( &quot;hearts&quot;, &quot;\u2665&quot; );</span>
+<span class="fc" id="L383">        parser.defineEntityReplacementText( &quot;diams&quot;, &quot;\u2666&quot; );</span>
+<span class="fc" id="L384">    }</span>
+
+    /**
+     * &lt;p&gt;
+     *   Goes through a common list of possible html start tags. These include only tags that can go into
+     *   the body of a xhtml document and so should be re-usable by different xhtml-based parsers.
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *   The currently handled tags are:
+     * &lt;/p&gt;
+     * &lt;p&gt;
+     *   &lt;code&gt;
+     *      &amp;lt;h2&amp;gt;, &amp;lt;h3&amp;gt;, &amp;lt;h4&amp;gt;, &amp;lt;h5&amp;gt;, &amp;lt;h6&amp;gt;, &amp;lt;p&amp;gt;, &amp;lt;pre&amp;gt;,
+     *      &amp;lt;ul&amp;gt;, &amp;lt;ol&amp;gt;, &amp;lt;li&amp;gt;, &amp;lt;dl&amp;gt;, &amp;lt;dt&amp;gt;, &amp;lt;dd&amp;gt;, &amp;lt;b&amp;gt;, &amp;lt;strong&amp;gt;,
+     *      &amp;lt;i&amp;gt;, &amp;lt;em&amp;gt;, &amp;lt;code&amp;gt;, &amp;lt;samp&amp;gt;, &amp;lt;tt&amp;gt;, &amp;lt;a&amp;gt;, &amp;lt;table&amp;gt;, &amp;lt;tr&amp;gt;,
+     *      &amp;lt;th&amp;gt;, &amp;lt;td&amp;gt;, &amp;lt;caption&amp;gt;, &amp;lt;br/&amp;gt;, &amp;lt;hr/&amp;gt;, &amp;lt;img/&amp;gt;.
+     *   &lt;/code&gt;
+     * &lt;/p&gt;
+     *
+     * @param parser A parser.
+     * @param sink the sink to receive the events.
+     * @return True if the event has been handled by this method, i.e. the tag was recognized, false otherwise.
+     */
+    protected boolean baseStartTag( XmlPullParser parser, Sink sink )
+    {
+<span class="fc" id="L409">        boolean visited = true;</span>
+
+<span class="fc" id="L411">        SinkEventAttributeSet attribs = getAttributesFromParser( parser );</span>
+
+<span class="fc bfc" id="L413" title="All 2 branches covered.">        if ( parser.getName().equals( HtmlMarkup.H2.toString() ) )</span>
+        {
+<span class="fc" id="L415">            handleSectionStart( sink, Sink.SECTION_LEVEL_1, attribs );</span>
+        }
+<span class="fc bfc" id="L417" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H3.toString() ) )</span>
+        {
+<span class="fc" id="L419">            handleSectionStart( sink, Sink.SECTION_LEVEL_2, attribs );</span>
+        }
+<span class="fc bfc" id="L421" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H4.toString() ) )</span>
+        {
+<span class="fc" id="L423">            handleSectionStart( sink, Sink.SECTION_LEVEL_3, attribs );</span>
+        }
+<span class="fc bfc" id="L425" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H5.toString() ) )</span>
+        {
+<span class="fc" id="L427">            handleSectionStart( sink, Sink.SECTION_LEVEL_4, attribs );</span>
+        }
+<span class="fc bfc" id="L429" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H6.toString() ) )</span>
+        {
+<span class="fc" id="L431">            handleSectionStart( sink, Sink.SECTION_LEVEL_5, attribs );</span>
+        }
+<span class="fc bfc" id="L433" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.U.toString() ) )</span>
+        {
+<span class="fc" id="L435">            decoration.addAttribute( SinkEventAttributes.DECORATION, &quot;underline&quot; );</span>
+        }
+<span class="fc bfc" id="L437" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.S.toString() )</span>
+<span class="fc bfc" id="L438" title="All 2 branches covered.">                || parser.getName().equals( HtmlMarkup.STRIKE.toString() )</span>
+<span class="fc bfc" id="L439" title="All 2 branches covered.">                || parser.getName().equals( &quot;del&quot; ) )</span>
+        {
+<span class="fc" id="L441">            decoration.addAttribute( SinkEventAttributes.DECORATION, &quot;line-through&quot; );</span>
+        }
+<span class="fc bfc" id="L443" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.SUB.toString() ) )</span>
+        {
+<span class="fc" id="L445">            decoration.addAttribute( SinkEventAttributes.VALIGN, &quot;sub&quot; );</span>
+        }
+<span class="fc bfc" id="L447" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.SUP.toString() ) )</span>
+        {
+<span class="fc" id="L449">            decoration.addAttribute( SinkEventAttributes.VALIGN, &quot;sup&quot; );</span>
+        }
+<span class="fc bfc" id="L451" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.P.toString() ) )</span>
+        {
+<span class="fc" id="L453">            handlePStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DIV.toString() ) )</span>
+        {
+<span class="fc" id="L457">            visited = handleDivStart( parser, attribs, sink );</span>
+        }
+<span class="fc bfc" id="L459" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.PRE.toString() ) )</span>
+        {
+<span class="fc" id="L461">            handlePreStart( attribs, sink );</span>
+        }
+<span class="fc bfc" id="L463" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.UL.toString() ) )</span>
+        {
+<span class="fc" id="L465">            sink.list( attribs );</span>
+        }
+<span class="fc bfc" id="L467" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.OL.toString() ) )</span>
+        {
+<span class="fc" id="L469">            handleOLStart( parser, sink, attribs );</span>
+        }
+<span class="fc bfc" id="L471" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.LI.toString() ) )</span>
+        {
+<span class="fc" id="L473">            handleLIStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L475" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DL.toString() ) )</span>
+        {
+<span class="fc" id="L477">            sink.definitionList( attribs );</span>
+        }
+<span class="fc bfc" id="L479" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DT.toString() ) )</span>
+        {
+<span class="pc bpc" id="L481" title="1 of 2 branches missed.">            if ( hasDefinitionListItem )</span>
+            {
+                // close previous listItem
+<span class="nc" id="L484">                sink.definitionListItem_();</span>
+            }
+<span class="fc" id="L486">            sink.definitionListItem( attribs );</span>
+<span class="fc" id="L487">            hasDefinitionListItem = true;</span>
+<span class="fc" id="L488">            sink.definedTerm( attribs );</span>
+        }
+<span class="fc bfc" id="L490" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DD.toString() ) )</span>
+        {
+<span class="fc bfc" id="L492" title="All 2 branches covered.">            if ( !hasDefinitionListItem )</span>
+            {
+<span class="fc" id="L494">                sink.definitionListItem( attribs );</span>
+            }
+<span class="fc" id="L496">            sink.definition( attribs );</span>
+        }
+<span class="fc bfc" id="L498" title="All 2 branches covered.">        else if ( ( parser.getName().equals( HtmlMarkup.B.toString() ) )</span>
+<span class="fc bfc" id="L499" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.STRONG.toString() ) ) )</span>
+        {
+<span class="fc" id="L501">            sink.bold();</span>
+        }
+<span class="fc bfc" id="L503" title="All 2 branches covered.">        else if ( ( parser.getName().equals( HtmlMarkup.I.toString() ) )</span>
+<span class="fc bfc" id="L504" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.EM.toString() ) ) )</span>
+        {
+<span class="fc" id="L506">            handleFigureCaptionStart( sink, attribs );</span>
+        }
+<span class="fc bfc" id="L508" title="All 2 branches covered.">        else if ( ( parser.getName().equals( HtmlMarkup.CODE.toString() ) )</span>
+<span class="fc bfc" id="L509" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.SAMP.toString() ) )</span>
+<span class="fc bfc" id="L510" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.TT.toString() ) ) )</span>
+        {
+<span class="fc" id="L512">            sink.monospaced();</span>
+        }
+<span class="fc bfc" id="L514" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.A.toString() ) )</span>
+        {
+<span class="fc" id="L516">            handleAStart( parser, sink, attribs );</span>
+        }
+<span class="fc bfc" id="L518" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TABLE.toString() ) )</span>
+        {
+<span class="fc" id="L520">            handleTableStart( sink, attribs, parser );</span>
+        }
+<span class="fc bfc" id="L522" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TR.toString() ) )</span>
+        {
+<span class="fc" id="L524">            sink.tableRow( attribs );</span>
+        }
+<span class="fc bfc" id="L526" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TH.toString() ) )</span>
+        {
+<span class="fc" id="L528">            sink.tableHeaderCell( attribs );</span>
+        }
+<span class="fc bfc" id="L530" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TD.toString() ) )</span>
+        {
+<span class="fc" id="L532">            sink.tableCell( attribs );</span>
+        }
+<span class="fc bfc" id="L534" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.CAPTION.toString() ) )</span>
+        {
+<span class="fc" id="L536">            sink.tableCaption( attribs );</span>
+        }
+<span class="fc bfc" id="L538" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.BR.toString() ) )</span>
+        {
+<span class="fc" id="L540">            sink.lineBreak( attribs );</span>
+        }
+<span class="fc bfc" id="L542" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.HR.toString() ) )</span>
+        {
+<span class="fc" id="L544">            sink.horizontalRule( attribs );</span>
+        }
+<span class="fc bfc" id="L546" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.IMG.toString() ) )</span>
+        {
+<span class="fc" id="L548">            handleImgStart( parser, sink, attribs );</span>
+        }
+<span class="fc bfc" id="L550" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.SCRIPT.toString() )</span>
+<span class="pc bpc" id="L551" title="1 of 2 branches missed.">            || parser.getName().equals( HtmlMarkup.STYLE.toString() ) )</span>
+        {
+<span class="fc" id="L553">            handleUnknown( parser, sink, TAG_TYPE_START );</span>
+<span class="fc" id="L554">            scriptBlock = true;</span>
+        }
+        else
+        {
+<span class="fc" id="L558">            visited = false;</span>
+        }
+
+<span class="fc" id="L561">        return visited;</span>
+    }
+
+    /**
+     * &lt;p&gt;
+     *   Goes through a common list of possible html end tags.
+     *   These should be re-usable by different xhtml-based parsers.
+     *   The tags handled here are the same as for {@link #baseStartTag(XmlPullParser,Sink)},
+     *   except for the empty elements (&lt;code&gt;&amp;lt;br/&amp;gt;, &amp;lt;hr/&amp;gt;, &amp;lt;img/&amp;gt;&lt;code&gt;).
+     * &lt;/p&gt;
+     *
+     * @param parser A parser.
+     * @param sink the sink to receive the events.
+     * @return True if the event has been handled by this method, false otherwise.
+     */
+    protected boolean baseEndTag( XmlPullParser parser, Sink sink )
+    {
+<span class="fc" id="L578">        boolean visited = true;</span>
+
+<span class="fc bfc" id="L580" title="All 2 branches covered.">        if ( parser.getName().equals( HtmlMarkup.P.toString() ) )</span>
+        {
+<span class="fc bfc" id="L582" title="All 2 branches covered.">            if ( !inFigure )</span>
+            {
+<span class="fc" id="L584">                sink.paragraph_();</span>
+            }
+        }
+<span class="fc bfc" id="L587" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.U.toString() )</span>
+<span class="fc bfc" id="L588" title="All 2 branches covered.">                || parser.getName().equals( HtmlMarkup.S.toString() )</span>
+<span class="fc bfc" id="L589" title="All 2 branches covered.">                || parser.getName().equals( HtmlMarkup.STRIKE.toString() )</span>
+<span class="fc bfc" id="L590" title="All 2 branches covered.">                || parser.getName().equals( &quot;del&quot; ) )</span>
+        {
+<span class="fc" id="L592">            decoration.removeAttribute( SinkEventAttributes.DECORATION );</span>
+        }
+<span class="fc bfc" id="L594" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.SUB.toString() )</span>
+<span class="fc bfc" id="L595" title="All 2 branches covered.">                || parser.getName().equals( HtmlMarkup.SUP.toString() ) )</span>
+        {
+<span class="fc" id="L597">            decoration.removeAttribute( SinkEventAttributes.VALIGN );</span>
+        }
+<span class="fc bfc" id="L599" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DIV.toString() ) )</span>
+        {
+<span class="fc bfc" id="L601" title="All 2 branches covered.">            if ( inFigure )</span>
+            {
+<span class="fc" id="L603">                sink.figure_();</span>
+<span class="fc" id="L604">                this.inFigure = false;</span>
+            }
+            else
+            {
+<span class="fc" id="L608">                visited = false;</span>
+            }
+        }
+<span class="fc bfc" id="L611" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.PRE.toString() ) )</span>
+        {
+<span class="fc" id="L613">            verbatim_();</span>
+
+<span class="fc" id="L615">            sink.verbatim_();</span>
+        }
+<span class="fc bfc" id="L617" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.UL.toString() ) )</span>
+        {
+<span class="fc" id="L619">            sink.list_();</span>
+        }
+<span class="fc bfc" id="L621" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.OL.toString() ) )</span>
+        {
+<span class="fc" id="L623">            sink.numberedList_();</span>
+<span class="fc" id="L624">            orderedListDepth--;</span>
+        }
+<span class="fc bfc" id="L626" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.LI.toString() ) )</span>
+        {
+<span class="fc" id="L628">            handleListItemEnd( sink );</span>
+        }
+<span class="fc bfc" id="L630" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DL.toString() ) )</span>
+        {
+<span class="fc bfc" id="L632" title="All 2 branches covered.">            if ( hasDefinitionListItem )</span>
+            {
+<span class="fc" id="L634">                sink.definitionListItem_();</span>
+<span class="fc" id="L635">                hasDefinitionListItem = false;</span>
+            }
+<span class="fc" id="L637">            sink.definitionList_();</span>
+        }
+<span class="fc bfc" id="L639" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DT.toString() ) )</span>
+        {
+<span class="fc" id="L641">            sink.definedTerm_();</span>
+        }
+<span class="fc bfc" id="L643" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.DD.toString() ) )</span>
+        {
+<span class="fc" id="L645">            sink.definition_();</span>
+<span class="fc" id="L646">            sink.definitionListItem_();</span>
+<span class="fc" id="L647">            hasDefinitionListItem = false;</span>
+        }
+<span class="fc bfc" id="L649" title="All 2 branches covered.">        else if ( ( parser.getName().equals( HtmlMarkup.B.toString() ) )</span>
+<span class="fc bfc" id="L650" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.STRONG.toString() ) ) )</span>
+        {
+<span class="fc" id="L652">            sink.bold_();</span>
+        }
+<span class="fc bfc" id="L654" title="All 2 branches covered.">        else if ( ( parser.getName().equals( HtmlMarkup.I.toString() ) )</span>
+<span class="fc bfc" id="L655" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.EM.toString() ) ) )</span>
+        {
+<span class="fc" id="L657">            handleFigureCaptionEnd( sink );</span>
+        }
+<span class="fc bfc" id="L659" title="All 2 branches covered.">        else if ( ( parser.getName().equals( HtmlMarkup.CODE.toString() ) )</span>
+<span class="fc bfc" id="L660" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.SAMP.toString() ) )</span>
+<span class="fc bfc" id="L661" title="All 2 branches covered.">                || ( parser.getName().equals( HtmlMarkup.TT.toString() ) ) )</span>
+        {
+<span class="fc" id="L663">            sink.monospaced_();</span>
+        }
+<span class="fc bfc" id="L665" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.A.toString() ) )</span>
+        {
+<span class="fc" id="L667">            handleAEnd( sink );</span>
+        }
+
+        // ----------------------------------------------------------------------
+        // Tables
+        // ----------------------------------------------------------------------
+
+<span class="fc bfc" id="L674" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TABLE.toString() ) )</span>
+        {
+<span class="fc" id="L676">            sink.tableRows_();</span>
+
+<span class="fc" id="L678">            sink.table_();</span>
+        }
+<span class="fc bfc" id="L680" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TR.toString() ) )</span>
+        {
+<span class="fc" id="L682">            sink.tableRow_();</span>
+        }
+<span class="fc bfc" id="L684" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TH.toString() ) )</span>
+        {
+<span class="fc" id="L686">            sink.tableHeaderCell_();</span>
+        }
+<span class="fc bfc" id="L688" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.TD.toString() ) )</span>
+        {
+<span class="fc" id="L690">            sink.tableCell_();</span>
+        }
+<span class="fc bfc" id="L692" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.CAPTION.toString() ) )</span>
+        {
+<span class="fc" id="L694">            sink.tableCaption_();</span>
+        }
+<span class="fc bfc" id="L696" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H2.toString() ) )</span>
+        {
+<span class="fc" id="L698">            sink.sectionTitle1_();</span>
+        }
+<span class="fc bfc" id="L700" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H3.toString() ) )</span>
+        {
+<span class="fc" id="L702">            sink.sectionTitle2_();</span>
+        }
+<span class="fc bfc" id="L704" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H4.toString() ) )</span>
+        {
+<span class="fc" id="L706">            sink.sectionTitle3_();</span>
+        }
+<span class="fc bfc" id="L708" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H5.toString() ) )</span>
+        {
+<span class="fc" id="L710">            sink.sectionTitle4_();</span>
+        }
+<span class="fc bfc" id="L712" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.H6.toString() ) )</span>
+        {
+<span class="fc" id="L714">            sink.sectionTitle5_();</span>
+        }
+<span class="fc bfc" id="L716" title="All 2 branches covered.">        else if ( parser.getName().equals( HtmlMarkup.SCRIPT.toString() )</span>
+<span class="pc bpc" id="L717" title="1 of 2 branches missed.">            || parser.getName().equals( HtmlMarkup.STYLE.toString() ) )</span>
+        {
+<span class="fc" id="L719">            handleUnknown( parser, sink, TAG_TYPE_END );</span>
+
+<span class="fc" id="L721">            scriptBlock = false;</span>
+        }
+        else
+        {
+<span class="fc" id="L725">            visited = false;</span>
+        }
+
+<span class="fc" id="L728">        return visited;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Just calls {@link #baseStartTag(XmlPullParser,Sink)}, this should be
+     * overridden by implementing parsers to include additional tags.
+     */
+    protected void handleStartTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L740" title="All 2 branches covered.">        if ( !baseStartTag( parser, sink ) )</span>
+        {
+<span class="fc bfc" id="L742" title="All 2 branches covered.">            if ( getLog().isWarnEnabled() )</span>
+            {
+<span class="fc" id="L744">                String position = &quot;[&quot; + parser.getLineNumber() + &quot;:&quot;</span>
+<span class="fc" id="L745">                    + parser.getColumnNumber() + &quot;]&quot;;</span>
+<span class="fc" id="L746">                String tag = &quot;&lt;&quot; + parser.getName() + &quot;&gt;&quot;;</span>
+
+<span class="fc" id="L748">                getLog().warn( &quot;Unrecognized xml tag: &quot; + tag + &quot; at &quot; + position );</span>
+            }
+        }
+<span class="fc" id="L751">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Just calls {@link #baseEndTag(XmlPullParser,Sink)}, this should be
+     * overridden by implementing parsers to include additional tags.
+     */
+    protected void handleEndTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L762" title="All 2 branches covered.">        if ( !baseEndTag( parser, sink ) )</span>
+        {
+            // unrecognized tag is already logged in StartTag
+        }
+<span class="fc" id="L766">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    protected void handleText( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L773">        String text = getText( parser );</span>
+
+        /*
+         * NOTE: Don't do any whitespace trimming here. Whitespace normalization has already been performed by the
+         * parser so any whitespace that makes it here is significant.
+         *
+         * NOTE: text within script tags is ignored, scripting code should be embedded in CDATA.
+         */
+<span class="pc bpc" id="L781" title="1 of 4 branches missed.">        if ( StringUtils.isNotEmpty( text ) &amp;&amp; !isScriptBlock() )</span>
+        {
+<span class="fc" id="L783">            sink.text( text, decoration );</span>
+        }
+<span class="fc" id="L785">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    protected void handleComment( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L792">        String text = getText( parser );</span>
+
+<span class="fc bfc" id="L794" title="All 2 branches covered.">        if ( &quot;PB&quot;.equals( text.trim() ) )</span>
+        {
+<span class="fc" id="L796">            sink.pageBreak();</span>
+        }
+        else
+        {
+<span class="pc bpc" id="L800" title="1 of 2 branches missed.">            if ( isEmitComments() )</span>
+            {
+<span class="fc" id="L802">                sink.comment( text );</span>
+            }
+        }
+<span class="fc" id="L805">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    protected void handleCdsect( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L812">        String text = getText( parser );</span>
+
+<span class="fc bfc" id="L814" title="All 2 branches covered.">        if ( isScriptBlock() )</span>
+        {
+<span class="fc" id="L816">            sink.unknown( CDATA, new Object[] { Integer.valueOf( CDATA_TYPE ), text}, null );</span>
+        }
+        else
+        {
+<span class="fc" id="L820">            sink.text( text );</span>
+        }
+<span class="fc" id="L822">    }</span>
+
+    /**
+     * Make sure sections are nested consecutively.
+     *
+     * &lt;p&gt;
+     * HTML doesn't have any sections, only sectionTitles (&amp;lt;h2&amp;gt; etc), that means we have to
+     * open close any sections that are missing in between.
+     * &lt;/p&gt;
+     *
+     * &lt;p&gt;
+     * For instance, if the following sequence is parsed:
+     * &lt;pre&gt;
+     * &amp;lt;h3&amp;gt;&amp;lt;/h3&amp;gt;
+     * &amp;lt;h6&amp;gt;&amp;lt;/h6&amp;gt;
+     * &lt;/pre&gt;
+     * we have to insert two section starts before we open the &lt;code&gt;&amp;lt;h6&amp;gt;&lt;/code&gt;.
+     * In the following sequence
+     * &lt;pre&gt;
+     * &amp;lt;h6&amp;gt;&amp;lt;/h6&amp;gt;
+     * &amp;lt;h3&amp;gt;&amp;lt;/h3&amp;gt;
+     * &lt;/pre&gt;
+     * we have to close two sections before we open the &lt;code&gt;&amp;lt;h3&amp;gt;&lt;/code&gt;.
+     * &lt;/p&gt;
+     *
+     * &lt;p&gt;The current level is set to newLevel afterwards.&lt;/p&gt;
+     *
+     * @param newLevel the new section level, all upper levels have to be closed.
+     * @param sink the sink to receive the events.
+     */
+    protected void consecutiveSections( int newLevel, Sink sink )
+    {
+<span class="fc" id="L854">        closeOpenSections( newLevel, sink );</span>
+<span class="fc" id="L855">        openMissingSections( newLevel, sink );</span>
+
+<span class="fc" id="L857">        this.sectionLevel = newLevel;</span>
+<span class="fc" id="L858">    }</span>
+
+    /**
+     * Close open sections.
+     *
+     * @param newLevel the new section level, all upper levels have to be closed.
+     * @param sink the sink to receive the events.
+     */
+    private void closeOpenSections( int newLevel, Sink sink )
+    {
+<span class="fc bfc" id="L868" title="All 2 branches covered.">        while ( this.sectionLevel &gt;= newLevel )</span>
+        {
+<span class="fc bfc" id="L870" title="All 2 branches covered.">            if ( sectionLevel == Sink.SECTION_LEVEL_5 )</span>
+            {
+<span class="fc" id="L872">                sink.section5_();</span>
+            }
+<span class="fc bfc" id="L874" title="All 2 branches covered.">            else if ( sectionLevel == Sink.SECTION_LEVEL_4 )</span>
+            {
+<span class="fc" id="L876">                sink.section4_();</span>
+            }
+<span class="fc bfc" id="L878" title="All 2 branches covered.">            else if ( sectionLevel == Sink.SECTION_LEVEL_3 )</span>
+            {
+<span class="fc" id="L880">                sink.section3_();</span>
+            }
+<span class="fc bfc" id="L882" title="All 2 branches covered.">            else if ( sectionLevel == Sink.SECTION_LEVEL_2 )</span>
+            {
+<span class="fc" id="L884">                sink.section2_();</span>
+            }
+<span class="pc bpc" id="L886" title="1 of 2 branches missed.">            else if ( sectionLevel == Sink.SECTION_LEVEL_1 )</span>
+            {
+<span class="fc" id="L888">                sink.section1_();</span>
+            }
+
+<span class="fc" id="L891">            this.sectionLevel--;</span>
+        }
+<span class="fc" id="L893">    }</span>
+
+    /**
+     * Open missing sections.
+     *
+     * @param newLevel the new section level, all lower levels have to be opened.
+     * @param sink the sink to receive the events.
+     */
+    private void openMissingSections( int newLevel, Sink sink )
+    {
+<span class="fc bfc" id="L903" title="All 2 branches covered.">        while ( this.sectionLevel &lt; newLevel - 1 )</span>
+        {
+<span class="fc" id="L905">            this.sectionLevel++;</span>
+
+<span class="pc bpc" id="L907" title="1 of 2 branches missed.">            if ( sectionLevel == Sink.SECTION_LEVEL_5 )</span>
+            {
+<span class="nc" id="L909">                sink.section5();</span>
+            }
+<span class="fc bfc" id="L911" title="All 2 branches covered.">            else if ( sectionLevel == Sink.SECTION_LEVEL_4 )</span>
+            {
+<span class="fc" id="L913">                sink.section4();</span>
+            }
+<span class="fc bfc" id="L915" title="All 2 branches covered.">            else if ( sectionLevel == Sink.SECTION_LEVEL_3 )</span>
+            {
+<span class="fc" id="L917">                sink.section3();</span>
+            }
+<span class="pc bpc" id="L919" title="1 of 2 branches missed.">            else if ( sectionLevel == Sink.SECTION_LEVEL_2 )</span>
+            {
+<span class="fc" id="L921">                sink.section2();</span>
+            }
+<span class="nc bnc" id="L923" title="All 2 branches missed.">            else if ( sectionLevel == Sink.SECTION_LEVEL_1 )</span>
+            {
+<span class="nc" id="L925">                sink.section1();</span>
+            }
+        }
+<span class="fc" id="L928">    }</span>
+
+    /**
+     * Return the current section level.
+     *
+     * @return the current section level.
+     */
+    protected int getSectionLevel()
+    {
+<span class="nc" id="L937">        return this.sectionLevel;</span>
+    }
+
+    /**
+     * Set the current section level.
+     *
+     * @param newLevel the new section level.
+     */
+    protected void setSectionLevel( int newLevel )
+    {
+<span class="nc" id="L947">        this.sectionLevel = newLevel;</span>
+<span class="nc" id="L948">    }</span>
+
+    /**
+     * Stop verbatim mode.
+     */
+    protected void verbatim_()
+    {
+<span class="fc" id="L955">        this.inVerbatim = false;</span>
+<span class="fc" id="L956">    }</span>
+
+    /**
+     * Start verbatim mode.
+     */
+    protected void verbatim()
+    {
+<span class="fc" id="L963">        this.inVerbatim = true;</span>
+<span class="fc" id="L964">    }</span>
+
+    /**
+     * Checks if we are currently inside a &amp;lt;pre&amp;gt; tag.
+     *
+     * @return true if we are currently in verbatim mode.
+     */
+    protected boolean isVerbatim()
+    {
+<span class="nc" id="L973">        return this.inVerbatim;</span>
+    }
+
+    /**
+     * Checks if we are currently inside a &amp;lt;script&amp;gt; tag.
+     *
+     * @return true if we are currently inside &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; tags.
+     *
+     * @since 1.1.1.
+     */
+    protected boolean isScriptBlock()
+    {
+<span class="fc" id="L985">        return this.scriptBlock;</span>
+    }
+
+    /**
+     * Checks if the given id is a valid Doxia id and if not, returns a transformed one.
+     *
+     * @param id The id to validate.
+     * @return A transformed id or the original id if it was already valid.
+     * @see DoxiaUtils#encodeId(String)
+     */
+    protected String validAnchor( String id )
+    {
+<span class="fc bfc" id="L997" title="All 2 branches covered.">        if ( !DoxiaUtils.isValidId( id ) )</span>
+        {
+<span class="fc" id="L999">            String linkAnchor = DoxiaUtils.encodeId( id, true );</span>
+
+<span class="fc" id="L1001">            String msg = &quot;Modified invalid link: '&quot; + id + &quot;' to '&quot; + linkAnchor + &quot;'&quot;;</span>
+<span class="fc" id="L1002">            logMessage( &quot;modifiedLink&quot;, msg );</span>
+
+<span class="fc" id="L1004">            return linkAnchor;</span>
+        }
+
+<span class="fc" id="L1007">        return id;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void init()
+    {
+<span class="fc" id="L1014">        super.init();</span>
+
+<span class="fc" id="L1016">        this.scriptBlock = false;</span>
+<span class="fc" id="L1017">        this.isLink = false;</span>
+<span class="fc" id="L1018">        this.isAnchor = false;</span>
+<span class="fc" id="L1019">        this.orderedListDepth = 0;</span>
+<span class="fc" id="L1020">        this.sectionLevel = 0;</span>
+<span class="fc" id="L1021">        this.inVerbatim = false;</span>
+<span class="fc" id="L1022">        this.inFigure = false;</span>
+<span class="pc bpc" id="L1023" title="1 of 2 branches missed.">        while ( this.decoration.getAttributeNames().hasMoreElements() )</span>
+        {
+<span class="nc" id="L1025">            this.decoration.removeAttribute( this.decoration.getAttributeNames().nextElement() );</span>
+        }
+<span class="fc" id="L1027">        this.warnMessages = null;</span>
+<span class="fc" id="L1028">    }</span>
+
+    private void handleAEnd( Sink sink )
+    {
+<span class="fc bfc" id="L1032" title="All 2 branches covered.">        if ( isLink )</span>
+        {
+<span class="fc" id="L1034">            sink.link_();</span>
+<span class="fc" id="L1035">            isLink = false;</span>
+        }
+<span class="pc bpc" id="L1037" title="1 of 2 branches missed.">        else if ( isAnchor )</span>
+        {
+<span class="fc" id="L1039">            sink.anchor_();</span>
+<span class="fc" id="L1040">            isAnchor = false;</span>
+        }
+<span class="fc" id="L1042">    }</span>
+
+    private void handleAStart( XmlPullParser parser, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L1046">        String href = parser.getAttributeValue( null, Attribute.HREF.toString() );</span>
+
+<span class="fc bfc" id="L1048" title="All 2 branches covered.">        if ( href != null )</span>
+        {
+<span class="fc" id="L1050">            int hashIndex = href.indexOf( '#' );</span>
+<span class="fc bfc" id="L1051" title="All 4 branches covered.">            if ( hashIndex != -1 &amp;&amp; !DoxiaUtils.isExternalLink( href ) )</span>
+            {
+<span class="fc" id="L1053">                String hash = href.substring( hashIndex + 1 );</span>
+
+<span class="pc bpc" id="L1055" title="1 of 2 branches missed.">                if ( !DoxiaUtils.isValidId( hash ) )</span>
+                {
+<span class="fc" id="L1057">                    href = href.substring( 0, hashIndex ) + &quot;#&quot; + DoxiaUtils.encodeId( hash, true );</span>
+
+<span class="fc" id="L1059">                    String msg = &quot;Modified invalid link: '&quot; + hash + &quot;' to '&quot; + href + &quot;'&quot;;</span>
+<span class="fc" id="L1060">                    logMessage( &quot;modifiedLink&quot;, msg );</span>
+                }
+            }
+<span class="fc" id="L1063">            sink.link( href, attribs );</span>
+<span class="fc" id="L1064">            isLink = true;</span>
+<span class="fc" id="L1065">        }</span>
+        else
+        {
+<span class="fc" id="L1068">            String name = parser.getAttributeValue( null, Attribute.NAME.toString() );</span>
+
+<span class="fc bfc" id="L1070" title="All 2 branches covered.">            if ( name != null )</span>
+            {
+<span class="fc" id="L1072">                sink.anchor( validAnchor( name ), attribs );</span>
+<span class="fc" id="L1073">                isAnchor = true;</span>
+            }
+            else
+            {
+<span class="fc" id="L1077">                String id = parser.getAttributeValue( null, Attribute.ID.toString() );</span>
+<span class="pc bpc" id="L1078" title="1 of 2 branches missed.">                if ( id != null )</span>
+                {
+<span class="fc" id="L1080">                    sink.anchor( validAnchor( id ), attribs );</span>
+<span class="fc" id="L1081">                    isAnchor = true;</span>
+                }
+            }
+        }
+<span class="fc" id="L1085">    }</span>
+
+    private boolean handleDivStart( XmlPullParser parser, SinkEventAttributeSet attribs, Sink sink )
+    {
+<span class="fc" id="L1089">        boolean visited = true;</span>
+
+<span class="fc" id="L1091">        String divclass = parser.getAttributeValue( null, Attribute.CLASS.toString() );</span>
+
+<span class="fc bfc" id="L1093" title="All 2 branches covered.">        if ( &quot;figure&quot;.equals( divclass ) )</span>
+        {
+<span class="fc" id="L1095">            this.inFigure = true;</span>
+<span class="fc" id="L1096">            SinkEventAttributeSet atts = new SinkEventAttributeSet( attribs );</span>
+<span class="fc" id="L1097">            atts.removeAttribute( SinkEventAttributes.CLASS );</span>
+<span class="fc" id="L1098">            sink.figure( atts );</span>
+<span class="fc" id="L1099">        }</span>
+        else
+        {
+<span class="fc" id="L1102">            visited = false;</span>
+        }
+
+<span class="fc" id="L1105">        return visited;</span>
+    }
+
+    private void handleFigureCaptionEnd( Sink sink )
+    {
+<span class="fc bfc" id="L1110" title="All 2 branches covered.">        if ( inFigure )</span>
+        {
+<span class="fc" id="L1112">            sink.figureCaption_();</span>
+        }
+        else
+        {
+<span class="fc" id="L1116">            sink.italic_();</span>
+        }
+<span class="fc" id="L1118">    }</span>
+
+    private void handleFigureCaptionStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L1122" title="All 2 branches covered.">        if ( inFigure )</span>
+        {
+<span class="fc" id="L1124">            sink.figureCaption( attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L1128">            sink.italic();</span>
+        }
+<span class="fc" id="L1130">    }</span>
+
+    private void handleImgStart( XmlPullParser parser, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L1134">        String src = parser.getAttributeValue( null, Attribute.SRC.toString() );</span>
+
+<span class="pc bpc" id="L1136" title="1 of 2 branches missed.">        if ( src != null )</span>
+        {
+<span class="fc" id="L1138">            sink.figureGraphics( src, attribs );</span>
+        }
+<span class="fc" id="L1140">    }</span>
+
+    private void handleLIStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L1144" title="All 2 branches covered.">        if ( orderedListDepth == 0 )</span>
+        {
+<span class="fc" id="L1146">            sink.listItem( attribs );</span>
+        }
+        else
+        {
+<span class="fc" id="L1150">            sink.numberedListItem( attribs );</span>
+        }
+<span class="fc" id="L1152">    }</span>
+
+    private void handleListItemEnd( Sink sink )
+    {
+<span class="fc bfc" id="L1156" title="All 2 branches covered.">        if ( orderedListDepth == 0 )</span>
+        {
+<span class="fc" id="L1158">            sink.listItem_();</span>
+        }
+        else
+        {
+<span class="fc" id="L1162">            sink.numberedListItem_();</span>
+        }
+<span class="fc" id="L1164">    }</span>
+
+    private void handleOLStart( XmlPullParser parser, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L1168">        int numbering = Sink.NUMBERING_DECIMAL;</span>
+        // this will have to be generalized if we handle styles
+<span class="fc" id="L1170">        String style = parser.getAttributeValue( null, Attribute.STYLE.toString() );</span>
+
+<span class="pc bpc" id="L1172" title="1 of 2 branches missed.">        if ( style != null )</span>
+        {
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">            if ( &quot;list-style-type: upper-alpha&quot;.equals( style ) )</span>
+            {
+<span class="nc" id="L1176">                numbering = Sink.NUMBERING_UPPER_ALPHA;</span>
+            }
+<span class="nc bnc" id="L1178" title="All 2 branches missed.">            else if ( &quot;list-style-type: lower-alpha&quot;.equals( style ) )</span>
+            {
+<span class="nc" id="L1180">                numbering = Sink.NUMBERING_LOWER_ALPHA;</span>
+            }
+<span class="nc bnc" id="L1182" title="All 2 branches missed.">            else if ( &quot;list-style-type: upper-roman&quot;.equals( style ) )</span>
+            {
+<span class="nc" id="L1184">                numbering = Sink.NUMBERING_UPPER_ROMAN;</span>
+            }
+<span class="nc bnc" id="L1186" title="All 2 branches missed.">            else if ( &quot;list-style-type: lower-roman&quot;.equals( style ) )</span>
+            {
+<span class="nc" id="L1188">                numbering = Sink.NUMBERING_LOWER_ROMAN;</span>
+            }
+<span class="nc bnc" id="L1190" title="All 2 branches missed.">            else if ( &quot;list-style-type: decimal&quot;.equals( style ) )</span>
+            {
+<span class="nc" id="L1192">                numbering = Sink.NUMBERING_DECIMAL;</span>
+            }
+        }
+
+<span class="fc" id="L1196">        sink.numberedList( numbering, attribs );</span>
+<span class="fc" id="L1197">        orderedListDepth++;</span>
+<span class="fc" id="L1198">    }</span>
+
+    private void handlePStart( Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc bfc" id="L1202" title="All 2 branches covered.">        if ( !inFigure )</span>
+        {
+<span class="fc" id="L1204">            sink.paragraph( attribs );</span>
+        }
+<span class="fc" id="L1206">    }</span>
+
+    /*
+     * The PRE element tells visual user agents that the enclosed text is
+     * &quot;preformatted&quot;. When handling preformatted text, visual user agents:
+     * - May leave white space intact.
+     * - May render text with a fixed-pitch font.
+     * - May disable automatic word wrap.
+     * - Must not disable bidirectional processing.
+     * Non-visual user agents are not required to respect extra white space
+     * in the content of a PRE element.
+     */
+    private void handlePreStart( SinkEventAttributeSet attribs, Sink sink )
+    {
+<span class="fc" id="L1220">        verbatim();</span>
+<span class="fc" id="L1221">        attribs.removeAttribute( SinkEventAttributes.DECORATION );</span>
+<span class="fc" id="L1222">        sink.verbatim( attribs );</span>
+<span class="fc" id="L1223">    }</span>
+
+    private void handleSectionStart( Sink sink, int level, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L1227">        consecutiveSections( level, sink );</span>
+<span class="fc" id="L1228">        sink.section( level, attribs );</span>
+<span class="fc" id="L1229">        sink.sectionTitle( level, attribs );</span>
+<span class="fc" id="L1230">    }</span>
+
+    private void handleTableStart( Sink sink, SinkEventAttributeSet attribs, XmlPullParser parser )
+    {
+<span class="fc" id="L1234">        sink.table( attribs );</span>
+<span class="fc" id="L1235">        String border = parser.getAttributeValue( null, Attribute.BORDER.toString() );</span>
+<span class="fc" id="L1236">        boolean grid = true;</span>
+
+<span class="pc bpc" id="L1238" title="3 of 4 branches missed.">        if ( border == null || &quot;0&quot;.equals( border ) )</span>
+        {
+<span class="fc" id="L1240">            grid = false;</span>
+        }
+
+<span class="fc" id="L1243">        String align = parser.getAttributeValue( null, Attribute.ALIGN.toString() );</span>
+<span class="fc" id="L1244">        int[] justif = {Sink.JUSTIFY_LEFT};</span>
+
+<span class="fc bfc" id="L1246" title="All 2 branches covered.">        if ( &quot;center&quot;.equals( align ) )</span>
+        {
+<span class="fc" id="L1248">            justif[0] = Sink.JUSTIFY_CENTER;</span>
+        }
+<span class="pc bpc" id="L1250" title="1 of 2 branches missed.">        else if ( &quot;right&quot;.equals( align ) )</span>
+        {
+<span class="nc" id="L1252">            justif[0] = Sink.JUSTIFY_RIGHT;</span>
+        }
+
+<span class="fc" id="L1255">        sink.tableRows( justif, grid );</span>
+<span class="fc" id="L1256">    }</span>
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #parse(Reader, Sink)
+     * @since 1.1.1
+     */
+    private void logMessage( String key, String msg )
+    {
+<span class="fc" id="L1268">        final String log = &quot;[XHTML Parser] &quot; + msg;</span>
+<span class="pc bpc" id="L1269" title="1 of 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L1271">            getLog().debug( log );</span>
+
+<span class="nc" id="L1273">            return;</span>
+        }
+
+<span class="fc bfc" id="L1276" title="All 2 branches covered.">        if ( warnMessages == null )</span>
+        {
+<span class="fc" id="L1278">            warnMessages = new HashMap&lt;String, Set&lt;String&gt;&gt;();</span>
+        }
+
+<span class="fc" id="L1281">        Set&lt;String&gt; set = warnMessages.get( key );</span>
+<span class="fc bfc" id="L1282" title="All 2 branches covered.">        if ( set == null )</span>
+        {
+<span class="fc" id="L1284">            set = new TreeSet&lt;String&gt;();</span>
+        }
+<span class="fc" id="L1286">        set.add( log );</span>
+<span class="fc" id="L1287">        warnMessages.put( key, set );</span>
+<span class="fc" id="L1288">    }</span>
+
+    /**
+     * @since 1.1.1
+     */
+    private void logWarnings()
+    {
+<span class="pc bpc" id="L1295" title="3 of 6 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null &amp;&amp; !isSecondParsing() )</span>
+        {
+<span class="nc bnc" id="L1297" title="All 2 branches missed.">            for ( Map.Entry&lt;String, Set&lt;String&gt;&gt; entry : this.warnMessages.entrySet() )</span>
+            {
+<span class="nc bnc" id="L1299" title="All 2 branches missed.">                for ( String msg : entry.getValue() )</span>
+                {
+<span class="nc" id="L1301">                    getLog().warn( msg );</span>
+<span class="nc" id="L1302">                }</span>
+<span class="nc" id="L1303">            }</span>
+
+<span class="nc" id="L1305">            this.warnMessages = null;</span>
+        }
+<span class="fc" id="L1307">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

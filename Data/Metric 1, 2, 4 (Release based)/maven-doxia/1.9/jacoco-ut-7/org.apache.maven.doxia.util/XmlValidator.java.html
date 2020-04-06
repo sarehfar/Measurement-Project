@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XmlValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.util</a> &gt; <span class="el_source">XmlValidator.java</span></div><h1>XmlValidator.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.util;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.IOException;
+import java.io.StringReader;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.xml.XMLConstants;
+
+import org.apache.maven.doxia.logging.Log;
+import org.apache.maven.doxia.markup.XmlMarkup;
+import org.apache.maven.doxia.parser.AbstractXmlParser.CachedFileEntityResolver;
+import org.apache.maven.doxia.parser.ParseException;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+/**
+ * A class to validate xml documents.
+ *
+ * @version $Id$
+ * @since 1.1.3
+ */
+public class XmlValidator
+{
+    /**
+     * Doctype pattern i.e. &quot;.*&lt;!DOCTYPE([^&gt;]*)&gt;.*&quot;
+     * see &lt;a href=&quot;http://www.w3.org/TR/REC-xml/#NT-doctypedecl&quot;&gt;http://www.w3.org/TR/REC-xml/#NT-doctypedecl&lt;/a&gt;.
+     */
+<span class="fc" id="L54">    private static final Pattern PATTERN_DOCTYPE = Pattern.compile( &quot;.*&quot; + XmlMarkup.DOCTYPE_START + &quot;([^&gt;]*)&gt;.*&quot; );</span>
+
+    /** Tag pattern as defined in http://www.w3.org/TR/REC-xml/#NT-Name */
+<span class="fc" id="L57">    private static final Pattern PATTERN_TAG = Pattern.compile( &quot;.*&lt;([A-Za-z][A-Za-z0-9:_.-]*)([^&gt;]*)&gt;.*&quot; );</span>
+
+    /** lazy xmlReader to validate xml content*/
+    private XMLReader xmlReader;
+
+    private Log logger;
+
+    /**
+     * Constructor.
+     *
+     * @param log a logger, not null.
+     */
+    public XmlValidator( Log log )
+<span class="fc" id="L70">    {</span>
+<span class="fc" id="L71">        this.logger = log;</span>
+<span class="fc" id="L72">    }</span>
+
+    /**
+     * Validate an XML content with SAX.
+     *
+     * @param content a not null xml content
+     * @throws ParseException if any.
+     */
+    public void validate( String content )
+        throws ParseException
+    {
+        try
+        {
+            // 1 if there's a doctype
+<span class="fc" id="L86">            boolean hasDoctype = false;</span>
+<span class="fc" id="L87">            Matcher matcher = PATTERN_DOCTYPE.matcher( content );</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">            if ( matcher.find() )</span>
+            {
+<span class="fc" id="L90">                hasDoctype = true;</span>
+            }
+
+            // 2 check for an xmlns instance
+<span class="fc" id="L94">            boolean hasXsd = false;</span>
+<span class="fc" id="L95">            matcher = PATTERN_TAG.matcher( content );</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">            if ( matcher.find() )</span>
+            {
+<span class="fc" id="L98">                String value = matcher.group( 2 );</span>
+
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">                if ( value.contains( XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI ) )</span>
+                {
+<span class="nc" id="L102">                    hasXsd = true;</span>
+                }
+            }
+
+            // 3 validate content
+<span class="fc" id="L107">            getLog().debug( &quot;Validating the content...&quot; );</span>
+<span class="pc bpc" id="L108" title="3 of 4 branches missed.">            getXmlReader( hasXsd &amp;&amp; hasDoctype ).parse( new InputSource( new StringReader( content ) ) );</span>
+        }
+<span class="nc" id="L110">        catch ( IOException | SAXException e )</span>
+        {
+<span class="nc" id="L112">            throw new ParseException( &quot;Error validating the model: &quot; + e.getMessage(), e );</span>
+<span class="fc" id="L113">        }</span>
+<span class="fc" id="L114">    }</span>
+
+    /**
+     * @param hasDtdAndXsd to flag the &lt;code&gt;ErrorHandler&lt;/code&gt;.
+     * @return an xmlReader instance.
+     * @throws SAXException if any
+     */
+    private XMLReader getXmlReader( boolean hasDtdAndXsd )
+        throws SAXException
+    {
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if ( xmlReader == null )</span>
+        {
+<span class="fc" id="L126">            MessagesErrorHandler errorHandler = new MessagesErrorHandler( getLog() );</span>
+
+<span class="fc" id="L128">            xmlReader = XMLReaderFactory.createXMLReader();</span>
+<span class="fc" id="L129">            xmlReader.setFeature( &quot;http://xml.org/sax/features/validation&quot;, true );</span>
+<span class="fc" id="L130">            xmlReader.setFeature( &quot;http://apache.org/xml/features/validation/schema&quot;, true );</span>
+<span class="fc" id="L131">            xmlReader.setErrorHandler( errorHandler );</span>
+<span class="fc" id="L132">            xmlReader.setEntityResolver( new CachedFileEntityResolver() );</span>
+        }
+
+<span class="fc" id="L135">        ( (MessagesErrorHandler) xmlReader.getErrorHandler() ).setHasDtdAndXsd( hasDtdAndXsd );</span>
+
+<span class="fc" id="L137">        return xmlReader;</span>
+    }
+
+    private Log getLog()
+    {
+<span class="fc" id="L142">        return logger;</span>
+    }
+
+    /**
+     * Convenience class to beautify &lt;code&gt;SAXParseException&lt;/code&gt; messages.
+     */
+    private static class MessagesErrorHandler
+        extends DefaultHandler
+    {
+        private static final int TYPE_UNKNOWN = 0;
+
+        private static final int TYPE_WARNING = 1;
+
+        private static final int TYPE_ERROR = 2;
+
+        private static final int TYPE_FATAL = 3;
+
+<span class="fc" id="L159">        private static final String EOL = XmlMarkup.EOL;</span>
+
+        /** @see org/apache/xerces/impl/msg/XMLMessages.properties#MSG_ELEMENT_NOT_DECLARED */
+<span class="fc" id="L162">        private static final Pattern ELEMENT_TYPE_PATTERN =</span>
+<span class="fc" id="L163">            Pattern.compile( &quot;Element type \&quot;.*\&quot; must be declared.&quot;, Pattern.DOTALL );</span>
+
+        private final Log log;
+
+        private boolean hasDtdAndXsd;
+
+        private MessagesErrorHandler( Log log )
+<span class="fc" id="L170">        {</span>
+<span class="fc" id="L171">            this.log = log;</span>
+<span class="fc" id="L172">        }</span>
+
+        /**
+         * @param hasDtdAndXsd the hasDtdAndXsd to set
+         */
+        protected void setHasDtdAndXsd( boolean hasDtdAndXsd )
+        {
+<span class="fc" id="L179">            this.hasDtdAndXsd = hasDtdAndXsd;</span>
+<span class="fc" id="L180">        }</span>
+
+        /** {@inheritDoc} */
+        @Override
+        public void warning( SAXParseException e )
+            throws SAXException
+        {
+<span class="nc" id="L187">            processException( TYPE_WARNING, e );</span>
+<span class="nc" id="L188">        }</span>
+
+        /** {@inheritDoc} */
+        @Override
+        public void error( SAXParseException e )
+            throws SAXException
+        {
+            // Workaround for Xerces complaints when an XML with XSD needs also a &lt;!DOCTYPE []&gt; to specify entities
+            // like &amp;nbsp;
+            // See http://xsd.stylusstudio.com/2001Nov/post08021.htm
+<span class="nc bnc" id="L198" title="All 2 branches missed.">            if ( !hasDtdAndXsd )</span>
+            {
+<span class="nc" id="L200">                processException( TYPE_ERROR, e );</span>
+<span class="nc" id="L201">                return;</span>
+            }
+
+<span class="nc" id="L204">            Matcher m = ELEMENT_TYPE_PATTERN.matcher( e.getMessage() );</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if ( !m.find() )</span>
+            {
+<span class="nc" id="L207">                processException( TYPE_ERROR, e );</span>
+            }
+<span class="nc" id="L209">        }</span>
+
+        /** {@inheritDoc} */
+        @Override
+        public void fatalError( SAXParseException e )
+            throws SAXException
+        {
+<span class="nc" id="L216">            processException( TYPE_FATAL, e );</span>
+<span class="nc" id="L217">        }</span>
+
+        private void processException( int type, SAXParseException e )
+            throws SAXException
+        {
+<span class="nc" id="L222">            StringBuilder message = new StringBuilder();</span>
+
+<span class="nc bnc" id="L224" title="All 4 branches missed.">            switch ( type )</span>
+            {
+                case TYPE_WARNING:
+<span class="nc" id="L227">                    message.append( &quot;Warning:&quot; );</span>
+<span class="nc" id="L228">                    break;</span>
+
+                case TYPE_ERROR:
+<span class="nc" id="L231">                    message.append( &quot;Error:&quot; );</span>
+<span class="nc" id="L232">                    break;</span>
+
+                case TYPE_FATAL:
+<span class="nc" id="L235">                    message.append( &quot;Fatal error:&quot; );</span>
+<span class="nc" id="L236">                    break;</span>
+
+                case TYPE_UNKNOWN:
+                default:
+<span class="nc" id="L240">                    message.append( &quot;Unknown:&quot; );</span>
+                    break;
+            }
+
+<span class="nc" id="L244">            message.append( EOL );</span>
+<span class="nc" id="L245">            message.append( &quot;  Public ID: &quot; ).append( e.getPublicId() ).append( EOL );</span>
+<span class="nc" id="L246">            message.append( &quot;  System ID: &quot; ).append( e.getSystemId() ).append( EOL );</span>
+<span class="nc" id="L247">            message.append( &quot;  Line number: &quot; ).append( e.getLineNumber() ).append( EOL );</span>
+<span class="nc" id="L248">            message.append( &quot;  Column number: &quot; ).append( e.getColumnNumber() ).append( EOL );</span>
+<span class="nc" id="L249">            message.append( &quot;  Message: &quot; ).append( e.getMessage() ).append( EOL );</span>
+
+<span class="nc" id="L251">            final String logMessage = message.toString();</span>
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">            switch ( type )</span>
+            {
+                case TYPE_WARNING:
+<span class="nc" id="L256">                    log.warn( logMessage );</span>
+<span class="nc" id="L257">                    break;</span>
+
+                case TYPE_UNKNOWN:
+                case TYPE_ERROR:
+                case TYPE_FATAL:
+                default:
+<span class="nc" id="L263">                    throw new SAXException( logMessage );</span>
+            }
+<span class="nc" id="L265">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

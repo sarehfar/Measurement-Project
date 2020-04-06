@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChildBlocksBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Confluence Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.confluence.parser</a> &gt; <span class="el_source">ChildBlocksBuilder.java</span></div><h1>ChildBlocksBuilder.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.confluence.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * Re-usable builder that can be used to generate paragraph and list item text from a string containing all the content
+ * and wiki formatting. This class is intentionally stateful, but cheap to create, so create one as needed and keep it
+ * on the stack to preserve stateless behaviour in the caller.
+ *
+ * @author Dave Syer
+ * @version $Id$
+ * @since 1.1
+ */
+public class ChildBlocksBuilder
+{
+<span class="fc" id="L38">    private boolean insideBold = false;</span>
+
+<span class="fc" id="L40">    private boolean insideItalic = false;</span>
+
+<span class="fc" id="L42">    private boolean insideLink = false;</span>
+
+<span class="fc" id="L44">    private boolean insideLinethrough = false;</span>
+
+<span class="fc" id="L46">    private boolean insideUnderline = false;</span>
+
+<span class="fc" id="L48">    private boolean insideSub = false;</span>
+
+<span class="fc" id="L50">    private boolean insideSup = false;</span>
+
+<span class="fc" id="L52">    private List&lt;Block&gt; blocks = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L54">    private StringBuilder text = new StringBuilder();</span>
+
+    private String input;
+
+    private boolean insideMonospaced;
+
+    /**
+     * &lt;p&gt;Constructor for ChildBlocksBuilder.&lt;/p&gt;
+     *
+     * @param input the input.
+     */
+    public ChildBlocksBuilder( String input )
+<span class="fc" id="L66">    {</span>
+<span class="fc" id="L67">        this.input = input;</span>
+<span class="fc" id="L68">    }</span>
+
+    /**
+     * Utility method to convert marked up content into blocks for rendering.
+     *
+     * @return a list of Blocks that can be used to render it
+     */
+    public List&lt;Block&gt; getBlocks()
+    {
+<span class="fc" id="L77">        List&lt;Block&gt; specialBlocks = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for ( int i = 0; i &lt; input.length(); i++ )</span>
+        {
+<span class="fc" id="L81">            char c = input.charAt( i );</span>
+
+<span class="fc bfc" id="L83" title="All 12 branches covered.">            switch ( c )</span>
+            {
+                case '*':
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                    if ( insideBold )</span>
+                    {
+<span class="fc" id="L88">                        insideBold = false;</span>
+<span class="fc" id="L89">                        specialBlocks = getList( new BoldBlock( getChildren( text, specialBlocks ) ), specialBlocks );</span>
+<span class="fc" id="L90">                        text = new StringBuilder();</span>
+                    }
+<span class="fc bfc" id="L92" title="All 2 branches covered.">                    else if ( insideMonospaced )</span>
+                    {
+<span class="fc" id="L94">                        text.append( c );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L98">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+<span class="fc" id="L99">                        insideBold = true;</span>
+                    }
+
+<span class="fc" id="L102">                    break;</span>
+                case '_':
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                    if ( insideItalic )</span>
+                    {
+<span class="fc" id="L106">                        insideItalic = false;</span>
+<span class="fc" id="L107">                        specialBlocks = getList( new ItalicBlock( getChildren( text, specialBlocks ) ), specialBlocks );</span>
+<span class="fc" id="L108">                        text = new StringBuilder();</span>
+                    }
+<span class="fc bfc" id="L110" title="All 4 branches covered.">                    else if ( insideLink || insideMonospaced )</span>
+                    {
+<span class="fc" id="L112">                        text.append( c );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L116">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+<span class="fc" id="L117">                        insideItalic = true;</span>
+                    }
+
+<span class="fc" id="L120">                    break;</span>
+                case '-':
+<span class="fc bfc" id="L122" title="All 2 branches covered.">                    if ( insideLinethrough )</span>
+                    {
+<span class="fc" id="L124">                        insideLinethrough = false;</span>
+<span class="fc" id="L125">                        blocks.add( new LinethroughBlock( text.toString() ) );</span>
+<span class="fc" id="L126">                        text = new StringBuilder();</span>
+                    }
+<span class="fc bfc" id="L128" title="All 4 branches covered.">                    else if ( insideLink || insideMonospaced )</span>
+                    {
+<span class="fc" id="L130">                        text.append( c );    </span>
+                    }
+                    else
+                    {
+<span class="fc" id="L134">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+<span class="fc" id="L135">                        insideLinethrough = true;                            </span>
+                    }
+<span class="fc" id="L137">                    break;</span>
+                case '+':
+<span class="fc bfc" id="L139" title="All 2 branches covered.">                    if ( insideUnderline )</span>
+                    {
+<span class="fc" id="L141">                        insideUnderline = false;</span>
+<span class="fc" id="L142">                        blocks.add( new UnderlineBlock( text.toString() ) );</span>
+<span class="fc" id="L143">                        text = new StringBuilder();</span>
+                    }
+<span class="pc bpc" id="L145" title="1 of 4 branches missed.">                    else if ( insideLink || insideMonospaced )</span>
+                    {
+<span class="fc" id="L147">                        text.append( c );    </span>
+                    }
+                    else
+                    {
+<span class="fc" id="L151">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+<span class="fc" id="L152">                        insideUnderline = true;                            </span>
+                    }
+<span class="fc" id="L154">                    break;</span>
+                case '~':
+<span class="fc bfc" id="L156" title="All 2 branches covered.">                    if ( insideSub )</span>
+                    {
+<span class="fc" id="L158">                        insideSub = false;</span>
+<span class="fc" id="L159">                        blocks.add( new SubBlock( text.toString() ) );</span>
+<span class="fc" id="L160">                        text = new StringBuilder();</span>
+                    }
+<span class="pc bpc" id="L162" title="1 of 4 branches missed.">                    else if ( insideLink || insideMonospaced )</span>
+                    {
+<span class="fc" id="L164">                        text.append( c );    </span>
+                    }
+                    else
+                    {
+<span class="fc" id="L168">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+<span class="fc" id="L169">                        insideSub = true;                            </span>
+                    }
+<span class="fc" id="L171">                    break;</span>
+                case '^':
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                    if ( insideSup )</span>
+                    {
+<span class="fc" id="L175">                        insideSup = false;</span>
+<span class="fc" id="L176">                        blocks.add( new SupBlock( text.toString() ) );</span>
+<span class="fc" id="L177">                        text = new StringBuilder();</span>
+                    }
+<span class="fc bfc" id="L179" title="All 4 branches covered.">                    else if ( insideLink || insideMonospaced )</span>
+                    {
+<span class="fc" id="L181">                        text.append( c );    </span>
+                    }
+                    else
+                    {
+<span class="fc" id="L185">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+<span class="fc" id="L186">                        insideSup = true;                            </span>
+                    }
+<span class="fc" id="L188">                    break;</span>
+                case '[':
+<span class="fc bfc" id="L190" title="All 2 branches covered.">                    if ( insideMonospaced )</span>
+                    {
+<span class="fc" id="L192">                        text.append( c );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L196">                        insideLink = true;</span>
+<span class="fc" id="L197">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+                    }
+<span class="fc" id="L199">                    break;</span>
+                case ']':
+<span class="fc bfc" id="L201" title="All 2 branches covered.">                    if ( insideLink )</span>
+                    {
+<span class="fc" id="L203">                        boolean addHTMLSuffix = false;</span>
+<span class="fc" id="L204">                        String link = text.toString();</span>
+
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">                        if ( !link.endsWith( &quot;.html&quot; ) )</span>
+                        {
+<span class="fc bfc" id="L208" title="All 2 branches covered.">                            if ( !link.contains( &quot;http&quot; ) )</span>
+                            {
+                                // relative path: see DOXIA-298
+<span class="fc" id="L211">                                addHTMLSuffix = true;</span>
+                            }
+                        }
+<span class="fc bfc" id="L214" title="All 2 branches covered.">                        if ( link.contains( &quot;|&quot; ) )</span>
+                        {
+<span class="fc" id="L216">                            String[] pieces = StringUtils.split( text.toString(), &quot;|&quot; );</span>
+                            
+<span class="fc bfc" id="L218" title="All 2 branches covered.">                            if ( pieces[1].startsWith( &quot;^&quot; ) )</span>
+                            {
+                                // use the &quot;file attachment&quot; ^ syntax to force verbatim link: needed to allow actually
+                                // linking to some non-html resources
+<span class="fc" id="L222">                                pieces[1] = pieces[1].substring( 1 ); // now just get rid of the lead ^</span>
+<span class="fc" id="L223">                                addHTMLSuffix = false; // force verbatim link to support attaching files/resources (not</span>
+                                                       // just .html files)
+                            }
+
+<span class="fc bfc" id="L227" title="All 2 branches covered.">                            if ( addHTMLSuffix )</span>
+                            {
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">                                if ( !pieces[1].contains( &quot;#&quot; ) )</span>
+                                {
+<span class="fc" id="L231">                                    pieces[1] = pieces[1].concat( &quot;.html&quot; );</span>
+                                }
+                                else
+                                {
+<span class="nc bnc" id="L235" title="All 2 branches missed.">                                    if ( !pieces[1].startsWith( &quot;#&quot; ) )</span>
+                                    {
+<span class="nc" id="L237">                                        String[] temp = pieces[1].split( &quot;#&quot; );</span>
+<span class="nc" id="L238">                                        pieces[1] = temp[0] + &quot;.html#&quot; + temp[1];</span>
+                                    }
+                                }
+                            }
+
+<span class="fc" id="L243">                            blocks.add( new LinkBlock( pieces[1], pieces[0] ) );</span>
+<span class="fc" id="L244">                        }</span>
+                        else
+                        {
+<span class="fc" id="L247">                            String value = link;</span>
+
+<span class="fc bfc" id="L249" title="All 2 branches covered.">                            if ( link.startsWith( &quot;#&quot; ) )</span>
+                            {
+<span class="fc" id="L251">                                value = link.substring( 1 );</span>
+                            }
+<span class="fc bfc" id="L253" title="All 2 branches covered.">                            else if ( link.startsWith( &quot;^&quot; ) )</span>
+                            {
+<span class="fc" id="L255">                                link = link.substring( 1 );  // chop off the lead ^ from link and from value</span>
+<span class="fc" id="L256">                                value = link;</span>
+<span class="fc" id="L257">                                addHTMLSuffix = false; // force verbatim link to support attaching files/resources (not</span>
+                                                       // just .html files)
+                            }
+
+<span class="fc bfc" id="L261" title="All 2 branches covered.">                            if ( addHTMLSuffix )</span>
+                            {
+<span class="fc bfc" id="L263" title="All 2 branches covered.">                                if ( !link.contains( &quot;#&quot; ) )</span>
+                                {
+<span class="fc" id="L265">                                    link = link.concat( &quot;.html&quot; );</span>
+                                }
+                                else
+                                {
+<span class="fc bfc" id="L269" title="All 2 branches covered.">                                    if ( !link.startsWith( &quot;#&quot; ) )</span>
+                                    {
+<span class="fc" id="L271">                                        String[] temp = link.split( &quot;#&quot; );</span>
+<span class="fc" id="L272">                                        link = temp[0] + &quot;.html#&quot; + temp[1];</span>
+                                    }
+                                }
+                            }
+
+<span class="fc" id="L277">                            blocks.add( new LinkBlock( link, value ) );</span>
+                        }
+
+<span class="fc" id="L280">                        text = new StringBuilder();</span>
+<span class="fc" id="L281">                        insideLink = false;</span>
+<span class="fc" id="L282">                    }</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">                    else if ( insideMonospaced )</span>
+                    {
+<span class="fc" id="L285">                        text.append( c );</span>
+                    }
+
+                    break;
+                case '{':
+<span class="fc bfc" id="L290" title="All 2 branches covered.">                    if ( insideMonospaced )</span>
+                    {
+<span class="fc" id="L292">                        text.append( c );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L296">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+
+<span class="fc bfc" id="L298" title="All 2 branches covered.">                        if ( nextChar( input, i ) == '{' ) // it's monospaced</span>
+                        {
+<span class="fc" id="L300">                            i++;</span>
+<span class="fc" id="L301">                            insideMonospaced = true;</span>
+                        }
+                    }
+                    // else it's a confluence macro...
+
+                    break;
+                case '}':
+<span class="fc bfc" id="L308" title="All 2 branches covered.">                    if ( nextChar( input, i ) == '}' )</span>
+                    {
+<span class="fc" id="L310">                        i++;</span>
+<span class="fc" id="L311">                        insideMonospaced = false;</span>
+<span class="fc" id="L312">                        specialBlocks = getList( new MonospaceBlock( getChildren( text, specialBlocks ) ),</span>
+                                                 specialBlocks );
+<span class="fc" id="L314">                        text = new StringBuilder();</span>
+                    }
+<span class="fc bfc" id="L316" title="All 2 branches covered.">                    else if ( insideMonospaced )</span>
+                    {
+<span class="fc" id="L318">                        text.append( c );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L322">                        String name = text.toString();</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">                        if ( name.startsWith( &quot;anchor:&quot; ) )</span>
+                        {
+<span class="fc" id="L325">                            blocks.add( new AnchorBlock( name.substring( &quot;anchor:&quot;.length() ) ) );</span>
+                        }
+                        else
+                        {
+<span class="fc" id="L329">                            blocks.add( new TextBlock( &quot;{&quot; + name + &quot;}&quot; ) );</span>
+                        }
+<span class="fc" id="L331">                        text = new StringBuilder();</span>
+                    }
+
+<span class="fc" id="L334">                    break;</span>
+                case '\\':
+<span class="fc bfc" id="L336" title="All 2 branches covered.">                    if ( insideMonospaced )</span>
+                    {
+<span class="fc" id="L338">                        text.append( c );</span>
+                    }
+<span class="fc bfc" id="L340" title="All 2 branches covered.">                    else if ( nextChar( input, i ) == '\\' )</span>
+                    {
+<span class="fc" id="L342">                        i++;</span>
+<span class="fc" id="L343">                        text = addTextBlockIfNecessary( blocks, specialBlocks, text );</span>
+<span class="fc" id="L344">                        blocks.add( new LinebreakBlock() );</span>
+                    }
+                    else
+                    {
+                        // DOXIA-467 single trailing backward slash, double is considered linebreak
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                        if ( i == input.length() - 1 )</span>
+                        {
+<span class="fc" id="L351">                            text.append( '\\' );</span>
+                        }
+                        else
+                        {
+<span class="fc" id="L355">                            text.append( input.charAt( ++i ) );</span>
+                        }
+                    }
+
+<span class="fc" id="L359">                    break;</span>
+                default:
+<span class="fc" id="L361">                    text.append( c );</span>
+            }
+
+<span class="fc bfc" id="L364" title="All 2 branches covered.">            if ( !specialBlocks.isEmpty() )</span>
+            {
+<span class="pc bpc" id="L366" title="1 of 6 branches missed.">                if ( !insideItalic &amp;&amp; !insideBold &amp;&amp; !insideMonospaced )</span>
+                {
+<span class="fc" id="L368">                    blocks.addAll( specialBlocks );</span>
+<span class="fc" id="L369">                    specialBlocks.clear();</span>
+                }
+            }
+
+        }
+
+<span class="fc bfc" id="L375" title="All 2 branches covered.">        if ( text.length() &gt; 0 )</span>
+        {
+<span class="fc" id="L377">            blocks.add( new TextBlock( text.toString() ) );</span>
+        }
+
+<span class="fc" id="L380">        return blocks;</span>
+    }
+
+    private List&lt;Block&gt; getList( Block block, List&lt;Block&gt; currentBlocks )
+    {
+<span class="fc" id="L385">        List&lt;Block&gt; list = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L387" title="1 of 6 branches missed.">        if ( insideBold || insideItalic || insideMonospaced )</span>
+        {
+<span class="fc" id="L389">            list.addAll( currentBlocks );</span>
+        }
+
+<span class="fc" id="L392">        list.add( block );</span>
+
+<span class="fc" id="L394">        return list;</span>
+    }
+
+    private List&lt;Block&gt; getChildren( StringBuilder buffer, List&lt;Block&gt; currentBlocks )
+    {
+<span class="fc" id="L399">        String txt = buffer.toString().trim();</span>
+
+<span class="pc bpc" id="L401" title="1 of 4 branches missed.">        if ( currentBlocks.isEmpty() &amp;&amp; StringUtils.isEmpty( txt ) )</span>
+        {
+<span class="nc" id="L403">            return new ArrayList&lt;&gt;();</span>
+        }
+
+<span class="fc" id="L406">        ArrayList&lt;Block&gt; list = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L408" title="1 of 6 branches missed.">        if ( !insideBold &amp;&amp; !insideItalic &amp;&amp; !insideMonospaced )</span>
+        {
+<span class="fc" id="L410">            list.addAll( currentBlocks );</span>
+        }
+
+<span class="fc bfc" id="L413" title="All 2 branches covered.">        if ( StringUtils.isEmpty( txt ) )</span>
+        {
+<span class="fc" id="L415">            return list;</span>
+        }
+
+<span class="fc" id="L418">        list.add( new TextBlock( txt ) );</span>
+
+<span class="fc" id="L420">        return list;</span>
+    }
+
+    private static char nextChar( String input, int i )
+    {
+<span class="fc bfc" id="L425" title="All 2 branches covered.">        return input.length() &gt; i + 1 ? input.charAt( i + 1 ) : '\0';</span>
+    }
+
+    private StringBuilder addTextBlockIfNecessary( List&lt;Block&gt; blcks, List&lt;Block&gt; specialBlocks, StringBuilder txt )
+    {
+<span class="fc bfc" id="L430" title="All 2 branches covered.">        if ( txt.length() == 0 )</span>
+        {
+<span class="fc" id="L432">            return txt;</span>
+        }
+
+<span class="fc" id="L435">        TextBlock textBlock = new TextBlock( txt.toString() );</span>
+
+<span class="pc bpc" id="L437" title="1 of 6 branches missed.">        if ( !insideBold &amp;&amp; !insideItalic &amp;&amp; !insideMonospaced )</span>
+        {
+<span class="fc" id="L439">            blcks.add( textBlock );</span>
+        }
+        else
+        {
+<span class="fc" id="L443">            specialBlocks.add( textBlock );</span>
+        }
+
+<span class="fc" id="L446">        return new StringBuilder();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

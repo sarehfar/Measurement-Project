@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractXmlSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.sink.impl</a> &gt; <span class="el_source">AbstractXmlSink.java</span></div><h1>AbstractXmlSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.sink.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.html.HTML.Tag;
+
+import org.apache.maven.doxia.markup.XmlMarkup;
+
+/**
+ * An abstract &lt;code&gt;Sink&lt;/code&gt; for xml markup syntax.
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+<span class="fc" id="L34">public abstract class AbstractXmlSink</span>
+    extends SinkAdapter
+    implements XmlMarkup
+{
+    /** Default namespace prepended to all tags */
+    private String nameSpace;
+
+<span class="fc" id="L41">    private boolean firstTag  = true;</span>
+
+<span class="fc" id="L43">    private boolean insertNewline = true;</span>
+
+    public void setInsertNewline( boolean insertNewline )
+    {
+<span class="nc" id="L47">        this.insertNewline = insertNewline;</span>
+<span class="nc" id="L48">    }</span>
+
+    /**
+     * Sets the default namespace that is prepended to all tags written by this sink.
+     *
+     * @param ns the default namespace.
+     * @since 1.1
+     */
+    public void setNameSpace( String ns )
+    {
+<span class="fc" id="L58">        this.nameSpace = ns;</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Return the default namespace that is prepended to all tags written by this sink.
+     *
+     * @return the current default namespace.
+     * @since 1.1
+     */
+    public String getNameSpace()
+    {
+<span class="fc" id="L69">        return this.nameSpace;</span>
+    }
+
+    /**
+     * Starts a Tag. For instance:
+     * &lt;pre&gt;
+     * &amp;lt;tag&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @param t a non null tag
+     * @see #writeStartTag(javax.swing.text.html.HTML.Tag, javax.swing.text.MutableAttributeSet)
+     */
+    protected void writeStartTag( Tag t )
+    {
+<span class="fc" id="L83">        writeStartTag ( t, null );</span>
+<span class="fc" id="L84">    }</span>
+
+    /**
+     * Starts a Tag with attributes. For instance:
+     * &lt;pre&gt;
+     * &amp;lt;tag attName=&quot;attValue&quot;&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @param t a non null tag.
+     * @param att a set of attributes. May be null.
+     * @see #writeStartTag(javax.swing.text.html.HTML.Tag, javax.swing.text.MutableAttributeSet, boolean)
+     */
+    protected void writeStartTag( Tag t, MutableAttributeSet att )
+    {
+<span class="fc" id="L98">        writeStartTag ( t, att, false );</span>
+<span class="fc" id="L99">    }</span>
+
+    /**
+     * Starts a Tag with attributes. For instance:
+     * &lt;pre&gt;
+     * &amp;lt;tag attName=&quot;attValue&quot;&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @param t a non null tag.
+     * @param att a set of attributes. May be null.
+     * @param isSimpleTag boolean to write as a simple tag.
+     */
+    protected void writeStartTag( Tag t, MutableAttributeSet att, boolean isSimpleTag )
+    {
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if ( t == null )</span>
+        {
+<span class="fc" id="L115">            throw new IllegalArgumentException( &quot;A tag is required&quot; );</span>
+        }
+
+<span class="fc" id="L118">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="pc bpc" id="L120" title="1 of 6 branches missed.">        if ( insertNewline &amp;&amp; t.isBlock() &amp;&amp; !firstTag )</span>
+        {
+<span class="fc" id="L122">            sb.append( EOL );</span>
+        }
+<span class="fc" id="L124">        firstTag = false;</span>
+
+<span class="fc" id="L126">        sb.append( LESS_THAN );</span>
+
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        if ( nameSpace != null )</span>
+        {
+<span class="fc" id="L130">            sb.append( nameSpace ).append( ':' );</span>
+        }
+
+<span class="fc" id="L133">        sb.append( t.toString() );</span>
+
+<span class="fc" id="L135">        sb.append( SinkUtils.getAttributeString( att ) );</span>
+
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        if ( isSimpleTag )</span>
+        {
+<span class="fc" id="L139">            sb.append( SPACE ).append( SLASH );</span>
+        }
+
+<span class="fc" id="L142">        sb.append( GREATER_THAN );</span>
+
+<span class="fc" id="L144">        write( sb.toString() );</span>
+<span class="fc" id="L145">    }</span>
+
+    /**
+     * Writes a system EOL.
+     *
+     * @since 1.1
+     */
+    protected void writeEOL()
+    {
+<span class="fc" id="L154">        write( EOL );</span>
+<span class="fc" id="L155">    }</span>
+
+    /**
+     * Ends a Tag without writing an EOL. For instance: &lt;pre&gt;&amp;lt;/tag&amp;gt;&lt;/pre&gt;.
+     *
+     * @param t a tag.
+     */
+    protected void writeEndTag( Tag t )
+    {
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        if ( t == null )</span>
+        {
+<span class="fc" id="L166">            throw new IllegalArgumentException( &quot;A tag is required&quot; );</span>
+        }
+
+<span class="fc" id="L169">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L170">        sb.append( LESS_THAN );</span>
+<span class="fc" id="L171">        sb.append( SLASH );</span>
+
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        if ( nameSpace != null )</span>
+        {
+<span class="fc" id="L175">            sb.append( nameSpace ).append( ':' );</span>
+        }
+
+<span class="fc" id="L178">        sb.append( t.toString() );</span>
+<span class="fc" id="L179">        sb.append( GREATER_THAN );</span>
+
+<span class="fc" id="L181">        write( sb.toString() );</span>
+<span class="fc" id="L182">    }</span>
+
+    /**
+     * Starts a simple Tag. For instance:
+     * &lt;pre&gt;
+     * &amp;lt;tag /&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @param t a non null tag
+     * @see #writeSimpleTag(javax.swing.text.html.HTML.Tag, javax.swing.text.MutableAttributeSet)
+     */
+    protected void writeSimpleTag( Tag t )
+    {
+<span class="fc" id="L195">        writeSimpleTag( t, null );</span>
+<span class="fc" id="L196">    }</span>
+
+    /**
+     * Starts a simple Tag with attributes. For instance:
+     * &lt;pre&gt;
+     * &amp;lt;tag attName=&quot;attValue&quot; /&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @param t a non null tag.
+     * @param att a set of attributes. May be null.
+     * @see #writeStartTag(javax.swing.text.html.HTML.Tag, javax.swing.text.MutableAttributeSet, boolean)
+     */
+    protected void writeSimpleTag( Tag t, MutableAttributeSet att )
+    {
+<span class="fc" id="L210">        writeStartTag ( t, att, true );</span>
+<span class="fc" id="L211">    }</span>
+
+    /**
+     * Write a text to the sink.
+     *
+     * @param text the given text to write
+     */
+    protected abstract void write( String text );
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

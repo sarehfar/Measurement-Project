@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TWikiParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki</a> &gt; <span class="el_source">TWikiParser.java</span></div><h1>TWikiParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.module.twiki.parser.Block;
+import org.apache.maven.doxia.module.twiki.parser.BlockParser;
+import org.apache.maven.doxia.module.twiki.parser.FormatedTextParser;
+import org.apache.maven.doxia.module.twiki.parser.GenericListBlockParser;
+import org.apache.maven.doxia.module.twiki.parser.HRuleBlockParser;
+import org.apache.maven.doxia.module.twiki.parser.ParagraphBlockParser;
+import org.apache.maven.doxia.module.twiki.parser.SectionBlock;
+import org.apache.maven.doxia.module.twiki.parser.SectionBlockParser;
+import org.apache.maven.doxia.module.twiki.parser.TableBlockParser;
+import org.apache.maven.doxia.module.twiki.parser.TextParser;
+import org.apache.maven.doxia.module.twiki.parser.VerbatimBlockParser;
+import org.apache.maven.doxia.module.twiki.parser.XHTMLWikiWordLinkResolver;
+import org.apache.maven.doxia.parser.AbstractTextParser;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.util.ByLineReaderSource;
+import org.apache.maven.doxia.util.ByLineSource;
+import org.codehaus.plexus.component.annotations.Component;
+
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Parse the &lt;a href=&quot;http://twiki.org/cgi-bin/view/TWiki/TextFormattingRules&quot;&gt;
+ * twiki file format&lt;/a&gt;
+ *
+ * @author Juan F. Codagnone
+ * @since 1.0
+ */
+@Component( role = Parser.class, hint = &quot;twiki&quot; )
+public class TWikiParser
+    extends AbstractTextParser
+{
+    private static final int EXTENSION_LENGTH = 6;
+
+    /** paragraph parser. */
+<span class="fc" id="L60">    private final ParagraphBlockParser paraParser = new ParagraphBlockParser();</span>
+
+    /** section parser. */
+<span class="fc" id="L63">    private final SectionBlockParser sectionParser = new SectionBlockParser();</span>
+
+    /** enumeration parser. */
+<span class="fc" id="L66">    private final GenericListBlockParser listParser = new GenericListBlockParser();</span>
+
+    /** Text parser. */
+<span class="fc" id="L69">    private final FormatedTextParser formatTextParser = new FormatedTextParser();</span>
+
+    /**
+     * text parser.
+     * This only works for xhtml output, but there is no way
+     * of transforming a wikiWord in another context.
+     */
+<span class="fc" id="L76">    private final TextParser textParser = new TextParser( new XHTMLWikiWordLinkResolver() );</span>
+
+    /** hruler parser. */
+<span class="fc" id="L79">    private final HRuleBlockParser hrulerParser = new HRuleBlockParser();</span>
+
+    /** table parser. */
+<span class="fc" id="L82">    private final TableBlockParser tableParser = new TableBlockParser();</span>
+
+    /** verbatim parser. */
+<span class="fc" id="L85">    private final VerbatimBlockParser verbatimParser = new VerbatimBlockParser();</span>
+
+    /** list of parsers to try to apply to the toplevel */
+    private BlockParser[] parsers;
+
+    /**
+     * Creates the TWikiParser.
+     */
+    public TWikiParser()
+<span class="fc" id="L94">    {</span>
+<span class="fc" id="L95">        init();</span>
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * &lt;p&gt;parse.&lt;/p&gt;
+     *
+     * @param source source to parse.
+     * @return the blocks that represent source.
+     * @throws org.apache.maven.doxia.parser.ParseException on error.
+     */
+    public final List&lt;Block&gt; parse( final ByLineSource source )
+        throws ParseException
+    {
+<span class="fc" id="L108">        final List&lt;Block&gt; ret = new ArrayList&lt;&gt;();</span>
+
+        String line;
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        while ( ( line = source.getNextLine() ) != null )</span>
+        {
+<span class="fc" id="L113">            boolean accepted = false;</span>
+
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">            for ( BlockParser parser : parsers )</span>
+            {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">                if ( parser.accept( line ) )</span>
+                {
+<span class="fc" id="L119">                    accepted = true;</span>
+<span class="fc" id="L120">                    ret.add( parser.visit( line, source ) );</span>
+<span class="fc" id="L121">                    break;</span>
+                }
+            }
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if ( !accepted )</span>
+            {
+<span class="nc" id="L126">                throw new ParseException( &quot;Line number not handle : &quot; + source.getLineNumber() + &quot;: &quot; + line );</span>
+            }
+<span class="fc" id="L128">        }</span>
+
+<span class="fc" id="L130">        return ret;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L138">        parse( source, sink, &quot;&quot; );</span>
+<span class="fc" id="L139">    }</span>
+    
+    /** {@inheritDoc} */
+    @Override
+    public final synchronized void parse( final Reader source, final Sink sink, String reference )
+        throws ParseException
+    {
+<span class="fc" id="L146">        init();</span>
+
+        List&lt;Block&gt; blocks;
+<span class="fc" id="L149">        final ByLineSource src = new ByLineReaderSource( source, reference );</span>
+
+        try
+        {
+<span class="fc" id="L153">            blocks = parse( src );</span>
+        }
+<span class="nc" id="L155">        catch ( final Exception e )</span>
+        {
+            // TODO handle column number
+<span class="nc" id="L158">            throw new ParseException( e, src.getName(), src.getLineNumber(), -1 );</span>
+<span class="fc" id="L159">        }</span>
+
+<span class="fc" id="L161">        sink.head();</span>
+
+<span class="fc" id="L163">        final String title = getTitle( blocks, src );</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        if ( title != null )</span>
+        {
+<span class="fc" id="L166">            sink.title();</span>
+<span class="fc" id="L167">            sink.text( title );</span>
+<span class="fc" id="L168">            sink.title_();</span>
+        }
+
+<span class="fc" id="L171">        sink.head_();</span>
+<span class="fc" id="L172">        sink.body();</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        for ( Block block : blocks )</span>
+        {
+<span class="fc" id="L175">            block.traverse( sink );</span>
+<span class="fc" id="L176">        }</span>
+<span class="fc" id="L177">        sink.body_();</span>
+<span class="fc" id="L178">        sink.flush();</span>
+<span class="fc" id="L179">        sink.close();</span>
+
+<span class="fc" id="L181">        setSecondParsing( false );</span>
+<span class="fc" id="L182">        init();</span>
+<span class="fc" id="L183">    }</span>
+
+    /**
+     * Guess a title for the page. It uses the first section that it finds.
+     * If it doesn't find any section tries to get it from
+     * {@link ByLineReaderSource#getName()}
+     *
+     * @param blocks blocks to parse
+     * @param source source to parse
+     * @return a title for a page
+     * @since 1.1
+     */
+    public final String getTitle( final List&lt;Block&gt; blocks, final ByLineSource source )
+    {
+<span class="fc" id="L197">        String title = null;</span>
+
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        for ( Block block : blocks )</span>
+        {
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            if ( block instanceof SectionBlock )</span>
+            {
+<span class="fc" id="L203">                final SectionBlock sectionBlock = (SectionBlock) block;</span>
+<span class="fc" id="L204">                title = sectionBlock.getTitle();</span>
+<span class="fc" id="L205">                break;</span>
+            }
+<span class="fc" id="L207">        }</span>
+
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        if ( title == null )</span>
+        {
+<span class="fc" id="L211">            String name = source.getName();</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">            if ( name != null )</span>
+            {
+<span class="fc" id="L214">                name = name.trim();</span>
+
+<span class="fc bfc" id="L216" title="All 2 branches covered.">                if ( name.length() != 0 )</span>
+                {
+<span class="fc bfc" id="L218" title="All 2 branches covered.">                    if ( name.endsWith( &quot;.twiki&quot; ) )</span>
+                    {
+<span class="fc" id="L220">                        title = name.substring( 0, name.length() - EXTENSION_LENGTH );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L224">                        title = name;</span>
+                    }
+                }
+            }
+        }
+
+<span class="fc" id="L230">        return title;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void init()
+    {
+<span class="fc" id="L238">        super.init();</span>
+
+<span class="fc" id="L240">        paraParser.setSectionParser( sectionParser );</span>
+<span class="fc" id="L241">        paraParser.setListParser( listParser );</span>
+<span class="fc" id="L242">        paraParser.setTextParser( formatTextParser );</span>
+<span class="fc" id="L243">        paraParser.setHrulerParser( hrulerParser );</span>
+<span class="fc" id="L244">        paraParser.setTableBlockParser( tableParser );</span>
+<span class="fc" id="L245">        paraParser.setVerbatimParser( verbatimParser );</span>
+<span class="fc" id="L246">        sectionParser.setParaParser( paraParser );</span>
+<span class="fc" id="L247">        sectionParser.setHrulerParser( hrulerParser );</span>
+<span class="fc" id="L248">        sectionParser.setVerbatimBlockParser( verbatimParser );</span>
+<span class="fc" id="L249">        listParser.setTextParser( formatTextParser );</span>
+<span class="fc" id="L250">        formatTextParser.setTextParser( textParser );</span>
+<span class="fc" id="L251">        tableParser.setTextParser( formatTextParser );</span>
+
+<span class="fc" id="L253">        this.parsers = new BlockParser[] { sectionParser, hrulerParser, verbatimParser, paraParser };</span>
+<span class="fc" id="L254">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

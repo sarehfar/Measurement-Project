@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HtmlMarkup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.markup</a> &gt; <span class="el_source">HtmlMarkup.java</span></div><h1>HtmlMarkup.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.markup;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import javax.swing.text.html.HTML.Tag;
+
+
+/**
+ * List of &lt;code&gt;Html&lt;/code&gt; tags.
+ * &lt;p&gt;
+ *   This should contain all valid XHTML 1.0 tags, comprising the tags in
+ *   {@link javax.swing.text.html.HTML.Tag} plus several others.
+ * &lt;/p&gt;
+ *
+ * @see &lt;a href=&quot;http://www.w3.org/TR/html401/index/elements.html&quot;&gt;http://www.w3.org/TR/html401/index/elements.html&lt;/a&gt;
+ *
+ * @author ltheussl
+ * @version $Id$
+ * @since 1.0
+ */
+@SuppressWarnings( &quot;checkstyle:interfaceistype&quot; )
+public interface HtmlMarkup
+    extends XmlMarkup
+{
+
+    /** A simple HTML tag. Eg &lt;code&gt;&amp;lt;br/&amp;gt;&lt;/code&gt;. */
+    int TAG_TYPE_SIMPLE = 1;
+
+    /** A start HTML tag. Eg &lt;code&gt;&amp;lt;p&amp;gt;&lt;/code&gt;. */
+    int TAG_TYPE_START = 2;
+
+    /** An end HTML tag. Eg &lt;code&gt;&amp;lt;/p&amp;gt;&lt;/code&gt;. */
+    int TAG_TYPE_END = 3;
+
+    /**
+     * An HTML entity. Eg &lt;code&gt;&amp;amp;lt;&lt;/code&gt;.
+     *
+     * @since 1.1.1.
+     */
+    int ENTITY_TYPE = 4;
+
+    /**
+     * A CDATA type event.
+     *
+     * @since 1.1.1.
+     */
+    int CDATA_TYPE = 5;
+
+    // ----------------------------------------------------------------------
+    // All XHTML 1.0 tags
+    // ----------------------------------------------------------------------
+
+    /** Xhtml tag for &lt;code&gt;a&lt;/code&gt;. */
+<span class="fc" id="L71">    Tag A = Tag.A;</span>
+
+    /** Xhtml tag for &lt;code&gt;abbr&lt;/code&gt;. */
+<span class="fc" id="L74">    Tag ABBR = new Tag()</span>
+<span class="fc" id="L75">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L80">            return &quot;abbr&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;acronym&lt;/code&gt;. */
+<span class="fc" id="L85">    Tag ACRONYM = new Tag()</span>
+<span class="fc" id="L86">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L91">            return &quot;acronym&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;address&lt;/code&gt;. */
+<span class="fc" id="L96">    Tag ADDRESS = Tag.ADDRESS;</span>
+
+    /** Xhtml tag for &lt;code&gt;applet&lt;/code&gt;. */
+<span class="fc" id="L99">    Tag APPLET = Tag.APPLET;</span>
+
+    /** Xhtml tag for &lt;code&gt;area&lt;/code&gt;. */
+<span class="fc" id="L102">    Tag AREA = Tag.AREA;</span>
+
+    /** Xhtml tag for &lt;code&gt;b&lt;/code&gt;. */
+<span class="fc" id="L105">    Tag B = Tag.B;</span>
+
+    /** Xhtml tag for &lt;code&gt;base&lt;/code&gt;. */
+<span class="fc" id="L108">    Tag BASE = Tag.BASE;</span>
+
+    /** Xhtml tag for &lt;code&gt;basefont&lt;/code&gt;. */
+<span class="fc" id="L111">    Tag BASEFONT = Tag.BASEFONT;</span>
+
+    /** Xhtml tag for &lt;code&gt;bdo&lt;/code&gt;. */
+<span class="fc" id="L114">    Tag BDO = new Tag()</span>
+<span class="fc" id="L115">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L120">            return &quot;bdo&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;big&lt;/code&gt;. */
+<span class="fc" id="L125">    Tag BIG = Tag.BIG;</span>
+
+    /** Xhtml tag for &lt;code&gt;blockquote&lt;/code&gt;. */
+<span class="fc" id="L128">    Tag BLOCKQUOTE = Tag.BLOCKQUOTE;</span>
+
+    /** Xhtml tag for &lt;code&gt;body&lt;/code&gt;. */
+<span class="fc" id="L131">    Tag BODY = Tag.BODY;</span>
+
+    /** Xhtml tag for &lt;code&gt;br&lt;/code&gt;. */
+<span class="fc" id="L134">    Tag BR = Tag.BR;</span>
+
+    /** Xhtml tag for &lt;code&gt;button&lt;/code&gt;. */
+<span class="fc" id="L137">    Tag BUTTON = new Tag()</span>
+<span class="fc" id="L138">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L143">            return &quot;button&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;caption&lt;/code&gt;. */
+<span class="fc" id="L148">    Tag CAPTION = Tag.CAPTION;</span>
+
+    /** Xhtml tag for &lt;code&gt;center&lt;/code&gt;. */
+<span class="fc" id="L151">    Tag CENTER = Tag.CENTER;</span>
+
+    /** Xhtml tag for &lt;code&gt;cite&lt;/code&gt;. */
+<span class="fc" id="L154">    Tag CITE = Tag.CITE;</span>
+
+    /** Xhtml tag for &lt;code&gt;code&lt;/code&gt;. */
+<span class="fc" id="L157">    Tag CODE = Tag.CODE;</span>
+
+    /** Xhtml tag for &lt;code&gt;col&lt;/code&gt;. */
+<span class="fc" id="L160">    Tag COL = new Tag()</span>
+<span class="fc" id="L161">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L166">            return &quot;col&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;colgroup&lt;/code&gt;. */
+<span class="fc" id="L171">    Tag COLGROUP = new Tag()</span>
+<span class="fc" id="L172">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L177">            return &quot;colgroup&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;dd&lt;/code&gt;. */
+<span class="fc" id="L182">    Tag DD = Tag.DD;</span>
+
+    /** Xhtml tag for &lt;code&gt;del&lt;/code&gt;. */
+<span class="fc" id="L185">    Tag DEL = new Tag()</span>
+<span class="fc" id="L186">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L191">            return &quot;del&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;dfn&lt;/code&gt;. */
+<span class="fc" id="L196">    Tag DFN = Tag.DFN;</span>
+
+    /** Xhtml tag for &lt;code&gt;dir&lt;/code&gt;. */
+<span class="fc" id="L199">    Tag DIR = Tag.DIR;</span>
+
+    /** Xhtml tag for &lt;code&gt;div&lt;/code&gt;. */
+<span class="fc" id="L202">    Tag DIV = Tag.DIV;</span>
+
+    /** Xhtml tag for &lt;code&gt;dl&lt;/code&gt;. */
+<span class="fc" id="L205">    Tag DL = Tag.DL;</span>
+
+    /** Xhtml tag for &lt;code&gt;dt&lt;/code&gt;. */
+<span class="fc" id="L208">    Tag DT = Tag.DT;</span>
+
+    /** Xhtml tag for &lt;code&gt;em&lt;/code&gt;. */
+<span class="fc" id="L211">    Tag EM = Tag.EM;</span>
+
+    /** Xhtml tag for &lt;code&gt;fieldset&lt;/code&gt;. */
+<span class="fc" id="L214">    Tag FIELDSET = new Tag()</span>
+<span class="fc" id="L215">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L220">            return &quot;fieldset&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;font&lt;/code&gt;. */
+<span class="fc" id="L225">    Tag FONT = Tag.FONT;</span>
+
+    /** Xhtml tag for &lt;code&gt;form&lt;/code&gt;. */
+<span class="fc" id="L228">    Tag FORM = Tag.FORM;</span>
+
+    /** Xhtml tag for &lt;code&gt;frame&lt;/code&gt;. */
+<span class="fc" id="L231">    Tag FRAME = Tag.FRAME;</span>
+
+    /** Xhtml tag for &lt;code&gt;frameset&lt;/code&gt;. */
+<span class="fc" id="L234">    Tag FRAMESET = Tag.FRAMESET;</span>
+
+    /** Xhtml tag for &lt;code&gt;h1&lt;/code&gt;. */
+<span class="fc" id="L237">    Tag H1 = Tag.H1;</span>
+
+    /** Xhtml tag for &lt;code&gt;h2&lt;/code&gt;. */
+<span class="fc" id="L240">    Tag H2 = Tag.H2 ;</span>
+
+    /** Xhtml tag for &lt;code&gt;h3&lt;/code&gt;. */
+<span class="fc" id="L243">    Tag H3 = Tag.H3;</span>
+
+    /** Xhtml tag for &lt;code&gt;h4&lt;/code&gt;. */
+<span class="fc" id="L246">    Tag H4 = Tag.H4;</span>
+
+    /** Xhtml tag for &lt;code&gt;h5&lt;/code&gt;. */
+<span class="fc" id="L249">    Tag H5 = Tag.H5;</span>
+
+    /** Xhtml tag for &lt;code&gt;h6&lt;/code&gt;. */
+<span class="fc" id="L252">    Tag H6 = Tag.H6;</span>
+
+    /** Xhtml tag for &lt;code&gt;head&lt;/code&gt;. */
+<span class="fc" id="L255">    Tag HEAD = Tag.HEAD;</span>
+
+    /** Xhtml tag for &lt;code&gt;hr&lt;/code&gt;. */
+<span class="fc" id="L258">    Tag HR = Tag.HR;</span>
+
+    /** Xhtml tag for &lt;code&gt;html&lt;/code&gt;. */
+<span class="fc" id="L261">    Tag HTML = Tag.HTML;</span>
+
+    /** Xhtml tag for &lt;code&gt;i&lt;/code&gt;. */
+<span class="fc" id="L264">    Tag I = Tag.I;</span>
+
+    /** Xhtml tag for &lt;code&gt;iframe&lt;/code&gt;. */
+<span class="fc" id="L267">    Tag IFRAME = new Tag()</span>
+<span class="fc" id="L268">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L273">            return &quot;iframe&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;img&lt;/code&gt;. */
+<span class="fc" id="L278">    Tag IMG = Tag.IMG;</span>
+
+    /** Xhtml tag for &lt;code&gt;input&lt;/code&gt;. */
+<span class="fc" id="L281">    Tag INPUT = Tag.INPUT;</span>
+
+    /** Xhtml tag for &lt;code&gt;ins&lt;/code&gt;. */
+<span class="fc" id="L284">    Tag INS = new Tag()</span>
+<span class="fc" id="L285">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L290">            return &quot;ins&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;isindex&lt;/code&gt;. */
+<span class="fc" id="L295">    Tag ISINDEX = Tag.ISINDEX;</span>
+
+    /** Xhtml tag for &lt;code&gt;kbd&lt;/code&gt;. */
+<span class="fc" id="L298">    Tag KBD = Tag.KBD;</span>
+
+    /** Xhtml tag for &lt;code&gt;label&lt;/code&gt;. */
+<span class="fc" id="L301">    Tag LABEL = new Tag()</span>
+<span class="fc" id="L302">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L307">            return &quot;label&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;legend&lt;/code&gt;. */
+<span class="fc" id="L312">    Tag LEGEND = new Tag()</span>
+<span class="fc" id="L313">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L318">            return &quot;legend&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;li&lt;/code&gt;. */
+<span class="fc" id="L323">    Tag LI = Tag.LI;</span>
+
+    /** Xhtml tag for &lt;code&gt;link&lt;/code&gt;. */
+<span class="fc" id="L326">    Tag LINK = Tag.LINK;</span>
+
+    /** Xhtml tag for &lt;code&gt;map&lt;/code&gt;. */
+<span class="fc" id="L329">    Tag MAP = Tag.MAP;</span>
+
+    /** Xhtml tag for &lt;code&gt;menu&lt;/code&gt;. */
+<span class="fc" id="L332">    Tag MENU = Tag.MENU;</span>
+
+    /** Xhtml tag for &lt;code&gt;meta&lt;/code&gt;. */
+<span class="fc" id="L335">    Tag META = Tag.META;</span>
+
+    /** Xhtml tag for &lt;code&gt;noframes&lt;/code&gt;. */
+<span class="fc" id="L338">    Tag NOFRAMES = Tag.NOFRAMES;</span>
+
+    /** Xhtml tag for &lt;code&gt;noscript&lt;/code&gt;. */
+<span class="fc" id="L341">    Tag NOSCRIPT = new Tag()</span>
+<span class="fc" id="L342">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L347">            return &quot;noscript&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;object&lt;/code&gt;. */
+<span class="fc" id="L352">    Tag OBJECT = Tag.OBJECT;</span>
+
+    /** Xhtml tag for &lt;code&gt;ol&lt;/code&gt;. */
+<span class="fc" id="L355">    Tag OL = Tag.OL;</span>
+
+    /** Xhtml tag for &lt;code&gt;optgroup&lt;/code&gt;. */
+<span class="fc" id="L358">    Tag OPTGROUP = new Tag()</span>
+<span class="fc" id="L359">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L364">            return &quot;optgroup&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;option&lt;/code&gt;. */
+<span class="fc" id="L369">    Tag OPTION = Tag.OPTION;</span>
+
+    /** Xhtml tag for &lt;code&gt;p&lt;/code&gt;. */
+<span class="fc" id="L372">    Tag P = Tag.P;</span>
+
+    /** Xhtml tag for &lt;code&gt;param&lt;/code&gt;. */
+<span class="fc" id="L375">    Tag PARAM = Tag.PARAM;</span>
+
+    /** Xhtml tag for &lt;code&gt;pre&lt;/code&gt;. */
+<span class="fc" id="L378">    Tag PRE = Tag.PRE;</span>
+
+    /** Xhtml tag for &lt;code&gt;q&lt;/code&gt;. */
+<span class="fc" id="L381">    Tag Q = new Tag()</span>
+<span class="fc" id="L382">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L387">            return &quot;q&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;s&lt;/code&gt;. */
+<span class="fc" id="L392">    Tag S = Tag.S;</span>
+
+    /** Xhtml tag for &lt;code&gt;samp&lt;/code&gt;. */
+<span class="fc" id="L395">    Tag SAMP = Tag.SAMP;</span>
+
+    /** Xhtml tag for &lt;code&gt;script&lt;/code&gt;. */
+<span class="fc" id="L398">    Tag SCRIPT = Tag.SCRIPT;</span>
+
+    /** Xhtml tag for &lt;code&gt;select&lt;/code&gt;. */
+<span class="fc" id="L401">    Tag SELECT = Tag.SELECT;</span>
+
+    /** Xhtml tag for &lt;code&gt;small&lt;/code&gt;. */
+<span class="fc" id="L404">    Tag SMALL = Tag.SMALL;</span>
+
+    /** Xhtml tag for &lt;code&gt;span&lt;/code&gt;. */
+<span class="fc" id="L407">    Tag SPAN = Tag.SPAN;</span>
+
+    /** Xhtml tag for &lt;code&gt;strike&lt;/code&gt;. */
+<span class="fc" id="L410">    Tag STRIKE = Tag.STRIKE;</span>
+
+    /** Xhtml tag for &lt;code&gt;strong&lt;/code&gt;. */
+<span class="fc" id="L413">    Tag STRONG = Tag.STRONG;</span>
+
+    /** Xhtml tag for &lt;code&gt;style&lt;/code&gt;. */
+<span class="fc" id="L416">    Tag STYLE = Tag.STYLE;</span>
+
+    /** Xhtml tag for &lt;code&gt;sub&lt;/code&gt;. */
+<span class="fc" id="L419">    Tag SUB = Tag.SUB;</span>
+
+    /** Xhtml tag for &lt;code&gt;sup&lt;/code&gt;. */
+<span class="fc" id="L422">    Tag SUP = Tag.SUP;</span>
+
+    /** Xhtml tag for &lt;code&gt;table&lt;/code&gt;. */
+<span class="fc" id="L425">    Tag TABLE = Tag.TABLE;</span>
+
+    /** Xhtml tag for &lt;code&gt;tbody&lt;/code&gt;. */
+<span class="fc" id="L428">    Tag TBODY = new Tag()</span>
+<span class="fc" id="L429">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L434">            return &quot;tbody&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;td&lt;/code&gt;. */
+<span class="fc" id="L439">    Tag TD = Tag.TD;</span>
+
+    /** Xhtml tag for &lt;code&gt;textarea&lt;/code&gt;. */
+<span class="fc" id="L442">    Tag TEXTAREA = Tag.TEXTAREA;</span>
+
+    /** Xhtml tag for &lt;code&gt;tfoot&lt;/code&gt;. */
+<span class="fc" id="L445">    Tag TFOOT = new Tag()</span>
+<span class="fc" id="L446">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L451">            return &quot;tfoot&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;th&lt;/code&gt;. */
+<span class="fc" id="L456">    Tag TH = Tag.TH;</span>
+
+    /** Xhtml tag for &lt;code&gt;thead&lt;/code&gt;. */
+<span class="fc" id="L459">    Tag THEAD = new Tag()</span>
+<span class="fc" id="L460">    {</span>
+        /** {@inheritDoc} */
+        @Override
+        public String toString()
+        {
+<span class="fc" id="L465">            return &quot;thead&quot;;</span>
+        }
+    };
+
+    /** Xhtml tag for &lt;code&gt;title&lt;/code&gt;. */
+<span class="fc" id="L470">    Tag TITLE = Tag.TITLE;</span>
+
+    /** Xhtml tag for &lt;code&gt;tr&lt;/code&gt;. */
+<span class="fc" id="L473">    Tag TR = Tag.TR;</span>
+
+    /** Xhtml tag for &lt;code&gt;tt&lt;/code&gt;. */
+<span class="fc" id="L476">    Tag TT = Tag.TT;</span>
+
+    /** Xhtml tag for &lt;code&gt;u&lt;/code&gt;. */
+<span class="fc" id="L479">    Tag U = Tag.U;</span>
+
+    /** Xhtml tag for &lt;code&gt;ul&lt;/code&gt;. */
+<span class="fc" id="L482">    Tag UL = Tag.UL;</span>
+
+    /** Xhtml tag for &lt;code&gt;var&lt;/code&gt;. */
+<span class="fc" id="L485">    Tag VAR = Tag.VAR ;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

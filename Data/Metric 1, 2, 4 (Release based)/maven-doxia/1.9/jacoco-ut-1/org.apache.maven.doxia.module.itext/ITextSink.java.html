@@ -1,0 +1,1888 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ITextSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: iText Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.itext</a> &gt; <span class="el_source">ITextSink.java</span></div><h1>ITextSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.itext;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import com.lowagie.text.BadElementException;
+import com.lowagie.text.ElementTags;
+import com.lowagie.text.Image;
+
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.AbstractXmlSink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.util.DoxiaUtils;
+import org.apache.maven.doxia.util.HtmlTools;
+
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.PrettyPrintXMLWriter;
+import org.codehaus.plexus.util.xml.XMLWriter;
+
+/**
+ * &lt;p&gt;A doxia Sink which produces an XML Front End document for &lt;code&gt;iText&lt;/code&gt; framework.&lt;/p&gt;
+ * Known limitations:
+ * &lt;ul&gt;
+ * &lt;li&gt;Roman lists are not supported.&lt;/li&gt;
+ * &lt;li&gt;Horizontal rule is not supported with 1.3.
+ * See &lt;a href=&quot;http://www.mail-archive.com/itext-questions@lists.sourceforge.net/msg10323.html&quot;&gt;
+ * http://www.mail-archive.com/itext-questions@lists.sourceforge.net/msg10323.html&lt;/a&gt;&lt;/li&gt;
+ * &lt;li&gt;iText has some problems with &lt;code&gt;ElementTags.TABLE&lt;/code&gt; and &lt;code&gt;ElementTags.TABLEFITSPAGE&lt;/code&gt;.
+ * See &lt;a href=&quot;http://sourceforge.net/tracker/index.php?func=detail&amp;aid=786427&amp;group_id=15255&amp;atid=115255&quot;&gt;
+ * SourceForce Tracker&lt;/a&gt;.&lt;/li&gt;
+ * &lt;li&gt;Images could be on another page and next text on the last one.&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * @see &lt;a href=&quot;http://www.lowagie.com/iText/tutorial/ch07.html&quot;&gt;http://www.lowagie.com/iText/tutorial/ch07.html&lt;/a&gt;
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ */
+public class ITextSink
+    extends AbstractXmlSink
+{
+    /** This is the place where the iText DTD is located. IMPORTANT: this DTD is not uptodate! */
+    public static final String DTD = &quot;http://itext.sourceforge.net/itext.dtd&quot;;
+
+    /** This is the reference to the DTD. */
+    public static final String DOCTYPE = &quot;ITEXT SYSTEM \&quot;&quot; + DTD + &quot;\&quot;&quot;;
+
+    /** This is the default leading for chapter title */
+    public static final String DEFAULT_CHAPTER_TITLE_LEADING = &quot;36.0&quot;;
+
+    /** This is the default leading for section title */
+    public static final String DEFAULT_SECTION_TITLE_LEADING = &quot;24.0&quot;;
+
+    /** The ClassLoader used */
+    private ClassLoader currentClassLoader;
+
+    /** The action context */
+    private SinkActionContext actionContext;
+
+    /** The Writer used */
+    private Writer writer;
+
+    /** The XML Writer used */
+    private final XMLWriter xmlWriter;
+
+    private boolean writeStart;
+
+    /** The Header object */
+    private ITextHeader header;
+
+    /** The font object */
+    private ITextFont font;
+
+<span class="fc" id="L110">    private int numberDepth = 1;</span>
+
+<span class="fc" id="L112">    private int depth = 0;</span>
+
+<span class="fc" id="L114">    private StringWriter tableCaptionWriter = null;</span>
+
+<span class="fc" id="L116">    private XMLWriter tableCaptionXMLWriter = null;</span>
+
+    /** Flag to know if an anchor is defined or not. Used as workaround for iText which needs a defined local
+     * destination. */
+<span class="fc" id="L120">    private boolean anchorDefined = false;</span>
+
+    /** Flag to know if an figure event is called. */
+<span class="fc" id="L123">    private boolean figureDefined = false;</span>
+
+    /** Keep track of the closing tags for inline events. */
+<span class="fc" id="L126">    protected Stack&lt;List&lt;String&gt;&gt; inlineStack = new Stack&lt;&gt;();</span>
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    private Map&lt;String, Set&lt;String&gt;&gt; warnMessages;
+
+    /**
+     * &lt;p&gt;Constructor for ITextSink.&lt;/p&gt;
+     *
+     * @param writer the writer.
+     */
+    protected ITextSink( Writer writer )
+    {
+<span class="fc" id="L139">        this( writer, &quot;UTF-8&quot; );</span>
+<span class="fc" id="L140">    }</span>
+
+    /**
+     * &lt;p&gt;Constructor for ITextSink.&lt;/p&gt;
+     *
+     * @param writer the writer.
+     * @param encoding the encoding.
+     * @since 1.1
+     */
+    protected ITextSink( Writer writer, String encoding )
+    {
+        // No doctype since itext doctype is not up to date!
+<span class="fc" id="L152">        this( new PrettyPrintXMLWriter( writer, encoding, null ) );</span>
+
+<span class="fc" id="L154">        this.writer = writer;</span>
+<span class="fc" id="L155">        this.writeStart = true;</span>
+<span class="fc" id="L156">    }</span>
+
+    /**
+     * &lt;p&gt;Constructor for ITextSink.&lt;/p&gt;
+     *
+     * @param xmlWriter a pretty-printing xml writer.
+     */
+    protected ITextSink( PrettyPrintXMLWriter xmlWriter )
+<span class="fc" id="L164">    {</span>
+<span class="fc" id="L165">        this.xmlWriter = xmlWriter;</span>
+
+<span class="fc" id="L167">        this.writeStart = false;</span>
+
+<span class="fc" id="L169">        init();</span>
+<span class="fc" id="L170">    }</span>
+
+    /**
+     * Get the current classLoader
+     *
+     * @return the current class loader
+     */
+    public ClassLoader getClassLoader()
+    {
+<span class="fc" id="L179">        return currentClassLoader;</span>
+    }
+
+    /**
+     * Set a new class loader
+     *
+     * @param cl the class loader.
+     */
+    public void setClassLoader( ClassLoader cl )
+    {
+<span class="fc" id="L189">        currentClassLoader = cl;</span>
+<span class="fc" id="L190">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Document
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void close()
+    {
+<span class="fc" id="L199">        IOUtil.close( writer );</span>
+
+<span class="fc" id="L201">        init();</span>
+<span class="fc" id="L202">    }</span>
+
+    /** {@inheritDoc} */
+    public void flush()
+    {
+<span class="pc bpc" id="L207" title="2 of 4 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null )</span>
+        {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">            for ( Map.Entry&lt;String, Set&lt;String&gt;&gt; entry : this.warnMessages.entrySet() )</span>
+            {
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                for ( String msg : entry.getValue() )</span>
+                {
+<span class="nc" id="L213">                    getLog().warn( msg );</span>
+<span class="nc" id="L214">                }</span>
+<span class="nc" id="L215">            }</span>
+        }
+
+<span class="fc" id="L218">        this.warnMessages = null;</span>
+<span class="fc" id="L219">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Header
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void head_()
+    {
+<span class="fc" id="L228">        actionContext.release();</span>
+<span class="fc" id="L229">    }</span>
+
+    /** {@inheritDoc} */
+    public void head()
+    {
+        //init(); // why? this causes DOXIA-413
+
+<span class="fc" id="L236">        actionContext.setAction( SinkActionContext.HEAD );</span>
+<span class="fc" id="L237">    }</span>
+
+    /** {@inheritDoc} */
+    public void author_()
+    {
+<span class="fc" id="L242">        actionContext.release();</span>
+<span class="fc" id="L243">    }</span>
+
+    /** {@inheritDoc} */
+    public void author()
+    {
+<span class="fc" id="L248">        actionContext.setAction( SinkActionContext.AUTHOR );</span>
+<span class="fc" id="L249">    }</span>
+
+    /** {@inheritDoc} */
+    public void date_()
+    {
+<span class="fc" id="L254">        actionContext.release();</span>
+<span class="fc" id="L255">    }</span>
+
+    /** {@inheritDoc} */
+    public void date()
+    {
+<span class="fc" id="L260">        actionContext.setAction( SinkActionContext.DATE );</span>
+<span class="fc" id="L261">    }</span>
+
+    /** {@inheritDoc} */
+    public void title_()
+    {
+<span class="fc" id="L266">        actionContext.release();</span>
+<span class="fc" id="L267">    }</span>
+
+    /** {@inheritDoc} */
+    public void title()
+    {
+<span class="fc" id="L272">        actionContext.setAction( SinkActionContext.TITLE );</span>
+<span class="fc" id="L273">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Body
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void body_()
+    {
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">        if ( writeStart )</span>
+        {
+<span class="fc" id="L284">            writeEndElement(); // ElementTags.CHAPTER</span>
+
+<span class="fc" id="L286">            writeEndElement(); // ElementTags.ITEXT</span>
+        }
+
+<span class="fc" id="L289">        actionContext.release();</span>
+<span class="fc" id="L290">    }</span>
+
+    /** {@inheritDoc} */
+    public void body()
+    {
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">        if ( writeStart )</span>
+        {
+<span class="fc" id="L297">            writeStartElement( ElementTags.ITEXT );</span>
+<span class="fc" id="L298">            writeAddAttribute( ElementTags.TITLE, header.getTitle() );</span>
+<span class="fc" id="L299">            writeAddAttribute( ElementTags.AUTHOR, header.getAuthors() );</span>
+<span class="fc" id="L300">            writeAddAttribute( ElementTags.CREATIONDATE, header.getDate() );</span>
+<span class="fc" id="L301">            writeAddAttribute( ElementTags.SUBJECT, header.getTitle() );</span>
+<span class="fc" id="L302">            writeAddAttribute( ElementTags.KEYWORDS, &quot;&quot; );</span>
+<span class="fc" id="L303">            writeAddAttribute( ElementTags.PRODUCER, &quot;Generated with Doxia by &quot; + System.getProperty( &quot;user.name&quot; ) );</span>
+<span class="fc" id="L304">            writeAddAttribute( ElementTags.PAGE_SIZE, ITextUtil.getPageSize( ITextUtil.getDefaultPageSize() ) );</span>
+
+<span class="fc" id="L306">            writeStartElement( ElementTags.CHAPTER );</span>
+<span class="fc" id="L307">            writeAddAttribute( ElementTags.NUMBERDEPTH, numberDepth );</span>
+<span class="fc" id="L308">            writeAddAttribute( ElementTags.DEPTH, depth );</span>
+<span class="fc" id="L309">            writeAddAttribute( ElementTags.INDENT, &quot;0.0&quot; );</span>
+
+<span class="fc" id="L311">            writeStartElement( ElementTags.TITLE );</span>
+<span class="fc" id="L312">            writeAddAttribute( ElementTags.LEADING, DEFAULT_CHAPTER_TITLE_LEADING );</span>
+<span class="fc" id="L313">            writeAddAttribute( ElementTags.FONT, ITextFont.DEFAULT_FONT_NAME );</span>
+<span class="fc" id="L314">            writeAddAttribute( ElementTags.SIZE, ITextFont.getSectionFontSize( 0 ) );</span>
+<span class="fc" id="L315">            writeAddAttribute( ElementTags.STYLE, ITextFont.BOLD );</span>
+<span class="fc" id="L316">            writeAddAttribute( ElementTags.BLUE, ITextFont.DEFAULT_FONT_COLOR_BLUE );</span>
+<span class="fc" id="L317">            writeAddAttribute( ElementTags.GREEN, ITextFont.DEFAULT_FONT_COLOR_GREEN );</span>
+<span class="fc" id="L318">            writeAddAttribute( ElementTags.RED, ITextFont.DEFAULT_FONT_COLOR_RED );</span>
+<span class="fc" id="L319">            writeAddAttribute( ElementTags.ALIGN, ElementTags.ALIGN_CENTER );</span>
+
+//            startChunk( ITextFont.DEFAULT_FONT_NAME, ITextFont.getSectionFontSize( 0 ),
+//                    ITextFont.BOLD, ITextFont.DEFAULT_FONT_COLOR_BLUE, ITextFont.DEFAULT_FONT_COLOR_GREEN,
+//                    ITextFont.DEFAULT_FONT_COLOR_RED, &quot;top&quot; );
+
+<span class="fc" id="L325">            writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L326">            writeAddAttribute( ElementTags.FONT, ITextFont.DEFAULT_FONT_NAME );</span>
+<span class="fc" id="L327">            writeAddAttribute( ElementTags.SIZE, ITextFont.getSectionFontSize( 0 ) );</span>
+<span class="fc" id="L328">            writeAddAttribute( ElementTags.STYLE, ITextFont.BOLD );</span>
+<span class="fc" id="L329">            writeAddAttribute( ElementTags.BLUE, ITextFont.DEFAULT_FONT_COLOR_BLUE );</span>
+<span class="fc" id="L330">            writeAddAttribute( ElementTags.GREEN, ITextFont.DEFAULT_FONT_COLOR_GREEN );</span>
+<span class="fc" id="L331">            writeAddAttribute( ElementTags.RED, ITextFont.DEFAULT_FONT_COLOR_RED );</span>
+//            writeAddAttribute( ElementTags.LOCALDESTINATION, &quot;top&quot; );
+
+<span class="fc" id="L334">            write( header.getTitle() );</span>
+
+<span class="fc" id="L336">            writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L338">            writeEndElement(); // ElementTags.TITLE</span>
+        }
+
+<span class="fc" id="L341">        actionContext.setAction( SinkActionContext.BODY );</span>
+<span class="fc" id="L342">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Sections
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void sectionTitle()
+    {
+<span class="nc" id="L351">        actionContext.release();</span>
+<span class="nc" id="L352">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle_()
+    {
+<span class="nc" id="L357">        actionContext.setAction( SinkActionContext.SECTION_TITLE );</span>
+<span class="nc" id="L358">    }</span>
+
+    /** {@inheritDoc} */
+    public void section1_()
+    {
+<span class="fc" id="L363">        writeEndElement(); // ElementTags.SECTION</span>
+
+<span class="fc" id="L365">        numberDepth--;</span>
+<span class="fc" id="L366">        depth = 0;</span>
+
+<span class="fc" id="L368">        actionContext.release();</span>
+<span class="fc" id="L369">    }</span>
+
+    /** {@inheritDoc} */
+    public void section1()
+    {
+<span class="fc" id="L374">        numberDepth++;</span>
+<span class="fc" id="L375">        depth = 1;</span>
+
+<span class="fc" id="L377">        writeStartElement( ElementTags.SECTION );</span>
+<span class="fc" id="L378">        writeAddAttribute( ElementTags.NUMBERDEPTH, numberDepth );</span>
+<span class="fc" id="L379">        writeAddAttribute( ElementTags.DEPTH, depth );</span>
+<span class="fc" id="L380">        writeAddAttribute( ElementTags.INDENT, &quot;0.0&quot; );</span>
+
+<span class="fc" id="L382">        lineBreak();</span>
+
+<span class="fc" id="L384">        actionContext.setAction( SinkActionContext.SECTION_1 );</span>
+<span class="fc" id="L385">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle1_()
+    {
+<span class="fc" id="L390">        writeEndElement(); // ElementTags.TITLE</span>
+
+<span class="fc" id="L392">        font.setSize( ITextFont.DEFAULT_FONT_SIZE );</span>
+<span class="fc" id="L393">        bold_();</span>
+
+<span class="fc" id="L395">        actionContext.release();</span>
+<span class="fc" id="L396">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle1()
+    {
+<span class="fc" id="L401">        font.setSize( ITextFont.getSectionFontSize( 1 ) );</span>
+<span class="fc" id="L402">        font.setColor( Color.BLACK );</span>
+<span class="fc" id="L403">        bold();</span>
+
+<span class="fc" id="L405">        writeStartElement( ElementTags.TITLE );</span>
+<span class="fc" id="L406">        writeAddAttribute( ElementTags.LEADING, DEFAULT_SECTION_TITLE_LEADING );</span>
+<span class="fc" id="L407">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L408">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L409">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L410">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L411">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L412">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+//        writeAddAttribute( ElementTags.LOCALDESTINATION, &quot;top&quot; ); // trygve
+
+<span class="fc" id="L415">        actionContext.setAction( SinkActionContext.SECTION_TITLE_1 );</span>
+<span class="fc" id="L416">    }</span>
+
+    /** {@inheritDoc} */
+    public void section2_()
+    {
+<span class="fc" id="L421">        writeEndElement(); // ElementTags.SECTION</span>
+
+<span class="fc" id="L423">        numberDepth--;</span>
+<span class="fc" id="L424">        depth = 0;</span>
+
+<span class="fc" id="L426">        actionContext.release();</span>
+<span class="fc" id="L427">    }</span>
+
+    /** {@inheritDoc} */
+    public void section2()
+    {
+<span class="fc" id="L432">        numberDepth++;</span>
+<span class="fc" id="L433">        depth = 1;</span>
+
+<span class="fc" id="L435">        writeStartElement( ElementTags.SECTION );</span>
+<span class="fc" id="L436">        writeAddAttribute( ElementTags.NUMBERDEPTH, numberDepth );</span>
+<span class="fc" id="L437">        writeAddAttribute( ElementTags.DEPTH, depth );</span>
+<span class="fc" id="L438">        writeAddAttribute( ElementTags.INDENT, &quot;0.0&quot; );</span>
+
+<span class="fc" id="L440">        lineBreak();</span>
+
+<span class="fc" id="L442">        actionContext.setAction( SinkActionContext.SECTION_2 );</span>
+<span class="fc" id="L443">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle2_()
+    {
+<span class="fc" id="L448">        writeEndElement(); // ElementTags.TITLE</span>
+
+<span class="fc" id="L450">        font.setSize( ITextFont.DEFAULT_FONT_SIZE );</span>
+<span class="fc" id="L451">        bold_();</span>
+
+<span class="fc" id="L453">        actionContext.release();</span>
+<span class="fc" id="L454">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle2()
+    {
+<span class="fc" id="L459">        font.setSize( ITextFont.getSectionFontSize( 2 ) );</span>
+<span class="fc" id="L460">        font.setColor( Color.BLACK );</span>
+<span class="fc" id="L461">        bold();</span>
+
+<span class="fc" id="L463">        writeStartElement( ElementTags.TITLE );</span>
+<span class="fc" id="L464">        writeAddAttribute( ElementTags.LEADING, DEFAULT_SECTION_TITLE_LEADING );</span>
+<span class="fc" id="L465">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L466">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L467">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L468">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L469">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L470">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+//        writeAddAttribute( ElementTags.LOCALDESTINATION, &quot;top&quot; ); // trygve
+
+<span class="fc" id="L473">        actionContext.setAction( SinkActionContext.SECTION_TITLE_2 );</span>
+<span class="fc" id="L474">    }</span>
+
+    /** {@inheritDoc} */
+    public void section3_()
+    {
+<span class="fc" id="L479">        writeEndElement(); // ElementTags.SECTION</span>
+
+<span class="fc" id="L481">        numberDepth--;</span>
+<span class="fc" id="L482">        depth = 1;</span>
+
+<span class="fc" id="L484">        actionContext.release();</span>
+<span class="fc" id="L485">    }</span>
+
+    /** {@inheritDoc} */
+    public void section3()
+    {
+<span class="fc" id="L490">        numberDepth++;</span>
+<span class="fc" id="L491">        depth = 1;</span>
+
+<span class="fc" id="L493">        writeStartElement( ElementTags.SECTION );</span>
+<span class="fc" id="L494">        writeAddAttribute( ElementTags.NUMBERDEPTH, numberDepth );</span>
+<span class="fc" id="L495">        writeAddAttribute( ElementTags.DEPTH, depth );</span>
+<span class="fc" id="L496">        writeAddAttribute( ElementTags.INDENT, &quot;0.0&quot; );</span>
+
+<span class="fc" id="L498">        lineBreak();</span>
+
+<span class="fc" id="L500">        actionContext.setAction( SinkActionContext.SECTION_3 );</span>
+<span class="fc" id="L501">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle3_()
+    {
+<span class="fc" id="L506">        writeEndElement(); // ElementTags.TITLE</span>
+
+<span class="fc" id="L508">        font.setSize( ITextFont.DEFAULT_FONT_SIZE );</span>
+<span class="fc" id="L509">        bold_();</span>
+
+<span class="fc" id="L511">        actionContext.release();</span>
+<span class="fc" id="L512">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle3()
+    {
+<span class="fc" id="L517">        font.setSize( ITextFont.getSectionFontSize( 3 ) );</span>
+<span class="fc" id="L518">        font.setColor( Color.BLACK );</span>
+<span class="fc" id="L519">        bold();</span>
+
+<span class="fc" id="L521">        writeStartElement( ElementTags.TITLE );</span>
+<span class="fc" id="L522">        writeAddAttribute( ElementTags.LEADING, DEFAULT_SECTION_TITLE_LEADING );</span>
+<span class="fc" id="L523">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L524">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L525">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L526">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L527">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L528">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+//        writeAddAttribute( ElementTags.LOCALDESTINATION, &quot;top&quot; ); // trygve
+
+<span class="fc" id="L531">        actionContext.setAction( SinkActionContext.SECTION_TITLE_3 );</span>
+<span class="fc" id="L532">    }</span>
+
+    /** {@inheritDoc} */
+    public void section4_()
+    {
+<span class="fc" id="L537">        writeEndElement(); // ElementTags.SECTION</span>
+
+<span class="fc" id="L539">        numberDepth--;</span>
+<span class="fc" id="L540">        depth = 1;</span>
+
+<span class="fc" id="L542">        actionContext.release();</span>
+<span class="fc" id="L543">    }</span>
+
+    /** {@inheritDoc} */
+    public void section4()
+    {
+<span class="fc" id="L548">        numberDepth++;</span>
+<span class="fc" id="L549">        depth = 1;</span>
+
+<span class="fc" id="L551">        writeStartElement( ElementTags.SECTION );</span>
+<span class="fc" id="L552">        writeAddAttribute( ElementTags.NUMBERDEPTH, numberDepth );</span>
+<span class="fc" id="L553">        writeAddAttribute( ElementTags.DEPTH, depth );</span>
+<span class="fc" id="L554">        writeAddAttribute( ElementTags.INDENT, &quot;0.0&quot; );</span>
+
+<span class="fc" id="L556">        lineBreak();</span>
+
+<span class="fc" id="L558">        actionContext.setAction( SinkActionContext.SECTION_4 );</span>
+<span class="fc" id="L559">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle4_()
+    {
+<span class="fc" id="L564">        writeEndElement(); // ElementTags.TITLE</span>
+
+<span class="fc" id="L566">        font.setSize( ITextFont.DEFAULT_FONT_SIZE );</span>
+<span class="fc" id="L567">        bold_();</span>
+
+<span class="fc" id="L569">        actionContext.release();</span>
+<span class="fc" id="L570">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle4()
+    {
+<span class="fc" id="L575">        font.setSize( ITextFont.getSectionFontSize( 4 ) );</span>
+<span class="fc" id="L576">        font.setColor( Color.BLACK );</span>
+<span class="fc" id="L577">        bold();</span>
+
+<span class="fc" id="L579">        writeStartElement( ElementTags.TITLE );</span>
+<span class="fc" id="L580">        writeAddAttribute( ElementTags.LEADING, DEFAULT_SECTION_TITLE_LEADING );</span>
+<span class="fc" id="L581">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L582">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L583">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L584">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L585">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L586">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+//        writeAddAttribute( ElementTags.LOCALDESTINATION, &quot;top&quot; ); // trygve
+
+<span class="fc" id="L589">        actionContext.setAction( SinkActionContext.SECTION_TITLE_4 );</span>
+<span class="fc" id="L590">    }</span>
+
+    /** {@inheritDoc} */
+    public void section5_()
+    {
+<span class="fc" id="L595">        writeEndElement(); // ElementTags.SECTION</span>
+
+<span class="fc" id="L597">        numberDepth--;</span>
+<span class="fc" id="L598">        depth = 1;</span>
+
+<span class="fc" id="L600">        actionContext.release();</span>
+<span class="fc" id="L601">    }</span>
+
+    /** {@inheritDoc} */
+    public void section5()
+    {
+<span class="fc" id="L606">        numberDepth++;</span>
+<span class="fc" id="L607">        depth = 1;</span>
+
+<span class="fc" id="L609">        writeStartElement( ElementTags.SECTION );</span>
+<span class="fc" id="L610">        writeAddAttribute( ElementTags.NUMBERDEPTH, numberDepth );</span>
+<span class="fc" id="L611">        writeAddAttribute( ElementTags.DEPTH, depth );</span>
+<span class="fc" id="L612">        writeAddAttribute( ElementTags.INDENT, &quot;0.0&quot; );</span>
+
+<span class="fc" id="L614">        lineBreak();</span>
+
+<span class="fc" id="L616">        actionContext.setAction( SinkActionContext.SECTION_5 );</span>
+<span class="fc" id="L617">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle5_()
+    {
+<span class="fc" id="L622">        writeEndElement(); // ElementTags.TITLE</span>
+
+<span class="fc" id="L624">        font.setSize( ITextFont.DEFAULT_FONT_SIZE );</span>
+<span class="fc" id="L625">        bold_();</span>
+
+<span class="fc" id="L627">        actionContext.release();</span>
+<span class="fc" id="L628">    }</span>
+
+    /** {@inheritDoc} */
+    public void sectionTitle5()
+    {
+<span class="fc" id="L633">        font.setSize( ITextFont.getSectionFontSize( 5 ) );</span>
+<span class="fc" id="L634">        font.setColor( Color.BLACK );</span>
+<span class="fc" id="L635">        bold();</span>
+
+<span class="fc" id="L637">        writeStartElement( ElementTags.TITLE );</span>
+<span class="fc" id="L638">        writeAddAttribute( ElementTags.LEADING, DEFAULT_SECTION_TITLE_LEADING );</span>
+<span class="fc" id="L639">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L640">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L641">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L642">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L643">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L644">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+//        writeAddAttribute( ElementTags.LOCALDESTINATION, &quot;top&quot; ); // trygve
+
+<span class="fc" id="L647">        actionContext.setAction( SinkActionContext.SECTION_TITLE_5 );</span>
+<span class="fc" id="L648">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Paragraph
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void paragraph_()
+    {
+        // Special case
+<span class="fc bfc" id="L658" title="All 2 branches covered.">        if ( ( actionContext.getCurrentAction() == SinkActionContext.LIST_ITEM )</span>
+<span class="pc bpc" id="L659" title="1 of 2 branches missed.">            || ( actionContext.getCurrentAction() == SinkActionContext.NUMBERED_LIST_ITEM )</span>
+<span class="pc bpc" id="L660" title="1 of 2 branches missed.">            || ( actionContext.getCurrentAction() == SinkActionContext.DEFINITION ) )</span>
+        {
+<span class="fc" id="L662">            return;</span>
+        }
+
+<span class="fc" id="L665">        writeEndElement(); // ElementTags.PARAGRAPH</span>
+
+<span class="fc" id="L667">        actionContext.release();</span>
+<span class="fc" id="L668">    }</span>
+
+    /** {@inheritDoc} */
+    public void paragraph()
+    {
+        // Special case
+<span class="fc bfc" id="L674" title="All 2 branches covered.">        if ( ( actionContext.getCurrentAction() == SinkActionContext.LIST_ITEM )</span>
+<span class="pc bpc" id="L675" title="1 of 2 branches missed.">            || ( actionContext.getCurrentAction() == SinkActionContext.NUMBERED_LIST_ITEM )</span>
+<span class="pc bpc" id="L676" title="1 of 2 branches missed.">            || ( actionContext.getCurrentAction() == SinkActionContext.DEFINITION ) )</span>
+        {
+<span class="fc" id="L678">            return;</span>
+        }
+
+<span class="fc" id="L681">        writeStartElement( ElementTags.PARAGRAPH );</span>
+<span class="fc" id="L682">        writeStartElement( ElementTags.NEWLINE );</span>
+<span class="fc" id="L683">        writeEndElement();</span>
+
+<span class="fc" id="L685">        actionContext.setAction( SinkActionContext.PARAGRAPH );</span>
+<span class="fc" id="L686">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Lists
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void list_()
+    {
+<span class="fc" id="L695">        writeEndElement(); // ElementTags.LIST</span>
+
+<span class="fc" id="L697">        writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L699">        actionContext.release();</span>
+<span class="fc" id="L700">    }</span>
+
+    /** {@inheritDoc} */
+    public void list()
+    {
+<span class="fc" id="L705">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L706">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L707">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L708">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L709">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L710">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L711">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L713">        writeStartElement( ElementTags.LIST );</span>
+<span class="fc" id="L714">        writeAddAttribute( ElementTags.NUMBERED, Boolean.FALSE.toString() );</span>
+<span class="fc" id="L715">        writeAddAttribute( ElementTags.SYMBOLINDENT, &quot;15&quot; );</span>
+
+<span class="fc" id="L717">        actionContext.setAction( SinkActionContext.LIST );</span>
+<span class="fc" id="L718">    }</span>
+
+    /** {@inheritDoc} */
+    public void listItem_()
+    {
+<span class="fc" id="L723">        writeEndElement(); // ElementTags.LISTITEM</span>
+
+<span class="fc" id="L725">        actionContext.release();</span>
+<span class="fc" id="L726">    }</span>
+
+    /** {@inheritDoc} */
+    public void listItem()
+    {
+<span class="fc" id="L731">        writeStartElement( ElementTags.LISTITEM );</span>
+<span class="fc" id="L732">        writeAddAttribute( ElementTags.INDENTATIONLEFT, &quot;20.0&quot; );</span>
+
+<span class="fc" id="L734">        actionContext.setAction( SinkActionContext.LIST_ITEM );</span>
+<span class="fc" id="L735">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList_()
+    {
+<span class="fc" id="L740">        writeEndElement(); // ElementTags.LIST</span>
+
+<span class="fc" id="L742">        writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L744">        actionContext.release();</span>
+<span class="fc" id="L745">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedList( int numbering )
+    {
+<span class="fc" id="L750">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L751">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L752">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L753">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L754">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L755">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L756">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L758">        writeStartElement( ElementTags.LIST );</span>
+<span class="fc" id="L759">        writeAddAttribute( ElementTags.NUMBERED, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L760">        writeAddAttribute( ElementTags.SYMBOLINDENT, &quot;20&quot; );</span>
+
+<span class="pc bpc" id="L762" title="3 of 5 branches missed.">        switch ( numbering )</span>
+        {
+            case Sink.NUMBERING_UPPER_ALPHA:
+<span class="fc" id="L765">                writeAddAttribute( ElementTags.LETTERED, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L766">                writeAddAttribute( ElementTags.FIRST, 'A' );</span>
+<span class="fc" id="L767">                break;</span>
+
+            case Sink.NUMBERING_LOWER_ALPHA:
+<span class="nc" id="L770">                writeAddAttribute( ElementTags.LETTERED, Boolean.TRUE.toString() );</span>
+<span class="nc" id="L771">                writeAddAttribute( ElementTags.FIRST, 'a' );</span>
+<span class="nc" id="L772">                break;</span>
+
+            // TODO Doesn't work
+            case Sink.NUMBERING_UPPER_ROMAN:
+<span class="nc" id="L776">                writeAddAttribute( ElementTags.LETTERED, Boolean.TRUE.toString() );</span>
+<span class="nc" id="L777">                writeAddAttribute( ElementTags.FIRST, 'I' );</span>
+<span class="nc" id="L778">                break;</span>
+
+            case Sink.NUMBERING_LOWER_ROMAN:
+<span class="nc" id="L781">                writeAddAttribute( ElementTags.LETTERED, Boolean.TRUE.toString() );</span>
+<span class="nc" id="L782">                writeAddAttribute( ElementTags.FIRST, 'i' );</span>
+<span class="nc" id="L783">                break;</span>
+
+            case Sink.NUMBERING_DECIMAL:
+            default:
+<span class="fc" id="L787">                writeAddAttribute( ElementTags.LETTERED, Boolean.FALSE.toString() );</span>
+        }
+
+<span class="fc" id="L790">        actionContext.setAction( SinkActionContext.NUMBERED_LIST );</span>
+<span class="fc" id="L791">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedListItem_()
+    {
+<span class="fc" id="L796">        writeEndElement(); // ElementTags.LISTITEM</span>
+
+<span class="fc" id="L798">        actionContext.release();</span>
+<span class="fc" id="L799">    }</span>
+
+    /** {@inheritDoc} */
+    public void numberedListItem()
+    {
+<span class="fc" id="L804">        writeStartElement( ElementTags.LISTITEM );</span>
+<span class="fc" id="L805">        writeAddAttribute( ElementTags.INDENTATIONLEFT, &quot;20&quot; );</span>
+
+<span class="fc" id="L807">        actionContext.setAction( SinkActionContext.NUMBERED_LIST_ITEM );</span>
+<span class="fc" id="L808">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionList_()
+    {
+<span class="fc" id="L813">        actionContext.release();</span>
+<span class="fc" id="L814">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionList()
+    {
+<span class="fc" id="L819">        lineBreak();</span>
+
+<span class="fc" id="L821">        actionContext.setAction( SinkActionContext.DEFINITION_LIST );</span>
+<span class="fc" id="L822">    }</span>
+
+    /** {@inheritDoc} */
+    public void definedTerm_()
+    {
+<span class="fc" id="L827">        font.setSize( ITextFont.DEFAULT_FONT_SIZE );</span>
+<span class="fc" id="L828">        bold_();</span>
+
+<span class="fc" id="L830">        writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L832">        actionContext.release();</span>
+
+<span class="fc" id="L834">        lineBreak();</span>
+<span class="fc" id="L835">    }</span>
+
+    /** {@inheritDoc} */
+    public void definedTerm()
+    {
+<span class="fc" id="L840">        font.setSize( ITextFont.DEFAULT_FONT_SIZE + 2 );</span>
+<span class="fc" id="L841">        bold();</span>
+
+<span class="fc" id="L843">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L844">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L845">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L846">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L847">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L848">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L849">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L851">        actionContext.setAction( SinkActionContext.DEFINED_TERM );</span>
+<span class="fc" id="L852">    }</span>
+
+    /** {@inheritDoc} */
+    public void definition_()
+    {
+<span class="fc" id="L857">        writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L859">        actionContext.release();</span>
+
+<span class="fc" id="L861">        lineBreak();</span>
+<span class="fc" id="L862">    }</span>
+
+    /** {@inheritDoc} */
+    public void definition()
+    {
+<span class="fc" id="L867">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L868">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L869">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L870">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L871">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L872">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L873">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+
+<span class="fc" id="L876">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L877">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L878">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L879">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L880">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L881">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L882">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+        // We need to add a non break space first to display empty string
+<span class="fc" id="L885">        write( &quot;\u00A0&quot; + StringUtils.repeat( &quot; &quot;, 16 ), false, false );</span>
+
+<span class="fc" id="L887">        writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L889">        actionContext.setAction( SinkActionContext.DEFINITION );</span>
+<span class="fc" id="L890">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionListItem_()
+    {
+<span class="fc" id="L895">        actionContext.release();</span>
+<span class="fc" id="L896">    }</span>
+
+    /** {@inheritDoc} */
+    public void definitionListItem()
+    {
+<span class="fc" id="L901">        actionContext.setAction( SinkActionContext.DEFINITION_LIST_ITEM );</span>
+<span class="fc" id="L902">    }</span>
+
+    // ----------------------------------------------------------------------
+    //  Tables
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void table_()
+    {
+<span class="fc bfc" id="L911" title="All 2 branches covered.">        if ( tableCaptionXMLWriter != null )</span>
+        {
+<span class="fc" id="L913">            tableCaptionXMLWriter = null;</span>
+
+<span class="fc" id="L915">            writeEndElement(); // ElementTags.TABLE</span>
+
+<span class="fc" id="L917">            writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L919">            writeStartElement( ElementTags.PARAGRAPH );</span>
+<span class="fc" id="L920">            writeAddAttribute( ElementTags.ALIGN, ElementTags.ALIGN_CENTER );</span>
+
+<span class="fc" id="L922">            write( tableCaptionWriter.toString(), true );</span>
+
+<span class="fc" id="L924">            writeEndElement(); // ElementTags.PARAGRAPH</span>
+
+<span class="fc" id="L926">            tableCaptionWriter = null;</span>
+        }
+        else
+        {
+<span class="fc" id="L930">            writeEndElement(); // ElementTags.TABLE</span>
+
+<span class="fc" id="L932">            writeEndElement(); // ElementTags.CHUNK</span>
+        }
+<span class="fc" id="L934">        actionContext.release();</span>
+<span class="fc" id="L935">    }</span>
+
+    /** {@inheritDoc} */
+    public void table()
+    {
+<span class="fc" id="L940">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L941">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L942">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L943">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L944">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L945">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L946">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L948">        writeStartElement( ElementTags.TABLE );</span>
+<span class="fc" id="L949">        writeAddAttribute( ElementTags.LEFT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L950">        writeAddAttribute( ElementTags.RIGHT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L951">        writeAddAttribute( ElementTags.TOP, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L952">        writeAddAttribute( ElementTags.BOTTOM, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L953">        writeAddAttribute( ElementTags.ALIGN, ElementTags.ALIGN_CENTER );</span>
+<span class="fc" id="L954">        writeAddAttribute( ElementTags.WIDTH, &quot;100.0%&quot; );</span>
+<span class="fc" id="L955">        writeAddAttribute( ElementTags.TABLEFITSPAGE, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L956">        writeAddAttribute( ElementTags.CELLSFITPAGE, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L957">        writeAddAttribute( ElementTags.CELLPADDING, &quot;10&quot; );</span>
+        //writeAddAttribute( ElementTags.COLUMNS, &quot;2&quot; );
+
+<span class="fc" id="L960">        actionContext.setAction( SinkActionContext.TABLE );</span>
+<span class="fc" id="L961">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCaption_()
+    {
+<span class="fc" id="L966">        actionContext.release();</span>
+<span class="fc" id="L967">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCaption()
+    {
+<span class="fc" id="L972">        tableCaptionWriter = new StringWriter();</span>
+<span class="fc" id="L973">        tableCaptionXMLWriter = new PrettyPrintXMLWriter( tableCaptionWriter );</span>
+<span class="fc" id="L974">        actionContext.setAction( SinkActionContext.TABLE_CAPTION );</span>
+<span class="fc" id="L975">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell_()
+    {
+<span class="fc" id="L980">        writeEndElement(); // ElementTags.CELL</span>
+
+<span class="fc" id="L982">        actionContext.release();</span>
+<span class="fc" id="L983">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell()
+    {
+<span class="fc" id="L988">        writeStartElement( ElementTags.CELL );</span>
+<span class="fc" id="L989">        writeAddAttribute( ElementTags.LEFT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L990">        writeAddAttribute( ElementTags.RIGHT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L991">        writeAddAttribute( ElementTags.TOP, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L992">        writeAddAttribute( ElementTags.BOTTOM, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L993">        writeAddAttribute( ElementTags.HORIZONTALALIGN, ElementTags.ALIGN_LEFT );</span>
+
+<span class="fc" id="L995">        actionContext.setAction( SinkActionContext.TABLE_CELL );</span>
+<span class="fc" id="L996">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableCell( String width )
+    {
+<span class="nc" id="L1001">        actionContext.setAction( SinkActionContext.TABLE_CELL );</span>
+<span class="nc" id="L1002">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell_()
+    {
+<span class="fc" id="L1007">        writeEndElement(); // ElementTags.CELL</span>
+
+<span class="fc" id="L1009">        actionContext.release();</span>
+<span class="fc" id="L1010">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell()
+    {
+<span class="fc" id="L1015">        writeStartElement( ElementTags.CELL );</span>
+<span class="fc" id="L1016">        writeAddAttribute( ElementTags.LEFT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1017">        writeAddAttribute( ElementTags.RIGHT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1018">        writeAddAttribute( ElementTags.TOP, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1019">        writeAddAttribute( ElementTags.BOTTOM, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1020">        writeAddAttribute( ElementTags.HEADER, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1021">        writeAddAttribute( ElementTags.BGRED, Color.GRAY.getRed() );</span>
+<span class="fc" id="L1022">        writeAddAttribute( ElementTags.BGBLUE, Color.GRAY.getBlue() );</span>
+<span class="fc" id="L1023">        writeAddAttribute( ElementTags.BGGREEN, Color.GRAY.getGreen() );</span>
+<span class="fc" id="L1024">        writeAddAttribute( ElementTags.HORIZONTALALIGN, ElementTags.ALIGN_CENTER );</span>
+
+<span class="fc" id="L1026">        actionContext.setAction( SinkActionContext.TABLE_HEADER_CELL );</span>
+<span class="fc" id="L1027">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableHeaderCell( String width )
+    {
+<span class="nc" id="L1032">        actionContext.setAction( SinkActionContext.TABLE_HEADER_CELL );</span>
+<span class="nc" id="L1033">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRow_()
+    {
+<span class="fc" id="L1038">        writeEndElement(); // ElementTags.ROW</span>
+
+<span class="fc" id="L1040">        actionContext.release();</span>
+<span class="fc" id="L1041">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRow()
+    {
+<span class="fc" id="L1046">        writeStartElement( ElementTags.ROW );</span>
+
+<span class="fc" id="L1048">        actionContext.setAction( SinkActionContext.TABLE_ROW );</span>
+<span class="fc" id="L1049">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRows_()
+    {
+        //writeEndElement(); // ElementTags.TABLE
+
+<span class="fc" id="L1056">        actionContext.release();</span>
+<span class="fc" id="L1057">    }</span>
+
+    /** {@inheritDoc} */
+    public void tableRows( int[] justification, boolean grid )
+    {
+        // ElementTags.TABLE
+<span class="fc" id="L1063">        writeAddAttribute( ElementTags.COLUMNS, justification.length );</span>
+
+<span class="fc" id="L1065">        actionContext.setAction( SinkActionContext.TABLE_ROWS );</span>
+<span class="fc" id="L1066">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Verbatim
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void verbatim_()
+    {
+<span class="fc" id="L1075">        writeEndElement(); // ElementTags.CELL</span>
+
+<span class="fc" id="L1077">        writeEndElement(); // ElementTags.ROW</span>
+
+<span class="fc" id="L1079">        writeEndElement(); // ElementTags.TABLE</span>
+
+<span class="fc" id="L1081">        writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L1083">        actionContext.release();</span>
+<span class="fc" id="L1084">    }</span>
+
+    /** {@inheritDoc} */
+    public void verbatim( boolean boxed )
+    {
+        // Always boxed
+<span class="fc" id="L1090">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L1091">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L1092">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L1093">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L1094">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L1095">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L1096">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L1098">        writeStartElement( ElementTags.TABLE );</span>
+<span class="fc" id="L1099">        writeAddAttribute( ElementTags.COLUMNS, &quot;1&quot; );</span>
+<span class="fc" id="L1100">        writeAddAttribute( ElementTags.LEFT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1101">        writeAddAttribute( ElementTags.RIGHT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1102">        writeAddAttribute( ElementTags.TOP, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1103">        writeAddAttribute( ElementTags.BOTTOM, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1104">        writeAddAttribute( ElementTags.ALIGN, ElementTags.ALIGN_CENTER );</span>
+<span class="fc" id="L1105">        writeAddAttribute( ElementTags.TABLEFITSPAGE, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1106">        writeAddAttribute( ElementTags.CELLSFITPAGE, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1107">        writeAddAttribute( ElementTags.CELLPADDING, &quot;10&quot; );</span>
+<span class="fc" id="L1108">        writeAddAttribute( ElementTags.WIDTH, &quot;100.0%&quot; );</span>
+
+<span class="fc" id="L1110">        writeStartElement( ElementTags.ROW );</span>
+
+<span class="fc" id="L1112">        writeStartElement( ElementTags.CELL );</span>
+<span class="fc" id="L1113">        writeAddAttribute( ElementTags.LEFT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1114">        writeAddAttribute( ElementTags.RIGHT, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1115">        writeAddAttribute( ElementTags.TOP, Boolean.TRUE.toString() );</span>
+<span class="fc" id="L1116">        writeAddAttribute( ElementTags.BOTTOM, Boolean.TRUE.toString() );</span>
+
+<span class="fc" id="L1118">        actionContext.setAction( SinkActionContext.VERBATIM );</span>
+<span class="fc" id="L1119">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Figures
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void figure_()
+    {
+<span class="fc" id="L1128">        writeEndElement(); // ElementTags.IMAGE</span>
+
+<span class="fc" id="L1130">        writeEndElement(); // ElementTags.CHUNK</span>
+
+<span class="fc" id="L1132">        actionContext.release();</span>
+
+<span class="fc" id="L1134">        figureDefined = false;</span>
+<span class="fc" id="L1135">    }</span>
+
+    /** {@inheritDoc} */
+    public void figure()
+    {
+<span class="fc" id="L1140">        figureDefined = true;</span>
+
+<span class="fc" id="L1142">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L1143">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L1144">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L1145">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L1146">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L1147">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L1148">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L1150">        writeStartElement( ElementTags.IMAGE );</span>
+
+<span class="fc" id="L1152">        actionContext.setAction( SinkActionContext.FIGURE );</span>
+<span class="fc" id="L1153">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureCaption_()
+    {
+<span class="fc" id="L1158">        actionContext.release();</span>
+<span class="fc" id="L1159">    }</span>
+
+    /** {@inheritDoc} */
+    public void figureCaption()
+    {
+<span class="fc" id="L1164">        actionContext.setAction( SinkActionContext.FIGURE_CAPTION );</span>
+<span class="fc" id="L1165">    }</span>
+
+    /**
+     * If the &lt;code&gt;name&lt;/code&gt; is a relative link, the internal link will used a System property
+     * &lt;code&gt;itext.basedir&lt;/code&gt;, or the class loader.
+     * {@inheritDoc}
+     */
+    public void figureGraphics( String name )
+    {
+<span class="fc" id="L1174">        String urlName = null;</span>
+<span class="fc" id="L1175">        File nameFile = null;</span>
+<span class="pc bpc" id="L1176" title="1 of 2 branches missed.">        if ( ( name.toLowerCase( Locale.ENGLISH ).startsWith( &quot;http://&quot; ) )</span>
+<span class="pc bpc" id="L1177" title="1 of 2 branches missed.">            || ( name.toLowerCase( Locale.ENGLISH ).startsWith( &quot;https://&quot; ) ) )</span>
+        {
+<span class="nc" id="L1179">            urlName = name;</span>
+        }
+        else
+        {
+<span class="pc bpc" id="L1183" title="1 of 2 branches missed.">            if ( System.getProperty( &quot;itext.basedir&quot; ) != null )</span>
+            {
+                try
+                {
+<span class="nc" id="L1187">                    nameFile = new File( System.getProperty( &quot;itext.basedir&quot; ), name );</span>
+<span class="nc" id="L1188">                    urlName = nameFile.toURI().toURL().toString();</span>
+                }
+<span class="nc" id="L1190">                catch ( MalformedURLException e )</span>
+                {
+<span class="nc" id="L1192">                    getLog().error( &quot;MalformedURLException: &quot; + e.getMessage(), e );</span>
+<span class="nc" id="L1193">                }</span>
+            }
+            else
+            {
+<span class="pc bpc" id="L1197" title="1 of 2 branches missed.">                if ( getClassLoader() != null )</span>
+                {
+<span class="pc bpc" id="L1199" title="1 of 2 branches missed.">                    if ( getClassLoader().getResource( name ) != null )</span>
+                    {
+<span class="fc" id="L1201">                        urlName = getClassLoader().getResource( name ).toString();</span>
+                    }
+                }
+                else
+                {
+<span class="nc bnc" id="L1206" title="All 2 branches missed.">                    if ( ITextSink.class.getClassLoader().getResource( name ) != null )</span>
+                    {
+<span class="nc" id="L1208">                        urlName = ITextSink.class.getClassLoader().getResource( name ).toString();</span>
+                    }
+                }
+            }
+        }
+
+<span class="pc bpc" id="L1214" title="1 of 2 branches missed.">        if ( urlName == null )</span>
+        {
+<span class="nc" id="L1216">            String msg =</span>
+                &quot;No image '&quot; + name
+                    + &quot;' found in the class loader. Try to call setClassLoader(ClassLoader) before.&quot;;
+<span class="nc" id="L1219">            logMessage( &quot;imageNotFound&quot;, msg );</span>
+
+<span class="nc" id="L1221">            return;</span>
+        }
+
+<span class="pc bpc" id="L1224" title="3 of 4 branches missed.">        if ( nameFile != null &amp;&amp; !nameFile.exists() )</span>
+        {
+<span class="nc" id="L1226">            String msg = &quot;No image '&quot; + nameFile + &quot;' found in your system, check the path.&quot;;</span>
+<span class="nc" id="L1227">            logMessage( &quot;imageNotFound&quot;, msg );</span>
+
+<span class="nc" id="L1229">            return;</span>
+        }
+
+<span class="fc" id="L1232">        boolean figureCalled = figureDefined;</span>
+<span class="pc bpc" id="L1233" title="1 of 2 branches missed.">        if ( !figureCalled )</span>
+        {
+<span class="nc" id="L1235">            figure();</span>
+        }
+
+<span class="fc" id="L1238">        float width = 0;</span>
+<span class="fc" id="L1239">        float height = 0;</span>
+        try
+        {
+<span class="fc" id="L1242">            Image image = Image.getInstance( new URL( urlName ) );</span>
+<span class="fc" id="L1243">            image.scaleToFit( ITextUtil.getDefaultPageSize().width() / 2, ITextUtil.getDefaultPageSize().height() / 2 );</span>
+<span class="fc" id="L1244">            width = image.plainWidth();</span>
+<span class="fc" id="L1245">            height = image.plainHeight();</span>
+        }
+<span class="nc" id="L1247">        catch ( BadElementException e )</span>
+        {
+<span class="nc" id="L1249">            getLog().error( &quot;BadElementException: &quot; + e.getMessage(), e );</span>
+        }
+<span class="nc" id="L1251">        catch ( MalformedURLException e )</span>
+        {
+<span class="nc" id="L1253">            getLog().error( &quot;MalformedURLException: &quot; + e.getMessage(), e );</span>
+        }
+<span class="nc" id="L1255">        catch ( IOException e )</span>
+        {
+<span class="nc" id="L1257">            getLog().error( &quot;IOException: &quot; + e.getMessage(), e );</span>
+<span class="pc" id="L1258">        }</span>
+
+<span class="fc" id="L1260">        writeAddAttribute( ElementTags.URL, urlName );</span>
+<span class="fc" id="L1261">        writeAddAttribute( ElementTags.ALIGN, ElementTags.ALIGN_MIDDLE );</span>
+<span class="fc" id="L1262">        writeAddAttribute( ElementTags.PLAINWIDTH, String.valueOf( width ) );</span>
+<span class="fc" id="L1263">        writeAddAttribute( ElementTags.PLAINHEIGHT, String.valueOf( height ) );</span>
+
+<span class="fc" id="L1265">        actionContext.setAction( SinkActionContext.FIGURE_GRAPHICS );</span>
+
+<span class="pc bpc" id="L1267" title="1 of 2 branches missed.">        if ( !figureCalled )</span>
+        {
+<span class="nc" id="L1269">            figure_();</span>
+        }
+<span class="fc" id="L1271">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Fonts
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void inline()
+    {
+<span class="nc" id="L1280">        inline( null );</span>
+<span class="nc" id="L1281">    }</span>
+
+    /** {@inheritDoc} */
+    public void inline( SinkEventAttributes attributes )
+    {
+<span class="fc" id="L1286">        List&lt;String&gt; tags = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L1288" title="1 of 2 branches missed.">        if ( attributes != null )</span>
+        {
+
+<span class="fc bfc" id="L1291" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;italic&quot; ) )</span>
+            {
+<span class="fc" id="L1293">                font.addItalic();</span>
+<span class="fc" id="L1294">                tags.add( 0, &quot;italic&quot; );</span>
+            }
+
+<span class="fc bfc" id="L1297" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;bold&quot; ) )</span>
+            {
+<span class="fc" id="L1299">                font.addBold();</span>
+<span class="fc" id="L1300">                tags.add( 0, &quot;bold&quot; );</span>
+            }
+
+<span class="fc bfc" id="L1303" title="All 2 branches covered.">            if ( attributes.containsAttribute( SinkEventAttributes.SEMANTICS, &quot;code&quot; ) )</span>
+            {
+<span class="fc" id="L1305">                font.setMonoSpaced( true );</span>
+<span class="fc" id="L1306">                tags.add( 0, &quot;code&quot; );</span>
+            }
+
+        }
+
+<span class="fc" id="L1311">        inlineStack.push( tags );</span>
+<span class="fc" id="L1312">    }</span>
+
+    /** {@inheritDoc} */
+    public void inline_()
+    {
+<span class="fc bfc" id="L1317" title="All 2 branches covered.">        for ( String tag: inlineStack.pop() )</span>
+        {
+<span class="fc bfc" id="L1319" title="All 2 branches covered.">            if ( &quot;italic&quot;.equals( tag ) )</span>
+            {
+<span class="fc" id="L1321">                font.removeItalic();</span>
+            }
+<span class="fc bfc" id="L1323" title="All 2 branches covered.">            else if ( &quot;bold&quot;.equals( tag ) )</span>
+            {
+<span class="fc" id="L1325">                font.removeBold();</span>
+            }
+<span class="pc bpc" id="L1327" title="1 of 2 branches missed.">            else if ( &quot;code&quot;.equals( tag ) )</span>
+            {
+<span class="fc" id="L1329">                font.setMonoSpaced( false );</span>
+            }
+<span class="fc" id="L1331">        }</span>
+<span class="fc" id="L1332">    }</span>
+
+    /** {@inheritDoc} */
+    public void bold_()
+    {
+<span class="fc" id="L1337">        inline_();</span>
+<span class="fc" id="L1338">    }</span>
+
+    /** {@inheritDoc} */
+    public void bold()
+    {
+<span class="fc" id="L1343">        inline( SinkEventAttributeSet.Semantics.BOLD );</span>
+<span class="fc" id="L1344">    }</span>
+
+    /** {@inheritDoc} */
+    public void italic_()
+    {
+<span class="nc" id="L1349">        inline_();</span>
+<span class="nc" id="L1350">    }</span>
+
+    /** {@inheritDoc} */
+    public void italic()
+    {
+<span class="nc" id="L1355">        inline( SinkEventAttributeSet.Semantics.ITALIC );</span>
+<span class="nc" id="L1356">    }</span>
+
+    /** {@inheritDoc} */
+    public void monospaced_()
+    {
+<span class="nc" id="L1361">        inline_();</span>
+<span class="nc" id="L1362">    }</span>
+
+    /** {@inheritDoc} */
+    public void monospaced()
+    {
+<span class="nc" id="L1367">        inline( SinkEventAttributeSet.Semantics.CODE );</span>
+<span class="nc" id="L1368">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Links
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void link_()
+    {
+<span class="fc" id="L1377">        writeEndElement(); // ElementTags.ANCHOR</span>
+
+<span class="fc" id="L1379">        font.setColor( Color.BLACK );</span>
+<span class="fc" id="L1380">        font.removeUnderlined();</span>
+
+<span class="fc" id="L1382">        actionContext.release();</span>
+<span class="fc" id="L1383">    }</span>
+
+    /** {@inheritDoc} */
+    public void link( String name )
+    {
+<span class="pc bpc" id="L1388" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L1390">            throw new NullPointerException( &quot;Link name cannot be null!&quot; );</span>
+        }
+
+<span class="fc" id="L1393">        font.setColor( Color.BLUE );</span>
+<span class="fc" id="L1394">        font.addUnderlined();</span>
+
+<span class="fc" id="L1396">        writeStartElement( ElementTags.ANCHOR );</span>
+<span class="pc bpc" id="L1397" title="2 of 6 branches missed.">        if ( StringUtils.isNotEmpty( name ) &amp;&amp; name.startsWith( &quot;#&quot; ) &amp;&amp; StringUtils.isNotEmpty( header.getTitle() ) )</span>
+        {
+<span class="fc" id="L1399">            name = &quot;#&quot; + DoxiaUtils.encodeId( header.getTitle(), true ) + &quot;_&quot; + name.substring( 1 );</span>
+        }
+<span class="fc" id="L1401">        writeAddAttribute( ElementTags.REFERENCE, HtmlTools.escapeHTML( name ) );</span>
+<span class="fc" id="L1402">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L1403">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L1404">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L1405">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L1406">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L1407">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L1409">        actionContext.setAction( SinkActionContext.LINK );</span>
+<span class="fc" id="L1410">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor_()
+    {
+<span class="fc bfc" id="L1415" title="All 2 branches covered.">        if ( !anchorDefined )</span>
+        {
+            // itext needs a defined local destination, we put an invisible text
+<span class="fc" id="L1418">            writeAddAttribute( ElementTags.BLUE, &quot;255&quot; );</span>
+<span class="fc" id="L1419">            writeAddAttribute( ElementTags.GREEN, &quot;255&quot; );</span>
+<span class="fc" id="L1420">            writeAddAttribute( ElementTags.RED, &quot;255&quot; );</span>
+
+<span class="fc" id="L1422">            write( &quot;_&quot; );</span>
+        }
+
+<span class="fc" id="L1425">        anchorDefined = false;</span>
+
+<span class="fc" id="L1427">        writeEndElement(); // ElementTags.ANCHOR</span>
+
+<span class="fc" id="L1429">        actionContext.release();</span>
+<span class="fc" id="L1430">    }</span>
+
+    /** {@inheritDoc} */
+    public void anchor( String name )
+    {
+<span class="pc bpc" id="L1435" title="1 of 2 branches missed.">        if ( name == null )</span>
+        {
+<span class="nc" id="L1437">            throw new NullPointerException( &quot;Anchor name cannot be null!&quot; );</span>
+        }
+
+<span class="pc bpc" id="L1440" title="1 of 2 branches missed.">        if ( StringUtils.isNotEmpty( header.getTitle() ) )</span>
+        {
+<span class="fc" id="L1442">            name = header.getTitle() + &quot;_&quot; + name;</span>
+        }
+<span class="fc" id="L1444">        String id = name;</span>
+
+<span class="pc bpc" id="L1446" title="1 of 2 branches missed.">        if ( !DoxiaUtils.isValidId( id ) )</span>
+        {
+<span class="nc" id="L1448">            id = DoxiaUtils.encodeId( name, true );</span>
+
+<span class="nc" id="L1450">            String msg = &quot;Modified invalid link: '&quot; + name + &quot;' to '&quot; + id + &quot;'&quot;;</span>
+<span class="nc" id="L1451">            logMessage( &quot;modifiedLink&quot;, msg );</span>
+        }
+
+<span class="fc" id="L1454">        writeStartElement( ElementTags.ANCHOR );</span>
+<span class="fc" id="L1455">        writeAddAttribute( ElementTags.NAME, id );</span>
+<span class="fc" id="L1456">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L1457">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L1458">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+
+<span class="fc" id="L1460">        actionContext.setAction( SinkActionContext.ANCHOR );</span>
+<span class="fc" id="L1461">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Misc
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void lineBreak()
+    {
+        // Special case for the header
+<span class="pc bpc" id="L1471" title="1 of 2 branches missed.">        if ( ( actionContext.getCurrentAction() == SinkActionContext.AUTHOR )</span>
+<span class="pc bpc" id="L1472" title="1 of 2 branches missed.">            || ( actionContext.getCurrentAction() == SinkActionContext.DATE )</span>
+<span class="pc bpc" id="L1473" title="1 of 2 branches missed.">            || ( actionContext.getCurrentAction() == SinkActionContext.TITLE ) )</span>
+        {
+<span class="nc" id="L1475">            return;</span>
+        }
+
+<span class="fc" id="L1478">        writeStartElement( ElementTags.NEWLINE );</span>
+<span class="fc" id="L1479">        writeEndElement();</span>
+<span class="fc" id="L1480">    }</span>
+
+    /** {@inheritDoc} */
+    public void nonBreakingSpace()
+    {
+<span class="fc" id="L1485">        write( &quot; &quot; );</span>
+<span class="fc" id="L1486">    }</span>
+
+    /** {@inheritDoc} */
+    public void pageBreak()
+    {
+<span class="fc" id="L1491">        writeStartElement( ElementTags.NEWPAGE );</span>
+<span class="fc" id="L1492">        writeEndElement();</span>
+<span class="fc" id="L1493">    }</span>
+
+    /** {@inheritDoc} */
+    public void horizontalRule()
+    {
+<span class="fc" id="L1498">        writeStartElement( ElementTags.PARAGRAPH );</span>
+<span class="fc" id="L1499">        writeAddAttribute( ElementTags.BLUE, &quot;255&quot; );</span>
+<span class="fc" id="L1500">        writeAddAttribute( ElementTags.GREEN, &quot;255&quot; );</span>
+<span class="fc" id="L1501">        writeAddAttribute( ElementTags.RED, &quot;255&quot; );</span>
+<span class="fc" id="L1502">        write( &quot;_&quot; );</span>
+<span class="fc" id="L1503">        writeEndElement();</span>
+
+<span class="fc" id="L1505">        writeStartElement( ElementTags.PARAGRAPH );</span>
+<span class="fc" id="L1506">        writeStartElement( ElementTags.HORIZONTALRULE );</span>
+<span class="fc" id="L1507">        writeEndElement();</span>
+<span class="fc" id="L1508">        writeEndElement();</span>
+<span class="fc" id="L1509">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Text
+    // ----------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public void rawText( String text )
+    {
+<span class="nc" id="L1518">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="nc" id="L1519">        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="nc" id="L1520">        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="nc" id="L1521">        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="nc" id="L1522">        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="nc" id="L1523">        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="nc" id="L1524">        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="nc" id="L1526">        write( text, false );</span>
+
+<span class="nc" id="L1528">        writeEndElement(); // ElementTags.CHUNK</span>
+<span class="nc" id="L1529">    }</span>
+
+    /** {@inheritDoc} */
+    public void text( String text )
+    {
+<span class="pc bpc" id="L1534" title="1 of 2 branches missed.">        if ( StringUtils.isEmpty( text ) )</span>
+        {
+<span class="nc" id="L1536">            return;</span>
+        }
+
+<span class="pc bpc" id="L1539" title="1 of 9 branches missed.">        switch ( actionContext.getCurrentAction() )</span>
+        {
+            case SinkActionContext.AUTHOR:
+<span class="fc" id="L1542">                header.addAuthor( text );</span>
+<span class="fc" id="L1543">                break;</span>
+
+            case SinkActionContext.DATE:
+<span class="fc" id="L1546">                header.setDate( text );</span>
+<span class="fc" id="L1547">                break;</span>
+
+            case SinkActionContext.TITLE:
+<span class="fc" id="L1550">                header.setTitle( text );</span>
+<span class="fc" id="L1551">                break;</span>
+
+            case SinkActionContext.TABLE_CAPTION:
+<span class="fc" id="L1554">                this.tableCaptionXMLWriter.writeText( text );</span>
+<span class="fc" id="L1555">                break;</span>
+
+            case SinkActionContext.VERBATIM:
+                // Used to preserve indentation and formating
+<span class="fc" id="L1559">                LineNumberReader lnr = new LineNumberReader( new StringReader( text ) );</span>
+                String line;
+                try
+                {
+<span class="fc bfc" id="L1563" title="All 2 branches covered.">                    while ( ( line = lnr.readLine() ) != null )</span>
+                    {
+<span class="fc" id="L1565">                        writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L1566">                        writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L1567">                        writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L1568">                        writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L1569">                        writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L1570">                        writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L1571">                        writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L1573">                        write( &quot;&lt;![CDATA[&quot;, true );</span>
+                        // Special case
+<span class="fc" id="L1575">                        line = StringUtils.replace( line, &quot;&lt;![CDATA[&quot;, &quot;&lt; ![CDATA[&quot; );</span>
+<span class="fc" id="L1576">                        line = StringUtils.replace( line, &quot;]]&gt;&quot;, &quot;]] &gt;&quot; );</span>
+<span class="fc" id="L1577">                        write( line, true, false );</span>
+<span class="fc" id="L1578">                        write( &quot;]]&gt;&quot;, true );</span>
+
+<span class="fc" id="L1580">                        writeEndElement();</span>
+<span class="fc" id="L1581">                        lineBreak();</span>
+                    }
+                }
+<span class="nc" id="L1584">                catch ( IOException e )</span>
+                {
+<span class="nc" id="L1586">                    throw new RuntimeException( &quot;IOException: &quot;, e );</span>
+<span class="fc" id="L1587">                }</span>
+                break;
+
+            case SinkActionContext.FIGURE_CAPTION:
+<span class="fc" id="L1591">                writeAddAttribute( ElementTags.ALT, text );</span>
+<span class="fc" id="L1592">                break;</span>
+
+            case SinkActionContext.SECTION_TITLE:
+            case SinkActionContext.SECTION_1:
+            case SinkActionContext.SECTION_2:
+            case SinkActionContext.SECTION_3:
+            case SinkActionContext.SECTION_4:
+            case SinkActionContext.SECTION_5:
+            case SinkActionContext.FIGURE:
+            case SinkActionContext.FIGURE_GRAPHICS:
+            case SinkActionContext.TABLE_ROW:
+            case SinkActionContext.TABLE:
+            case SinkActionContext.HEAD:
+            case SinkActionContext.UNDEFINED:
+<span class="nc" id="L1606">                break;</span>
+
+            case SinkActionContext.ANCHOR:
+<span class="fc" id="L1609">                anchorDefined = true;</span>
+            case SinkActionContext.PARAGRAPH:
+            case SinkActionContext.LINK:
+            case SinkActionContext.TABLE_CELL:
+            case SinkActionContext.TABLE_HEADER_CELL:
+            case SinkActionContext.DEFINITION:
+            case SinkActionContext.DEFINED_TERM:
+            case SinkActionContext.NUMBERED_LIST_ITEM:
+            case SinkActionContext.LIST_ITEM:
+            case SinkActionContext.SECTION_TITLE_5:
+            case SinkActionContext.SECTION_TITLE_4:
+            case SinkActionContext.SECTION_TITLE_3:
+            case SinkActionContext.SECTION_TITLE_2:
+            case SinkActionContext.SECTION_TITLE_1:
+            default:
+<span class="fc" id="L1624">                writeStartElement( ElementTags.CHUNK );</span>
+<span class="fc" id="L1625">                writeAddAttribute( ElementTags.FONT, font.getFontName() );</span>
+<span class="fc" id="L1626">                writeAddAttribute( ElementTags.SIZE, font.getFontSize() );</span>
+<span class="fc" id="L1627">                writeAddAttribute( ElementTags.STYLE, font.getFontStyle() );</span>
+<span class="fc" id="L1628">                writeAddAttribute( ElementTags.BLUE, font.getFontColorBlue() );</span>
+<span class="fc" id="L1629">                writeAddAttribute( ElementTags.GREEN, font.getFontColorGreen() );</span>
+<span class="fc" id="L1630">                writeAddAttribute( ElementTags.RED, font.getFontColorRed() );</span>
+
+<span class="fc" id="L1632">                write( text );</span>
+
+<span class="fc" id="L1634">                writeEndElement(); // ElementTags.CHUNK</span>
+        }
+<span class="fc" id="L1636">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Unkown events just log a warning message but are ignored otherwise.
+     * @see org.apache.maven.doxia.sink.Sink#unknown(String,Object[],SinkEventAttributes)
+     */
+    public void unknown( String name, Object[] requiredParams, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L1646">        String msg = &quot;Unknown Sink event: '&quot; + name + &quot;', ignoring!&quot;;</span>
+<span class="nc" id="L1647">        logMessage( &quot;unknownEvent&quot;, msg );</span>
+<span class="nc" id="L1648">    }</span>
+
+    /** {@inheritDoc} */
+    protected void init()
+    {
+<span class="fc" id="L1653">        super.init();</span>
+
+<span class="fc" id="L1655">        this.actionContext = new SinkActionContext();</span>
+<span class="fc" id="L1656">        this.font = new ITextFont();</span>
+<span class="fc" id="L1657">        this.header = new ITextHeader();</span>
+
+<span class="fc" id="L1659">        this.numberDepth = 1;</span>
+<span class="fc" id="L1660">        this.depth = 0;</span>
+<span class="fc" id="L1661">        this.tableCaptionWriter = null;</span>
+<span class="fc" id="L1662">        this.tableCaptionXMLWriter = null;</span>
+<span class="fc" id="L1663">        this.anchorDefined = false;</span>
+<span class="fc" id="L1664">        this.figureDefined = false;</span>
+<span class="fc" id="L1665">        this.warnMessages = null;</span>
+<span class="fc" id="L1666">    }</span>
+
+    /**
+     * Convenience method to write a starting element.
+     *
+     * @param tag the name of the tag
+     */
+    private void writeStartElement( String tag )
+    {
+<span class="pc bpc" id="L1675" title="1 of 2 branches missed.">        if ( tableCaptionXMLWriter == null )</span>
+        {
+<span class="fc" id="L1677">            xmlWriter.startElement( tag );</span>
+        }
+        else
+        {
+<span class="nc" id="L1681">            tableCaptionXMLWriter.startElement( tag );</span>
+        }
+<span class="fc" id="L1683">    }</span>
+
+    /**
+     * Convenience method to write a key-value pair.
+     *
+     * @param key the name of an attribute
+     * @param value the value of an attribute
+     */
+    private void writeAddAttribute( String key, String value )
+    {
+<span class="pc bpc" id="L1693" title="1 of 2 branches missed.">        if ( tableCaptionXMLWriter == null )</span>
+        {
+<span class="fc" id="L1695">            xmlWriter.addAttribute( key, value );</span>
+        }
+        else
+        {
+<span class="nc" id="L1699">            tableCaptionXMLWriter.addAttribute( key, value );</span>
+        }
+<span class="fc" id="L1701">    }</span>
+
+    /**
+     * Convenience method to write a key-value pair.
+     *
+     * @param key the name of an attribute
+     * @param value the value of an attribute
+     */
+    private void writeAddAttribute( String key, int value )
+    {
+<span class="pc bpc" id="L1711" title="1 of 2 branches missed.">        if ( tableCaptionXMLWriter == null )</span>
+        {
+<span class="fc" id="L1713">            xmlWriter.addAttribute( key, String.valueOf( value ) );</span>
+        }
+        else
+        {
+<span class="nc" id="L1717">            tableCaptionXMLWriter.addAttribute( key, String.valueOf( value ) );</span>
+        }
+<span class="fc" id="L1719">    }</span>
+
+    /**
+     * Convenience method to write an end element.
+     */
+    private void writeEndElement()
+    {
+<span class="pc bpc" id="L1726" title="1 of 2 branches missed.">        if ( tableCaptionXMLWriter == null )</span>
+        {
+<span class="fc" id="L1728">            xmlWriter.endElement();</span>
+        }
+        else
+        {
+<span class="nc" id="L1732">            tableCaptionXMLWriter.endElement();</span>
+        }
+<span class="fc" id="L1734">    }</span>
+
+    /**
+     * Convenience method to write a String
+     *
+     * @param aString
+     */
+    protected void write( String aString )
+    {
+<span class="fc" id="L1743">        write( aString, false );</span>
+<span class="fc" id="L1744">    }</span>
+
+    /**
+     * Convenience method to write a String depending the escapeHtml flag
+     *
+     * @param aString
+     * @param escapeHtml
+     */
+    private void write( String aString, boolean escapeHtml )
+    {
+<span class="fc" id="L1754">        write( aString, escapeHtml, true );</span>
+<span class="fc" id="L1755">    }</span>
+
+    /**
+     * Convenience method to write a String depending the escapeHtml flag
+     *
+     * @param aString
+     * @param escapeHtml
+     * @param trim
+     */
+    private void write( String aString, boolean escapeHtml, boolean trim )
+    {
+<span class="pc bpc" id="L1766" title="1 of 2 branches missed.">        if ( aString == null )</span>
+        {
+<span class="nc" id="L1768">            return;</span>
+        }
+
+<span class="fc bfc" id="L1771" title="All 2 branches covered.">        if ( trim )</span>
+        {
+<span class="fc" id="L1773">            aString = StringUtils.replace( aString, &quot;\n&quot;, &quot;&quot; );</span>
+
+<span class="fc" id="L1775">            LineNumberReader lnr = new LineNumberReader( new StringReader( aString ) );</span>
+<span class="fc" id="L1776">            StringBuilder sb = new StringBuilder();</span>
+            String line;
+            try
+            {
+<span class="fc bfc" id="L1780" title="All 2 branches covered.">                while ( ( line = lnr.readLine() ) != null )</span>
+                {
+<span class="fc" id="L1782">                    sb.append( beautifyPhrase( line.trim() ) );</span>
+<span class="fc" id="L1783">                    sb.append( &quot; &quot; );</span>
+                }
+
+<span class="fc" id="L1786">                aString = sb.toString();</span>
+            }
+<span class="nc" id="L1788">            catch ( IOException e )</span>
+            {
+                // nop
+<span class="fc" id="L1791">            }</span>
+<span class="fc bfc" id="L1792" title="All 2 branches covered.">            if ( aString.trim().length() == 0 )</span>
+            {
+<span class="fc" id="L1794">                return;</span>
+            }
+        }
+<span class="fc bfc" id="L1797" title="All 2 branches covered.">        if ( escapeHtml )</span>
+        {
+<span class="pc bpc" id="L1799" title="1 of 2 branches missed.">            if ( tableCaptionXMLWriter == null )</span>
+            {
+<span class="fc" id="L1801">                xmlWriter.writeMarkup( aString );</span>
+            }
+            else
+            {
+<span class="nc" id="L1805">                tableCaptionXMLWriter.writeMarkup( aString );</span>
+            }
+        }
+        else
+        {
+<span class="pc bpc" id="L1810" title="1 of 2 branches missed.">            if ( tableCaptionXMLWriter == null )</span>
+            {
+<span class="fc" id="L1812">                xmlWriter.writeText( aString );</span>
+            }
+            else
+            {
+<span class="nc" id="L1816">                tableCaptionXMLWriter.writeText( aString );</span>
+            }
+        }
+<span class="fc" id="L1819">    }</span>
+
+    /**
+     * Convenience method to return a beautify phrase, i.e. one space between words.
+     *
+     * @param aString
+     * @return a String with only one space between words
+     */
+    private static String beautifyPhrase( String aString )
+    {
+<span class="fc" id="L1829">        String[] strings = StringUtils.split( aString, &quot; &quot; );</span>
+<span class="fc" id="L1830">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L1831" title="All 2 branches covered.">        for ( String string : strings )</span>
+        {
+<span class="pc bpc" id="L1833" title="1 of 2 branches missed.">            if ( string.trim().length() != 0 )</span>
+            {
+<span class="fc" id="L1835">                sb.append( string.trim() );</span>
+<span class="fc" id="L1836">                sb.append( &quot; &quot; );</span>
+            }
+        }
+
+<span class="fc" id="L1840">        return sb.toString().trim();</span>
+    }
+
+    private void startChunk( String fontName, int fontSize, String fontStyle, int fontColorBlue, int fontColorGreen,
+                             int fontColorRed, String localDestination )
+    {
+<span class="nc" id="L1846">        writeStartElement( ElementTags.CHUNK );</span>
+<span class="nc" id="L1847">        writeAddAttribute( ElementTags.FONT, fontName );</span>
+<span class="nc" id="L1848">        writeAddAttribute( ElementTags.SIZE, fontSize );</span>
+<span class="nc" id="L1849">        writeAddAttribute( ElementTags.STYLE, fontStyle );</span>
+<span class="nc" id="L1850">        writeAddAttribute( ElementTags.BLUE, fontColorBlue );</span>
+<span class="nc" id="L1851">        writeAddAttribute( ElementTags.GREEN, fontColorGreen );</span>
+<span class="nc" id="L1852">        writeAddAttribute( ElementTags.RED, fontColorRed );</span>
+//        writeAddAttribute( ElementTags.LOCALDESTINATION, localDestination );
+<span class="nc" id="L1854">    }</span>
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #close()
+     * @since 1.1.1
+     */
+    private void logMessage( String key, String msg )
+    {
+<span class="nc" id="L1866">        msg = &quot;[iText Sink] &quot; + msg;</span>
+<span class="nc bnc" id="L1867" title="All 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L1869">            getLog().debug( msg );</span>
+
+<span class="nc" id="L1871">            return;</span>
+        }
+
+<span class="nc bnc" id="L1874" title="All 2 branches missed.">        if ( warnMessages == null )</span>
+        {
+<span class="nc" id="L1876">            warnMessages = new HashMap&lt;&gt;();</span>
+        }
+
+<span class="nc" id="L1879">        Set&lt;String&gt; set = warnMessages.get( key );</span>
+<span class="nc bnc" id="L1880" title="All 2 branches missed.">        if ( set == null )</span>
+        {
+<span class="nc" id="L1882">            set = new TreeSet&lt;&gt;();</span>
+        }
+<span class="nc" id="L1884">        set.add( msg );</span>
+<span class="nc" id="L1885">        warnMessages.put( key, set );</span>
+<span class="nc" id="L1886">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

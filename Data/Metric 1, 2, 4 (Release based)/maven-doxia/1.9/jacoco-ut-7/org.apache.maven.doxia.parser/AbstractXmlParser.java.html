@@ -1,0 +1,874 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractXmlParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.parser</a> &gt; <span class="el_source">AbstractXmlParser.java</span></div><h1>AbstractXmlParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.net.URL;
+import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.markup.XmlMarkup;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.util.HtmlTools;
+import org.apache.maven.doxia.util.XmlValidator;
+
+import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.pull.MXParser;
+import org.codehaus.plexus.util.xml.pull.XmlPullParser;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+/**
+ * An abstract class that defines some convenience methods for &lt;code&gt;XML&lt;/code&gt; parsers.
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+<span class="fc" id="L71">public abstract class AbstractXmlParser</span>
+    extends AbstractParser
+    implements XmlMarkup
+{
+    /**
+     * Entity pattern for HTML entity, i.e. &amp;#38;nbsp;
+     * &quot;&lt;!ENTITY(\\s)+([^&gt;|^\\s]+)(\\s)+\&quot;(\\s)*(&amp;[a-zA-Z]{2,6};)(\\s)*\&quot;(\\s)*&gt;
+     * &lt;br&gt;
+     * see &lt;a href=&quot;http://www.w3.org/TR/REC-xml/#NT-EntityDecl&quot;&gt;http://www.w3.org/TR/REC-xml/#NT-EntityDecl&lt;/a&gt;.
+     */
+<span class="fc" id="L81">    private static final Pattern PATTERN_ENTITY_1 =</span>
+<span class="fc" id="L82">        Pattern.compile( ENTITY_START + &quot;(\\s)+([^&gt;|^\\s]+)(\\s)+\&quot;(\\s)*(&amp;[a-zA-Z]{2,6};)(\\s)*\&quot;(\\s)*&gt;&quot; );</span>
+
+    /**
+     * Entity pattern for Unicode entity, i.e. &amp;#38;#38;
+     * &quot;&lt;!ENTITY(\\s)+([^&gt;|^\\s]+)(\\s)+\&quot;(\\s)*(&amp;(#x?[0-9a-fA-F]{1,5};)*)(\\s)*\&quot;(\\s)*&gt;&quot;
+     * &lt;br&gt;
+     * see &lt;a href=&quot;http://www.w3.org/TR/REC-xml/#NT-EntityDecl&quot;&gt;http://www.w3.org/TR/REC-xml/#NT-EntityDecl&lt;/a&gt;.
+     */
+<span class="fc" id="L90">    private static final Pattern PATTERN_ENTITY_2 =</span>
+<span class="fc" id="L91">        Pattern.compile( ENTITY_START + &quot;(\\s)+([^&gt;|^\\s]+)(\\s)+\&quot;(\\s)*(&amp;(#x?[0-9a-fA-F]{1,5};)*)(\\s)*\&quot;(\\s)*&gt;&quot; );</span>
+
+    private boolean ignorableWhitespace;
+
+    private boolean collapsibleWhitespace;
+
+    private boolean trimmableWhitespace;
+
+    private Map&lt;String, String&gt; entities;
+
+<span class="fc" id="L101">    private boolean validate = false;</span>
+
+    /** {@inheritDoc} */
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L107">        init();</span>
+
+<span class="fc" id="L109">        Reader src = source;</span>
+
+        // 1 first parsing if validation is required
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if ( isValidate() )</span>
+        {
+            String content;
+            try
+            {
+<span class="nc" id="L117">                content = IOUtil.toString( new BufferedReader( src ) );</span>
+            }
+<span class="nc" id="L119">            catch ( IOException e )</span>
+            {
+<span class="nc" id="L121">                throw new ParseException( &quot;Error reading the model: &quot; + e.getMessage(), e );</span>
+<span class="nc" id="L122">            }</span>
+
+<span class="nc" id="L124">            new XmlValidator( getLog() ).validate( content );</span>
+
+<span class="nc" id="L126">            src = new StringReader( content );</span>
+        }
+
+        // 2 second parsing to process
+        try
+        {
+<span class="fc" id="L132">            XmlPullParser parser = new MXParser();</span>
+
+<span class="fc" id="L134">            parser.setInput( src );</span>
+            
+            // allow parser initialization, e.g. for additional entities in XHTML
+            // Note: do it after input is set, otherwise values are reset
+<span class="fc" id="L138">            initXmlParser( parser );</span>
+
+<span class="fc" id="L140">            sink.enableLogging( getLog() );</span>
+
+<span class="fc" id="L142">            parseXml( parser, sink );</span>
+        }
+<span class="nc" id="L144">        catch ( XmlPullParserException ex )</span>
+        {
+<span class="nc" id="L146">            throw new ParseException( &quot;Error parsing the model: &quot; + ex.getMessage(), ex, ex.getLineNumber(),</span>
+<span class="nc" id="L147">                                      ex.getColumnNumber() );</span>
+        }
+<span class="nc" id="L149">        catch ( MacroExecutionException ex )</span>
+        {
+<span class="nc" id="L151">            throw new ParseException( &quot;Macro execution failed: &quot; + ex.getMessage(), ex );</span>
+<span class="fc" id="L152">        }</span>
+
+<span class="fc" id="L154">        setSecondParsing( false );</span>
+<span class="fc" id="L155">        init();</span>
+<span class="fc" id="L156">    }</span>
+    
+    /**
+     * Initializes the parser with custom entities or other options.
+     *
+     * @param parser A parser, not null.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem initializing the parser
+     */
+    protected void initXmlParser( XmlPullParser parser )
+        throws XmlPullParserException
+    {
+        // nop
+<span class="fc" id="L168">    }</span>
+
+    /**
+     * {@inheritDoc}
+     *
+     * Convenience method to parse an arbitrary string and emit any xml events into the given sink.
+     */
+    @Override
+    public void parse( String string, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L179">        super.parse( string, sink );</span>
+<span class="fc" id="L180">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public final int getType()
+    {
+<span class="nc" id="L186">        return XML_TYPE;</span>
+    }
+
+    /**
+     * Converts the attributes of the current start tag of the given parser to a SinkEventAttributeSet.
+     *
+     * @param parser A parser, not null.
+     * @return a SinkEventAttributeSet or null if the current parser event is not a start tag.
+     * @since 1.1
+     */
+    protected SinkEventAttributeSet getAttributesFromParser( XmlPullParser parser )
+    {
+<span class="fc" id="L198">        int count = parser.getAttributeCount();</span>
+
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if ( count &lt; 0 )</span>
+        {
+<span class="fc" id="L202">            return null;</span>
+        }
+
+<span class="fc" id="L205">        SinkEventAttributeSet atts = new SinkEventAttributeSet( count );</span>
+
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        for ( int i = 0; i &lt; count; i++ )</span>
+        {
+<span class="fc" id="L209">            atts.addAttribute( parser.getAttributeName( i ), parser.getAttributeValue( i ) );</span>
+        }
+
+<span class="fc" id="L212">        return atts;</span>
+    }
+
+    /**
+     * Parse the model from the XmlPullParser into the given sink.
+     *
+     * @param parser A parser, not null.
+     * @param sink the sink to receive the events.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem parsing the model
+     * @throws org.apache.maven.doxia.macro.MacroExecutionException if there's a problem executing a macro
+     */
+    private void parseXml( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc" id="L226">        int eventType = parser.getEventType();</span>
+
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        while ( eventType != XmlPullParser.END_DOCUMENT )</span>
+        {
+<span class="fc bfc" id="L230" title="All 2 branches covered.">            if ( eventType == XmlPullParser.START_TAG )</span>
+            {
+<span class="fc" id="L232">                handleStartTag( parser, sink );</span>
+            }
+<span class="fc bfc" id="L234" title="All 2 branches covered.">            else if ( eventType == XmlPullParser.END_TAG )</span>
+            {
+<span class="fc" id="L236">                handleEndTag( parser, sink );</span>
+            }
+<span class="fc bfc" id="L238" title="All 2 branches covered.">            else if ( eventType == XmlPullParser.TEXT )</span>
+            {
+<span class="fc" id="L240">                String text = getText( parser );</span>
+
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">                if ( isIgnorableWhitespace() )</span>
+                {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                    if ( text.trim().length() != 0 )</span>
+                    {
+<span class="nc" id="L246">                        handleText( parser, sink );</span>
+                    }
+                }
+                else
+                {
+<span class="fc" id="L251">                    handleText( parser, sink );</span>
+                }
+<span class="fc" id="L253">            }</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">            else if ( eventType == XmlPullParser.CDSECT )</span>
+            {
+<span class="fc" id="L256">                handleCdsect( parser, sink );</span>
+            }
+<span class="fc bfc" id="L258" title="All 2 branches covered.">            else if ( eventType == XmlPullParser.COMMENT )</span>
+            {
+<span class="fc" id="L260">                handleComment( parser, sink );</span>
+            }
+<span class="fc bfc" id="L262" title="All 2 branches covered.">            else if ( eventType == XmlPullParser.ENTITY_REF )</span>
+            {
+<span class="fc" id="L264">                handleEntity( parser, sink );</span>
+            }
+<span class="fc bfc" id="L266" title="All 2 branches covered.">            else if ( eventType == XmlPullParser.IGNORABLE_WHITESPACE )</span>
+            {
+                // nop
+            }
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">            else if ( eventType == XmlPullParser.PROCESSING_INSTRUCTION )</span>
+            {
+                // nop
+            }
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            else if ( eventType == XmlPullParser.DOCDECL )</span>
+            {
+<span class="fc" id="L276">                addLocalEntities( parser, parser.getText() );</span>
+
+<span class="fc bfc" id="L278" title="All 2 branches covered.">                for ( byte[] res : CachedFileEntityResolver.ENTITY_CACHE.values() )</span>
+                {
+<span class="fc" id="L280">                    addDTDEntities( parser, new String( res ) );</span>
+<span class="fc" id="L281">                }</span>
+            }
+
+            try
+            {
+<span class="fc" id="L286">                eventType = parser.nextToken();</span>
+            }
+<span class="nc" id="L288">            catch ( IOException io )</span>
+            {
+<span class="nc" id="L290">                throw new XmlPullParserException( &quot;IOException: &quot; + io.getMessage(), parser, io );</span>
+<span class="fc" id="L291">            }</span>
+        }
+<span class="fc" id="L293">    }</span>
+
+    /**
+     * Goes through the possible start tags.
+     *
+     * @param parser A parser, not null.
+     * @param sink the sink to receive the events.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem parsing the model
+     * @throws org.apache.maven.doxia.macro.MacroExecutionException if there's a problem executing a macro
+     */
+    protected abstract void handleStartTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException;
+
+    /**
+     * Goes through the possible end tags.
+     *
+     * @param parser A parser, not null.
+     * @param sink the sink to receive the events.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem parsing the model
+     * @throws org.apache.maven.doxia.macro.MacroExecutionException if there's a problem executing a macro
+     */
+    protected abstract void handleEndTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException;
+
+    /**
+     * Handles text events.
+     *
+     * &lt;p&gt;This is a default implementation, if the parser points to a non-empty text element,
+     * it is emitted as a text event into the specified sink.&lt;/p&gt;
+     *
+     * @param parser A parser, not null.
+     * @param sink the sink to receive the events. Not null.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem parsing the model
+     */
+    protected void handleText( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="nc" id="L330">        String text = getText( parser );</span>
+
+        /*
+         * NOTE: Don't do any whitespace trimming here. Whitespace normalization has already been performed by the
+         * parser so any whitespace that makes it here is significant.
+         */
+<span class="nc bnc" id="L336" title="All 2 branches missed.">        if ( StringUtils.isNotEmpty( text ) )</span>
+        {
+<span class="nc" id="L338">            sink.text( text );</span>
+        }
+<span class="nc" id="L340">    }</span>
+
+    /**
+     * Handles CDATA sections.
+     *
+     * &lt;p&gt;This is a default implementation, all data are emitted as text
+     * events into the specified sink.&lt;/p&gt;
+     *
+     * @param parser A parser, not null.
+     * @param sink the sink to receive the events. Not null.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem parsing the model
+     */
+    protected void handleCdsect( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="nc" id="L355">        sink.text( getText( parser ) );</span>
+<span class="nc" id="L356">    }</span>
+
+    /**
+     * Handles comments.
+     *
+     * &lt;p&gt;This is a default implementation, all data are emitted as comment
+     * events into the specified sink.&lt;/p&gt;
+     *
+     * @param parser A parser, not null.
+     * @param sink the sink to receive the events. Not null.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem parsing the model
+     */
+    protected void handleComment( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="nc bnc" id="L371" title="All 2 branches missed.">        if ( isEmitComments() )</span>
+        {
+<span class="nc" id="L373">            sink.comment( getText( parser ) );</span>
+        }
+<span class="nc" id="L375">    }</span>
+
+    /**
+     * Handles entities.
+     *
+     * &lt;p&gt;This is a default implementation, all entities are resolved and emitted as text
+     * events into the specified sink, except:&lt;/p&gt;
+     * &lt;ul&gt;
+     * &lt;li&gt;the entities with names &lt;code&gt;#160&lt;/code&gt;, &lt;code&gt;nbsp&lt;/code&gt; and &lt;code&gt;#x00A0&lt;/code&gt;
+     * are emitted as &lt;code&gt;nonBreakingSpace()&lt;/code&gt; events.&lt;/li&gt;
+     * &lt;/ul&gt;
+     *
+     * @param parser A parser, not null.
+     * @param sink the sink to receive the events. Not null.
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException if there's a problem parsing the model
+     */
+    protected void handleEntity( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L394">        String text = getText( parser );</span>
+
+<span class="fc" id="L396">        String name = parser.getName();</span>
+
+<span class="pc bpc" id="L398" title="1 of 6 branches missed.">        if ( &quot;#160&quot;.equals( name ) || &quot;nbsp&quot;.equals( name ) || &quot;#x00A0&quot;.equals( name ) )</span>
+        {
+<span class="fc" id="L400">            sink.nonBreakingSpace();</span>
+        }
+        else
+        {
+<span class="fc" id="L404">            String unescaped = HtmlTools.unescapeHTML( text );</span>
+
+<span class="fc" id="L406">            sink.text( unescaped );</span>
+        }
+<span class="fc" id="L408">    }</span>
+
+    /**
+     * Handles an unknown event.
+     *
+     * &lt;p&gt;This is a default implementation, all events are emitted as unknown
+     * events into the specified sink.&lt;/p&gt;
+     *
+     * @param parser the parser to get the event from.
+     * @param sink the sink to receive the event.
+     * @param type the tag event type. This should be one of HtmlMarkup.TAG_TYPE_SIMPLE,
+     * HtmlMarkup.TAG_TYPE_START, HtmlMarkup.TAG_TYPE_END or HtmlMarkup.ENTITY_TYPE.
+     * It will be passed as the first argument of the required parameters to the Sink
+     * {@link
+     * org.apache.maven.doxia.sink.Sink#unknown(String, Object[], org.apache.maven.doxia.sink.SinkEventAttributes)}
+     * method.
+     */
+    protected void handleUnknown( XmlPullParser parser, Sink sink, int type )
+    {
+<span class="fc" id="L427">        Object[] required = new Object[] { type };</span>
+
+<span class="fc" id="L429">        SinkEventAttributeSet attribs = getAttributesFromParser( parser );</span>
+
+<span class="fc" id="L431">        sink.unknown( parser.getName(), required, attribs );</span>
+<span class="fc" id="L432">    }</span>
+
+    /**
+     * &lt;p&gt;isIgnorableWhitespace.&lt;/p&gt;
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if whitespace will be ignored, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @see #setIgnorableWhitespace(boolean)
+     * @since 1.1
+     */
+    protected boolean isIgnorableWhitespace()
+    {
+<span class="fc" id="L443">        return ignorableWhitespace;</span>
+    }
+
+    /**
+     * Specify that whitespace will be ignored. I.e.:
+     * &lt;pre&gt;&amp;lt;tr&amp;gt; &amp;lt;td/&amp;gt; &amp;lt;/tr&amp;gt;&lt;/pre&gt;
+     * is equivalent to
+     * &lt;pre&gt;&amp;lt;tr&amp;gt;&amp;lt;td/&amp;gt;&amp;lt;/tr&amp;gt;&lt;/pre&gt;
+     *
+     * @param ignorable &lt;code&gt;true&lt;/code&gt; to ignore whitespace, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @since 1.1
+     */
+    protected void setIgnorableWhitespace( boolean ignorable )
+    {
+<span class="nc" id="L457">        this.ignorableWhitespace = ignorable;</span>
+<span class="nc" id="L458">    }</span>
+
+    /**
+     * &lt;p&gt;isCollapsibleWhitespace.&lt;/p&gt;
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if text will collapse, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @see #setCollapsibleWhitespace(boolean)
+     * @since 1.1
+     */
+    protected boolean isCollapsibleWhitespace()
+    {
+<span class="fc" id="L469">        return collapsibleWhitespace;</span>
+    }
+
+    /**
+     * Specify that text will be collapsed. I.e.:
+     * &lt;pre&gt;Text   Text&lt;/pre&gt;
+     * is equivalent to
+     * &lt;pre&gt;Text Text&lt;/pre&gt;
+     *
+     * @param collapsible &lt;code&gt;true&lt;/code&gt; to allow collapsible text, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @since 1.1
+     */
+    protected void setCollapsibleWhitespace( boolean collapsible )
+    {
+<span class="nc" id="L483">        this.collapsibleWhitespace = collapsible;</span>
+<span class="nc" id="L484">    }</span>
+
+    /**
+     * &lt;p&gt;isTrimmableWhitespace.&lt;/p&gt;
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if text will be trim, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @see #setTrimmableWhitespace(boolean)
+     * @since 1.1
+     */
+    protected boolean isTrimmableWhitespace()
+    {
+<span class="fc" id="L495">        return trimmableWhitespace;</span>
+    }
+
+    /**
+     * Specify that text will be collapsed. I.e.:
+     * &lt;pre&gt;&amp;lt;p&amp;gt; Text &amp;lt;/p&amp;gt;&lt;/pre&gt;
+     * is equivalent to
+     * &lt;pre&gt;&amp;lt;p&amp;gt;Text&amp;lt;/p&amp;gt;&lt;/pre&gt;
+     *
+     * @param trimmable &lt;code&gt;true&lt;/code&gt; to allow trimmable text, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @since 1.1
+     */
+    protected void setTrimmableWhitespace( boolean trimmable )
+    {
+<span class="nc" id="L509">        this.trimmableWhitespace = trimmable;</span>
+<span class="nc" id="L510">    }</span>
+
+    /**
+     * &lt;p&gt;getText.&lt;/p&gt;
+     *
+     * @param parser A parser, not null.
+     * @return the {@link XmlPullParser#getText()} taking care of trimmable or collapsible configuration.
+     * @see XmlPullParser#getText()
+     * @see #isCollapsibleWhitespace()
+     * @see #isTrimmableWhitespace()
+     * @since 1.1
+     */
+    protected String getText( XmlPullParser parser )
+    {
+<span class="fc" id="L524">        String text = parser.getText();</span>
+
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">        if ( isTrimmableWhitespace() )</span>
+        {
+<span class="nc" id="L528">            text = text.trim();</span>
+        }
+
+<span class="pc bpc" id="L531" title="1 of 2 branches missed.">        if ( isCollapsibleWhitespace() )</span>
+        {
+<span class="nc" id="L533">            StringBuilder newText = new StringBuilder();</span>
+<span class="nc" id="L534">            String[] elts = StringUtils.split( text, &quot; \r\n&quot; );</span>
+<span class="nc bnc" id="L535" title="All 2 branches missed.">            for ( int i = 0; i &lt; elts.length; i++ )</span>
+            {
+<span class="nc" id="L537">                newText.append( elts[i] );</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">                if ( ( i + 1 ) &lt; elts.length )</span>
+                {
+<span class="nc" id="L540">                    newText.append( &quot; &quot; );</span>
+                }
+            }
+<span class="nc" id="L543">            text = newText.toString();</span>
+        }
+
+<span class="fc" id="L546">        return text;</span>
+    }
+
+    /**
+     * Return the defined entities in a local doctype. I.e.:
+     * &lt;pre&gt;
+     * &amp;lt;!DOCTYPE foo [
+     *   &amp;lt;!ENTITY bar &quot;&amp;#38;#x160;&quot;&amp;gt;
+     *   &amp;lt;!ENTITY bar1 &quot;&amp;#38;#x161;&quot;&amp;gt;
+     * ]&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @return a map of the defined entities in a local doctype.
+     * @since 1.1
+     */
+    protected Map&lt;String, String&gt; getLocalEntities()
+    {
+<span class="fc bfc" id="L563" title="All 2 branches covered.">        if ( entities == null )</span>
+        {
+<span class="fc" id="L565">            entities = new LinkedHashMap&lt;&gt;();</span>
+        }
+
+<span class="fc" id="L568">        return entities;</span>
+    }
+
+    /**
+     * &lt;p&gt;isValidate.&lt;/p&gt;
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if XML content will be validate, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @since 1.1
+     */
+    public boolean isValidate()
+    {
+<span class="fc" id="L579">        return validate;</span>
+    }
+
+    /**
+     * Specify a flag to validate or not the XML content.
+     *
+     * @param validate the validate to set
+     * @see #parse(Reader, Sink)
+     * @since 1.1
+     */
+    public void setValidate( boolean validate )
+    {
+<span class="fc" id="L591">        this.validate = validate;</span>
+<span class="fc" id="L592">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Private methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * Add an entity given by &lt;code&gt;entityName&lt;/code&gt; and &lt;code&gt;entityValue&lt;/code&gt; to {@link #entities}.
+     * &lt;br&gt;
+     * By default, we exclude the default XML entities: &amp;#38;amp;, &amp;#38;lt;, &amp;#38;gt;, &amp;#38;quot; and &amp;#38;apos;.
+     *
+     * @param parser not null
+     * @param entityName not null
+     * @param entityValue not null
+     * @throws XmlPullParserException if any
+     * @see XmlPullParser#defineEntityReplacementText(String, String)
+     */
+    private void addEntity( XmlPullParser parser, String entityName, String entityValue )
+        throws XmlPullParserException
+    {
+<span class="fc bfc" id="L612" title="All 6 branches covered.">        if ( entityName.endsWith( &quot;amp&quot; ) || entityName.endsWith( &quot;lt&quot; ) || entityName.endsWith( &quot;gt&quot; )</span>
+<span class="fc bfc" id="L613" title="All 4 branches covered.">            || entityName.endsWith( &quot;quot&quot; ) || entityName.endsWith( &quot;apos&quot; ) )</span>
+        {
+<span class="fc" id="L615">            return;</span>
+        }
+
+<span class="fc" id="L618">        parser.defineEntityReplacementText( entityName, entityValue );</span>
+<span class="fc" id="L619">        getLocalEntities().put( entityName, entityValue );</span>
+<span class="fc" id="L620">    }</span>
+
+    /**
+     * Handle entities defined in a local doctype as the following:
+     * &lt;pre&gt;
+     * &amp;lt;!DOCTYPE foo [
+     *   &amp;lt;!ENTITY bar &quot;&amp;#38;#x160;&quot;&amp;gt;
+     *   &amp;lt;!ENTITY bar1 &quot;&amp;#38;#x161;&quot;&amp;gt;
+     * ]&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @param parser not null
+     * @param text not null
+     * @throws XmlPullParserException if any
+     */
+    private void addLocalEntities( XmlPullParser parser, String text )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L638">        int entitiesCount = StringUtils.countMatches( text, ENTITY_START );</span>
+<span class="fc bfc" id="L639" title="All 2 branches covered.">        if ( entitiesCount &gt; 0 )</span>
+        {
+            // text should be foo [...]
+<span class="fc" id="L642">            int start = text.indexOf( '[' );</span>
+<span class="fc" id="L643">            int end = text.lastIndexOf( ']' );</span>
+<span class="pc bpc" id="L644" title="2 of 4 branches missed.">            if ( start != -1 &amp;&amp; end != -1 )</span>
+            {
+<span class="fc" id="L646">                addDTDEntities( parser, text.substring( start + 1, end ) );</span>
+            }
+        }
+<span class="fc" id="L649">    }</span>
+
+    /**
+     * Handle entities defined in external doctypes as the following:
+     * &lt;pre&gt;
+     * &amp;lt;!DOCTYPE foo [
+     *   &amp;lt;!-- These are the entity sets for ISO Latin 1 characters for the XHTML --&amp;gt;
+     *   &amp;lt;!ENTITY % HTMLlat1 PUBLIC &quot;-//W3C//ENTITIES Latin 1 for XHTML//EN&quot;
+     *          &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml-lat1.ent&quot;&amp;gt;
+     *   %HTMLlat1;
+     * ]&amp;gt;
+     * &lt;/pre&gt;
+     *
+     * @param parser not null
+     * @param text not null
+     * @throws XmlPullParserException if any
+     */
+    private void addDTDEntities( XmlPullParser parser, String text )
+        throws XmlPullParserException
+    {
+<span class="fc" id="L669">        int entitiesCount = StringUtils.countMatches( text, ENTITY_START );</span>
+<span class="pc bpc" id="L670" title="1 of 2 branches missed.">        if ( entitiesCount &gt; 0 )</span>
+        {
+<span class="fc" id="L672">            final String txt = StringUtils.replace( text, ENTITY_START, &quot;\n&quot; + ENTITY_START );</span>
+<span class="fc" id="L673">            try ( BufferedReader reader = new BufferedReader( new StringReader( txt ) ) )</span>
+            {
+                String line;
+<span class="fc" id="L676">                String tmpLine = &quot;&quot;;</span>
+                Matcher matcher;
+<span class="fc bfc" id="L678" title="All 2 branches covered.">                while ( ( line = reader.readLine() ) != null )</span>
+                {
+<span class="fc" id="L680">                    tmpLine += &quot;\n&quot; + line;</span>
+<span class="fc" id="L681">                    matcher = PATTERN_ENTITY_1.matcher( tmpLine );</span>
+<span class="pc bpc" id="L682" title="1 of 4 branches missed.">                    if ( matcher.find() &amp;&amp; matcher.groupCount() == 7 )</span>
+                    {
+<span class="fc" id="L684">                        String entityName = matcher.group( 2 );</span>
+<span class="fc" id="L685">                        String entityValue = matcher.group( 5 );</span>
+
+<span class="fc" id="L687">                        addEntity( parser, entityName, entityValue );</span>
+<span class="fc" id="L688">                        tmpLine = &quot;&quot;;</span>
+<span class="fc" id="L689">                    }</span>
+                    else
+                    {
+<span class="fc" id="L692">                        matcher = PATTERN_ENTITY_2.matcher( tmpLine );</span>
+<span class="pc bpc" id="L693" title="1 of 4 branches missed.">                        if ( matcher.find() &amp;&amp; matcher.groupCount() == 8 )</span>
+                        {
+<span class="fc" id="L695">                            String entityName = matcher.group( 2 );</span>
+<span class="fc" id="L696">                            String entityValue = matcher.group( 5 );</span>
+
+<span class="fc" id="L698">                            addEntity( parser, entityName, entityValue );</span>
+<span class="fc" id="L699">                            tmpLine = &quot;&quot;;</span>
+<span class="fc" id="L700">                        }</span>
+                    }
+                }
+            }
+<span class="nc" id="L704">            catch ( IOException e )</span>
+            {
+                // nop
+<span class="fc" id="L707">            }</span>
+        }
+<span class="fc" id="L709">    }</span>
+
+    /**
+     * Implementation of the callback mechanism &lt;code&gt;EntityResolver&lt;/code&gt;.
+     * Using a mechanism of cached files in temp dir to improve performance when using the &lt;code&gt;XMLReader&lt;/code&gt;.
+     */
+<span class="fc" id="L715">    public static class CachedFileEntityResolver</span>
+        implements EntityResolver
+    {
+        /** Map with systemId as key and the content of systemId as byte[]. */
+<span class="fc" id="L719">        protected static final Map&lt;String, byte[]&gt; ENTITY_CACHE = new Hashtable&lt;&gt;();</span>
+
+        /** {@inheritDoc} */
+        public InputSource resolveEntity( String publicId, String systemId )
+            throws SAXException, IOException
+        {
+<span class="fc" id="L725">            byte[] res = ENTITY_CACHE.get( systemId );</span>
+            // already cached?
+<span class="pc bpc" id="L727" title="1 of 2 branches missed.">            if ( res == null )</span>
+            {
+<span class="fc" id="L729">                String systemName = FileUtils.getFile( systemId ).getName();</span>
+<span class="fc" id="L730">                File temp = new File( System.getProperty( &quot;java.io.tmpdir&quot; ), systemName );</span>
+                // maybe already as a temp file?
+<span class="fc bfc" id="L732" title="All 2 branches covered.">                if ( !temp.exists() )</span>
+                {
+                    // is systemId a file or an url?
+<span class="pc bpc" id="L735" title="1 of 2 branches missed.">                    if ( systemId.toLowerCase( Locale.ENGLISH ).startsWith( &quot;file&quot; ) )</span>
+                    {
+                        // Doxia XSDs are included in the jars, so try to find the resource systemName from
+                        // the classpath...
+<span class="nc" id="L739">                        String resource = &quot;/&quot; + systemName;</span>
+<span class="nc" id="L740">                        URL url = getClass().getResource( resource );</span>
+<span class="nc bnc" id="L741" title="All 2 branches missed.">                        if ( url != null )</span>
+                        {
+<span class="nc" id="L743">                            res = toByteArray( url );</span>
+                        }
+                        else
+                        {
+<span class="nc" id="L747">                            throw new SAXException( &quot;Could not find the SYSTEM entity: &quot; + systemId</span>
+                            + &quot; because '&quot; + resource + &quot;' is not available of the classpath.&quot; );
+                        }
+<span class="nc" id="L750">                    }</span>
+                    else
+                    {
+<span class="fc" id="L753">                        res = toByteArray( new URL( systemId ) );</span>
+                    }
+
+                    // write systemId as temp file
+<span class="fc" id="L757">                    copy( res, temp );</span>
+                }
+                else
+                {
+                    // TODO How to refresh Doxia XSDs from temp dir?
+<span class="fc" id="L762">                    res = toByteArray( temp.toURI().toURL() );</span>
+                }
+
+<span class="fc" id="L765">                ENTITY_CACHE.put( systemId, res );</span>
+            }
+
+<span class="fc" id="L768">            InputSource is = new InputSource( new ByteArrayInputStream( res ) );</span>
+<span class="fc" id="L769">            is.setPublicId( publicId );</span>
+<span class="fc" id="L770">            is.setSystemId( systemId );</span>
+
+<span class="fc" id="L772">            return is;</span>
+        }
+
+        /**
+         * If url is not an http/https urls, call {@link IOUtil#toByteArray(java.io.InputStream)} to get the url
+         * content.
+         * Otherwise, use HttpClient to get the http content.
+         * Wrap all internal exceptions to throw SAXException.
+         *
+         * @param url not null
+         * @return return an array of byte
+         * @throws SAXException if any
+         */
+        private static byte[] toByteArray( URL url )
+            throws SAXException
+        {
+<span class="pc bpc" id="L788" title="1 of 4 branches missed.">            if ( !( url.getProtocol().equalsIgnoreCase( &quot;http&quot; ) || url.getProtocol().equalsIgnoreCase( &quot;https&quot; ) ) )</span>
+            {
+<span class="fc" id="L790">                InputStream is = null;</span>
+                try
+                {
+<span class="fc" id="L793">                    is = url.openStream();</span>
+<span class="pc bpc" id="L794" title="1 of 2 branches missed.">                    if ( is == null )</span>
+                    {
+<span class="nc" id="L796">                        throw new SAXException( &quot;Cannot open stream from the url: &quot; + url.toString() );</span>
+                    }
+<span class="fc" id="L798">                    return IOUtil.toByteArray( is );</span>
+                }
+<span class="nc" id="L800">                catch ( IOException e )</span>
+                {
+<span class="nc" id="L802">                    throw new SAXException( &quot;IOException: &quot; + e.getMessage(), e );</span>
+                }
+                finally
+                {
+<span class="fc" id="L806">                    IOUtil.close( is );</span>
+                }
+            }
+
+            // it is an HTTP url, using HttpClient...
+<span class="fc" id="L811">            HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()</span>
+<span class="fc" id="L812">                    .useSystemProperties()</span>
+<span class="fc" id="L813">                    .setRetryHandler( new DefaultHttpRequestRetryHandler( 3, false ) )</span>
+                    // Set a user-agent that doesn't contain the word &quot;java&quot;, otherwise it will be blocked by the W3C
+                    // The default user-agent is &quot;Apache-HttpClient/4.5.8 (java 7)&quot;
+<span class="fc" id="L816">                    .setUserAgent( &quot;Apache-Doxia/&quot; + doxiaVersion() );</span>
+
+<span class="fc" id="L818">            try ( CloseableHttpResponse response = httpClientBuilder.build().execute( new HttpGet( url.toString() ) ) )</span>
+            {
+<span class="fc" id="L820">                int statusCode = response.getStatusLine().getStatusCode();</span>
+<span class="pc bpc" id="L821" title="1 of 2 branches missed.">                if ( statusCode != HttpStatus.SC_OK )</span>
+                {
+<span class="nc" id="L823">                    throw new IOException(</span>
+<span class="nc" id="L824">                            &quot;The status code when accessing the URL '&quot; + url.toString() + &quot;' was &quot; + statusCode</span>
+                                    + &quot;, which is not allowed. The server gave this reason for the failure '&quot;
+<span class="nc" id="L826">                                    + response.getStatusLine().getReasonPhrase() + &quot;'.&quot; );</span>
+                }
+
+<span class="fc" id="L829">                return EntityUtils.toByteArray( response.getEntity() );</span>
+            }
+<span class="nc" id="L831">            catch ( ClientProtocolException e )</span>
+            {
+<span class="nc" id="L833">                throw new SAXException( &quot;ClientProtocolException: Fatal protocol violation: &quot; + e.getMessage(), e );</span>
+            }
+<span class="nc" id="L835">            catch ( IOException e )</span>
+            {
+<span class="nc" id="L837">                throw new SAXException( &quot;IOException: Fatal transport error: &quot; + e.getMessage(), e );</span>
+            }
+        }
+
+        /**
+         * Wrap {@link IOUtil#copy(byte[], OutputStream)} to throw SAXException.
+         *
+         * @param res not null array of byte
+         * @param f the file where to write the bytes
+         * @throws SAXException if any
+         * @see IOUtil#copy(byte[], OutputStream)
+         */
+        private void copy( byte[] res, File f )
+            throws SAXException
+        {
+<span class="pc bpc" id="L852" title="1 of 2 branches missed.">            if ( f.isDirectory() )</span>
+            {
+<span class="nc" id="L854">                throw new SAXException( &quot;'&quot; + f.getAbsolutePath() + &quot;' is a directory, can not write it.&quot; );</span>
+            }
+
+<span class="fc" id="L857">            OutputStream os = null;</span>
+            try
+            {
+<span class="fc" id="L860">                os = new FileOutputStream( f );</span>
+<span class="fc" id="L861">                IOUtil.copy( res, os );</span>
+            }
+<span class="nc" id="L863">            catch ( IOException e )</span>
+            {
+<span class="nc" id="L865">                throw new SAXException( &quot;IOException: &quot; + e.getMessage(), e );</span>
+            }
+            finally
+            {
+<span class="fc" id="L869">                IOUtil.close( os );</span>
+            }
+<span class="fc" id="L871">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

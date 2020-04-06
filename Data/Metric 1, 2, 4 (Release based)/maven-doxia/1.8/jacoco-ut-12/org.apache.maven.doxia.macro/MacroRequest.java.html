@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MacroRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.macro</a> &gt; <span class="el_source">MacroRequest.java</span></div><h1>MacroRequest.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.macro;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.Map;
+
+import org.apache.maven.doxia.parser.AbstractParser;
+import org.apache.maven.doxia.parser.Parser;
+
+import java.io.File;
+
+/**
+ * &lt;p&gt;MacroRequest class.&lt;/p&gt;
+ *
+ * @author &lt;a href=&quot;mailto:jason@maven.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+public class MacroRequest
+{
+    private static final String PARAM_SOURCE_CONTENT = &quot;sourceContent&quot;;
+    private static final String PARAM_PARSER = &quot;parser&quot;;
+
+    /** The current base directory. */
+    private File basedir;
+
+    /** A map of parameters. */
+    private Map&lt;String, Object&gt; parameters;
+
+    /**
+     * Constructor.
+     *
+     * @param param A map of parameters.
+     * @param base The current base directory.
+     * @deprecated prefer other constructor
+     */
+    public MacroRequest( Map&lt;String, Object&gt; param, File base )
+<span class="fc" id="L55">    {</span>
+<span class="fc" id="L56">        this.parameters = param;</span>
+<span class="fc" id="L57">        this.basedir = base;</span>
+<span class="fc" id="L58">    }</span>
+
+    public MacroRequest( String sourceContent, AbstractParser parser, Map&lt;String, Object&gt; param, File base )
+<span class="fc" id="L61">    {</span>
+<span class="fc" id="L62">        this.parameters = param;</span>
+<span class="fc" id="L63">        this.basedir = base;</span>
+<span class="fc" id="L64">        param.put( PARAM_SOURCE_CONTENT, sourceContent );</span>
+<span class="fc" id="L65">        parser.setSecondParsing( true );</span>
+<span class="fc" id="L66">        param.put( PARAM_PARSER, parser );</span>
+<span class="fc" id="L67">    }</span>
+
+    /**
+     * Returns the current base directory.
+     *
+     * @return The base dir.
+     */
+    public File getBasedir()
+    {
+<span class="fc" id="L76">        return basedir;</span>
+    }
+
+    /**
+     * Sets the current base directory.
+     *
+     * @param base The current base directory.
+     */
+    public void setBasedir( File base )
+    {
+<span class="nc" id="L86">        this.basedir = base;</span>
+<span class="nc" id="L87">    }</span>
+
+    /**
+     * Returns the map of parameters.
+     *
+     * @return The map of parameters.
+     */
+    public Map&lt;String, Object&gt; getParameters()
+    {
+<span class="fc" id="L96">        return parameters;</span>
+    }
+
+    /**
+     * Returns on object from the map of parameters
+     * that corresponds to the given key.
+     *
+     * @param key The key to lookup the object.
+     * @return The value object.
+     */
+    public Object getParameter( String key )
+    {
+<span class="fc" id="L108">        return parameters.get( key );</span>
+    }
+
+    public String getSourceContent()
+    {
+<span class="fc" id="L113">        return (String) getParameter( PARAM_SOURCE_CONTENT );</span>
+    }
+
+    public Parser getParser()
+    {
+<span class="fc" id="L118">        return (Parser) getParameter( PARAM_PARSER );</span>
+    }
+
+    public static boolean isInternalParameter( String name )
+    {
+<span class="fc bfc" id="L123" title="All 4 branches covered.">        return PARAM_PARSER.equals( name ) || PARAM_SOURCE_CONTENT.equals( name );</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

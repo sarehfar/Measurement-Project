@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XdocParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: XDoc Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.xdoc</a> &gt; <span class="el_source">XdocParser.java</span></div><h1>XdocParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.xdoc;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.text.html.HTML.Attribute;
+
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.macro.MacroRequest;
+import org.apache.maven.doxia.macro.manager.MacroNotFoundException;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.parser.XhtmlBaseParser;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.util.HtmlTools;
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParser;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
+/**
+ * Parse an xdoc model and emit events into the specified doxia Sink.
+ *
+ * @author &lt;a href=&quot;mailto:jason@maven.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+@Component( role = Parser.class, hint = &quot;xdoc&quot; )
+<span class="fc" id="L54">public class XdocParser</span>
+    extends XhtmlBaseParser
+    implements XdocMarkup
+{
+    /**
+     * The source content of the input reader. Used to pass into macros.
+     */
+    private String sourceContent;
+
+    /**
+     * Empty elements don't write a closing tag.
+     */
+    private boolean isEmptyElement;
+
+    /**
+     * A macro name.
+     */
+    private String macroName;
+
+    /**
+     * The macro parameters.
+     */
+<span class="fc" id="L76">    private Map&lt;String, Object&gt; macroParameters = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Indicates that we're inside &amp;lt;properties&amp;gt; or &amp;lt;head&amp;gt;.
+     */
+    private boolean inHead;
+
+    /**
+     * Indicates that &amp;lt;title&amp;gt; was called from &amp;lt;properties&amp;gt; or &amp;lt;head&amp;gt;.
+     */
+    private boolean hasTitle;
+
+    /**
+     * {@inheritDoc}
+     */
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L94">        this.sourceContent = null;</span>
+
+        try
+        {
+<span class="fc" id="L98">            StringWriter contentWriter = new StringWriter();</span>
+<span class="fc" id="L99">            IOUtil.copy( source, contentWriter );</span>
+<span class="fc" id="L100">            sourceContent = contentWriter.toString();</span>
+        }
+<span class="nc" id="L102">        catch ( IOException ex )</span>
+        {
+<span class="nc" id="L104">            throw new ParseException( &quot;Error reading the input source: &quot; + ex.getMessage(), ex );</span>
+        }
+        finally
+        {
+<span class="fc" id="L108">            IOUtil.close( source );</span>
+        }
+
+        // leave this at default (false) until everything is properly implemented, see DOXIA-226
+        //setIgnorableWhitespace( true );
+
+        try
+        {
+<span class="fc" id="L116">            super.parse( new StringReader( sourceContent ), sink );</span>
+        }
+        finally
+        {
+<span class="fc" id="L120">            this.sourceContent = null;</span>
+        }
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void handleStartTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc" id="L130">        isEmptyElement = parser.isEmptyElementTag();</span>
+
+<span class="fc" id="L132">        SinkEventAttributeSet attribs = getAttributesFromParser( parser );</span>
+
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if ( parser.getName().equals( DOCUMENT_TAG.toString() ) )</span>
+        {
+            //Do nothing
+<span class="fc" id="L137">            return;</span>
+        }
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        else if ( parser.getName().equals( HEAD.toString() ) )</span>
+        {
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            if ( !inHead ) // we might be in head from a &lt;properties&gt; already</span>
+            {
+<span class="nc" id="L143">                this.inHead = true;</span>
+
+<span class="nc" id="L145">                sink.head( attribs );</span>
+            }
+        }
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        else if ( parser.getName().equals( TITLE.toString() ) )</span>
+        {
+<span class="fc bfc" id="L150" title="All 2 branches covered.">            if ( hasTitle )</span>
+            {
+<span class="fc" id="L152">                getLog().warn( &quot;&lt;title&gt; was already defined in &lt;properties&gt;, ignored &lt;title&gt; in &lt;head&gt;.&quot; );</span>
+
+                try
+                {
+<span class="fc" id="L156">                    parser.nextText(); // ignore next text event</span>
+                }
+<span class="nc" id="L158">                catch ( IOException ex )</span>
+                {
+<span class="nc" id="L160">                    throw new XmlPullParserException( &quot;Failed to parse text&quot;, parser, ex );</span>
+<span class="fc" id="L161">                }</span>
+            }
+            else
+            {
+<span class="fc" id="L165">                sink.title( attribs );</span>
+            }
+        }
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        else if ( parser.getName().equals( AUTHOR_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L170">            sink.author( attribs );</span>
+        }
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        else if ( parser.getName().equals( DATE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L174">            sink.date( attribs );</span>
+        }
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        else if ( parser.getName().equals( META.toString() ) )</span>
+        {
+<span class="fc" id="L178">            handleMetaStart( parser, sink, attribs );</span>
+        }
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        else if ( parser.getName().equals( BODY.toString() ) )</span>
+        {
+<span class="fc bfc" id="L182" title="All 2 branches covered.">            if ( inHead )</span>
+            {
+<span class="fc" id="L184">                sink.head_();</span>
+<span class="fc" id="L185">                this.inHead = false;</span>
+            }
+
+<span class="fc" id="L188">            sink.body( attribs );</span>
+        }
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        else if ( parser.getName().equals( SECTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L192">            handleSectionStart( Sink.SECTION_LEVEL_1, sink, attribs, parser );</span>
+        }
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        else if ( parser.getName().equals( SUBSECTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L196">            handleSectionStart( Sink.SECTION_LEVEL_2, sink, attribs, parser );</span>
+        }
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        else if ( parser.getName().equals( SOURCE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L200">            verbatim();</span>
+
+<span class="fc" id="L202">            attribs.addAttributes( SinkEventAttributeSet.BOXED );</span>
+
+<span class="fc" id="L204">            sink.verbatim( attribs );</span>
+        }
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        else if ( parser.getName().equals( PROPERTIES_TAG.toString() ) )</span>
+        {
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">            if ( !inHead ) // we might be in head from a &lt;head&gt; already</span>
+            {
+<span class="fc" id="L210">                this.inHead = true;</span>
+
+<span class="fc" id="L212">                sink.head( attribs );</span>
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        // Macro
+        // ----------------------------------------------------------------------
+
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        else if ( parser.getName().equals( MACRO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L222">            handleMacroStart( parser );</span>
+        }
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        else if ( parser.getName().equals( PARAM.toString() ) )</span>
+        {
+<span class="fc" id="L226">            handleParamStart( parser, sink );</span>
+        }
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        else if ( !baseStartTag( parser, sink ) )</span>
+        {
+<span class="fc bfc" id="L230" title="All 2 branches covered.">            if ( isEmptyElement )</span>
+            {
+<span class="fc" id="L232">                handleUnknown( parser, sink, TAG_TYPE_SIMPLE );</span>
+            }
+            else
+            {
+<span class="fc" id="L236">                handleUnknown( parser, sink, TAG_TYPE_START );</span>
+            }
+
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">            if ( getLog().isDebugEnabled() )</span>
+            {
+<span class="nc" id="L241">                String position = &quot;[&quot; + parser.getLineNumber() + &quot;:&quot; + parser.getColumnNumber() + &quot;]&quot;;</span>
+<span class="nc" id="L242">                String tag = &quot;&lt;&quot; + parser.getName() + &quot;&gt;&quot;;</span>
+
+<span class="nc" id="L244">                getLog().debug( &quot;Unrecognized xdoc tag: &quot; + tag + &quot; at &quot; + position );</span>
+            }
+        }
+<span class="fc" id="L247">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void handleEndTag( XmlPullParser parser, Sink sink )
+        throws XmlPullParserException, MacroExecutionException
+    {
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        if ( parser.getName().equals( DOCUMENT_TAG.toString() ) )</span>
+        {
+            //Do nothing
+<span class="fc" id="L258">            return;</span>
+        }
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        else if ( parser.getName().equals( HEAD.toString() ) )</span>
+        {
+            //Do nothing, head is closed with BODY start.
+        }
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        else if ( parser.getName().equals( BODY.toString() ) )</span>
+        {
+<span class="fc" id="L266">            consecutiveSections( 0, sink );</span>
+
+<span class="fc" id="L268">            sink.body_();</span>
+        }
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        else if ( parser.getName().equals( TITLE.toString() ) )</span>
+        {
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">            if ( !hasTitle )</span>
+            {
+<span class="fc" id="L274">                sink.title_();</span>
+<span class="fc" id="L275">                this.hasTitle = true;</span>
+            }
+        }
+<span class="fc bfc" id="L278" title="All 2 branches covered.">        else if ( parser.getName().equals( AUTHOR_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L280">            sink.author_();</span>
+        }
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        else if ( parser.getName().equals( DATE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L284">            sink.date_();</span>
+        }
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        else if ( parser.getName().equals( SOURCE_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L288">            verbatim_();</span>
+
+<span class="fc" id="L290">            sink.verbatim_();</span>
+        }
+<span class="fc bfc" id="L292" title="All 2 branches covered.">        else if ( parser.getName().equals( PROPERTIES_TAG.toString() ) )</span>
+        {
+            //Do nothing, head is closed with BODY start.
+        }
+<span class="fc bfc" id="L296" title="All 2 branches covered.">        else if ( parser.getName().equals( MACRO_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L298">            handleMacroEnd( sink );</span>
+        }
+<span class="fc bfc" id="L300" title="All 2 branches covered.">        else if ( parser.getName().equals( PARAM.toString() ) )</span>
+        {
+<span class="fc bfc" id="L302" title="All 2 branches covered.">            if ( !StringUtils.isNotEmpty( macroName ) )</span>
+            {
+<span class="fc" id="L304">                handleUnknown( parser, sink, TAG_TYPE_END );</span>
+            }
+        }
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        else if ( parser.getName().equals( SECTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L309">            consecutiveSections( 0, sink );</span>
+
+<span class="fc" id="L311">            sink.section1_();</span>
+        }
+<span class="fc bfc" id="L313" title="All 2 branches covered.">        else if ( parser.getName().equals( SUBSECTION_TAG.toString() ) )</span>
+        {
+<span class="fc" id="L315">            consecutiveSections( Sink.SECTION_LEVEL_1, sink );</span>
+        }
+<span class="fc bfc" id="L317" title="All 2 branches covered.">        else if ( !baseEndTag( parser, sink ) )</span>
+        {
+<span class="fc bfc" id="L319" title="All 2 branches covered.">            if ( !isEmptyElement )</span>
+            {
+<span class="fc" id="L321">                handleUnknown( parser, sink, TAG_TYPE_END );</span>
+            }
+        }
+
+<span class="fc" id="L325">        isEmptyElement = false;</span>
+<span class="fc" id="L326">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void consecutiveSections( int newLevel, Sink sink )
+    {
+<span class="fc" id="L333">        closeOpenSections( newLevel, sink );</span>
+<span class="fc" id="L334">        openMissingSections( newLevel, sink );</span>
+
+<span class="fc" id="L336">        setSectionLevel( newLevel );</span>
+<span class="fc" id="L337">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void init()
+    {
+<span class="fc" id="L344">        super.init();</span>
+
+<span class="fc" id="L346">        this.isEmptyElement = false;</span>
+<span class="fc" id="L347">        this.macroName = null;</span>
+<span class="fc" id="L348">        this.macroParameters = null;</span>
+<span class="fc" id="L349">        this.inHead = false;</span>
+<span class="fc" id="L350">        this.hasTitle = false;</span>
+<span class="fc" id="L351">    }</span>
+
+    /**
+     * Close open h4, h5, h6 sections.
+     */
+    private void closeOpenSections( int newLevel, Sink sink )
+    {
+<span class="fc bfc" id="L358" title="All 2 branches covered.">        while ( getSectionLevel() &gt;= newLevel )</span>
+        {
+<span class="fc bfc" id="L360" title="All 2 branches covered.">            if ( getSectionLevel() == Sink.SECTION_LEVEL_5 )</span>
+            {
+<span class="fc" id="L362">                sink.section5_();</span>
+            }
+<span class="fc bfc" id="L364" title="All 2 branches covered.">            else if ( getSectionLevel() == Sink.SECTION_LEVEL_4 )</span>
+            {
+<span class="fc" id="L366">                sink.section4_();</span>
+            }
+<span class="fc bfc" id="L368" title="All 2 branches covered.">            else if ( getSectionLevel() == Sink.SECTION_LEVEL_3 )</span>
+            {
+<span class="fc" id="L370">                sink.section3_();</span>
+            }
+<span class="fc bfc" id="L372" title="All 2 branches covered.">            else if ( getSectionLevel() == Sink.SECTION_LEVEL_2 )</span>
+            {
+<span class="fc" id="L374">                sink.section2_();</span>
+            }
+
+<span class="fc" id="L377">            setSectionLevel( getSectionLevel() - 1 );</span>
+        }
+<span class="fc" id="L379">    }</span>
+
+    private void handleMacroEnd( Sink sink )
+        throws MacroExecutionException
+    {
+<span class="pc bpc" id="L384" title="1 of 4 branches missed.">        if ( !isSecondParsing() &amp;&amp; StringUtils.isNotEmpty( macroName ) )</span>
+        {
+<span class="fc" id="L386">            MacroRequest request =</span>
+<span class="fc" id="L387">                new MacroRequest( sourceContent, new XdocParser(), macroParameters, getBasedir() );</span>
+
+            try
+            {
+<span class="fc" id="L391">                executeMacro( macroName, request, sink );</span>
+            }
+<span class="fc" id="L393">            catch ( MacroNotFoundException me )</span>
+            {
+<span class="fc" id="L395">                throw new MacroExecutionException( &quot;Macro not found: &quot; + macroName, me );</span>
+<span class="fc" id="L396">            }</span>
+        }
+
+        // Reinit macro
+<span class="fc" id="L400">        macroName = null;</span>
+<span class="fc" id="L401">        macroParameters = null;</span>
+<span class="fc" id="L402">    }</span>
+
+    private void handleMacroStart( XmlPullParser parser )
+        throws MacroExecutionException
+    {
+<span class="fc bfc" id="L407" title="All 2 branches covered.">        if ( !isSecondParsing() )</span>
+        {
+<span class="fc" id="L409">            macroName = parser.getAttributeValue( null, Attribute.NAME.toString() );</span>
+
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">            if ( macroParameters == null )</span>
+            {
+<span class="fc" id="L413">                macroParameters = new HashMap&lt;&gt;();</span>
+            }
+
+<span class="fc bfc" id="L416" title="All 2 branches covered.">            if ( StringUtils.isEmpty( macroName ) )</span>
+            {
+<span class="fc" id="L418">                throw new MacroExecutionException(</span>
+<span class="fc" id="L419">                    &quot;The '&quot; + Attribute.NAME.toString() + &quot;' attribute for the '&quot; + MACRO_TAG.toString()</span>
+                        + &quot;' tag is required.&quot; );
+            }
+        }
+<span class="fc" id="L423">    }</span>
+
+    private void handleMetaStart( XmlPullParser parser, Sink sink, SinkEventAttributeSet attribs )
+    {
+<span class="fc" id="L427">        String name = parser.getAttributeValue( null, Attribute.NAME.toString() );</span>
+<span class="fc" id="L428">        String content = parser.getAttributeValue( null, Attribute.CONTENT.toString() );</span>
+
+<span class="pc bpc" id="L430" title="1 of 2 branches missed.">        if ( &quot;author&quot;.equals( name ) )</span>
+        {
+<span class="nc" id="L432">            sink.author( null );</span>
+<span class="nc" id="L433">            sink.text( content );</span>
+<span class="nc" id="L434">            sink.author_();</span>
+        }
+<span class="pc bpc" id="L436" title="1 of 2 branches missed.">        else if ( &quot;date&quot;.equals( name ) )</span>
+        {
+<span class="nc" id="L438">            sink.date( null );</span>
+<span class="nc" id="L439">            sink.text( content );</span>
+<span class="nc" id="L440">            sink.date_();</span>
+        }
+        else
+        {
+<span class="fc" id="L444">            sink.unknown( &quot;meta&quot;, new Object[]{ TAG_TYPE_SIMPLE }, attribs );</span>
+        }
+<span class="fc" id="L446">    }</span>
+
+    private void handleParamStart( XmlPullParser parser, Sink sink )
+        throws MacroExecutionException
+    {
+<span class="fc bfc" id="L451" title="All 2 branches covered.">        if ( !isSecondParsing() )</span>
+        {
+<span class="fc bfc" id="L453" title="All 2 branches covered.">            if ( StringUtils.isNotEmpty( macroName ) )</span>
+            {
+<span class="fc" id="L455">                String paramName = parser.getAttributeValue( null, Attribute.NAME.toString() );</span>
+<span class="fc" id="L456">                String paramValue = parser.getAttributeValue( null, Attribute.VALUE.toString() );</span>
+
+<span class="fc bfc" id="L458" title="All 4 branches covered.">                if ( StringUtils.isEmpty( paramName ) || StringUtils.isEmpty( paramValue ) )</span>
+                {
+<span class="fc" id="L460">                    throw new MacroExecutionException(</span>
+<span class="fc" id="L461">                        &quot;'&quot; + Attribute.NAME.toString() + &quot;' and '&quot; + Attribute.VALUE.toString()</span>
+<span class="fc" id="L462">                            + &quot;' attributes for the '&quot; + PARAM.toString() + &quot;' tag are required inside the '&quot;</span>
+<span class="fc" id="L463">                            + MACRO_TAG.toString() + &quot;' tag.&quot; );</span>
+                }
+
+<span class="fc" id="L466">                macroParameters.put( paramName, paramValue );</span>
+<span class="fc" id="L467">            }</span>
+            else
+            {
+                // param tag from non-macro object, see MSITE-288
+<span class="fc" id="L471">                handleUnknown( parser, sink, TAG_TYPE_START );</span>
+            }
+        }
+<span class="fc" id="L474">    }</span>
+
+    private void handleSectionStart( int level, Sink sink, SinkEventAttributeSet attribs, XmlPullParser parser )
+    {
+<span class="fc" id="L478">        consecutiveSections( level, sink );</span>
+
+<span class="fc" id="L480">        Object id = attribs.getAttribute( Attribute.ID.toString() );</span>
+
+<span class="fc bfc" id="L482" title="All 2 branches covered.">        if ( id != null )</span>
+        {
+<span class="fc" id="L484">            sink.anchor( id.toString() );</span>
+<span class="fc" id="L485">            sink.anchor_();</span>
+        }
+
+<span class="fc" id="L488">        sink.section( level, attribs );</span>
+<span class="fc" id="L489">        sink.sectionTitle( level, null );</span>
+<span class="fc" id="L490">        sink.text( HtmlTools.unescapeHTML( parser.getAttributeValue( null, Attribute.NAME.toString() ) ) );</span>
+<span class="fc" id="L491">        sink.sectionTitle_( level );</span>
+<span class="fc" id="L492">    }</span>
+
+    /**
+     * Open missing h4, h5, h6 sections.
+     */
+    private void openMissingSections( int newLevel, Sink sink )
+    {
+<span class="fc bfc" id="L499" title="All 2 branches covered.">        while ( getSectionLevel() &lt; newLevel - 1 )</span>
+        {
+<span class="fc" id="L501">            setSectionLevel( getSectionLevel() + 1 );</span>
+
+<span class="pc bpc" id="L503" title="1 of 2 branches missed.">            if ( getSectionLevel() == Sink.SECTION_LEVEL_5 )</span>
+            {
+<span class="nc" id="L505">                sink.section5();</span>
+            }
+<span class="fc bfc" id="L507" title="All 2 branches covered.">            else if ( getSectionLevel() == Sink.SECTION_LEVEL_4 )</span>
+            {
+<span class="fc" id="L509">                sink.section4();</span>
+            }
+<span class="fc bfc" id="L511" title="All 2 branches covered.">            else if ( getSectionLevel() == Sink.SECTION_LEVEL_3 )</span>
+            {
+<span class="fc" id="L513">                sink.section3();</span>
+            }
+<span class="pc bpc" id="L515" title="1 of 2 branches missed.">            else if ( getSectionLevel() == Sink.SECTION_LEVEL_2 )</span>
+            {
+<span class="fc" id="L517">                sink.section2();</span>
+            }
+        }
+<span class="fc" id="L520">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

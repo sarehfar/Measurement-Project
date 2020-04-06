@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AptMarkup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: APT Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.apt</a> &gt; <span class="el_source">AptMarkup.java</span></div><h1>AptMarkup.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.apt;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.markup.TextMarkup;
+import org.codehaus.plexus.util.StringUtils;
+
+/**
+ * This interface defines all markups and syntaxes used by the &lt;b&gt;APT&lt;/b&gt; format.
+ *
+ * @see &lt;a href=&quot;http://maven.apache.org/doxia/references/apt-format.html&quot;&gt;http://maven.apache.org/doxia/references/apt-format.html&lt;/a&gt;
+ *
+ * @author &lt;a href=&quot;mailto:vincent.siveton@gmail.com&quot;&gt;Vincent Siveton&lt;/a&gt;
+ * @version $Id$
+ * @since 1.0
+ */
+@SuppressWarnings( &quot;checkstyle:interfaceistype&quot; )
+public interface AptMarkup
+    extends TextMarkup
+{
+    // ----------------------------------------------------------------------
+    // Markup separators
+    // ----------------------------------------------------------------------
+
+    /** APT backslash markup char: '\\' */
+    char BACKSLASH = '\\';
+
+    /** APT comment markup char: '~' */
+    char COMMENT = '~';
+
+    /** APT numbering decimal markup char: '1' */
+    char NUMBERING = '1';
+
+    /** APT numbering lower alpha markup char: 'a' */
+    char NUMBERING_LOWER_ALPHA_CHAR = 'a';
+
+    /** APT numbering lower roman markup char: 'i' */
+    char NUMBERING_LOWER_ROMAN_CHAR = 'i';
+
+    /** APT numbering upper alpha markup char: 'A' */
+    char NUMBERING_UPPER_ALPHA_CHAR = 'A';
+
+    /** APT numbering upper roman markup char: 'I' */
+    char NUMBERING_UPPER_ROMAN_CHAR = 'I';
+
+    /** APT page break markup char: '\f' */
+    char PAGE_BREAK = '\f';
+
+    /** APT percent markup char: '%' */
+    char PERCENT = '%';
+
+    /** APT tab markup char: '\t' */
+    char TAB = '\t';
+
+    // ----------------------------------------------------------------------
+    // Markup syntax
+    // ----------------------------------------------------------------------
+
+    /** Syntax for the anchor end: &quot;}&quot; */
+<span class="fc" id="L77">    String ANCHOR_END_MARKUP = String.valueOf( RIGHT_CURLY_BRACKET );</span>
+
+    /** Syntax for the anchor start: &quot;{&quot; */
+<span class="fc" id="L80">    String ANCHOR_START_MARKUP = String.valueOf( LEFT_CURLY_BRACKET );</span>
+
+    /** Syntax for the bold style end: &quot;&gt;&gt;&quot; */
+<span class="fc" id="L83">    String BOLD_END_MARKUP = StringUtils.repeat( String.valueOf( GREATER_THAN ), 2 );</span>
+
+    /** Syntax for the bold style start: &quot;&lt;&lt;&quot; */
+<span class="fc" id="L86">    String BOLD_START_MARKUP = StringUtils.repeat( String.valueOf( LESS_THAN ), 2 );</span>
+
+    /** Syntax for the boxed verbatim start: &quot;+------+&quot; */
+<span class="fc" id="L89">    String BOXED_VERBATIM_START_MARKUP = String.valueOf( PLUS )</span>
+<span class="fc" id="L90">        + StringUtils.repeat( String.valueOf( MINUS ), 6 ) + String.valueOf( PLUS );</span>
+
+    /** Syntax for the header start: &quot; -----&quot; */
+<span class="fc" id="L93">    String HEADER_START_MARKUP = String.valueOf( SPACE ) + StringUtils.repeat( String.valueOf( MINUS ), 5 );</span>
+
+    /** Syntax for the horizontal rule: &quot;========&quot; */
+<span class="fc" id="L96">    String HORIZONTAL_RULE_MARKUP = StringUtils.repeat( String.valueOf( EQUAL ), 8 );</span>
+
+    /** Syntax for the italic style end: &quot;&gt;&quot; */
+<span class="fc" id="L99">    String ITALIC_END_MARKUP = String.valueOf( GREATER_THAN );</span>
+
+    /** Syntax for the italic style start: &quot;&lt;&quot; */
+<span class="fc" id="L102">    String ITALIC_START_MARKUP = String.valueOf( LESS_THAN );</span>
+
+    /** Syntax for the link end: &quot;}}&quot; */
+<span class="fc" id="L105">    String LINK_END_MARKUP = StringUtils.repeat( String.valueOf( RIGHT_CURLY_BRACKET ), 2 );</span>
+
+    /** Syntax for the link start: &quot;{{{&quot; */
+<span class="fc" id="L108">    String LINK_START_1_MARKUP = StringUtils.repeat( String.valueOf( LEFT_CURLY_BRACKET ), 3 );</span>
+
+    /** Syntax for the link start: &quot;}&quot; */
+<span class="fc" id="L111">    String LINK_START_2_MARKUP = String.valueOf( RIGHT_CURLY_BRACKET );</span>
+
+    /** Syntax for the list end: &quot;[]&quot; */
+<span class="fc" id="L114">    String LIST_END_MARKUP = String.valueOf( LEFT_SQUARE_BRACKET ) + String.valueOf( RIGHT_SQUARE_BRACKET );</span>
+
+    /** Syntax for the list start: &quot;*&quot; */
+<span class="fc" id="L117">    String LIST_START_MARKUP = String.valueOf( STAR );</span>
+
+    /** Syntax for the mono-spaced style end: &quot;&gt;&gt;&gt;&quot; */
+<span class="fc" id="L120">    String MONOSPACED_END_MARKUP = StringUtils.repeat( String.valueOf( GREATER_THAN ), 3 );</span>
+
+    /** Syntax for the mono-spaced style start: &quot;&lt;&lt;&lt;&quot; */
+<span class="fc" id="L123">    String MONOSPACED_START_MARKUP = StringUtils.repeat( String.valueOf( LESS_THAN ), 3 );</span>
+
+    /** Syntax for the non boxed verbatim start: &quot;------&quot; */
+<span class="fc" id="L126">    String NON_BOXED_VERBATIM_START_MARKUP = StringUtils.repeat( String.valueOf( MINUS ), 6 );</span>
+
+    /** Syntax for the non breaking space: &quot;\ &quot; */
+<span class="fc" id="L129">    String NON_BREAKING_SPACE_MARKUP = String.valueOf( BACKSLASH ) + String.valueOf( SPACE );</span>
+
+    /** Syntax for the page break: &quot;\f&quot; */
+<span class="fc" id="L132">    String PAGE_BREAK_MARKUP = String.valueOf( PAGE_BREAK );</span>
+
+    /** Syntax for the section title start: &quot;*&quot; */
+<span class="fc" id="L135">    String SECTION_TITLE_START_MARKUP = String.valueOf( STAR );</span>
+
+    /** Syntax for the table cell start: &quot;|&quot; */
+<span class="fc" id="L138">    String TABLE_CELL_SEPARATOR_MARKUP = String.valueOf( PIPE );</span>
+
+    /** Syntax for the table column, centered style: &quot;-*&quot; */
+<span class="fc" id="L141">    String TABLE_COL_CENTERED_ALIGNED_MARKUP = StringUtils.repeat( String.valueOf( MINUS ), 2 )</span>
+<span class="fc" id="L142">        + String.valueOf( STAR );</span>
+
+    /** Syntax for the table column, left style: &quot;-+&quot; */
+<span class="fc" id="L145">    String TABLE_COL_LEFT_ALIGNED_MARKUP = StringUtils.repeat( String.valueOf( MINUS ), 2 )</span>
+<span class="fc" id="L146">        + String.valueOf( PLUS );</span>
+
+    /** Syntax for the table column, right style: &quot;-:&quot; */
+<span class="fc" id="L149">    String TABLE_COL_RIGHT_ALIGNED_MARKUP = StringUtils.repeat( String.valueOf( MINUS ), 2 )</span>
+<span class="fc" id="L150">        + String.valueOf( COLON );</span>
+
+    /** Syntax for the table row end: &quot;|&quot; */
+<span class="fc" id="L153">    String TABLE_ROW_SEPARATOR_MARKUP = String.valueOf( PIPE );</span>
+
+    /** Syntax for the table row start: &quot;*--&quot; */
+<span class="fc" id="L156">    String TABLE_ROW_START_MARKUP = String.valueOf( STAR ) + StringUtils.repeat( String.valueOf( MINUS ), 2 );</span>
+
+    /** Syntax for the boxed verbatim end: &quot;+------+&quot; */
+<span class="fc" id="L159">    String BOXED_VERBATIM_END_MARKUP = BOXED_VERBATIM_START_MARKUP;</span>
+
+    /** Syntax for the non boxed verbatim end: &quot;------&quot; */
+<span class="fc" id="L162">    String NON_BOXED_VERBATIM_END_MARKUP = NON_BOXED_VERBATIM_START_MARKUP;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WMFWriter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: RTF Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.rtf</a> &gt; <span class="el_source">WMFWriter.java</span></div><h1>WMFWriter.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.rtf;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.Vector;
+
+/**
+ * A Windows MetaFile writer.
+ *
+ * @version $Id$
+ */
+class WMFWriter
+{
+    /**
+     * See the libwmf library documentation
+     * (http://www.wvware.com/wmf_doc_index.html)
+     * for a description of WMF format.
+     */
+<span class="nc" id="L41">    private static Record trailer = new Record( 0, null );</span>
+
+    /**
+     * standard header fields
+     */
+    private short fileType;
+
+    private short headerSize;
+
+    private short version;
+
+    private int fileSize;
+
+    private short numOfObjects;
+
+    private int maxRecordSize;
+
+    private short numOfParams;
+
+    private Vector records;
+
+    WMFWriter()
+<span class="nc" id="L63">    {</span>
+<span class="nc" id="L64">        fileType = 2;</span>
+<span class="nc" id="L65">        headerSize = 9;</span>
+<span class="nc" id="L66">        version = 0x0300;</span>
+<span class="nc" id="L67">        fileSize = headerSize + trailer.size();</span>
+<span class="nc" id="L68">        numOfObjects = 0;</span>
+<span class="nc" id="L69">        maxRecordSize = trailer.size();</span>
+<span class="nc" id="L70">        numOfParams = 0;</span>
+
+<span class="nc" id="L72">        records = new Vector();</span>
+<span class="nc" id="L73">    }</span>
+
+    void add( Record record )
+    {
+<span class="nc" id="L77">        records.addElement( record );</span>
+
+<span class="nc" id="L79">        int size = record.size();</span>
+<span class="nc" id="L80">        fileSize += size;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if ( size &gt; maxRecordSize )</span>
+        {
+<span class="nc" id="L83">            maxRecordSize = size;</span>
+        }
+<span class="nc" id="L85">    }</span>
+
+    int size()
+    {
+<span class="nc" id="L89">        return fileSize;</span>
+    }
+
+    void write( String fileName )
+        throws IOException
+    {
+<span class="nc" id="L95">        BufferedOutputStream out = new BufferedOutputStream( new FileOutputStream( fileName ) );</span>
+<span class="nc" id="L96">        write( out );</span>
+<span class="nc" id="L97">        out.flush();</span>
+<span class="nc" id="L98">        out.close();</span>
+<span class="nc" id="L99">    }</span>
+
+    void write( OutputStream out )
+        throws IOException
+    {
+<span class="nc" id="L104">        write16( fileType, out );</span>
+<span class="nc" id="L105">        write16( headerSize, out );</span>
+<span class="nc" id="L106">        write16( version, out );</span>
+<span class="nc" id="L107">        write32( fileSize, out );</span>
+<span class="nc" id="L108">        write16( numOfObjects, out );</span>
+<span class="nc" id="L109">        write32( maxRecordSize, out );</span>
+<span class="nc" id="L110">        write16( numOfParams, out );</span>
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        for ( int i = 0, n = records.size(); i &lt; n; ++i )</span>
+        {
+<span class="nc" id="L114">            Record record = (Record) records.elementAt( i );</span>
+<span class="nc" id="L115">            record.write( out );</span>
+        }
+
+<span class="nc" id="L118">        trailer.write( out );</span>
+<span class="nc" id="L119">    }</span>
+
+    /**
+     * Writes a 16-bit integer in little-endian format.
+     */
+    static void write16( int word, OutputStream out )
+        throws IOException
+    {
+<span class="nc" id="L127">        out.write( word );</span>
+<span class="nc" id="L128">        out.write( word &gt;&gt; 8 );</span>
+<span class="nc" id="L129">    }</span>
+
+    /**
+     * Writes a 32-bit integer in little-endian format.
+     */
+    static void write32( int dword, OutputStream out )
+        throws IOException
+    {
+<span class="nc" id="L137">        out.write( dword );</span>
+<span class="nc" id="L138">        out.write( dword &gt;&gt; 8 );</span>
+<span class="nc" id="L139">        out.write( dword &gt;&gt; 16 );</span>
+<span class="nc" id="L140">        out.write( dword &gt;&gt; 24 );</span>
+<span class="nc" id="L141">    }</span>
+
+    void print( Writer out )
+        throws IOException
+    {
+<span class="nc" id="L146">        print16( fileType, out );</span>
+<span class="nc" id="L147">        print16( headerSize, out );</span>
+<span class="nc" id="L148">        print16( version, out );</span>
+<span class="nc" id="L149">        print32( fileSize, out );</span>
+<span class="nc" id="L150">        print16( numOfObjects, out );</span>
+<span class="nc" id="L151">        print32( maxRecordSize, out );</span>
+<span class="nc" id="L152">        print16( numOfParams, out );</span>
+<span class="nc" id="L153">        out.write( System.getProperty( &quot;line.separator&quot; ) );</span>
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        for ( int i = 0, n = records.size(); i &lt; n; ++i )</span>
+        {
+<span class="nc" id="L157">            Record record = (Record) records.elementAt( i );</span>
+<span class="nc" id="L158">            record.print( out );</span>
+        }
+
+<span class="nc" id="L161">        trailer.print( out );</span>
+<span class="nc" id="L162">    }</span>
+
+    static void print16( int word, Writer out )
+        throws IOException
+    {
+<span class="nc" id="L167">        byte[] buf = new byte[2];</span>
+<span class="nc" id="L168">        buf[0] = (byte) word;</span>
+<span class="nc" id="L169">        buf[1] = (byte) ( word &gt;&gt; 8 );</span>
+<span class="nc" id="L170">        print( buf, 0, 2, out );</span>
+<span class="nc" id="L171">    }</span>
+
+    static void print32( int dword, Writer out )
+        throws IOException
+    {
+<span class="nc" id="L176">        byte[] buf = new byte[4];</span>
+<span class="nc" id="L177">        buf[0] = (byte) dword;</span>
+<span class="nc" id="L178">        buf[1] = (byte) ( dword &gt;&gt; 8 );</span>
+<span class="nc" id="L179">        buf[2] = (byte) ( dword &gt;&gt; 16 );</span>
+<span class="nc" id="L180">        buf[3] = (byte) ( dword &gt;&gt; 24 );</span>
+<span class="nc" id="L181">        print( buf, 0, 4, out );</span>
+<span class="nc" id="L182">    }</span>
+
+    static void print( byte[] buf, int off, int len, Writer out )
+        throws IOException
+    {
+<span class="nc" id="L187">        char[] cbuf = new char[2 * len];</span>
+
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        for ( int i = off, j = 0, n = off + len; i &lt; n; ++i )</span>
+        {
+<span class="nc" id="L191">            int d = ( buf[i] &gt;&gt; 4 ) &amp; 0x0f;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">            if ( d &lt; 10 )</span>
+            {
+<span class="nc" id="L194">                cbuf[j++] = (char) ( '0' + d );</span>
+            }
+            else
+            {
+<span class="nc" id="L198">                cbuf[j++] = (char) ( 'a' + ( d - 10 ) );</span>
+            }
+<span class="nc" id="L200">            d = buf[i] &amp; 0x0f;</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">            if ( d &lt; 10 )</span>
+            {
+<span class="nc" id="L203">                cbuf[j++] = (char) ( '0' + d );</span>
+            }
+            else
+            {
+<span class="nc" id="L207">                cbuf[j++] = (char) ( 'a' + ( d - 10 ) );</span>
+            }
+        }
+
+<span class="nc" id="L211">        out.write( cbuf );</span>
+<span class="nc" id="L212">    }</span>
+
+    static void print( byte[] buf, int off, int len, Writer out, int lw )
+        throws IOException
+    {
+<span class="nc" id="L217">        String ls = System.getProperty( &quot;line.separator&quot; );</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        for ( int i = off; len &gt; 0; )</span>
+        {
+<span class="nc" id="L220">            int n = Math.min( len, lw / 2 );</span>
+<span class="nc" id="L221">            print( buf, i, n, out );</span>
+<span class="nc" id="L222">            out.write( ls );</span>
+<span class="nc" id="L223">            len -= n;</span>
+<span class="nc" id="L224">            i += n;</span>
+<span class="nc" id="L225">        }</span>
+<span class="nc" id="L226">    }</span>
+
+    /**
+     * Standard data record.
+     */
+    static class Record
+    {
+        protected int size;
+
+        private short function;
+
+        private short[] parameters;
+
+        Record( int function, int[] parameters )
+<span class="nc" id="L240">        {</span>
+<span class="nc" id="L241">            this.function = (short) function;</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            if ( parameters != null )</span>
+            {
+<span class="nc" id="L244">                this.parameters = new short[parameters.length];</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">                for ( int i = 0; i &lt; parameters.length; ++i )</span>
+                {
+<span class="nc" id="L247">                    this.parameters[i] = (short) parameters[i];</span>
+                }
+            }
+<span class="nc bnc" id="L250" title="All 2 branches missed.">            size = 3 + ( parameters == null ? 0 : parameters.length );</span>
+<span class="nc" id="L251">        }</span>
+
+        int size()
+        {
+<span class="nc" id="L255">            return size;</span>
+        }
+
+        void write( OutputStream out )
+            throws IOException
+        {
+<span class="nc" id="L261">            write32( size, out );</span>
+<span class="nc" id="L262">            write16( function, out );</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">            if ( parameters != null )</span>
+            {
+<span class="nc bnc" id="L265" title="All 2 branches missed.">                for ( int i = 0; i &lt; parameters.length; ++i )</span>
+                {
+<span class="nc" id="L267">                    write16( parameters[i], out );</span>
+                }
+            }
+<span class="nc" id="L270">        }</span>
+
+        void print( Writer out )
+            throws IOException
+        {
+<span class="nc" id="L275">            print32( size, out );</span>
+<span class="nc" id="L276">            print16( function, out );</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">            if ( parameters != null )</span>
+            {
+<span class="nc bnc" id="L279" title="All 2 branches missed.">                for ( int i = 0; i &lt; parameters.length; ++i )</span>
+                {
+<span class="nc" id="L281">                    print16( parameters[i], out );</span>
+                }
+            }
+<span class="nc" id="L284">        }</span>
+
+    }
+
+    /**
+     * DIB data structure.
+     */
+<span class="nc" id="L291">    static class Dib</span>
+    {
+        /**
+         * compression types
+         */
+        static final int BI_RGB = 0;
+
+        static final int BI_RLE8 = 1;
+
+        static final int BI_RLE4 = 2;
+
+        static final int BI_BITFIELDS = 3;
+
+        /*
+         * information header fields
+         */
+<span class="nc" id="L307">        final int biSize = 40;        // header size</span>
+
+        int biWidth;            // image width
+
+        int biHeight;            // image height
+
+<span class="nc" id="L313">        final short biPlanes = 1;    // number of planes</span>
+
+        short biBitCount;        // number of bits per pixel
+
+        int biCompression;        // compression type
+
+        int biSizeImage;            // image data size
+
+        int biXPelsPerMeter;        // horizontal resolution
+
+        int biYPelsPerMeter;        // vertical resolution
+
+        int biClrUsed;            // number of colors
+
+        int biClrImportant;        // number of required colors
+
+        byte[] palette;            // color palette
+
+        byte[] bitmap;            // bitmap data
+
+        int size()
+        {
+<span class="nc" id="L335">            int size = biSize;</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">            if ( palette != null )</span>
+            {
+<span class="nc" id="L338">                size += palette.length;</span>
+            }
+<span class="nc bnc" id="L340" title="All 2 branches missed.">            if ( bitmap != null )</span>
+            {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">                if ( biSizeImage != 0 )</span>
+                {
+<span class="nc" id="L344">                    size += biSizeImage;</span>
+                }
+                else
+                {
+<span class="nc" id="L348">                    size += bitmap.length;</span>
+                }
+            }
+<span class="nc" id="L351">            return size / 2;</span>
+        }
+
+        void write( OutputStream out )
+            throws IOException
+        {
+<span class="nc" id="L357">            write32( biSize, out );</span>
+<span class="nc" id="L358">            write32( biWidth, out );</span>
+<span class="nc" id="L359">            write32( biHeight, out );</span>
+<span class="nc" id="L360">            write16( biPlanes, out );</span>
+<span class="nc" id="L361">            write16( biBitCount, out );</span>
+<span class="nc" id="L362">            write32( biCompression, out );</span>
+<span class="nc" id="L363">            write32( biSizeImage, out );</span>
+<span class="nc" id="L364">            write32( biXPelsPerMeter, out );</span>
+<span class="nc" id="L365">            write32( biYPelsPerMeter, out );</span>
+<span class="nc" id="L366">            write32( biClrUsed, out );</span>
+<span class="nc" id="L367">            write32( biClrImportant, out );</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">            if ( palette != null )</span>
+            {
+<span class="nc" id="L370">                out.write( palette );</span>
+            }
+<span class="nc bnc" id="L372" title="All 2 branches missed.">            if ( bitmap != null )</span>
+            {
+<span class="nc bnc" id="L374" title="All 2 branches missed.">                if ( biSizeImage != 0 )</span>
+                {
+<span class="nc" id="L376">                    out.write( bitmap, 0, biSizeImage );</span>
+                }
+                else
+                {
+<span class="nc" id="L380">                    out.write( bitmap );</span>
+                }
+            }
+<span class="nc" id="L383">        }</span>
+
+        void print( Writer out )
+            throws IOException
+        {
+<span class="nc" id="L388">            String ls = System.getProperty( &quot;line.separator&quot; );</span>
+
+<span class="nc" id="L390">            print32( biSize, out );</span>
+<span class="nc" id="L391">            print32( biWidth, out );</span>
+<span class="nc" id="L392">            print32( biHeight, out );</span>
+<span class="nc" id="L393">            print16( biPlanes, out );</span>
+<span class="nc" id="L394">            print16( biBitCount, out );</span>
+<span class="nc" id="L395">            out.write( ls );</span>
+
+<span class="nc" id="L397">            print32( biCompression, out );</span>
+<span class="nc" id="L398">            print32( biSizeImage, out );</span>
+<span class="nc" id="L399">            print32( biXPelsPerMeter, out );</span>
+<span class="nc" id="L400">            print32( biYPelsPerMeter, out );</span>
+<span class="nc" id="L401">            print32( biClrUsed, out );</span>
+<span class="nc" id="L402">            print32( biClrImportant, out );</span>
+<span class="nc" id="L403">            out.write( ls );</span>
+
+<span class="nc bnc" id="L405" title="All 2 branches missed.">            if ( palette != null )</span>
+            {
+<span class="nc" id="L407">                WMFWriter.print( palette, 0, palette.length, out, 64 );</span>
+            }
+
+<span class="nc bnc" id="L410" title="All 2 branches missed.">            if ( bitmap != null )</span>
+            {
+<span class="nc bnc" id="L412" title="All 2 branches missed.">                int len = ( biSizeImage != 0 ) ? biSizeImage : bitmap.length;</span>
+<span class="nc" id="L413">                WMFWriter.print( bitmap, 0, len, out, 76 );</span>
+            }
+<span class="nc" id="L415">        }</span>
+
+        static int rlEncode8( byte[] inBuf, int inOff, int inLen, byte[] outBuf, int outOff )
+        {
+            int i1, i2, j, k, n;
+            int len;
+
+<span class="nc bnc" id="L422" title="All 2 branches missed.">            for ( i1 = inOff, j = outOff, n = ( inOff + inLen ); i1 &lt; n; )</span>
+            {
+<span class="nc bnc" id="L424" title="All 2 branches missed.">                for ( i2 = ( i1 + 1 ), len = 1; i2 &lt; n; ++i2, ++len )</span>
+                {
+<span class="nc bnc" id="L426" title="All 2 branches missed.">                    if ( inBuf[i2] != inBuf[i2 - 1] )</span>
+                    {
+<span class="nc" id="L428">                        break;</span>
+                    }
+                }
+
+<span class="nc bnc" id="L432" title="All 2 branches missed.">                if ( len &gt; 1 )</span>
+                {
+<span class="nc bnc" id="L434" title="All 2 branches missed.">                    while ( len &gt; 255 )</span>
+                    {
+<span class="nc" id="L436">                        outBuf[j++] = (byte) 255;</span>
+<span class="nc" id="L437">                        outBuf[j++] = inBuf[i1];</span>
+<span class="nc" id="L438">                        len -= 255;</span>
+                    }
+<span class="nc bnc" id="L440" title="All 2 branches missed.">                    if ( len &gt; 0 )</span>
+                    {
+<span class="nc" id="L442">                        outBuf[j++] = (byte) len;</span>
+<span class="nc" id="L443">                        outBuf[j++] = inBuf[i1];</span>
+                    }
+<span class="nc" id="L445">                    i1 = i2;</span>
+<span class="nc" id="L446">                    continue;</span>
+                }
+
+<span class="nc bnc" id="L449" title="All 2 branches missed.">                for ( ++i2; i2 &lt; n; ++i2, ++len )</span>
+                {
+<span class="nc bnc" id="L451" title="All 2 branches missed.">                    if ( inBuf[i2] == inBuf[i2 - 1] )</span>
+                    {
+<span class="nc" id="L453">                        break;</span>
+                    }
+                }
+
+<span class="nc bnc" id="L457" title="All 2 branches missed.">                while ( len &gt; 255 )</span>
+                {
+<span class="nc" id="L459">                    outBuf[j++] = 0;</span>
+<span class="nc" id="L460">                    outBuf[j++] = (byte) 255;</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">                    for ( k = 0; k &lt; 255; ++k )</span>
+                    {
+<span class="nc" id="L463">                        outBuf[j++] = inBuf[i1++];</span>
+                    }
+<span class="nc" id="L465">                    outBuf[j++] = (byte) 0;</span>
+<span class="nc" id="L466">                    len -= 255;</span>
+                }
+
+<span class="nc bnc" id="L469" title="All 2 branches missed.">                if ( len &gt; 2 )</span>
+                {
+<span class="nc" id="L471">                    outBuf[j++] = 0;</span>
+<span class="nc" id="L472">                    outBuf[j++] = (byte) len;</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">                    for ( k = 0; k &lt; len; ++k )</span>
+                    {
+<span class="nc" id="L475">                        outBuf[j++] = inBuf[i1++];</span>
+                    }
+<span class="nc bnc" id="L477" title="All 2 branches missed.">                    if ( len % 2 != 0 )</span>
+                    {
+<span class="nc" id="L479">                        outBuf[j++] = 0;</span>
+                    }
+                }
+                else
+                {
+<span class="nc bnc" id="L484" title="All 2 branches missed.">                    while ( len &gt; 0 )</span>
+                    {
+<span class="nc" id="L486">                        outBuf[j++] = 1;</span>
+<span class="nc" id="L487">                        outBuf[j++] = inBuf[i1++];</span>
+<span class="nc" id="L488">                        len -= 1;</span>
+                    }
+                }
+            }
+
+<span class="nc" id="L493">            return j - outOff;</span>
+        }
+    }
+
+    static class DibBitBltRecord
+        extends Record
+    {
+        /**
+         * parameter count
+         */
+        static final int P_COUNT = 8;
+
+        /**
+         * parameter indexes
+         */
+        static final int P_ROP_L = 0;
+
+        static final int P_ROP_H = 1;
+
+        static final int P_YSRC = 2;
+
+        static final int P_XSRC = 3;
+
+        static final int P_HEIGHT = 4;
+
+        static final int P_WIDTH = 5;
+
+        static final int P_YDST = 6;
+
+        static final int P_XDST = 7;
+
+        private Dib dib;
+
+        DibBitBltRecord( int[] parameters, Dib dib )
+        {
+<span class="nc" id="L528">            super( 0x0940, parameters );</span>
+<span class="nc" id="L529">            size += dib.size();</span>
+<span class="nc" id="L530">            this.dib = dib;</span>
+<span class="nc" id="L531">        }</span>
+
+        /** {@inheritDoc} */
+        void write( OutputStream out )
+            throws IOException
+        {
+<span class="nc" id="L537">            super.write( out );</span>
+<span class="nc" id="L538">            dib.write( out );</span>
+<span class="nc" id="L539">        }</span>
+
+        /** {@inheritDoc} */
+        void print( Writer out )
+            throws IOException
+        {
+<span class="nc" id="L545">            super.print( out );</span>
+<span class="nc" id="L546">            dib.print( out );</span>
+<span class="nc" id="L547">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

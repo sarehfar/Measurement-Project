@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SinkEventAttributeSet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.sink.impl</a> &gt; <span class="el_source">SinkEventAttributeSet.java</span></div><h1>SinkEventAttributeSet.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.sink.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.swing.text.AttributeSet;
+
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+
+/**
+ * Implementation of MutableAttributeSet using a LinkedHashMap.
+ *
+ * @author ltheussl
+ * @version $Id$
+ * @since 1.1
+ */
+public class SinkEventAttributeSet
+    implements SinkEventAttributes, Cloneable
+{
+    /**
+     * An unmodifiable attribute set containing only an underline attribute.
+     */
+    public static final SinkEventAttributes UNDERLINE;
+
+    /**
+     * An unmodifiable attribute set containing only an overline attribute.
+     */
+    public static final SinkEventAttributes OVERLINE;
+
+    /**
+     * An unmodifiable attribute set containing only a linethrough attribute.
+     */
+    public static final SinkEventAttributes LINETHROUGH;
+
+    /**
+     * An unmodifiable attribute set containing only a boxed attribute.
+     */
+    public static final SinkEventAttributes BOXED;
+
+    /**
+     * An unmodifiable attribute set containing only a bold attribute.
+     */
+    public static final SinkEventAttributes BOLD;
+
+    /**
+     * An unmodifiable attribute set containing only an italic attribute.
+     */
+    public static final SinkEventAttributes ITALIC;
+
+    /**
+     * An unmodifiable attribute set containing only a monospaced attribute.
+     */
+    public static final SinkEventAttributes MONOSPACED;
+
+    /**
+     * An unmodifiable attribute set containing only a left attribute.
+     */
+    public static final SinkEventAttributes LEFT;
+
+    /**
+     * An unmodifiable attribute set containing only a right attribute.
+     */
+    public static final SinkEventAttributes RIGHT;
+
+    /**
+     * An unmodifiable attribute set containing only a center attribute.
+     */
+    public static final SinkEventAttributes CENTER;
+
+    /**
+     * An unmodifiable attribute set containing only a justify attribute.
+     */
+    public static final SinkEventAttributes JUSTIFY;
+
+
+    static
+    {
+<span class="fc" id="L99">        UNDERLINE = new SinkEventAttributeSet( new String[] {DECORATION, &quot;underline&quot;} ).unmodifiable();</span>
+<span class="fc" id="L100">        OVERLINE = new SinkEventAttributeSet( new String[] {DECORATION, &quot;overline&quot;} ).unmodifiable();</span>
+<span class="fc" id="L101">        LINETHROUGH = new SinkEventAttributeSet( new String[] {DECORATION, &quot;line-through&quot;} ).unmodifiable();</span>
+<span class="fc" id="L102">        BOXED = new SinkEventAttributeSet( new String[] {DECORATION, &quot;boxed&quot;} ).unmodifiable();</span>
+
+<span class="fc" id="L104">        BOLD = new SinkEventAttributeSet( new String[] {STYLE, &quot;bold&quot;} ).unmodifiable();</span>
+<span class="fc" id="L105">        ITALIC = new SinkEventAttributeSet( new String[] {STYLE, &quot;italic&quot;} ).unmodifiable();</span>
+<span class="fc" id="L106">        MONOSPACED = new SinkEventAttributeSet( new String[] {STYLE, &quot;monospaced&quot;} ).unmodifiable();</span>
+
+<span class="fc" id="L108">        LEFT = new SinkEventAttributeSet( new String[] {ALIGN, &quot;left&quot;} ).unmodifiable();</span>
+<span class="fc" id="L109">        RIGHT = new SinkEventAttributeSet( new String[] {ALIGN, &quot;right&quot;} ).unmodifiable();</span>
+<span class="fc" id="L110">        CENTER = new SinkEventAttributeSet( new String[] {ALIGN, &quot;center&quot;} ).unmodifiable();</span>
+<span class="fc" id="L111">        JUSTIFY = new SinkEventAttributeSet( new String[] {ALIGN, &quot;justify&quot;} ).unmodifiable();</span>
+<span class="fc" id="L112">    }</span>
+
+    private Map&lt;String, Object&gt; attribs;
+
+    private AttributeSet resolveParent;
+
+    /**
+     * Constructs a new, empty SinkEventAttributeSet with default size 5.
+     */
+    public SinkEventAttributeSet()
+    {
+<span class="fc" id="L123">        this( 5 );</span>
+<span class="fc" id="L124">    }</span>
+
+    /**
+     * Constructs a new, empty SinkEventAttributeSet with the specified initial size.
+     *
+     * @param size the initial number of attribs.
+     */
+    public SinkEventAttributeSet( int size )
+<span class="fc" id="L132">    {</span>
+<span class="fc" id="L133">        attribs = new LinkedHashMap&lt;String, Object&gt;( size );</span>
+<span class="fc" id="L134">    }</span>
+
+    /**
+     * Constructs a new SinkEventAttributeSet with the attribute name-value
+     * mappings as given by the specified String array.
+     *
+     * @param attributes the specified String array. If the length of this array
+     * is not an even number, an IllegalArgumentException is thrown.
+     */
+    public SinkEventAttributeSet( String... attributes )
+<span class="fc" id="L144">    {</span>
+<span class="fc" id="L145">        int n = attributes.length;</span>
+
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if ( ( n % 2 ) != 0 )</span>
+        {
+<span class="fc" id="L149">            throw new IllegalArgumentException( &quot;Missing attribute!&quot; );</span>
+        }
+
+<span class="fc" id="L152">        attribs = new LinkedHashMap&lt;String, Object&gt;( n / 2 );</span>
+
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        for ( int i = 0; i &lt; n; i += 2 )</span>
+        {
+<span class="fc" id="L156">            attribs.put( attributes[i], attributes[i + 1] );</span>
+        }
+<span class="fc" id="L158">    }</span>
+
+    /**
+     * Constructs a new SinkEventAttributeSet with the same attribute name-value
+     * mappings as in the specified AttributeSet.
+     *
+     * @param attributes the specified AttributeSet.
+     */
+    public SinkEventAttributeSet( AttributeSet attributes )
+<span class="fc" id="L167">    {</span>
+<span class="fc" id="L168">        attribs = new LinkedHashMap&lt;String, Object&gt;( attributes.getAttributeCount() );</span>
+
+<span class="fc" id="L170">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L174">            Object name = names.nextElement();</span>
+
+<span class="fc" id="L176">            attribs.put( name.toString(), attributes.getAttribute( name ) );</span>
+<span class="fc" id="L177">        }</span>
+<span class="fc" id="L178">    }</span>
+
+    /**
+     * Replace this AttributeSet by an unmodifiable view of itself.
+     * Any subsequent attempt to add, remove or modify the underlying mapping
+     * will result in an UnsupportedOperationException.
+     *
+     * @return an unmodifiable view of this AttributeSet.
+     *
+     * @since 1.1.1
+     */
+    public SinkEventAttributeSet unmodifiable()
+    {
+<span class="fc" id="L191">        this.attribs = Collections.unmodifiableMap( attribs );</span>
+
+<span class="fc" id="L193">        return this;</span>
+    }
+
+    /**
+     * Checks whether the set of attribs is empty.
+     *
+     * @return true if the set is empty.
+     */
+    public boolean isEmpty()
+    {
+<span class="fc" id="L203">        return attribs.isEmpty();</span>
+    }
+
+    /** {@inheritDoc} */
+    public int getAttributeCount()
+    {
+<span class="fc" id="L209">        return attribs.size();</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean isDefined( Object attrName )
+    {
+<span class="fc" id="L215">        return attribs.containsKey( attrName );</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean isEqual( AttributeSet attr )
+    {
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        return ( ( getAttributeCount() == attr.getAttributeCount() )</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">                &amp;&amp; containsAttributes( attr ) );</span>
+    }
+
+    /** {@inheritDoc} */
+    public AttributeSet copyAttributes()
+    {
+<span class="fc" id="L228">        return ( (AttributeSet) clone() );</span>
+    }
+
+    /** {@inheritDoc} */
+    public Enumeration&lt;String&gt; getAttributeNames()
+    {
+<span class="fc" id="L234">        return Collections.enumeration( attribs.keySet() );</span>
+    }
+
+    /** {@inheritDoc} */
+    public Object getAttribute( Object key  )
+    {
+<span class="fc" id="L240">        Object value = attribs.get( key  );</span>
+
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if ( value == null )</span>
+        {
+<span class="fc" id="L244">            AttributeSet parent = getResolveParent();</span>
+
+<span class="fc bfc" id="L246" title="All 2 branches covered.">            if ( parent != null )</span>
+            {
+<span class="fc" id="L248">                value = parent.getAttribute( key  );</span>
+            }
+        }
+
+<span class="fc" id="L252">        return value;</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean containsAttribute( Object name, Object value )
+    {
+<span class="fc" id="L258">        return value.equals( getAttribute( name ) );</span>
+    }
+
+    /** {@inheritDoc} */
+    public boolean containsAttributes( AttributeSet attributes )
+    {
+<span class="fc" id="L264">        boolean result = true;</span>
+
+<span class="fc" id="L266">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L268" title="All 4 branches covered.">        while ( result &amp;&amp; names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L270">            Object name = names.nextElement();</span>
+<span class="fc" id="L271">            result = attributes.getAttribute( name ).equals( getAttribute( name ) );</span>
+<span class="fc" id="L272">        }</span>
+
+<span class="fc" id="L274">        return result;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Adds an attribute with the given name and value.
+     */
+    public void addAttribute( Object name, Object value )
+    {
+<span class="fc" id="L284">        attribs.put( name.toString(), value );</span>
+<span class="fc" id="L285">    }</span>
+
+    /** {@inheritDoc} */
+    public void addAttributes( AttributeSet attributes  )
+    {
+<span class="fc bfc" id="L290" title="All 4 branches covered.">        if ( attributes == null || attributes.getAttributeCount() == 0 )</span>
+        {
+<span class="fc" id="L292">            return;</span>
+        }
+
+<span class="fc" id="L295">        Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L297" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L299">            Object name = names.nextElement();</span>
+
+<span class="fc" id="L301">            addAttribute( name, attributes.getAttribute( name ) );</span>
+<span class="fc" id="L302">        }</span>
+<span class="fc" id="L303">    }</span>
+
+    /** {@inheritDoc} */
+    public void removeAttribute( Object name )
+    {
+<span class="fc" id="L308">        attribs.remove( name );</span>
+<span class="fc" id="L309">    }</span>
+
+    /** {@inheritDoc} */
+    public void removeAttributes( Enumeration&lt;?&gt; names )
+    {
+<span class="fc bfc" id="L314" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L316">            removeAttribute( names.nextElement() );</span>
+        }
+<span class="fc" id="L318">    }</span>
+
+    /** {@inheritDoc} */
+    public void removeAttributes( AttributeSet attributes  )
+    {
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        if ( attributes == null )</span>
+        {
+<span class="fc" id="L325">            return;</span>
+        }
+<span class="fc bfc" id="L327" title="All 2 branches covered.">        else if ( attributes == this )</span>
+        {
+<span class="fc" id="L329">            attribs.clear();</span>
+        }
+        else
+        {
+<span class="fc" id="L333">            Enumeration&lt;?&gt; names = attributes.getAttributeNames();</span>
+
+<span class="fc bfc" id="L335" title="All 2 branches covered.">            while ( names.hasMoreElements() )</span>
+            {
+<span class="fc" id="L337">                Object name = names.nextElement();</span>
+<span class="fc" id="L338">                Object value = attributes.getAttribute( name );</span>
+
+<span class="fc bfc" id="L340" title="All 2 branches covered.">                if ( value.equals( getAttribute( name ) ) )</span>
+                {
+<span class="fc" id="L342">                    removeAttribute( name );</span>
+                }
+<span class="fc" id="L344">            }</span>
+        }
+<span class="fc" id="L346">    }</span>
+
+    /** {@inheritDoc} */
+    public AttributeSet getResolveParent()
+    {
+<span class="fc" id="L351">        return this.resolveParent;</span>
+    }
+
+    /** {@inheritDoc} */
+    public void setResolveParent( AttributeSet parent )
+    {
+<span class="fc" id="L357">        this.resolveParent = parent;</span>
+<span class="fc" id="L358">    }</span>
+
+    /** {@inheritDoc} */
+    @Override
+    public Object clone()
+    {
+<span class="fc" id="L364">        SinkEventAttributeSet attr = new SinkEventAttributeSet( attribs.size() );</span>
+<span class="fc" id="L365">        attr.attribs = new LinkedHashMap&lt;String, Object&gt;( attribs );</span>
+
+<span class="fc bfc" id="L367" title="All 2 branches covered.">        if ( resolveParent != null )</span>
+        {
+<span class="fc" id="L369">            attr.resolveParent = resolveParent.copyAttributes();</span>
+        }
+
+<span class="fc" id="L372">        return attr;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode()
+    {
+<span class="fc bfc" id="L379" title="All 2 branches covered.">        final int parentHash = ( resolveParent == null ? 0 : resolveParent.hashCode() );</span>
+
+<span class="fc" id="L381">        return attribs.hashCode() + parentHash;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals( Object obj )
+    {
+<span class="fc bfc" id="L388" title="All 2 branches covered.">        if ( this == obj )</span>
+        {
+<span class="fc" id="L390">            return true;</span>
+        }
+
+<span class="fc bfc" id="L393" title="All 2 branches covered.">        if ( obj instanceof SinkEventAttributeSet )</span>
+        {
+<span class="fc" id="L395">            return isEqual( (SinkEventAttributeSet) obj  );</span>
+        }
+
+<span class="fc" id="L398">        return false;</span>
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString()
+    {
+<span class="fc" id="L405">        StringBuilder s = new StringBuilder();</span>
+<span class="fc" id="L406">        Enumeration&lt;String&gt; names = getAttributeNames();</span>
+
+<span class="fc bfc" id="L408" title="All 2 branches covered.">        while ( names.hasMoreElements() )</span>
+        {
+<span class="fc" id="L410">            String key = names.nextElement();</span>
+<span class="fc" id="L411">            String value = getAttribute( key ).toString();</span>
+
+<span class="fc" id="L413">            s.append( ' ' ).append( key ).append( '=' ).append( value );</span>
+<span class="fc" id="L414">        }</span>
+
+<span class="fc" id="L416">        return s.toString();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

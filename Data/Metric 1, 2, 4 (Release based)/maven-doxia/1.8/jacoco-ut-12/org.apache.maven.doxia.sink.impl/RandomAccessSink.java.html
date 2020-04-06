@@ -1,0 +1,930 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RandomAccessSink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: Core</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.sink.impl</a> &gt; <span class="el_source">RandomAccessSink.java</span></div><h1>RandomAccessSink.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.sink.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.maven.doxia.logging.Log;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.SinkFactory;
+
+/**
+ * The RandomAccessSink provides the ability to create a {@link Sink} with hooks.
+ * A page can be prepared by first creating its structure and specifying the positions of these hooks.
+ * After specifying the structure, the page can be filled with content from one or more models.
+ * These hooks can prevent you to have to loop over the model multiple times to build the page as desired. 
+ * 
+ * @author Robert Scholte
+ * @since 1.3
+ */
+public class RandomAccessSink
+    implements Sink
+{
+    private SinkFactory sinkFactory;
+
+    private String encoding;
+
+    private OutputStream coreOutputStream;
+
+    private Sink coreSink;
+
+<span class="pc" id="L55">    private List&lt;Sink&gt; sinks = new ArrayList&lt;Sink&gt;();</span>
+
+<span class="pc" id="L57">    private List&lt;ByteArrayOutputStream&gt; outputStreams = new ArrayList&lt;ByteArrayOutputStream&gt;();</span>
+
+    private Sink currentSink;
+
+    public RandomAccessSink( SinkFactory sinkFactory, OutputStream stream )
+        throws IOException
+<span class="nc" id="L63">    {</span>
+<span class="nc" id="L64">        this.sinkFactory = sinkFactory;</span>
+<span class="nc" id="L65">        this.coreOutputStream = stream;</span>
+<span class="nc" id="L66">        this.currentSink = sinkFactory.createSink( stream );</span>
+<span class="nc" id="L67">        this.coreSink = this.currentSink;</span>
+<span class="nc" id="L68">    }</span>
+
+    public RandomAccessSink( SinkFactory sinkFactory, OutputStream stream, String encoding )
+        throws IOException
+<span class="fc" id="L72">    {</span>
+<span class="fc" id="L73">        this.sinkFactory = sinkFactory;</span>
+<span class="fc" id="L74">        this.coreOutputStream = stream;</span>
+<span class="fc" id="L75">        this.encoding = encoding;</span>
+<span class="fc" id="L76">        this.currentSink = sinkFactory.createSink( stream, encoding );</span>
+<span class="fc" id="L77">        this.coreSink = this.currentSink;</span>
+<span class="fc" id="L78">    }</span>
+
+    public RandomAccessSink( SinkFactory sinkFactory, File outputDirectory, String outputName )
+        throws IOException
+<span class="nc" id="L82">    {</span>
+<span class="nc" id="L83">        this.sinkFactory = sinkFactory;</span>
+<span class="nc" id="L84">        this.coreOutputStream = new FileOutputStream( new File( outputDirectory, outputName ) );</span>
+<span class="nc" id="L85">        this.currentSink = sinkFactory.createSink( coreOutputStream );</span>
+<span class="nc" id="L86">        this.coreSink = this.currentSink;</span>
+<span class="nc" id="L87">    }</span>
+
+    public RandomAccessSink( SinkFactory sinkFactory, File outputDirectory, String outputName, String encoding )
+        throws IOException
+<span class="nc" id="L91">    {</span>
+<span class="nc" id="L92">        this.sinkFactory = sinkFactory;</span>
+<span class="nc" id="L93">        this.coreOutputStream = new FileOutputStream( new File( outputDirectory, outputName ) );</span>
+<span class="nc" id="L94">        this.encoding = encoding;</span>
+<span class="nc" id="L95">        this.currentSink = sinkFactory.createSink( coreOutputStream, encoding );</span>
+<span class="nc" id="L96">        this.coreSink = this.currentSink;</span>
+<span class="nc" id="L97">    }</span>
+
+    /**
+     * By calling this method a sink reference is added at the current position. You can write to both the new sink
+     * reference and the original sink. After flushing all sinks will be flushed in the right order.
+     * 
+     * @return a subsink reference you can write to
+     */
+    public Sink addSinkHook()
+    {
+<span class="fc" id="L107">        Sink subSink = null;</span>
+        try
+        {
+<span class="fc" id="L110">            ByteArrayOutputStream subOut = new ByteArrayOutputStream();</span>
+<span class="fc" id="L111">            ByteArrayOutputStream newOut = new ByteArrayOutputStream();</span>
+
+<span class="fc" id="L113">            outputStreams.add( subOut );</span>
+<span class="fc" id="L114">            outputStreams.add( newOut );</span>
+
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">            if ( encoding != null )</span>
+            {
+<span class="fc" id="L118">                subSink = sinkFactory.createSink( subOut, encoding );</span>
+<span class="fc" id="L119">                currentSink = sinkFactory.createSink( newOut, encoding );</span>
+            }
+            else
+            {
+<span class="nc" id="L123">                subSink = sinkFactory.createSink( subOut );</span>
+<span class="nc" id="L124">                currentSink = sinkFactory.createSink( newOut );</span>
+            }
+<span class="fc" id="L126">            sinks.add( subSink );</span>
+<span class="fc" id="L127">            sinks.add( currentSink );</span>
+        }
+<span class="nc" id="L129">        catch ( IOException e )</span>
+        {
+            // IOException can only be caused by our own ByteArrayOutputStream
+<span class="fc" id="L132">        }</span>
+<span class="fc" id="L133">        return subSink;</span>
+    }
+
+    @Override
+    public void anchor( String name )
+    {
+<span class="fc" id="L139">        currentSink.anchor( name );</span>
+<span class="fc" id="L140">    }</span>
+
+    @Override
+    public void anchor( String name, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L145">        currentSink.anchor( name, attributes );</span>
+<span class="nc" id="L146">    }</span>
+
+    @Override
+    public void anchor_()
+    {
+<span class="fc" id="L151">        currentSink.anchor_();</span>
+<span class="fc" id="L152">    }</span>
+
+    @Override
+    public void author()
+    {
+<span class="nc" id="L157">        currentSink.author();</span>
+<span class="nc" id="L158">    }</span>
+
+    @Override
+    public void author( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L163">        currentSink.author( attributes );</span>
+<span class="nc" id="L164">    }</span>
+
+    @Override
+    public void author_()
+    {
+<span class="nc" id="L169">        currentSink.author_();</span>
+<span class="nc" id="L170">    }</span>
+
+    @Override
+    public void body()
+    {
+<span class="nc" id="L175">        currentSink.body();</span>
+<span class="nc" id="L176">    }</span>
+
+    @Override
+    public void body( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L181">        currentSink.body( attributes );</span>
+<span class="nc" id="L182">    }</span>
+
+    @Override
+    public void body_()
+    {
+<span class="nc" id="L187">        currentSink.body_();</span>
+<span class="nc" id="L188">    }</span>
+
+    @Override
+    public void bold()
+    {
+<span class="nc" id="L193">        currentSink.bold();</span>
+<span class="nc" id="L194">    }</span>
+
+    @Override
+    public void bold_()
+    {
+<span class="nc" id="L199">        currentSink.bold_();</span>
+<span class="nc" id="L200">    }</span>
+
+    /**
+     * Close all sinks
+     */
+    public void close()
+    {
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        for ( Sink sink  : sinks )</span>
+        {
+            // sink is responsible for closing it's stream
+<span class="fc" id="L210">            sink.close();</span>
+<span class="fc" id="L211">        }</span>
+<span class="fc" id="L212">        coreSink.close();</span>
+<span class="fc" id="L213">    }</span>
+
+    @Override
+    public void comment( String comment )
+    {
+<span class="nc" id="L218">        currentSink.comment( comment );</span>
+<span class="nc" id="L219">    }</span>
+
+    @Override
+    public void date()
+    {
+<span class="nc" id="L224">        currentSink.date();</span>
+<span class="nc" id="L225">    }</span>
+
+    @Override
+    public void date( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L230">        currentSink.date( attributes );</span>
+<span class="nc" id="L231">    }</span>
+
+    @Override
+    public void date_()
+    {
+<span class="nc" id="L236">        currentSink.date_();</span>
+<span class="nc" id="L237">    }</span>
+
+    @Override
+    public void definedTerm()
+    {
+<span class="nc" id="L242">        currentSink.definedTerm();</span>
+<span class="nc" id="L243">    }</span>
+
+    @Override
+    public void definedTerm( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L248">        currentSink.definedTerm( attributes );</span>
+<span class="nc" id="L249">    }</span>
+
+    @Override
+    public void definedTerm_()
+    {
+<span class="nc" id="L254">        currentSink.definedTerm_();</span>
+<span class="nc" id="L255">    }</span>
+
+    @Override
+    public void definition()
+    {
+<span class="nc" id="L260">        currentSink.definition();</span>
+<span class="nc" id="L261">    }</span>
+
+    @Override
+    public void definition( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L266">        currentSink.definition( attributes );</span>
+<span class="nc" id="L267">    }</span>
+
+    @Override
+    public void definitionList()
+    {
+<span class="nc" id="L272">        currentSink.definitionList();</span>
+<span class="nc" id="L273">    }</span>
+
+    @Override
+    public void definitionList( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L278">        currentSink.definitionList( attributes );</span>
+<span class="nc" id="L279">    }</span>
+
+    @Override
+    public void definitionListItem()
+    {
+<span class="nc" id="L284">        currentSink.definitionListItem();</span>
+<span class="nc" id="L285">    }</span>
+
+    @Override
+    public void definitionListItem( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L290">        currentSink.definitionListItem( attributes );</span>
+<span class="nc" id="L291">    }</span>
+
+    @Override
+    public void definitionListItem_()
+    {
+<span class="nc" id="L296">        currentSink.definitionListItem_();</span>
+<span class="nc" id="L297">    }</span>
+
+    @Override
+    public void definitionList_()
+    {
+<span class="nc" id="L302">        currentSink.definitionList_();</span>
+<span class="nc" id="L303">    }</span>
+
+    @Override
+    public void definition_()
+    {
+<span class="nc" id="L308">        currentSink.definition_();</span>
+<span class="nc" id="L309">    }</span>
+
+    @Override
+    public void figure()
+    {
+<span class="nc" id="L314">        currentSink.figure();</span>
+<span class="nc" id="L315">    }</span>
+
+    @Override
+    public void figure( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L320">        currentSink.figure( attributes );</span>
+<span class="nc" id="L321">    }</span>
+
+    @Override
+    public void figureCaption()
+    {
+<span class="nc" id="L326">        currentSink.figureCaption();</span>
+<span class="nc" id="L327">    }</span>
+
+    @Override
+    public void figureCaption( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L332">        currentSink.figureCaption( attributes );</span>
+<span class="nc" id="L333">    }</span>
+
+    @Override
+    public void figureCaption_()
+    {
+<span class="nc" id="L338">        currentSink.figureCaption_();</span>
+<span class="nc" id="L339">    }</span>
+
+    @Override
+    public void figureGraphics( String name )
+    {
+<span class="nc" id="L344">        currentSink.figureGraphics( name );</span>
+<span class="nc" id="L345">    }</span>
+
+    @Override
+    public void figureGraphics( String src, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L350">        currentSink.figureGraphics( src, attributes );</span>
+<span class="nc" id="L351">    }</span>
+
+    @Override
+    public void figure_()
+    {
+<span class="nc" id="L356">        currentSink.figure_();</span>
+<span class="nc" id="L357">    }</span>
+
+    /**
+     * Flush all sinks
+     */
+    public void flush()
+    {
+<span class="fc bfc" id="L364" title="All 2 branches covered.">        for ( int i = 0; i &lt; sinks.size(); i++ )</span>
+        {
+            // first flush to get complete buffer
+            // sink is responsible for flushing it's stream
+<span class="fc" id="L368">            Sink sink = sinks.get( i );</span>
+<span class="fc" id="L369">            sink.flush();</span>
+
+<span class="fc" id="L371">            ByteArrayOutputStream stream = outputStreams.get( i );</span>
+            try
+            {
+<span class="fc" id="L374">                coreOutputStream.write( stream.toByteArray() );</span>
+            }
+<span class="nc" id="L376">            catch ( IOException e )</span>
+            {
+                // @todo
+<span class="fc" id="L379">            }</span>
+        }
+<span class="fc" id="L381">        coreSink.flush();</span>
+<span class="fc" id="L382">    }</span>
+
+    @Override
+    public void head()
+    {
+<span class="nc" id="L387">        currentSink.head();</span>
+<span class="nc" id="L388">    }</span>
+
+    @Override
+    public void head( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L393">        currentSink.head( attributes );</span>
+<span class="nc" id="L394">    }</span>
+
+    @Override
+    public void head_()
+    {
+<span class="nc" id="L399">        currentSink.head_();</span>
+<span class="nc" id="L400">    }</span>
+
+    @Override
+    public void horizontalRule()
+    {
+<span class="fc" id="L405">        currentSink.horizontalRule();</span>
+<span class="fc" id="L406">    }</span>
+
+    @Override
+    public void horizontalRule( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L411">        currentSink.horizontalRule( attributes );</span>
+<span class="nc" id="L412">    }</span>
+
+    @Override
+    public void italic()
+    {
+<span class="nc" id="L417">        currentSink.italic();</span>
+<span class="nc" id="L418">    }</span>
+
+    @Override
+    public void italic_()
+    {
+<span class="nc" id="L423">        currentSink.italic_();</span>
+<span class="nc" id="L424">    }</span>
+
+    @Override
+    public void lineBreak()
+    {
+<span class="nc" id="L429">        currentSink.lineBreak();</span>
+<span class="nc" id="L430">    }</span>
+
+    @Override
+    public void lineBreak( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L435">        currentSink.lineBreak( attributes );</span>
+<span class="nc" id="L436">    }</span>
+
+    @Override
+    public void link( String name )
+    {
+<span class="nc" id="L441">        currentSink.link( name );</span>
+<span class="nc" id="L442">    }</span>
+
+    @Override
+    public void link( String name, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L447">        currentSink.link( name, attributes );</span>
+<span class="nc" id="L448">    }</span>
+
+    @Override
+    public void link_()
+    {
+<span class="nc" id="L453">        currentSink.link_();</span>
+<span class="nc" id="L454">    }</span>
+
+    @Override
+    public void list()
+    {
+<span class="nc" id="L459">        currentSink.list();</span>
+<span class="nc" id="L460">    }</span>
+
+    @Override
+    public void list( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L465">        currentSink.list( attributes );</span>
+<span class="nc" id="L466">    }</span>
+
+    @Override
+    public void listItem()
+    {
+<span class="nc" id="L471">        currentSink.listItem();</span>
+<span class="nc" id="L472">    }</span>
+
+    @Override
+    public void listItem( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L477">        currentSink.listItem( attributes );</span>
+<span class="nc" id="L478">    }</span>
+
+    @Override
+    public void listItem_()
+    {
+<span class="nc" id="L483">        currentSink.listItem_();</span>
+<span class="nc" id="L484">    }</span>
+
+    @Override
+    public void list_()
+    {
+<span class="nc" id="L489">        currentSink.list_();</span>
+<span class="nc" id="L490">    }</span>
+
+    @Override
+    public void monospaced()
+    {
+<span class="nc" id="L495">        currentSink.monospaced();</span>
+<span class="nc" id="L496">    }</span>
+
+    @Override
+    public void monospaced_()
+    {
+<span class="nc" id="L501">        currentSink.monospaced_();</span>
+<span class="nc" id="L502">    }</span>
+
+    @Override
+    public void nonBreakingSpace()
+    {
+<span class="nc" id="L507">        currentSink.nonBreakingSpace();</span>
+<span class="nc" id="L508">    }</span>
+
+    @Override
+    public void numberedList( int numbering )
+    {
+<span class="nc" id="L513">        currentSink.numberedList( numbering );</span>
+<span class="nc" id="L514">    }</span>
+
+    @Override
+    public void numberedList( int numbering, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L519">        currentSink.numberedList( numbering, attributes );</span>
+<span class="nc" id="L520">    }</span>
+
+    @Override
+    public void numberedListItem()
+    {
+<span class="nc" id="L525">        currentSink.numberedListItem();</span>
+<span class="nc" id="L526">    }</span>
+
+    @Override
+    public void numberedListItem( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L531">        currentSink.numberedListItem( attributes );</span>
+<span class="nc" id="L532">    }</span>
+
+    @Override
+    public void numberedListItem_()
+    {
+<span class="nc" id="L537">        currentSink.numberedListItem_();</span>
+<span class="nc" id="L538">    }</span>
+
+    @Override
+    public void numberedList_()
+    {
+<span class="nc" id="L543">        currentSink.numberedList_();</span>
+<span class="nc" id="L544">    }</span>
+
+    @Override
+    public void pageBreak()
+    {
+<span class="nc" id="L549">        currentSink.pageBreak();</span>
+<span class="nc" id="L550">    }</span>
+
+    @Override
+    public void paragraph()
+    {
+<span class="nc" id="L555">        currentSink.paragraph();</span>
+<span class="nc" id="L556">    }</span>
+
+    @Override
+    public void paragraph( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L561">        currentSink.paragraph( attributes );</span>
+<span class="nc" id="L562">    }</span>
+
+    @Override
+    public void paragraph_()
+    {
+<span class="nc" id="L567">        currentSink.paragraph_();</span>
+<span class="nc" id="L568">    }</span>
+
+    @Override
+    public void rawText( String text )
+    {
+<span class="nc" id="L573">        currentSink.rawText( text );</span>
+<span class="nc" id="L574">    }</span>
+
+    @Override
+    public void section( int level, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L579">        currentSink.section( level, attributes );</span>
+<span class="nc" id="L580">    }</span>
+
+    @Override
+    public void section1()
+    {
+<span class="nc" id="L585">        currentSink.section1();</span>
+<span class="nc" id="L586">    }</span>
+
+    @Override
+    public void section1_()
+    {
+<span class="nc" id="L591">        currentSink.section1_();</span>
+<span class="nc" id="L592">    }</span>
+
+    @Override
+    public void section2()
+    {
+<span class="nc" id="L597">        currentSink.section2();</span>
+<span class="nc" id="L598">    }</span>
+
+    @Override
+    public void section2_()
+    {
+<span class="nc" id="L603">        currentSink.section2_();</span>
+<span class="nc" id="L604">    }</span>
+
+    @Override
+    public void section3()
+    {
+<span class="nc" id="L609">        currentSink.section3();</span>
+<span class="nc" id="L610">    }</span>
+
+    @Override
+    public void section3_()
+    {
+<span class="nc" id="L615">        currentSink.section3_();</span>
+<span class="nc" id="L616">    }</span>
+
+    @Override
+    public void section4()
+    {
+<span class="nc" id="L621">        currentSink.section4();</span>
+<span class="nc" id="L622">    }</span>
+
+    @Override
+    public void section4_()
+    {
+<span class="nc" id="L627">        currentSink.section4_();</span>
+<span class="nc" id="L628">    }</span>
+
+    @Override
+    public void section5()
+    {
+<span class="nc" id="L633">        currentSink.section5();</span>
+<span class="nc" id="L634">    }</span>
+
+    @Override
+    public void section5_()
+    {
+<span class="nc" id="L639">        currentSink.section5_();</span>
+<span class="nc" id="L640">    }</span>
+
+    @Override
+    public void section6()
+    {
+<span class="nc" id="L645">        currentSink.section5();</span>
+<span class="nc" id="L646">    }</span>
+
+    @Override
+    public void section6_()
+    {
+<span class="nc" id="L651">        currentSink.section5_();</span>
+<span class="nc" id="L652">    }</span>
+
+    @Override
+    public void sectionTitle()
+    {
+<span class="nc" id="L657">        currentSink.sectionTitle();</span>
+<span class="nc" id="L658">    }</span>
+
+    @Override
+    public void sectionTitle( int level, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L663">        currentSink.sectionTitle( level, attributes );</span>
+<span class="nc" id="L664">    }</span>
+
+    @Override
+    public void sectionTitle1()
+    {
+<span class="nc" id="L669">        currentSink.sectionTitle1();</span>
+<span class="nc" id="L670">    }</span>
+
+    @Override
+    public void sectionTitle1_()
+    {
+<span class="nc" id="L675">        currentSink.sectionTitle1_();</span>
+<span class="nc" id="L676">    }</span>
+
+    @Override
+    public void sectionTitle2()
+    {
+<span class="nc" id="L681">        currentSink.sectionTitle2();</span>
+<span class="nc" id="L682">    }</span>
+
+    @Override
+    public void sectionTitle2_()
+    {
+<span class="nc" id="L687">        currentSink.sectionTitle2_();</span>
+<span class="nc" id="L688">    }</span>
+
+    @Override
+    public void sectionTitle3()
+    {
+<span class="nc" id="L693">        currentSink.sectionTitle3();</span>
+<span class="nc" id="L694">    }</span>
+
+    @Override
+    public void sectionTitle3_()
+    {
+<span class="nc" id="L699">        currentSink.sectionTitle3_();</span>
+<span class="nc" id="L700">    }</span>
+
+    @Override
+    public void sectionTitle4()
+    {
+<span class="nc" id="L705">        currentSink.sectionTitle4();</span>
+<span class="nc" id="L706">    }</span>
+
+    @Override
+    public void sectionTitle4_()
+    {
+<span class="nc" id="L711">        currentSink.sectionTitle4_();</span>
+<span class="nc" id="L712">    }</span>
+
+    @Override
+    public void sectionTitle5()
+    {
+<span class="nc" id="L717">        currentSink.sectionTitle5();</span>
+<span class="nc" id="L718">    }</span>
+
+    @Override
+    public void sectionTitle5_()
+    {
+<span class="nc" id="L723">        currentSink.sectionTitle5_();</span>
+<span class="nc" id="L724">    }</span>
+
+    @Override
+    public void sectionTitle6()
+    {
+<span class="nc" id="L729">        currentSink.sectionTitle5();</span>
+<span class="nc" id="L730">    }</span>
+
+    @Override
+    public void sectionTitle6_()
+    {
+<span class="nc" id="L735">        currentSink.sectionTitle5_();</span>
+<span class="nc" id="L736">    }</span>
+
+    @Override
+    public void sectionTitle_()
+    {
+<span class="nc" id="L741">        currentSink.sectionTitle_();</span>
+<span class="nc" id="L742">    }</span>
+
+    @Override
+    public void sectionTitle_( int level )
+    {
+<span class="nc" id="L747">        currentSink.sectionTitle_( level );</span>
+<span class="nc" id="L748">    }</span>
+
+    @Override
+    public void section_( int level )
+    {
+<span class="nc" id="L753">        currentSink.section_( level );</span>
+<span class="nc" id="L754">    }</span>
+
+    @Override
+    public void table()
+    {
+<span class="nc" id="L759">        currentSink.table();</span>
+<span class="nc" id="L760">    }</span>
+
+    @Override
+    public void table( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L765">        currentSink.table( attributes );</span>
+<span class="nc" id="L766">    }</span>
+
+    @Override
+    public void tableCaption()
+    {
+<span class="nc" id="L771">        currentSink.tableCaption();</span>
+<span class="nc" id="L772">    }</span>
+
+    @Override
+    public void tableCaption( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L777">        currentSink.tableCaption( attributes );</span>
+<span class="nc" id="L778">    }</span>
+
+    @Override
+    public void tableCaption_()
+    {
+<span class="nc" id="L783">        currentSink.tableCaption_();</span>
+<span class="nc" id="L784">    }</span>
+
+    @Override
+    public void tableCell()
+    {
+<span class="nc" id="L789">        currentSink.tableCell();</span>
+<span class="nc" id="L790">    }</span>
+
+    @Override
+    public void tableCell( String width )
+    {
+<span class="nc" id="L795">        currentSink.tableCell( width );</span>
+<span class="nc" id="L796">    }</span>
+
+    @Override
+    public void tableCell( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L801">        currentSink.tableCell( attributes );</span>
+<span class="nc" id="L802">    }</span>
+
+    @Override
+    public void tableCell_()
+    {
+<span class="nc" id="L807">        currentSink.tableCell_();</span>
+<span class="nc" id="L808">    }</span>
+
+    @Override
+    public void tableHeaderCell()
+    {
+<span class="nc" id="L813">        currentSink.tableHeaderCell();</span>
+<span class="nc" id="L814">    }</span>
+
+    @Override
+    public void tableHeaderCell( String width )
+    {
+<span class="nc" id="L819">        currentSink.tableHeaderCell( width );</span>
+<span class="nc" id="L820">    }</span>
+
+    @Override
+    public void tableHeaderCell( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L825">        currentSink.tableHeaderCell( attributes );</span>
+<span class="nc" id="L826">    }</span>
+
+    @Override
+    public void tableHeaderCell_()
+    {
+<span class="nc" id="L831">        currentSink.tableHeaderCell_();</span>
+<span class="nc" id="L832">    }</span>
+
+    @Override
+    public void tableRow()
+    {
+<span class="nc" id="L837">        currentSink.tableRow();</span>
+<span class="nc" id="L838">    }</span>
+
+    @Override
+    public void tableRow( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L843">        currentSink.tableRow( attributes );</span>
+<span class="nc" id="L844">    }</span>
+
+    @Override
+    public void tableRow_()
+    {
+<span class="nc" id="L849">        currentSink.tableRow_();</span>
+<span class="nc" id="L850">    }</span>
+
+    @Override
+    public void tableRows( int[] justification, boolean grid )
+    {
+<span class="nc" id="L855">        currentSink.tableRows( justification, grid );</span>
+<span class="nc" id="L856">    }</span>
+
+    @Override
+    public void tableRows_()
+    {
+<span class="nc" id="L861">        currentSink.tableRows_();</span>
+<span class="nc" id="L862">    }</span>
+
+    @Override
+    public void table_()
+    {
+<span class="nc" id="L867">        currentSink.table_();</span>
+<span class="nc" id="L868">    }</span>
+
+    @Override
+    public void text( String text )
+    {
+<span class="fc" id="L873">        currentSink.text( text );</span>
+<span class="fc" id="L874">    }</span>
+
+    @Override
+    public void text( String text, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L879">        currentSink.text( text, attributes );</span>
+<span class="nc" id="L880">    }</span>
+
+    @Override
+    public void title()
+    {
+<span class="nc" id="L885">        currentSink.title();</span>
+<span class="nc" id="L886">    }</span>
+
+    @Override
+    public void title( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L891">        currentSink.title( attributes );</span>
+<span class="nc" id="L892">    }</span>
+
+    @Override
+    public void title_()
+    {
+<span class="nc" id="L897">        currentSink.title_();</span>
+<span class="nc" id="L898">    }</span>
+
+    @Override
+    public void unknown( String name, Object[] requiredParams, SinkEventAttributes attributes )
+    {
+<span class="nc" id="L903">        currentSink.unknown( name, requiredParams, attributes );</span>
+<span class="nc" id="L904">    }</span>
+
+    @Override
+    public void verbatim( boolean boxed )
+    {
+<span class="nc" id="L909">        currentSink.verbatim( boxed );</span>
+<span class="nc" id="L910">    }</span>
+
+    @Override
+    public void verbatim( SinkEventAttributes attributes )
+    {
+<span class="nc" id="L915">        currentSink.verbatim( attributes );</span>
+<span class="nc" id="L916">    }</span>
+
+    @Override
+    public void verbatim_()
+    {
+<span class="nc" id="L921">        currentSink.verbatim_();</span>
+<span class="nc" id="L922">    }</span>
+
+    @Override
+    public void enableLogging( Log log )
+    {
+<span class="nc" id="L927">        currentSink.enableLogging( log );</span>
+<span class="nc" id="L928">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

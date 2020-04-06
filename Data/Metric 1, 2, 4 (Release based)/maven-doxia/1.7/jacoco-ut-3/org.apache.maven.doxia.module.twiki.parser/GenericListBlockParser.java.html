@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GenericListBlockParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: TWiki Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.twiki.parser</a> &gt; <span class="el_source">GenericListBlockParser.java</span></div><h1>GenericListBlockParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.twiki.parser;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.util.ByLineSource;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.sink.Sink;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Generic list parser
+ *
+ * @author Juan F. Codagnone
+ * @version $Id$
+ */
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">public class GenericListBlockParser</span>
+    implements BlockParser
+{
+<span class="fc" id="L40">    static final String EOL = System.getProperty( &quot;line.separator&quot; );</span>
+
+    /**
+     * parser used to create text blocks
+     */
+    private FormatedTextParser formatedTextParser;
+
+    /**
+     * supported patterns
+     */
+<span class="fc" id="L50">    private final Pattern[] patterns = new Pattern[TYPES.length];</span>
+
+    /**
+     * Creates the GenericListBlockParser.
+     */
+    public GenericListBlockParser()
+<span class="fc" id="L56">    {</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for ( int i = 0; i &lt; TYPES.length; i++ )</span>
+        {
+<span class="fc" id="L59">            patterns[i] = Pattern.compile( &quot;^((   )+)&quot; + TYPES[i].getItemPattern() + &quot;(.*)$&quot; );</span>
+        }
+<span class="fc" id="L61">    }</span>
+
+    /** {@inheritDoc} */
+    public final boolean accept( final String line )
+    {
+<span class="fc" id="L66">        boolean ret = false;</span>
+
+<span class="fc bfc" id="L68" title="All 4 branches covered.">        for ( int i = 0; !ret &amp;&amp; i &lt; patterns.length; i++ )</span>
+        {
+<span class="fc" id="L70">            ret |= patterns[i].matcher( line ).lookingAt();</span>
+        }
+
+<span class="fc" id="L73">        return ret;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public final Block visit( final String line, final ByLineSource source )
+        throws ParseException
+    {
+<span class="fc" id="L82">        final TreeListBuilder treeListBuilder = new TreeListBuilder( formatedTextParser );</span>
+        // new TreeListBuilder(formatedTextParser);
+<span class="fc" id="L84">        String l = line;</span>
+        do
+        {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if ( !accept( l ) )</span>
+            {
+<span class="fc" id="L89">                break;</span>
+            }
+
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">            for ( int i = 0; i &lt; patterns.length; i++ )</span>
+            {
+<span class="fc" id="L94">                final Matcher m = patterns[i].matcher( l );</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                if ( m.lookingAt() )</span>
+                {
+<span class="fc" id="L97">                    final int numberOfSpaces = 3;</span>
+<span class="fc" id="L98">                    final int textGroup = 3;</span>
+<span class="pc bpc" id="L99" title="2 of 4 branches missed.">                    assert m.group( 1 ).length() % numberOfSpaces == 0;</span>
+<span class="fc" id="L100">                    final int level = m.group( 1 ).length() / numberOfSpaces;</span>
+<span class="fc" id="L101">                    treeListBuilder.feedEntry( TYPES[i], level, m.group( textGroup ).trim() );</span>
+<span class="fc" id="L102">                    break;</span>
+                }
+            }
+        }
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        while ( ( l = source.getNextLine() ) != null );</span>
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if ( l != null )</span>
+        {
+<span class="fc" id="L110">            source.ungetLine();</span>
+        }
+
+<span class="fc" id="L113">        return treeListBuilder.getBlock();</span>
+    }
+
+    /**
+     * Sets the formatTextParser.
+     *
+     * @param textParser &lt;code&gt;FormatedTextParser&lt;/code&gt; with the formatTextParser.
+     */
+    public final void setTextParser( final FormatedTextParser textParser )
+    {
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if ( textParser == null )</span>
+        {
+<span class="nc" id="L125">            throw new IllegalArgumentException( &quot;formatTextParser can't be null&quot; );</span>
+        }
+<span class="fc" id="L127">        this.formatedTextParser = textParser;</span>
+<span class="fc" id="L128">    }</span>
+
+    interface Type
+    {
+        /**
+         * @return the pattern of the item part of the list regex
+         */
+        String getItemPattern();
+
+        /**
+         * @param items children of the new listblock
+         * @return a new ListBlock
+         */
+        ListBlock createList( final ListItemBlock[] items );
+
+    }
+
+    /**
+     * unordered list
+     */
+<span class="fc" id="L148">    private static final Type LIST = new Type()</span>
+<span class="fc" id="L149">    {</span>
+        /** {@inheritDoc} */
+        public String getItemPattern()
+        {
+<span class="fc" id="L153">            return &quot;[*]&quot;;</span>
+        }
+
+        /** {@inheritDoc} */
+        public ListBlock createList( final ListItemBlock[] items )
+        {
+<span class="fc" id="L159">            return new UnorderedListBlock( items );</span>
+        }
+    };
+
+    /**
+     * a.
+     */
+<span class="fc" id="L166">    private static final Type ORDERED_LOWER_ALPHA = new Type()</span>
+<span class="fc" id="L167">    {</span>
+        /** {@inheritDoc} */
+        public String getItemPattern()
+        {
+<span class="fc" id="L171">            return &quot;[a-hj-z][.]&quot;;</span>
+        }
+
+        /** {@inheritDoc} */
+        public ListBlock createList( final ListItemBlock[] items )
+        {
+<span class="fc" id="L177">            return new NumeratedListBlock( Sink.NUMBERING_LOWER_ALPHA, items );</span>
+        }
+    };
+
+    /**
+     * A.
+     */
+<span class="fc" id="L184">    private static final Type ORDERED_UPPER_ALPHA = new Type()</span>
+<span class="fc" id="L185">    {</span>
+        /** {@inheritDoc} */
+        public String getItemPattern()
+        {
+<span class="fc" id="L189">            return &quot;[A-HJ-Z][.]&quot;;</span>
+        }
+
+        /** {@inheritDoc} */
+        public ListBlock createList( final ListItemBlock[] items )
+        {
+<span class="fc" id="L195">            return new NumeratedListBlock( Sink.NUMBERING_UPPER_ALPHA, items );</span>
+        }
+    };
+
+    /**
+     * 1.
+     */
+<span class="fc" id="L202">    private static final Type ORDERERED_DECIMAL = new Type()</span>
+<span class="fc" id="L203">    {</span>
+        /** {@inheritDoc} */
+        public String getItemPattern()
+        {
+<span class="fc" id="L207">            return &quot;[0123456789][.]&quot;;</span>
+        }
+
+        /** {@inheritDoc} */
+        public ListBlock createList( final ListItemBlock[] items )
+        {
+<span class="fc" id="L213">            return new NumeratedListBlock( Sink.NUMBERING_DECIMAL, items );</span>
+        }
+    };
+
+    /**
+     * i.
+     */
+<span class="fc" id="L220">    private static final Type ORDERERED_LOWER_ROMAN = new Type()</span>
+<span class="fc" id="L221">    {</span>
+        /** {@inheritDoc} */
+        public String getItemPattern()
+        {
+<span class="fc" id="L225">            return &quot;[i][.]&quot;;</span>
+        }
+
+        /** {@inheritDoc} */
+        public ListBlock createList( final ListItemBlock[] items )
+        {
+<span class="fc" id="L231">            return new NumeratedListBlock( Sink.NUMBERING_LOWER_ROMAN, items );</span>
+        }
+    };
+
+    /**
+     * I.
+     */
+<span class="fc" id="L238">    private static final Type ORDERERED_UPPER_ROMAN = new Type()</span>
+<span class="fc" id="L239">    {</span>
+        /** {@inheritDoc} */
+        public String getItemPattern()
+        {
+<span class="fc" id="L243">            return &quot;[I][.]&quot;;</span>
+        }
+
+        /** {@inheritDoc} */
+        public ListBlock createList( final ListItemBlock[] items )
+        {
+<span class="fc" id="L249">            return new NumeratedListBlock( Sink.NUMBERING_UPPER_ROMAN, items );</span>
+        }
+    };
+
+<span class="fc" id="L253">    private static final Type[] TYPES =</span>
+        { LIST, ORDERED_LOWER_ALPHA, ORDERED_UPPER_ALPHA, ORDERERED_DECIMAL, ORDERERED_LOWER_ROMAN,
+            ORDERERED_UPPER_ROMAN };
+
+}
+
+/**
+ * It helps to build
+ *
+ * @author Juan F. Codagnone
+ * @version $Id$
+ */
+class TreeListBuilder
+{
+    /**
+     * parser that create text blocks
+     */
+    private final FormatedTextParser textParser;
+
+    /**
+     * tree root
+     */
+    private final TreeComponent root;
+
+    /**
+     * the current element of the tree
+     */
+    private TreeComponent current;
+
+    /**
+     * Creates the TreeListBuilder.
+     *
+     * @param formatTextParser parser that create text blocks
+     * @throws IllegalArgumentException if &lt;code&gt;formatTextParser&lt;/code&gt; is null
+     */
+    TreeListBuilder( final FormatedTextParser formatTextParser )
+        throws IllegalArgumentException
+<span class="fc" id="L290">    {</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">        if ( formatTextParser == null )</span>
+        {
+<span class="nc" id="L293">            throw new IllegalArgumentException( &quot;argument is null&quot; );</span>
+        }
+<span class="fc" id="L295">        this.textParser = formatTextParser;</span>
+<span class="fc" id="L296">        root = new TreeComponent( null, &quot;root&quot;, null );</span>
+<span class="fc" id="L297">        current = root;</span>
+<span class="fc" id="L298">    }</span>
+
+    /**
+     * recibe un nivel y un texto y armar magicamente (manteniendo estado)
+     * el �rbol
+     *
+     * @param type  type of list
+     * @param level indentation level of the item
+     * @param text  text of the item
+     */
+    void feedEntry( final GenericListBlockParser.Type type, final int level, final String text )
+    {
+<span class="fc" id="L310">        final int currentDepth = current.getDepth();</span>
+<span class="fc" id="L311">        final int incomingLevel = level - 1;</span>
+
+<span class="fc bfc" id="L313" title="All 2 branches covered.">        if ( incomingLevel == currentDepth )</span>
+        {
+            // nothing to move
+        }
+<span class="fc bfc" id="L317" title="All 2 branches covered.">        else if ( incomingLevel &gt; currentDepth )</span>
+        {
+            // el actual ahora es el �ltimo que insert�
+<span class="fc" id="L320">            final TreeComponent[] components = current.getChildren();</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">            if ( components.length == 0 )</span>
+            {
+                /* for example:
+                 *        * item1
+                 *     * item2
+                 */
+<span class="fc bfc" id="L327" title="All 2 branches covered.">                for ( int i = 0, n = incomingLevel - currentDepth; i &lt; n; i++ )</span>
+                {
+<span class="fc" id="L329">                    current = current.addChildren( &quot;&quot;, type );</span>
+                }
+            }
+            else
+            {
+<span class="fc" id="L334">                current = components[components.length - 1];</span>
+            }
+
+<span class="fc" id="L337">        }</span>
+        else
+        {
+<span class="fc bfc" id="L340" title="All 2 branches covered.">            for ( int i = 0, n = currentDepth - incomingLevel; i &lt; n; i++ )</span>
+            {
+<span class="fc" id="L342">                current = current.getFather();</span>
+<span class="pc bpc" id="L343" title="1 of 2 branches missed.">                if ( current == null )</span>
+                {
+<span class="nc" id="L345">                    throw new IllegalStateException();</span>
+                }
+            }
+        }
+<span class="fc" id="L349">        current.addChildren( text, type );</span>
+<span class="fc" id="L350">    }</span>
+
+    /**
+     * @return a Block for the list that we received
+     */
+    ListBlock getBlock()
+    {
+<span class="fc" id="L357">        return getList( root );</span>
+    }
+
+    /**
+     * Wrapper
+     *
+     * @param tc tree
+     * @return list Block for this tree
+     */
+    private ListBlock getList( final TreeComponent tc )
+    {
+<span class="fc" id="L368">        ListItemBlock[] li = getListItems( tc ).toArray( new ListItemBlock[] {} );</span>
+<span class="fc" id="L369">        return tc.getChildren()[0].getType().createList( li );</span>
+    }
+
+    /**
+     * @param tc tree
+     * @return list Block for this tree
+     */
+    private List&lt;ListItemBlock&gt; getListItems( final TreeComponent tc )
+    {
+<span class="fc" id="L378">        final List&lt;ListItemBlock&gt; blocks = new ArrayList&lt;ListItemBlock&gt;();</span>
+
+<span class="fc bfc" id="L380" title="All 2 branches covered.">        for ( int i = 0; i &lt; tc.getChildren().length; i++ )</span>
+        {
+<span class="fc" id="L382">            final TreeComponent child = tc.getChildren()[i];</span>
+
+<span class="fc" id="L384">            Block[] text = new Block[] {};</span>
+<span class="pc bpc" id="L385" title="1 of 2 branches missed.">            if ( child.getFather() != null )</span>
+            {
+<span class="fc" id="L387">                text = textParser.parse( child.getText() );</span>
+            }
+
+<span class="fc bfc" id="L390" title="All 2 branches covered.">            if ( child.getChildren().length != 0 )</span>
+            {
+<span class="fc" id="L392">                blocks.add( new ListItemBlock( text, getList( child ) ) );</span>
+            }
+            else
+            {
+<span class="fc" id="L396">                blocks.add( new ListItemBlock( text ) );</span>
+            }
+        }
+
+<span class="fc" id="L400">        return blocks;</span>
+    }
+
+    /**
+     * A bidirectional tree node
+     *
+     * @author Juan F. Codagnone
+     * @version $Id$
+     */
+    class TreeComponent
+    {
+        /**
+         * childrens
+         */
+<span class="fc" id="L414">        private List&lt;TreeComponent&gt; children = new ArrayList&lt;TreeComponent&gt;();</span>
+
+        /**
+         * node text
+         */
+        private String text;
+
+        /**
+         * the father
+         */
+        private TreeComponent father;
+
+        /**
+         * type of the list
+         */
+        private GenericListBlockParser.Type type;
+
+        /**
+         * Creates the TreeComponent.
+         *
+         * @param father Component father
+         * @param text   component text
+         * @param type   component type
+         */
+        TreeComponent( final TreeComponent father, final String text, final GenericListBlockParser.Type type )
+<span class="fc" id="L439">        {</span>
+<span class="fc" id="L440">            this.text = text;</span>
+<span class="fc" id="L441">            this.father = father;</span>
+<span class="fc" id="L442">            this.type = type;</span>
+<span class="fc" id="L443">        }</span>
+
+        /**
+         * @return my childrens
+         */
+        TreeComponent[] getChildren()
+        {
+<span class="fc" id="L450">            return (TreeComponent[]) children.toArray( new TreeComponent[] {} );</span>
+        }
+
+        /**
+         * adds a children node
+         *
+         * @param t     text of the children
+         * @param ttype component type
+         * @return the new node created
+         */
+        TreeComponent addChildren( final String t, final GenericListBlockParser.Type ttype )
+        {
+<span class="pc bpc" id="L462" title="2 of 4 branches missed.">            if ( t == null || ttype == null )</span>
+            {
+<span class="nc" id="L464">                throw new IllegalArgumentException( &quot;argument is null&quot; );</span>
+            }
+<span class="fc" id="L466">            final TreeComponent ret = new TreeComponent( this, t, ttype );</span>
+<span class="fc" id="L467">            children.add( ret );</span>
+
+<span class="fc" id="L469">            return ret;</span>
+        }
+
+        /**
+         * @return the father
+         */
+        TreeComponent getFather()
+        {
+<span class="fc" id="L477">            return father;</span>
+        }
+
+        /**
+         * @return the node depth in the tree
+         */
+        int getDepth()
+        {
+<span class="fc" id="L485">            int ret = 0;</span>
+
+<span class="fc" id="L487">            TreeComponent c = this;</span>
+
+<span class="fc bfc" id="L489" title="All 2 branches covered.">            while ( ( c = c.getFather() ) != null )</span>
+            {
+<span class="fc" id="L491">                ret++;</span>
+            }
+
+<span class="fc" id="L494">            return ret;</span>
+        }
+
+        /** {@inheritDoc} */
+        public String toString()
+        {
+<span class="nc" id="L500">            return toString( &quot;&quot; );</span>
+        }
+
+        /** {@inheritDoc} */
+        public String toString( final String indent )
+        {
+<span class="nc" id="L506">            final StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc bnc" id="L508" title="All 2 branches missed.">            if ( father != null )</span>
+            {
+<span class="nc" id="L510">                sb.append( indent );</span>
+<span class="nc" id="L511">                sb.append( &quot;- &quot; );</span>
+<span class="nc" id="L512">                sb.append( text );</span>
+<span class="nc" id="L513">                sb.append( GenericListBlockParser.EOL );</span>
+            }
+<span class="nc bnc" id="L515" title="All 2 branches missed.">            for ( TreeComponent lc : children )</span>
+            {
+<span class="nc" id="L517">                sb.append( lc.toString( indent + &quot;   &quot; ) );</span>
+<span class="nc" id="L518">            }</span>
+<span class="nc" id="L519">            return sb.toString();</span>
+        }
+
+        /**
+         * Returns the text.
+         *
+         * @return &lt;code&gt;String&lt;/code&gt; with the text.
+         */
+        String getText()
+        {
+<span class="fc" id="L529">            return text;</span>
+        }
+
+        /**
+         * Returns the type.
+         *
+         * @return &lt;code&gt;Type&lt;/code&gt; with the text.
+         */
+        GenericListBlockParser.Type getType()
+        {
+<span class="fc" id="L539">            return type;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

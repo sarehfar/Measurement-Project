@@ -1,0 +1,2988 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AptParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Doxia :: APT Module</a> &gt; <a href="index.source.html" class="el_package">org.apache.maven.doxia.module.apt</a> &gt; <span class="el_source">AptParser.java</span></div><h1>AptParser.java</h1><pre class="source lang-java linenums">package org.apache.maven.doxia.module.apt;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.maven.doxia.macro.MacroExecutionException;
+import org.apache.maven.doxia.macro.MacroRequest;
+import org.apache.maven.doxia.macro.manager.MacroNotFoundException;
+import org.apache.maven.doxia.parser.AbstractTextParser;
+import org.apache.maven.doxia.parser.ParseException;
+import org.apache.maven.doxia.parser.Parser;
+import org.apache.maven.doxia.sink.Sink;
+import org.apache.maven.doxia.sink.SinkEventAttributes;
+import org.apache.maven.doxia.sink.impl.SinkAdapter;
+import org.apache.maven.doxia.sink.impl.SinkEventAttributeSet;
+import org.apache.maven.doxia.util.DoxiaUtils;
+
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+
+/**
+ * The APT parser.
+ * &lt;br/&gt;
+ * Based on the &lt;a href=&quot;http://www.xmlmind.com/aptconvert.html&quot;&gt;APTconvert&lt;/a&gt; project.
+ *
+ * @version $Id$
+ * @since 1.0
+ */
+@Component( role = Parser.class, hint = &quot;apt&quot; )
+<span class="fc" id="L57">public class AptParser</span>
+    extends AbstractTextParser
+    implements AptMarkup
+{
+    /** Title event id */
+    private static final int TITLE = 0;
+
+    /** Section 1 event id */
+    private static final int SECTION1 = 1;
+
+    /** Section 2 event id */
+    private static final int SECTION2 = 2;
+
+    /** Section 3 event id */
+    private static final int SECTION3 = 3;
+
+    /** Section 4 event id */
+    private static final int SECTION4 = 4;
+
+    /** Section 5 event id */
+    private static final int SECTION5 = 5;
+
+    /** Paragraph event id */
+    private static final int PARAGRAPH = 6;
+
+    /** Verbatim event id */
+    private static final int VERBATIM = 7;
+
+    /** Figure event id */
+    private static final int FIGURE = 8;
+
+    /** Table event id */
+    private static final int TABLE = 9;
+
+    /** List event id */
+    private static final int LIST_ITEM = 10;
+
+    /** Numbered list event id */
+    private static final int NUMBERED_LIST_ITEM = 11;
+
+    /** Definition list event id */
+    private static final int DEFINITION_LIST_ITEM = 12;
+
+    /** Horizontal rule event id */
+    private static final int HORIZONTAL_RULE = 13;
+
+    /** Page break event id */
+    private static final int PG_BREAK = 14;
+
+    /** List break event id */
+    private static final int LIST_BREAK = 15;
+
+    /** Macro event id */
+    private static final int MACRO = 16;
+
+    /** Comment event id. */
+    private static final int COMMENT_BLOCK = 17;
+
+    /** String representations of event ids */
+<span class="fc" id="L116">    private static final String TYPE_NAMES[] = {</span>
+        &quot;TITLE&quot;,
+        &quot;SECTION1&quot;,
+        &quot;SECTION2&quot;,
+        &quot;SECTION3&quot;,
+        &quot;SECTION4&quot;,
+        &quot;SECTION5&quot;,
+        &quot;PARAGRAPH&quot;,
+        &quot;VERBATIM&quot;,
+        &quot;FIGURE&quot;,
+        &quot;TABLE&quot;,
+        &quot;LIST_ITEM&quot;,
+        &quot;NUMBERED_LIST_ITEM&quot;,
+        &quot;DEFINITION_LIST_ITEM&quot;,
+        &quot;HORIZONTAL_RULE&quot;,
+        &quot;PG_BREAK&quot;,
+        &quot;LIST_BREAK&quot;,
+        &quot;MACRO&quot;,
+        &quot;COMMENT_BLOCK&quot; };
+
+    /** An array of 85 spaces. */
+    protected static final char[] SPACES;
+
+    /** Default tab width. */
+    public static final int TAB_WIDTH = 8;
+
+    // ----------------------------------------------------------------------
+    // Instance fields
+    // ----------------------------------------------------------------------
+
+    /** the AptSource. */
+    private AptSource source;
+
+    /** a block of AptSource. */
+    private Block block;
+
+    /** blockFileName. */
+    private String blockFileName;
+
+    /** blockLineNumber. */
+    private int blockLineNumber;
+
+    /** sourceContent. */
+    protected String sourceContent;
+
+    /** the sink to receive the events. */
+    protected Sink sink;
+
+    /** a line of AptSource. */
+    protected String line;
+
+    /** Map of warn messages with a String as key to describe the error type and a Set as value.
+     * Using to reduce warn messages. */
+    protected Map&lt;String, Set&lt;String&gt;&gt; warnMessages;
+
+    private static final int NUMBER_OF_SPACES = 85;
+
+    static
+    {
+<span class="fc" id="L175">        SPACES = new char[NUMBER_OF_SPACES];</span>
+
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        for ( int i = 0; i &lt; NUMBER_OF_SPACES; i++ )</span>
+        {
+<span class="fc" id="L179">            SPACES[i] = ' ';</span>
+        }
+<span class="fc" id="L181">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Public methods
+    // ----------------------------------------------------------------------
+
+    @Override
+    public void parse( Reader source, Sink sink )
+        throws ParseException
+    {
+<span class="fc" id="L191">        parse( source, sink, &quot;&quot; );</span>
+<span class="fc" id="L192">    }</span>
+    
+    @Override
+    public void parse( Reader source, Sink sink, String reference )
+        throws ParseException
+    {
+<span class="fc" id="L198">        init();</span>
+
+        try
+        {
+<span class="fc" id="L202">            StringWriter contentWriter = new StringWriter();</span>
+<span class="fc" id="L203">            IOUtil.copy( source, contentWriter );</span>
+<span class="fc" id="L204">            sourceContent = contentWriter.toString();</span>
+        }
+<span class="nc" id="L206">        catch ( IOException e )</span>
+        {
+<span class="nc" id="L208">            throw new AptParseException( &quot;IOException: &quot; + e.getMessage(), e );</span>
+<span class="fc" id="L209">        }</span>
+
+        try
+        {
+<span class="fc" id="L213">            this.source = new AptReaderSource( new StringReader( sourceContent ), reference );</span>
+
+<span class="fc" id="L215">            this.sink = sink;</span>
+<span class="fc" id="L216">            sink.enableLogging( getLog() );</span>
+
+<span class="fc" id="L218">            blockFileName = null;</span>
+
+<span class="fc" id="L220">            blockLineNumber = -1;</span>
+
+            // Lookahead line.
+<span class="fc" id="L223">            nextLine();</span>
+
+            // Lookahead block.
+<span class="fc" id="L226">            nextBlock( /*first*/true );</span>
+
+            // traverse comments
+<span class="pc bpc" id="L229" title="1 of 4 branches missed.">            while ( ( block != null ) &amp;&amp; ( block.getType() == COMMENT_BLOCK ) )</span>
+            {
+<span class="fc" id="L231">                block.traverse();</span>
+<span class="fc" id="L232">                nextBlock( /*first*/true );</span>
+            }
+
+<span class="fc" id="L235">            traverseHead();</span>
+
+<span class="fc" id="L237">            traverseBody();</span>
+        }
+<span class="nc" id="L239">        catch ( AptParseException ape )</span>
+        {
+            // TODO handle column number
+<span class="nc" id="L242">            throw new AptParseException( ape.getMessage(), ape, getSourceName(), getSourceLineNumber(), -1 );</span>
+        }
+        finally
+        {
+<span class="fc" id="L246">            logWarnings();</span>
+
+<span class="fc" id="L248">            setSecondParsing( false );</span>
+<span class="fc" id="L249">            init();</span>
+        }
+<span class="fc" id="L251">    }</span>
+
+    /**
+     * Returns the name of the Apt source document.
+     *
+     * @return the source name.
+     */
+    public String getSourceName()
+    {
+        // Use this rather than source.getName() to report errors.
+<span class="nc" id="L261">        return blockFileName;</span>
+    }
+
+    /**
+     * Returns the current line number of the Apt source document.
+     *
+     * @return the line number.
+     */
+    public int getSourceLineNumber()
+    {
+        // Use this rather than source.getLineNumber() to report errors.
+<span class="nc" id="L272">        return blockLineNumber;</span>
+    }
+
+    // ----------------------------------------------------------------------
+    // Protected methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * Parse the next line of the Apt source document.
+     *
+     * @throws org.apache.maven.doxia.module.apt.AptParseException if something goes wrong.
+     */
+    protected void nextLine()
+        throws AptParseException
+    {
+<span class="fc" id="L287">        line = source.getNextLine();</span>
+<span class="fc" id="L288">    }</span>
+
+    /**
+     * Parse the given text.
+     *
+     * @param text the text to parse.
+     * @param begin offset.
+     * @param end offset.
+     * @param sink the sink to receive the events.
+     * @throws org.apache.maven.doxia.module.apt.AptParseException if something goes wrong.
+     */
+    protected void doTraverseText( String text, int begin, int end, Sink sink )
+        throws AptParseException
+    {
+<span class="fc" id="L302">        boolean anchor = false;</span>
+<span class="fc" id="L303">        boolean link = false;</span>
+<span class="fc" id="L304">        boolean italic = false;</span>
+<span class="fc" id="L305">        boolean bold = false;</span>
+<span class="fc" id="L306">        boolean monospaced = false;</span>
+<span class="fc" id="L307">        StringBuilder buffer = new StringBuilder( end - begin );</span>
+
+<span class="fc bfc" id="L309" title="All 2 branches covered.">        for ( int i = begin; i &lt; end; ++i )</span>
+        {
+<span class="fc" id="L311">            char c = text.charAt( i );</span>
+<span class="fc bfc" id="L312" title="All 6 branches covered.">            switch ( c )</span>
+            {
+                case BACKSLASH:
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">                    if ( i + 1 &lt; end )</span>
+                    {
+<span class="fc" id="L317">                        char escaped = text.charAt( i + 1 );</span>
+<span class="fc bfc" id="L318" title="All 6 branches covered.">                        switch ( escaped )</span>
+                        {
+                            case SPACE:
+<span class="fc" id="L321">                                ++i;</span>
+<span class="fc" id="L322">                                flushTraversed( buffer, sink );</span>
+<span class="fc" id="L323">                                sink.nonBreakingSpace();</span>
+<span class="fc" id="L324">                                break;</span>
+                            case '\r':
+                            case '\n':
+<span class="fc" id="L327">                                ++i;</span>
+                                // Skip white space which may follow a line break.
+<span class="pc bpc" id="L329" title="1 of 4 branches missed.">                                while ( i + 1 &lt; end &amp;&amp; Character.isWhitespace( text.charAt( i + 1 ) ) )</span>
+                                {
+<span class="fc" id="L331">                                    ++i;</span>
+                                }
+<span class="fc" id="L333">                                flushTraversed( buffer, sink );</span>
+<span class="fc" id="L334">                                sink.lineBreak();</span>
+<span class="fc" id="L335">                                break;</span>
+                            case BACKSLASH:
+                            case PIPE:
+                            case COMMENT:
+                            case EQUAL:
+                            case MINUS:
+                            case PLUS:
+                            case STAR:
+                            case LEFT_SQUARE_BRACKET:
+                            case RIGHT_SQUARE_BRACKET:
+                            case LESS_THAN:
+                            case GREATER_THAN:
+                            case LEFT_CURLY_BRACKET:
+                            case RIGHT_CURLY_BRACKET:
+<span class="fc" id="L349">                                ++i;</span>
+<span class="fc" id="L350">                                buffer.append( escaped );</span>
+<span class="fc" id="L351">                                break;</span>
+                            case 'x':
+<span class="pc bpc" id="L353" title="2 of 4 branches missed.">                                if ( i + 3 &lt; end &amp;&amp; isHexChar( text.charAt( i + 2 ) )</span>
+<span class="pc bpc" id="L354" title="1 of 2 branches missed.">                                    &amp;&amp; isHexChar( text.charAt( i + 3 ) ) )</span>
+                                {
+<span class="fc" id="L356">                                    int value = '?';</span>
+                                    try
+                                    {
+<span class="fc" id="L359">                                        value = Integer.parseInt( text.substring( i + 2, i + 4 ), 16 );</span>
+                                    }
+<span class="nc" id="L361">                                    catch ( NumberFormatException e )</span>
+                                    {
+<span class="nc bnc" id="L363" title="All 2 branches missed.">                                        if ( getLog().isDebugEnabled() )</span>
+                                        {
+<span class="nc" id="L365">                                            getLog().debug( &quot;Not a number: &quot; + text.substring( i + 2, i + 4 ) );</span>
+                                        }
+<span class="fc" id="L367">                                    }</span>
+
+<span class="fc" id="L369">                                    i += 3;</span>
+<span class="fc" id="L370">                                    buffer.append( (char) value );</span>
+<span class="fc" id="L371">                                }</span>
+                                else
+                                {
+<span class="nc" id="L374">                                    buffer.append( BACKSLASH );</span>
+                                }
+<span class="nc" id="L376">                                break;</span>
+                            case 'u':
+<span class="pc bpc" id="L378" title="2 of 4 branches missed.">                                if ( i + 5 &lt; end &amp;&amp; isHexChar( text.charAt( i + 2 ) )</span>
+<span class="pc bpc" id="L379" title="2 of 4 branches missed.">                                    &amp;&amp; isHexChar( text.charAt( i + 3 ) ) &amp;&amp; isHexChar( text.charAt( i + 4 ) )</span>
+<span class="pc bpc" id="L380" title="1 of 2 branches missed.">                                    &amp;&amp; isHexChar( text.charAt( i + 5 ) ) )</span>
+                                {
+<span class="fc" id="L382">                                    int value = '?';</span>
+                                    try
+                                    {
+<span class="fc" id="L385">                                        value = Integer.parseInt( text.substring( i + 2, i + 6 ), 16 );</span>
+                                    }
+<span class="nc" id="L387">                                    catch ( NumberFormatException e )</span>
+                                    {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                                        if ( getLog().isDebugEnabled() )</span>
+                                        {
+<span class="nc" id="L391">                                            getLog().debug( &quot;Not a number: &quot; + text.substring( i + 2, i + 6 ) );</span>
+                                        }
+<span class="fc" id="L393">                                    }</span>
+
+<span class="fc" id="L395">                                    i += 5;</span>
+<span class="fc" id="L396">                                    buffer.append( (char) value );</span>
+<span class="fc" id="L397">                                }</span>
+                                else
+                                {
+<span class="nc" id="L400">                                    buffer.append( BACKSLASH );</span>
+                                }
+<span class="nc" id="L402">                                break;</span>
+                            default:
+<span class="pc bpc" id="L404" title="1 of 2 branches missed.">                                if ( isOctalChar( escaped ) )</span>
+                                {
+<span class="fc" id="L406">                                    int octalChars = 1;</span>
+<span class="pc bpc" id="L407" title="1 of 2 branches missed.">                                    if ( isOctalChar( charAt( text, end, i + 2 ) ) )</span>
+                                    {
+<span class="fc" id="L409">                                        ++octalChars;</span>
+<span class="pc bpc" id="L410" title="1 of 2 branches missed.">                                        if ( isOctalChar( charAt( text, end, i + 3 ) ) )</span>
+                                        {
+<span class="fc" id="L412">                                            ++octalChars;</span>
+                                        }
+                                    }
+<span class="fc" id="L415">                                    int value = '?';</span>
+                                    try
+                                    {
+<span class="fc" id="L418">                                        value = Integer.parseInt( text.substring( i + 1, i + 1 + octalChars ), 8 );</span>
+                                    }
+<span class="nc" id="L420">                                    catch ( NumberFormatException e )</span>
+                                    {
+<span class="nc bnc" id="L422" title="All 2 branches missed.">                                        if ( getLog().isDebugEnabled() )</span>
+                                        {
+<span class="nc" id="L424">                                            getLog().debug(</span>
+                                                            &quot;Not a number: &quot;
+<span class="nc" id="L426">                                                                + text.substring( i + 1, i + 1 + octalChars ) );</span>
+                                        }
+<span class="fc" id="L428">                                    }</span>
+
+<span class="fc" id="L430">                                    i += octalChars;</span>
+<span class="fc" id="L431">                                    buffer.append( (char) value );</span>
+<span class="fc" id="L432">                                }</span>
+                                else
+                                {
+<span class="nc" id="L435">                                    buffer.append( BACKSLASH );</span>
+                                }
+                        }
+<span class="fc" id="L438">                    }</span>
+                    else
+                    {
+<span class="nc" id="L441">                        buffer.append( BACKSLASH );</span>
+                    }
+<span class="nc" id="L443">                    break;</span>
+
+                case LEFT_CURLY_BRACKET: /*}*/
+<span class="pc bpc" id="L446" title="2 of 4 branches missed.">                    if ( !anchor &amp;&amp; !link )</span>
+                    {
+<span class="pc bpc" id="L448" title="1 of 4 branches missed.">                        if ( i + 1 &lt; end &amp;&amp; text.charAt( i + 1 ) == LEFT_CURLY_BRACKET /*}*/ )</span>
+                        {
+<span class="fc" id="L450">                            ++i;</span>
+<span class="fc" id="L451">                            link = true;</span>
+<span class="fc" id="L452">                            flushTraversed( buffer, sink );</span>
+
+<span class="fc" id="L454">                            String linkAnchor = null;</span>
+
+<span class="pc bpc" id="L456" title="1 of 4 branches missed.">                            if ( i + 1 &lt; end &amp;&amp; text.charAt( i + 1 ) == LEFT_CURLY_BRACKET /*}*/ )</span>
+                            {
+<span class="fc" id="L458">                                ++i;</span>
+<span class="fc" id="L459">                                StringBuilder buf = new StringBuilder();</span>
+<span class="fc" id="L460">                                i = skipTraversedLinkAnchor( text, i + 1, end, buf );</span>
+<span class="fc" id="L461">                                linkAnchor = buf.toString();</span>
+                            }
+
+<span class="fc bfc" id="L464" title="All 2 branches covered.">                            if ( linkAnchor == null )</span>
+                            {
+<span class="fc" id="L466">                                linkAnchor = getTraversedLink( text, i + 1, end );</span>
+                            }
+
+<span class="fc bfc" id="L469" title="All 2 branches covered.">                            if ( AptUtils.isInternalLink( linkAnchor ) )</span>
+                            {
+<span class="fc" id="L471">                                linkAnchor = &quot;#&quot; + linkAnchor;</span>
+                            }
+
+<span class="fc" id="L474">                            int hashIndex = linkAnchor.indexOf( &quot;#&quot; );</span>
+
+<span class="fc bfc" id="L476" title="All 4 branches covered.">                            if ( hashIndex != -1 &amp;&amp; !AptUtils.isExternalLink( linkAnchor ) )</span>
+                            {
+<span class="fc" id="L478">                                String hash = linkAnchor.substring( hashIndex + 1 );</span>
+
+<span class="pc bpc" id="L480" title="3 of 4 branches missed.">                                if ( hash.endsWith( &quot;.html&quot; ) &amp;&amp; !hash.startsWith( &quot;./&quot; ) )</span>
+                                {
+<span class="nc" id="L482">                                    String msg = &quot;Ambiguous link: '&quot; + hash</span>
+                                            + &quot;'. If this is a local link, prepend \&quot;./\&quot;!&quot;;
+<span class="nc" id="L484">                                    logMessage( &quot;ambiguousLink&quot;, msg );</span>
+                                }
+
+                                // link##anchor means literal
+<span class="fc bfc" id="L488" title="All 2 branches covered.">                                if ( hash.startsWith( &quot;#&quot; ) )</span>
+                                {
+<span class="fc" id="L490">                                    linkAnchor = linkAnchor.substring( 0, hashIndex ) + hash;</span>
+                                }
+<span class="fc bfc" id="L492" title="All 2 branches covered.">                                else if ( !DoxiaUtils.isValidId( hash ) )</span>
+                                {
+<span class="fc" id="L494">                                    linkAnchor =</span>
+<span class="fc" id="L495">                                        linkAnchor.substring( 0, hashIndex ) + &quot;#&quot;</span>
+<span class="fc" id="L496">                                            + DoxiaUtils.encodeId( hash, true );</span>
+
+<span class="fc" id="L498">                                    String msg = &quot;Modified invalid link: '&quot; + hash + &quot;' to '&quot; + linkAnchor + &quot;'&quot;;</span>
+<span class="fc" id="L499">                                    logMessage( &quot;modifiedLink&quot;, msg );</span>
+                                }
+                            }
+
+<span class="fc" id="L503">                            sink.link( linkAnchor );</span>
+<span class="fc" id="L504">                        }</span>
+                        else
+                        {
+<span class="fc" id="L507">                            anchor = true;</span>
+<span class="fc" id="L508">                            flushTraversed( buffer, sink );</span>
+
+<span class="fc" id="L510">                            String linkAnchor = getTraversedAnchor( text, i + 1, end );</span>
+
+<span class="fc" id="L512">                            linkAnchor = AptUtils.encodeAnchor( linkAnchor );</span>
+
+<span class="fc" id="L514">                            sink.anchor( linkAnchor );</span>
+<span class="fc" id="L515">                        }</span>
+                    }
+                    else
+                    {
+<span class="nc" id="L519">                        buffer.append( c );</span>
+                    }
+<span class="nc" id="L521">                    break;</span>
+
+                case /*{*/RIGHT_CURLY_BRACKET:
+<span class="pc bpc" id="L524" title="2 of 6 branches missed.">                    if ( link &amp;&amp; i + 1 &lt; end &amp;&amp; text.charAt( i + 1 ) == /*{*/RIGHT_CURLY_BRACKET )</span>
+                    {
+<span class="fc" id="L526">                        ++i;</span>
+<span class="fc" id="L527">                        link = false;</span>
+<span class="fc" id="L528">                        flushTraversed( buffer, sink );</span>
+<span class="fc" id="L529">                        sink.link_();</span>
+                    }
+<span class="pc bpc" id="L531" title="1 of 2 branches missed.">                    else if ( anchor )</span>
+                    {
+<span class="fc" id="L533">                        anchor = false;</span>
+<span class="fc" id="L534">                        flushTraversed( buffer, sink );</span>
+<span class="fc" id="L535">                        sink.anchor_();</span>
+                    }
+                    else
+                    {
+<span class="nc" id="L539">                        buffer.append( c );</span>
+                    }
+<span class="nc" id="L541">                    break;</span>
+
+                case LESS_THAN:
+<span class="pc bpc" id="L544" title="3 of 6 branches missed.">                    if ( !italic &amp;&amp; !bold &amp;&amp; !monospaced )</span>
+                    {
+<span class="pc bpc" id="L546" title="1 of 4 branches missed.">                        if ( i + 1 &lt; end &amp;&amp; text.charAt( i + 1 ) == LESS_THAN )</span>
+                        {
+<span class="pc bpc" id="L548" title="1 of 4 branches missed.">                            if ( i + 2 &lt; end &amp;&amp; text.charAt( i + 2 ) == LESS_THAN )</span>
+                            {
+<span class="fc" id="L550">                                i += 2;</span>
+<span class="fc" id="L551">                                monospaced = true;</span>
+<span class="fc" id="L552">                                flushTraversed( buffer, sink );</span>
+<span class="fc" id="L553">                                sink.monospaced();</span>
+                            }
+                            else
+                            {
+<span class="fc" id="L557">                                ++i;</span>
+<span class="fc" id="L558">                                bold = true;</span>
+<span class="fc" id="L559">                                flushTraversed( buffer, sink );</span>
+<span class="fc" id="L560">                                sink.bold();</span>
+                            }
+                        }
+                        else
+                        {
+<span class="fc" id="L565">                            italic = true;</span>
+<span class="fc" id="L566">                            flushTraversed( buffer, sink );</span>
+<span class="fc" id="L567">                            sink.italic();</span>
+                        }
+                    }
+                    else
+                    {
+<span class="nc" id="L572">                        buffer.append( c );</span>
+                    }
+<span class="nc" id="L574">                    break;</span>
+
+                case GREATER_THAN:
+<span class="pc bpc" id="L577" title="2 of 6 branches missed.">                    if ( monospaced &amp;&amp; i + 2 &lt; end &amp;&amp; text.charAt( i + 1 ) == GREATER_THAN</span>
+<span class="pc bpc" id="L578" title="1 of 2 branches missed.">                        &amp;&amp; text.charAt( i + 2 ) == GREATER_THAN )</span>
+                    {
+<span class="fc" id="L580">                        i += 2;</span>
+<span class="fc" id="L581">                        monospaced = false;</span>
+<span class="fc" id="L582">                        flushTraversed( buffer, sink );</span>
+<span class="fc" id="L583">                        sink.monospaced_();</span>
+                    }
+<span class="pc bpc" id="L585" title="2 of 6 branches missed.">                    else if ( bold &amp;&amp; i + 1 &lt; end &amp;&amp; text.charAt( i + 1 ) == GREATER_THAN )</span>
+                    {
+<span class="fc" id="L587">                        ++i;</span>
+<span class="fc" id="L588">                        bold = false;</span>
+<span class="fc" id="L589">                        flushTraversed( buffer, sink );</span>
+<span class="fc" id="L590">                        sink.bold_();</span>
+                    }
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">                    else if ( italic )</span>
+                    {
+<span class="fc" id="L594">                        italic = false;</span>
+<span class="fc" id="L595">                        flushTraversed( buffer, sink );</span>
+<span class="fc" id="L596">                        sink.italic_();</span>
+                    }
+                    else
+                    {
+<span class="nc" id="L600">                        buffer.append( c );</span>
+                    }
+<span class="nc" id="L602">                    break;</span>
+
+                default:
+<span class="fc bfc" id="L605" title="All 2 branches covered.">                    if ( Character.isWhitespace( c ) )</span>
+                    {
+<span class="fc" id="L607">                        buffer.append( SPACE );</span>
+
+                        // Skip to the last char of a sequence of white spaces.
+<span class="pc bpc" id="L610" title="1 of 4 branches missed.">                        while ( i + 1 &lt; end &amp;&amp; Character.isWhitespace( text.charAt( i + 1 ) ) )</span>
+                        {
+<span class="fc" id="L612">                            ++i;</span>
+                        }
+                    }
+                    else
+                    {
+<span class="fc" id="L617">                        buffer.append( c );</span>
+                    }
+            }
+        }
+
+<span class="pc bpc" id="L622" title="1 of 2 branches missed.">        if ( monospaced )</span>
+        {
+<span class="nc" id="L624">            throw new AptParseException( &quot;missing '&quot; + MONOSPACED_END_MARKUP + &quot;'&quot; );</span>
+        }
+<span class="pc bpc" id="L626" title="1 of 2 branches missed.">        if ( bold )</span>
+        {
+<span class="nc" id="L628">            throw new AptParseException( &quot;missing '&quot; + BOLD_END_MARKUP + &quot;'&quot; );</span>
+        }
+<span class="pc bpc" id="L630" title="1 of 2 branches missed.">        if ( italic )</span>
+        {
+<span class="nc" id="L632">            throw new AptParseException( &quot;missing '&quot; + ITALIC_END_MARKUP + &quot;'&quot; );</span>
+        }
+<span class="pc bpc" id="L634" title="1 of 2 branches missed.">        if ( link )</span>
+        {
+<span class="nc" id="L636">            throw new AptParseException( &quot;missing '&quot; + LINK_END_MARKUP + &quot;'&quot; );</span>
+        }
+<span class="pc bpc" id="L638" title="1 of 2 branches missed.">        if ( anchor )</span>
+        {
+<span class="nc" id="L640">            throw new AptParseException( &quot;missing '&quot; + ANCHOR_END_MARKUP + &quot;'&quot; );</span>
+        }
+
+<span class="fc" id="L643">        flushTraversed( buffer, sink );</span>
+<span class="fc" id="L644">    }</span>
+
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns the character at position i of the given string.
+     *
+     * @param string the string.
+     * @param length length.
+     * @param i offset.
+     * @return the character, or '\0' if i &gt; length.
+     */
+    protected static char charAt( String string, int length, int i )
+    {
+<span class="pc bpc" id="L658" title="1 of 2 branches missed.">        return ( i &lt; length ) ? string.charAt( i ) : '\0';</span>
+    }
+
+    /**
+     * Skip spaces.
+     *
+     * @param string string.
+     * @param length length.
+     * @param i offset.
+     * @return int.
+     */
+    protected static int skipSpace( String string, int length, int i )
+    {
+<span class="fc bfc" id="L671" title="All 2 branches covered.">        loop: for ( ; i &lt; length; ++i )</span>
+        {
+<span class="fc bfc" id="L673" title="All 2 branches covered.">            switch ( string.charAt( i ) )</span>
+            {
+                case SPACE:
+                case TAB:
+<span class="fc" id="L677">                    break;</span>
+                default:
+<span class="fc" id="L679">                    break loop;</span>
+            }
+        }
+<span class="fc" id="L682">        return i;</span>
+    }
+
+    /**
+     * Replace part of a string.
+     *
+     * @param string the string
+     * @param oldSub the substring to replace
+     * @param newSub the replacement string
+     * @return String
+     */
+    protected static String replaceAll( String string, String oldSub, String newSub )
+    {
+<span class="fc" id="L695">        StringBuilder replaced = new StringBuilder();</span>
+<span class="fc" id="L696">        int oldSubLength = oldSub.length();</span>
+        int begin, end;
+
+<span class="fc" id="L699">        begin = 0;</span>
+<span class="fc bfc" id="L700" title="All 2 branches covered.">        while ( ( end = string.indexOf( oldSub, begin ) ) &gt;= 0 )</span>
+        {
+<span class="fc bfc" id="L702" title="All 2 branches covered.">            if ( end &gt; begin )</span>
+            {
+<span class="fc" id="L704">                replaced.append( string.substring( begin, end ) );</span>
+            }
+<span class="fc" id="L706">            replaced.append( newSub );</span>
+<span class="fc" id="L707">            begin = end + oldSubLength;</span>
+        }
+<span class="fc bfc" id="L709" title="All 2 branches covered.">        if ( begin &lt; string.length() )</span>
+        {
+<span class="fc" id="L711">            replaced.append( string.substring( begin ) );</span>
+        }
+
+<span class="fc" id="L714">        return replaced.toString();</span>
+    }
+
+    /** {@inheritDoc} */
+    protected void init()
+    {
+<span class="fc" id="L720">        super.init();</span>
+
+<span class="fc" id="L722">        this.sourceContent = null;</span>
+<span class="fc" id="L723">        this.sink = null;</span>
+<span class="fc" id="L724">        this.source = null;</span>
+<span class="fc" id="L725">        this.block = null;</span>
+<span class="fc" id="L726">        this.blockFileName = null;</span>
+<span class="fc" id="L727">        this.blockLineNumber = 0;</span>
+<span class="fc" id="L728">        this.line = null;</span>
+<span class="fc" id="L729">        this.warnMessages = null;</span>
+<span class="fc" id="L730">    }</span>
+
+    // ----------------------------------------------------------------------
+    // Private methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * Parse the head of the Apt source document.
+     *
+     * @throws AptParseException if something goes wrong.
+     */
+    private void traverseHead()
+        throws AptParseException
+    {
+<span class="fc" id="L744">        sink.head();</span>
+
+<span class="pc bpc" id="L746" title="1 of 4 branches missed.">        if ( block != null &amp;&amp; block.getType() == TITLE )</span>
+        {
+<span class="fc" id="L748">            block.traverse();</span>
+<span class="fc" id="L749">            nextBlock();</span>
+        }
+
+<span class="fc" id="L752">        sink.head_();</span>
+<span class="fc" id="L753">    }</span>
+
+    /**
+     * Parse the body of the Apt source document.
+     *
+     * @throws AptParseException if something goes wrong.
+     */
+    private void traverseBody()
+        throws AptParseException
+    {
+<span class="fc" id="L763">        sink.body();</span>
+
+<span class="pc bpc" id="L765" title="1 of 2 branches missed.">        if ( block != null )</span>
+        {
+<span class="fc" id="L767">            traverseSectionBlocks();</span>
+        }
+
+<span class="fc bfc" id="L770" title="All 2 branches covered.">        while ( block != null )</span>
+        {
+<span class="fc" id="L772">            traverseSection( 0 );</span>
+        }
+
+<span class="fc" id="L775">        sink.body_();</span>
+<span class="fc" id="L776">    }</span>
+
+    /**
+     * Parse a section of the Apt source document.
+     *
+     * @param level The section level.
+     * @throws AptParseException if something goes wrong.
+     */
+    private void traverseSection( int level )
+        throws AptParseException
+    {
+<span class="pc bpc" id="L787" title="1 of 2 branches missed.">        if ( block == null )</span>
+        {
+<span class="nc" id="L789">            return;</span>
+        }
+
+<span class="fc" id="L792">        int type = SECTION1 + level;</span>
+
+<span class="fc" id="L794">        expectedBlock( type );</span>
+
+<span class="pc bpc" id="L796" title="1 of 6 branches missed.">        switch ( level )</span>
+        {
+            case 0:
+<span class="fc" id="L799">                sink.section1();</span>
+<span class="fc" id="L800">                break;</span>
+            case 1:
+<span class="fc" id="L802">                sink.section2();</span>
+<span class="fc" id="L803">                break;</span>
+            case 2:
+<span class="fc" id="L805">                sink.section3();</span>
+<span class="fc" id="L806">                break;</span>
+            case 3:
+<span class="fc" id="L808">                sink.section4();</span>
+<span class="fc" id="L809">                break;</span>
+            case 4:
+<span class="fc" id="L811">                sink.section5();</span>
+<span class="fc" id="L812">                break;</span>
+            default:
+                break;
+        }
+
+<span class="fc" id="L817">        block.traverse();</span>
+
+<span class="fc" id="L819">        nextBlock();</span>
+
+<span class="fc" id="L821">        traverseSectionBlocks();</span>
+
+<span class="fc bfc" id="L823" title="All 2 branches covered.">        while ( block != null )</span>
+        {
+<span class="fc bfc" id="L825" title="All 2 branches covered.">            if ( block.getType() &lt;= type )</span>
+            {
+<span class="fc" id="L827">                break;</span>
+            }
+
+<span class="fc" id="L830">            traverseSection( level + 1 );</span>
+        }
+
+<span class="pc bpc" id="L833" title="1 of 6 branches missed.">        switch ( level )</span>
+        {
+            case 0:
+<span class="fc" id="L836">                sink.section1_();</span>
+<span class="fc" id="L837">                break;</span>
+            case 1:
+<span class="fc" id="L839">                sink.section2_();</span>
+<span class="fc" id="L840">                break;</span>
+            case 2:
+<span class="fc" id="L842">                sink.section3_();</span>
+<span class="fc" id="L843">                break;</span>
+            case 3:
+<span class="fc" id="L845">                sink.section4_();</span>
+<span class="fc" id="L846">                break;</span>
+            case 4:
+<span class="fc" id="L848">                sink.section5_();</span>
+<span class="fc" id="L849">                break;</span>
+            default:
+                break;
+        }
+<span class="fc" id="L853">    }</span>
+
+    /**
+     * Parse the section blocks of the Apt source document.
+     *
+     * @throws AptParseException if something goes wrong.
+     */
+    private void traverseSectionBlocks()
+        throws AptParseException
+    {
+<span class="fc bfc" id="L863" title="All 2 branches covered.">        loop: while ( block != null )</span>
+        {
+<span class="pc bpc" id="L865" title="1 of 6 branches missed.">            switch ( block.getType() )</span>
+            {
+                case PARAGRAPH:
+                case VERBATIM:
+                case FIGURE:
+                case TABLE:
+                case HORIZONTAL_RULE:
+                case PG_BREAK:
+                case MACRO:
+                case COMMENT_BLOCK:
+<span class="fc" id="L875">                    block.traverse();</span>
+<span class="fc" id="L876">                    nextBlock();</span>
+<span class="fc" id="L877">                    break;</span>
+
+                case LIST_ITEM:
+<span class="fc" id="L880">                    traverseList();</span>
+<span class="fc" id="L881">                    break;</span>
+
+                case NUMBERED_LIST_ITEM:
+<span class="fc" id="L884">                    traverseNumberedList();</span>
+<span class="fc" id="L885">                    break;</span>
+
+                case DEFINITION_LIST_ITEM:
+<span class="fc" id="L888">                    traverseDefinitionList();</span>
+<span class="fc" id="L889">                    break;</span>
+
+                case LIST_BREAK:
+                    // May be this is a list break which has not been indented
+                    // very precisely.
+<span class="nc" id="L894">                    nextBlock();</span>
+<span class="nc" id="L895">                    break;</span>
+
+                default:
+                    // A section block which starts a new section.
+<span class="fc" id="L899">                    break loop;</span>
+            }
+        }
+<span class="fc" id="L902">    }</span>
+
+    /**
+     * Parse a list of the Apt source document.
+     *
+     * @throws AptParseException if something goes wrong.
+     */
+    private void traverseList()
+        throws AptParseException
+    {
+<span class="pc bpc" id="L912" title="1 of 2 branches missed.">        if ( block == null )</span>
+        {
+<span class="nc" id="L914">            return;</span>
+        }
+
+<span class="fc" id="L917">        expectedBlock( LIST_ITEM );</span>
+
+<span class="fc" id="L919">        int listIndent = block.getIndent();</span>
+
+<span class="fc" id="L921">        sink.list();</span>
+
+<span class="fc" id="L923">        sink.listItem();</span>
+
+<span class="fc" id="L925">        block.traverse();</span>
+
+<span class="fc" id="L927">        nextBlock();</span>
+
+<span class="fc bfc" id="L929" title="All 2 branches covered.">        loop: while ( block != null )</span>
+        {
+<span class="fc" id="L931">            int blockIndent = block.getIndent();</span>
+
+<span class="pc bpc" id="L933" title="3 of 7 branches missed.">            switch ( block.getType() )</span>
+            {
+                case PARAGRAPH:
+<span class="pc bpc" id="L936" title="1 of 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L938">                        break loop;</span>
+                    }
+                    /*FALLTHROUGH*/
+                case VERBATIM:
+                case MACRO:
+                case FIGURE:
+                case TABLE:
+                case HORIZONTAL_RULE:
+                case PG_BREAK:
+<span class="fc" id="L947">                    block.traverse();</span>
+<span class="fc" id="L948">                    nextBlock();</span>
+<span class="fc" id="L949">                    break;</span>
+
+                case LIST_ITEM:
+<span class="fc bfc" id="L952" title="All 2 branches covered.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="fc" id="L954">                        break loop;</span>
+                    }
+
+<span class="fc bfc" id="L957" title="All 2 branches covered.">                    if ( blockIndent &gt; listIndent )</span>
+                    {
+<span class="fc" id="L959">                        traverseList();</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L963">                        sink.listItem_();</span>
+<span class="fc" id="L964">                        sink.listItem();</span>
+<span class="fc" id="L965">                        block.traverse();</span>
+<span class="fc" id="L966">                        nextBlock();</span>
+                    }
+<span class="fc" id="L968">                    break;</span>
+
+                case NUMBERED_LIST_ITEM:
+<span class="nc bnc" id="L971" title="All 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L973">                        break loop;</span>
+                    }
+
+<span class="nc" id="L976">                    traverseNumberedList();</span>
+<span class="nc" id="L977">                    break;</span>
+
+                case DEFINITION_LIST_ITEM:
+<span class="nc bnc" id="L980" title="All 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L982">                        break loop;</span>
+                    }
+
+<span class="nc" id="L985">                    traverseDefinitionList();</span>
+<span class="nc" id="L986">                    break;</span>
+
+                case LIST_BREAK:
+<span class="pc bpc" id="L989" title="1 of 2 branches missed.">                    if ( blockIndent &gt;= listIndent )</span>
+                    {
+<span class="fc" id="L991">                        nextBlock();</span>
+                    }
+                    /*FALLTHROUGH*/
+                default:
+                    // A block which ends the list.
+<span class="fc" id="L996">                    break loop;</span>
+            }
+<span class="fc" id="L998">        }</span>
+
+<span class="fc" id="L1000">        sink.listItem_();</span>
+<span class="fc" id="L1001">        sink.list_();</span>
+<span class="fc" id="L1002">    }</span>
+
+    /**
+     * Parse a numbered list of the Apt source document.
+     *
+     * @throws AptParseException if something goes wrong.
+     */
+    private void traverseNumberedList()
+        throws AptParseException
+    {
+<span class="pc bpc" id="L1012" title="1 of 2 branches missed.">        if ( block == null )</span>
+        {
+<span class="nc" id="L1014">            return;</span>
+        }
+<span class="fc" id="L1016">        expectedBlock( NUMBERED_LIST_ITEM );</span>
+<span class="fc" id="L1017">        int listIndent = block.getIndent();</span>
+
+<span class="fc" id="L1019">        sink.numberedList( ( (NumberedListItem) block ).getNumbering() );</span>
+<span class="fc" id="L1020">        sink.numberedListItem();</span>
+<span class="fc" id="L1021">        block.traverse();</span>
+<span class="fc" id="L1022">        nextBlock();</span>
+
+<span class="pc bpc" id="L1024" title="1 of 2 branches missed.">        loop: while ( block != null )</span>
+        {
+<span class="fc" id="L1026">            int blockIndent = block.getIndent();</span>
+
+<span class="pc bpc" id="L1028" title="4 of 7 branches missed.">            switch ( block.getType() )</span>
+            {
+                case PARAGRAPH:
+<span class="pc bpc" id="L1031" title="1 of 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="fc" id="L1033">                        break loop;</span>
+                    }
+                    /*FALLTHROUGH*/
+                case VERBATIM:
+                case FIGURE:
+                case TABLE:
+                case HORIZONTAL_RULE:
+                case PG_BREAK:
+<span class="nc" id="L1041">                    block.traverse();</span>
+<span class="nc" id="L1042">                    nextBlock();</span>
+<span class="nc" id="L1043">                    break;</span>
+
+                case LIST_ITEM:
+<span class="nc bnc" id="L1046" title="All 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L1048">                        break loop;</span>
+                    }
+
+<span class="nc" id="L1051">                    traverseList();</span>
+<span class="nc" id="L1052">                    break;</span>
+
+                case NUMBERED_LIST_ITEM:
+<span class="fc bfc" id="L1055" title="All 2 branches covered.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="fc" id="L1057">                        break loop;</span>
+                    }
+
+<span class="fc bfc" id="L1060" title="All 2 branches covered.">                    if ( blockIndent &gt; listIndent )</span>
+                    {
+<span class="fc" id="L1062">                        traverseNumberedList();</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L1066">                        sink.numberedListItem_();</span>
+<span class="fc" id="L1067">                        sink.numberedListItem();</span>
+<span class="fc" id="L1068">                        block.traverse();</span>
+<span class="fc" id="L1069">                        nextBlock();</span>
+                    }
+<span class="fc" id="L1071">                    break;</span>
+
+                case DEFINITION_LIST_ITEM:
+<span class="nc bnc" id="L1074" title="All 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L1076">                        break loop;</span>
+                    }
+
+<span class="nc" id="L1079">                    traverseDefinitionList();</span>
+<span class="nc" id="L1080">                    break;</span>
+
+                case LIST_BREAK:
+<span class="pc bpc" id="L1083" title="1 of 2 branches missed.">                    if ( blockIndent &gt;= listIndent )</span>
+                    {
+<span class="fc" id="L1085">                        nextBlock();</span>
+                    }
+                    /*FALLTHROUGH*/
+                default:
+                    // A block which ends the list.
+<span class="fc" id="L1090">                    break loop;</span>
+            }
+<span class="fc" id="L1092">        }</span>
+
+<span class="fc" id="L1094">        sink.numberedListItem_();</span>
+<span class="fc" id="L1095">        sink.numberedList_();</span>
+<span class="fc" id="L1096">    }</span>
+
+    /**
+     * Parse a definition list of the Apt source document.
+     *
+     * @throws AptParseException if something goes wrong.
+     */
+    private void traverseDefinitionList()
+        throws AptParseException
+    {
+<span class="pc bpc" id="L1106" title="1 of 2 branches missed.">        if ( block == null )</span>
+        {
+<span class="nc" id="L1108">            return;</span>
+        }
+<span class="fc" id="L1110">        expectedBlock( DEFINITION_LIST_ITEM );</span>
+<span class="fc" id="L1111">        int listIndent = block.getIndent();</span>
+
+<span class="fc" id="L1113">        sink.definitionList();</span>
+<span class="fc" id="L1114">        sink.definitionListItem();</span>
+<span class="fc" id="L1115">        block.traverse();</span>
+<span class="fc" id="L1116">        nextBlock();</span>
+
+<span class="pc bpc" id="L1118" title="1 of 2 branches missed.">        loop: while ( block != null )</span>
+        {
+<span class="fc" id="L1120">            int blockIndent = block.getIndent();</span>
+
+<span class="pc bpc" id="L1122" title="3 of 7 branches missed.">            switch ( block.getType() )</span>
+            {
+                case PARAGRAPH:
+<span class="pc bpc" id="L1125" title="1 of 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="fc" id="L1127">                        break loop;</span>
+                    }
+                    /*FALLTHROUGH*/
+                case VERBATIM:
+                case FIGURE:
+                case TABLE:
+                case HORIZONTAL_RULE:
+                case PG_BREAK:
+<span class="fc" id="L1135">                    block.traverse();</span>
+<span class="fc" id="L1136">                    nextBlock();</span>
+<span class="fc" id="L1137">                    break;</span>
+
+                case LIST_ITEM:
+<span class="nc bnc" id="L1140" title="All 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L1142">                        break loop;</span>
+                    }
+
+<span class="nc" id="L1145">                    traverseList();</span>
+<span class="nc" id="L1146">                    break;</span>
+
+                case NUMBERED_LIST_ITEM:
+<span class="nc bnc" id="L1149" title="All 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L1151">                        break loop;</span>
+                    }
+
+<span class="nc" id="L1154">                    traverseNumberedList();</span>
+<span class="nc" id="L1155">                    break;</span>
+
+                case DEFINITION_LIST_ITEM:
+<span class="pc bpc" id="L1158" title="1 of 2 branches missed.">                    if ( blockIndent &lt; listIndent )</span>
+                    {
+<span class="nc" id="L1160">                        break loop;</span>
+                    }
+
+<span class="pc bpc" id="L1163" title="1 of 2 branches missed.">                    if ( blockIndent &gt; listIndent )</span>
+                    {
+<span class="nc" id="L1165">                        traverseDefinitionList();</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L1169">                        sink.definition_();</span>
+<span class="fc" id="L1170">                        sink.definitionListItem_();</span>
+<span class="fc" id="L1171">                        sink.definitionListItem();</span>
+<span class="fc" id="L1172">                        block.traverse();</span>
+<span class="fc" id="L1173">                        nextBlock();</span>
+                    }
+<span class="fc" id="L1175">                    break;</span>
+
+                case LIST_BREAK:
+<span class="pc bpc" id="L1178" title="1 of 2 branches missed.">                    if ( blockIndent &gt;= listIndent )</span>
+                    {
+<span class="fc" id="L1180">                        nextBlock();</span>
+                    }
+                    /*FALLTHROUGH*/
+                default:
+                    // A block which ends the list.
+<span class="fc" id="L1185">                    break loop;</span>
+            }
+<span class="fc" id="L1187">        }</span>
+
+<span class="fc" id="L1189">        sink.definition_();</span>
+<span class="fc" id="L1190">        sink.definitionListItem_();</span>
+<span class="fc" id="L1191">        sink.definitionList_();</span>
+<span class="fc" id="L1192">    }</span>
+
+    /**
+     * Parse the next block of the Apt source document.
+     *
+     * @throws AptParseException if something goes wrong.
+     */
+    private void nextBlock()
+        throws AptParseException
+    {
+<span class="fc" id="L1202">        nextBlock( /*first*/false );</span>
+<span class="fc" id="L1203">    }</span>
+
+    /**
+     * Parse the next block of the Apt source document.
+     *
+     * @param firstBlock True if this is the first block of the Apt source document.
+     * @throws AptParseException if something goes wrong.
+     */
+    private void nextBlock( boolean firstBlock )
+        throws AptParseException
+    {
+        // Skip open lines.
+        int length, indent, i;
+
+        skipLoop: for ( ;; )
+        {
+<span class="fc bfc" id="L1219" title="All 2 branches covered.">            if ( line == null )</span>
+            {
+<span class="fc" id="L1221">                block = null;</span>
+<span class="fc" id="L1222">                return;</span>
+            }
+
+<span class="fc" id="L1225">            length = line.length();</span>
+<span class="fc" id="L1226">            indent = 0;</span>
+<span class="fc bfc" id="L1227" title="All 2 branches covered.">            for ( i = 0; i &lt; length; ++i )</span>
+            {
+<span class="pc bpc" id="L1229" title="1 of 3 branches missed.">                switch ( line.charAt( i ) )</span>
+                {
+                    case SPACE:
+<span class="fc" id="L1232">                        ++indent;</span>
+<span class="fc" id="L1233">                        break;</span>
+                    case TAB:
+<span class="nc" id="L1235">                        indent += 8;</span>
+<span class="nc" id="L1236">                        break;</span>
+                    default:
+<span class="fc" id="L1238">                        break skipLoop;</span>
+                }
+            }
+
+<span class="pc bpc" id="L1242" title="1 of 2 branches missed.">            if ( i == length )</span>
+            {
+<span class="fc" id="L1244">                nextLine();</span>
+            }
+        }
+
+<span class="fc" id="L1248">        blockFileName = source.getName();</span>
+<span class="fc" id="L1249">        blockLineNumber = source.getLineNumber();</span>
+<span class="fc" id="L1250">        block = null;</span>
+<span class="fc bfc" id="L1251" title="All 9 branches covered.">        switch ( line.charAt( i ) )</span>
+        {
+            case STAR:
+<span class="fc bfc" id="L1254" title="All 2 branches covered.">                if ( indent == 0 )</span>
+                {
+<span class="pc bpc" id="L1256" title="1 of 4 branches missed.">                    if ( charAt( line, length, i + 1 ) == MINUS &amp;&amp; charAt( line, length, i + 2 ) == MINUS )</span>
+                    {
+<span class="fc" id="L1258">                        block = new Table( indent, line );</span>
+                    }
+<span class="fc bfc" id="L1260" title="All 2 branches covered.">                    else if ( charAt( line, length, i + 1 ) == STAR )</span>
+                    {
+<span class="fc bfc" id="L1262" title="All 2 branches covered.">                        if ( charAt( line, length, i + 2 ) == STAR )</span>
+                        {
+<span class="fc bfc" id="L1264" title="All 2 branches covered.">                            if ( charAt( line, length, i + 3 ) == STAR )</span>
+                            {
+<span class="fc" id="L1266">                                block = new Section5( indent, line );</span>
+                            }
+                            else
+                            {
+<span class="fc" id="L1270">                                block = new Section4( indent, line );</span>
+                            }
+                        }
+                        else
+                        {
+<span class="fc" id="L1275">                            block = new Section3( indent, line );</span>
+                        }
+                    }
+                    else
+                    {
+<span class="fc" id="L1280">                        block = new Section2( indent, line );</span>
+                    }
+                }
+                else
+                {
+<span class="fc" id="L1285">                    block = new ListItem( indent, line );</span>
+                }
+<span class="fc" id="L1287">                break;</span>
+            case LEFT_SQUARE_BRACKET:
+<span class="fc bfc" id="L1289" title="All 2 branches covered.">                if ( charAt( line, length, i + 1 ) == RIGHT_SQUARE_BRACKET )</span>
+                {
+<span class="fc" id="L1291">                    block = new ListBreak( indent, line );</span>
+                }
+                else
+                {
+<span class="fc bfc" id="L1295" title="All 2 branches covered.">                    if ( indent == 0 )</span>
+                    {
+<span class="fc" id="L1297">                        block = new Figure( indent, line );</span>
+                    }
+                    else
+                    {
+<span class="fc bfc" id="L1301" title="All 2 branches covered.">                        if ( charAt( line, length, i + 1 ) == LEFT_SQUARE_BRACKET )</span>
+                        {
+                            int numbering;
+
+<span class="pc bpc" id="L1305" title="3 of 5 branches missed.">                            switch ( charAt( line, length, i + 2 ) )</span>
+                            {
+                                case NUMBERING_LOWER_ALPHA_CHAR:
+<span class="nc" id="L1308">                                    numbering = Sink.NUMBERING_LOWER_ALPHA;</span>
+<span class="nc" id="L1309">                                    break;</span>
+                                case NUMBERING_UPPER_ALPHA_CHAR:
+<span class="fc" id="L1311">                                    numbering = Sink.NUMBERING_UPPER_ALPHA;</span>
+<span class="fc" id="L1312">                                    break;</span>
+                                case NUMBERING_LOWER_ROMAN_CHAR:
+<span class="nc" id="L1314">                                    numbering = Sink.NUMBERING_LOWER_ROMAN;</span>
+<span class="nc" id="L1315">                                    break;</span>
+                                case NUMBERING_UPPER_ROMAN_CHAR:
+<span class="nc" id="L1317">                                    numbering = Sink.NUMBERING_UPPER_ROMAN;</span>
+<span class="nc" id="L1318">                                    break;</span>
+                                case NUMBERING:
+                                default:
+                                    // The first item establishes the numbering
+                                    // scheme for the whole list.
+<span class="fc" id="L1323">                                    numbering = Sink.NUMBERING_DECIMAL;</span>
+                            }
+
+<span class="fc" id="L1326">                            block = new NumberedListItem( indent, line, numbering );</span>
+<span class="fc" id="L1327">                        }</span>
+                        else
+                        {
+<span class="fc" id="L1330">                            block = new DefinitionListItem( indent, line );</span>
+                        }
+                    }
+                }
+<span class="fc" id="L1334">                break;</span>
+            case MINUS:
+<span class="pc bpc" id="L1336" title="2 of 4 branches missed.">                if ( charAt( line, length, i + 1 ) == MINUS &amp;&amp; charAt( line, length, i + 2 ) == MINUS )</span>
+                {
+<span class="fc bfc" id="L1338" title="All 2 branches covered.">                    if ( indent == 0 )</span>
+                    {
+<span class="fc" id="L1340">                        block = new Verbatim( indent, line );</span>
+                    }
+                    else
+                    {
+<span class="fc bfc" id="L1344" title="All 2 branches covered.">                        if ( firstBlock )</span>
+                        {
+<span class="fc" id="L1346">                            block = new Title( indent, line );</span>
+                        }
+                    }
+                }
+                break;
+            case PLUS:
+<span class="pc bpc" id="L1352" title="3 of 6 branches missed.">                if ( indent == 0 &amp;&amp; charAt( line, length, i + 1 ) == MINUS &amp;&amp; charAt( line, length, i + 2 ) == MINUS )</span>
+                {
+<span class="fc" id="L1354">                    block = new Verbatim( indent, line );</span>
+                }
+                break;
+            case EQUAL:
+<span class="pc bpc" id="L1358" title="3 of 6 branches missed.">                if ( indent == 0 &amp;&amp; charAt( line, length, i + 1 ) == EQUAL &amp;&amp; charAt( line, length, i + 2 ) == EQUAL )</span>
+                {
+<span class="fc" id="L1360">                    block = new HorizontalRule( indent, line );</span>
+                }
+                break;
+            case PAGE_BREAK:
+<span class="pc bpc" id="L1364" title="1 of 2 branches missed.">                if ( indent == 0 )</span>
+                {
+<span class="fc" id="L1366">                    block = new PageBreak( indent, line );</span>
+                }
+                break;
+            case PERCENT:
+<span class="pc bpc" id="L1370" title="2 of 4 branches missed.">                if ( indent == 0 &amp;&amp; charAt( line, length, i + 1 ) == LEFT_CURLY_BRACKET )</span>
+                {
+<span class="fc" id="L1372">                    block = new MacroBlock( indent, line );</span>
+                }
+                break;
+            case COMMENT:
+<span class="pc bpc" id="L1376" title="1 of 2 branches missed.">                if ( charAt( line, length, i + 1 ) == COMMENT )</span>
+                {
+<span class="fc" id="L1378">                    block = new Comment( line.substring( i + 2 ) );</span>
+                }
+                break;
+            default:
+                break;
+        }
+
+<span class="fc bfc" id="L1385" title="All 2 branches covered.">        if ( block == null )</span>
+        {
+<span class="fc bfc" id="L1387" title="All 2 branches covered.">            if ( indent == 0 )</span>
+            {
+<span class="fc" id="L1389">                block = new Section1( indent, line );</span>
+            }
+            else
+            {
+<span class="fc" id="L1393">                block = new Paragraph( indent, line );</span>
+            }
+        }
+<span class="fc" id="L1396">    }</span>
+
+    /**
+     * Checks that the current block is of the expected type.
+     *
+     * @param type the expected type.
+     * @throws AptParseException if something goes wrong.
+     */
+    private void expectedBlock( int type )
+        throws AptParseException
+    {
+<span class="fc" id="L1407">        int blockType = block.getType();</span>
+
+<span class="pc bpc" id="L1409" title="1 of 2 branches missed.">        if ( blockType != type )</span>
+        {
+<span class="nc" id="L1411">            throw new AptParseException( &quot;expected &quot; + TYPE_NAMES[type] + &quot;, found &quot; + TYPE_NAMES[blockType] );</span>
+        }
+<span class="fc" id="L1413">    }</span>
+
+    // -----------------------------------------------------------------------
+
+    /**
+     * Determine if c is an octal character.
+     *
+     * @param c the character.
+     * @return boolean
+     */
+    private static boolean isOctalChar( char c )
+    {
+<span class="pc bpc" id="L1425" title="2 of 4 branches missed.">        return ( c &gt;= '0' &amp;&amp; c &lt;= '7' );</span>
+    }
+
+    /**
+     * Determine if c is an hex character.
+     *
+     * @param c the character.
+     * @return boolean
+     */
+    private static boolean isHexChar( char c )
+    {
+<span class="pc bpc" id="L1436" title="4 of 12 branches missed.">        return ( ( c &gt;= '0' &amp;&amp; c &lt;= '9' ) || ( c &gt;= 'a' &amp;&amp; c &lt;= 'f' ) || ( c &gt;= 'A' &amp;&amp; c &lt;= 'F' ) );</span>
+    }
+
+    /**
+     * Emits the text so far parsed into the given sink.
+     *
+     * @param buffer A StringBuilder that contains the text to be flushed.
+     * @param sink The sink to receive the text.
+     */
+    private static void flushTraversed( StringBuilder buffer, Sink sink )
+    {
+<span class="fc bfc" id="L1447" title="All 2 branches covered.">        if ( buffer.length() &gt; 0 )</span>
+        {
+<span class="fc" id="L1449">            sink.text( buffer.toString() );</span>
+<span class="fc" id="L1450">            buffer.setLength( 0 );</span>
+        }
+<span class="fc" id="L1452">    }</span>
+
+    /**
+     * Parse the given text.
+     *
+     * @param text the text to parse.
+     * @param begin offset.
+     * @param end offset.
+     * @param linkAnchor a StringBuilder.
+     * @return int
+     * @throws AptParseException if something goes wrong.
+     */
+    private static int skipTraversedLinkAnchor( String text, int begin, int end, StringBuilder linkAnchor )
+        throws AptParseException
+    {
+        int i;
+<span class="pc bpc" id="L1468" title="1 of 2 branches missed.">        loop: for ( i = begin; i &lt; end; ++i )</span>
+        {
+<span class="fc" id="L1470">            char c = text.charAt( i );</span>
+<span class="pc bpc" id="L1471" title="1 of 3 branches missed.">            switch ( c )</span>
+            {
+                case RIGHT_CURLY_BRACKET:
+<span class="fc" id="L1474">                    break loop;</span>
+                case BACKSLASH:
+<span class="nc bnc" id="L1476" title="All 2 branches missed.">                    if ( i + 1 &lt; end )</span>
+                    {
+<span class="nc" id="L1478">                        ++i;</span>
+<span class="nc" id="L1479">                        linkAnchor.append( text.charAt( i ) );</span>
+                    }
+                    else
+                    {
+<span class="nc" id="L1483">                        linkAnchor.append( BACKSLASH );</span>
+                    }
+<span class="nc" id="L1485">                    break;</span>
+                default:
+<span class="fc" id="L1487">                    linkAnchor.append( c );</span>
+            }
+        }
+<span class="pc bpc" id="L1490" title="1 of 2 branches missed.">        if ( i == end )</span>
+        {
+<span class="nc" id="L1492">            throw new AptParseException( &quot;missing '&quot; + RIGHT_CURLY_BRACKET + &quot;'&quot; );</span>
+        }
+
+<span class="fc" id="L1495">        return i;</span>
+    }
+
+    /**
+     * Parse the given text.
+     *
+     * @param text the text to parse.
+     * @param begin offset.
+     * @param end offset.
+     * @return String
+     * @throws AptParseException if something goes wrong.
+     */
+    private String getTraversedLink( String text, int begin, int end )
+        throws AptParseException
+    {
+<span class="fc" id="L1510">        char previous2 = LEFT_CURLY_BRACKET;</span>
+<span class="fc" id="L1511">        char previous = LEFT_CURLY_BRACKET;</span>
+        int i;
+
+<span class="pc bpc" id="L1514" title="1 of 2 branches missed.">        for ( i = begin; i &lt; end; ++i )</span>
+        {
+<span class="fc" id="L1516">            char c = text.charAt( i );</span>
+<span class="pc bpc" id="L1517" title="1 of 6 branches missed.">            if ( c == RIGHT_CURLY_BRACKET &amp;&amp; previous == RIGHT_CURLY_BRACKET &amp;&amp; previous2 != BACKSLASH )</span>
+            {
+<span class="fc" id="L1519">                break;</span>
+            }
+
+<span class="fc" id="L1522">            previous2 = previous;</span>
+<span class="fc" id="L1523">            previous = c;</span>
+        }
+<span class="pc bpc" id="L1525" title="1 of 2 branches missed.">        if ( i == end )</span>
+        {
+<span class="nc" id="L1527">            throw new AptParseException( &quot;missing '&quot; + LEFT_CURLY_BRACKET + LEFT_CURLY_BRACKET + &quot;'&quot; );</span>
+        }
+
+<span class="fc" id="L1530">        return doGetTraversedLink( text, begin, i - 1 );</span>
+    }
+
+    /**
+     * Parse the given text.
+     *
+     * @param text the text to parse.
+     * @param begin offset.
+     * @param end offset.
+     * @return String
+     * @throws AptParseException if something goes wrong.
+     */
+    private String getTraversedAnchor( String text, int begin, int end )
+        throws AptParseException
+    {
+<span class="fc" id="L1545">        char previous = LEFT_CURLY_BRACKET;</span>
+        int i;
+
+<span class="pc bpc" id="L1548" title="1 of 2 branches missed.">        for ( i = begin; i &lt; end; ++i )</span>
+        {
+<span class="fc" id="L1550">            char c = text.charAt( i );</span>
+<span class="pc bpc" id="L1551" title="1 of 4 branches missed.">            if ( c == RIGHT_CURLY_BRACKET &amp;&amp; previous != BACKSLASH )</span>
+            {
+<span class="fc" id="L1553">                break;</span>
+            }
+
+<span class="fc" id="L1556">            previous = c;</span>
+        }
+<span class="pc bpc" id="L1558" title="1 of 2 branches missed.">        if ( i == end )</span>
+        {
+<span class="nc" id="L1560">            throw new AptParseException( &quot;missing '&quot; + RIGHT_CURLY_BRACKET + &quot;'&quot; );</span>
+        }
+
+<span class="fc" id="L1563">        return doGetTraversedLink( text, begin, i );</span>
+    }
+
+    /**
+     * Parse the given text.
+     *
+     * @param text the text to parse.
+     * @param begin offset.
+     * @param end offset.
+     * @return String
+     * @throws AptParseException if something goes wrong.
+     */
+    private String doGetTraversedLink( String text, int begin, int end )
+        throws AptParseException
+    {
+<span class="fc" id="L1578">        final StringBuilder buffer = new StringBuilder( end - begin );</span>
+
+<span class="fc" id="L1580">        Sink linkSink = new SinkAdapter()</span>
+<span class="fc" id="L1581">        {</span>
+            /** {@inheritDoc} */
+            public void lineBreak()
+            {
+<span class="nc" id="L1585">                buffer.append( SPACE );</span>
+<span class="nc" id="L1586">            }</span>
+
+            /** {@inheritDoc} */
+            public void nonBreakingSpace()
+            {
+<span class="nc" id="L1591">                buffer.append( SPACE );</span>
+<span class="nc" id="L1592">            }</span>
+
+            /** {@inheritDoc} */
+            public void text( String text )
+            {
+<span class="fc" id="L1597">                buffer.append( text );</span>
+<span class="fc" id="L1598">            }</span>
+        };
+<span class="fc" id="L1600">        doTraverseText( text, begin, end, linkSink );</span>
+
+<span class="fc" id="L1602">        return buffer.toString().trim();</span>
+    }
+
+    /**
+     * If debug mode is enabled, log the &lt;code&gt;msg&lt;/code&gt; as is, otherwise add unique msg in &lt;code&gt;warnMessages&lt;/code&gt;.
+     *
+     * @param key not null
+     * @param msg not null
+     * @see #parse(Reader, Sink)
+     * @since 1.1.1
+     */
+    private void logMessage( String key, String msg )
+    {
+<span class="fc" id="L1615">        msg = &quot;[APT Parser] &quot; + msg;</span>
+<span class="pc bpc" id="L1616" title="1 of 2 branches missed.">        if ( getLog().isDebugEnabled() )</span>
+        {
+<span class="nc" id="L1618">            getLog().debug( msg );</span>
+
+<span class="nc" id="L1620">            return;</span>
+        }
+
+<span class="pc bpc" id="L1623" title="1 of 2 branches missed.">        if ( warnMessages == null )</span>
+        {
+<span class="fc" id="L1625">            warnMessages = new HashMap&lt;String, Set&lt;String&gt;&gt;();</span>
+        }
+
+<span class="fc" id="L1628">        Set&lt;String&gt; set = warnMessages.get( key );</span>
+<span class="pc bpc" id="L1629" title="1 of 2 branches missed.">        if ( set == null )</span>
+        {
+<span class="fc" id="L1631">            set = new TreeSet&lt;String&gt;();</span>
+        }
+<span class="fc" id="L1633">        set.add( msg );</span>
+<span class="fc" id="L1634">        warnMessages.put( key, set );</span>
+<span class="fc" id="L1635">    }</span>
+
+    /**
+     * @since 1.1.2
+     */
+    private void logWarnings()
+    {
+<span class="pc bpc" id="L1642" title="2 of 6 branches missed.">        if ( getLog().isWarnEnabled() &amp;&amp; this.warnMessages != null &amp;&amp; !isSecondParsing() )</span>
+        {
+<span class="fc bfc" id="L1644" title="All 2 branches covered.">            for ( Map.Entry&lt;String, Set&lt;String&gt;&gt; entry : this.warnMessages.entrySet() )</span>
+            {
+<span class="fc bfc" id="L1646" title="All 2 branches covered.">                for ( String msg : entry.getValue() )</span>
+                {
+<span class="fc" id="L1648">                    getLog().warn( msg );</span>
+<span class="fc" id="L1649">                }</span>
+<span class="fc" id="L1650">            }</span>
+
+<span class="fc" id="L1652">            this.warnMessages = null;</span>
+        }
+<span class="fc" id="L1654">    }</span>
+
+    // -----------------------------------------------------------------------
+
+    /** A block of an apt source document. */
+    private abstract class Block
+    {
+        /** type. */
+        protected int type;
+
+        /** indent. */
+        protected int indent;
+
+        /** text. */
+        protected String text;
+
+        /** textLength. */
+        protected int textLength;
+
+        /**
+         * Constructor.
+         *
+         * @param type the block type.
+         * @param indent indent.
+         * @throws AptParseException AptParseException
+         */
+        public Block( int type, int indent )
+            throws AptParseException
+        {
+<span class="fc" id="L1683">            this( type, indent, null );</span>
+<span class="fc" id="L1684">        }</span>
+
+        /**
+         * Constructor.
+         *
+         * @param type type.
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Block( int type, int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L1696">        {</span>
+<span class="fc" id="L1697">            this.type = type;</span>
+<span class="fc" id="L1698">            this.indent = indent;</span>
+
+            // Skip first line ---
+<span class="fc" id="L1701">            AptParser.this.nextLine();</span>
+
+<span class="fc bfc" id="L1703" title="All 2 branches covered.">            if ( firstLine == null )</span>
+            {
+<span class="fc" id="L1705">                text = null;</span>
+<span class="fc" id="L1706">                textLength = 0;</span>
+            }
+            else
+            {
+                // Read block ---
+<span class="fc" id="L1711">                StringBuilder buffer = new StringBuilder( firstLine );</span>
+
+<span class="fc bfc" id="L1713" title="All 2 branches covered.">                while ( AptParser.this.line != null )</span>
+                {
+<span class="fc" id="L1715">                    String l = AptParser.this.line;</span>
+<span class="fc" id="L1716">                    int length = l.length();</span>
+<span class="fc" id="L1717">                    int i = 0;</span>
+
+<span class="fc" id="L1719">                    i = skipSpace( l, length, i );</span>
+<span class="fc bfc" id="L1720" title="All 2 branches covered.">                    if ( i == length )</span>
+                    {
+                        // Stop after open line and skip it.
+<span class="fc" id="L1723">                        AptParser.this.nextLine();</span>
+<span class="fc" id="L1724">                        break;</span>
+                    }
+<span class="fc bfc" id="L1726" title="All 2 branches covered.">                    else if ( ( AptParser.charAt( l, length, i ) == COMMENT</span>
+<span class="pc bpc" id="L1727" title="1 of 4 branches missed.">                            &amp;&amp; AptParser.charAt( l, length, i + 1 ) == COMMENT )</span>
+                            || type == COMMENT_BLOCK )
+                    {
+                        // parse comments as separate blocks line by line
+<span class="fc" id="L1731">                        break;</span>
+                    }
+
+<span class="fc" id="L1734">                    buffer.append( EOL );</span>
+<span class="fc" id="L1735">                    buffer.append( l );</span>
+
+<span class="fc" id="L1737">                    AptParser.this.nextLine();</span>
+<span class="fc" id="L1738">                }</span>
+
+<span class="fc" id="L1740">                text = buffer.toString();</span>
+<span class="fc" id="L1741">                textLength = text.length();</span>
+            }
+<span class="fc" id="L1743">        }</span>
+
+        /**
+         * Return the block type.
+         *
+         * @return int
+         */
+        public final int getType()
+        {
+<span class="fc" id="L1752">            return type;</span>
+        }
+
+        /**
+         * Return the block indent.
+         *
+         * @return int
+         */
+        public final int getIndent()
+        {
+<span class="fc" id="L1762">            return indent;</span>
+        }
+
+        /**
+         * Parse the block.
+         *
+         * @throws AptParseException if something goes wrong.
+         */
+        public abstract void traverse()
+            throws AptParseException;
+
+        /**
+         * Traverse the text.
+         *
+         * @param begin offset.
+         * @throws AptParseException if something goes wrong.
+         */
+        protected void traverseText( int begin )
+            throws AptParseException
+        {
+<span class="fc" id="L1782">            traverseText( begin, text.length() );</span>
+<span class="fc" id="L1783">        }</span>
+
+        /**
+         * Traverse the text.
+         *
+         * @param begin offset.
+         * @param end offset.
+         * @throws AptParseException if something goes wrong.
+         */
+        protected void traverseText( int begin, int end )
+            throws AptParseException
+        {
+<span class="fc" id="L1795">            AptParser.this.doTraverseText( text, begin, end, AptParser.this.sink );</span>
+<span class="fc" id="L1796">        }</span>
+
+        /**
+         * Skip spaces.
+         *
+         * @return int.
+         */
+        protected int skipLeadingBullets()
+        {
+<span class="fc" id="L1805">            int i = skipSpaceFrom( 0 );</span>
+<span class="pc bpc" id="L1806" title="1 of 2 branches missed.">            for ( ; i &lt; textLength; ++i )</span>
+            {
+<span class="fc bfc" id="L1808" title="All 2 branches covered.">                if ( text.charAt( i ) != STAR )</span>
+                {
+<span class="fc" id="L1810">                    break;</span>
+                }
+            }
+<span class="fc" id="L1813">            return skipSpaceFrom( i );</span>
+        }
+
+        /**
+         * Skip brackets.
+         *
+         * @param i offset.
+         * @return int.
+         * @throws AptParseException if something goes wrong.
+         */
+        protected int skipFromLeftToRightBracket( int i )
+            throws AptParseException
+        {
+<span class="fc" id="L1826">            char previous = LEFT_SQUARE_BRACKET;</span>
+<span class="pc bpc" id="L1827" title="1 of 2 branches missed.">            for ( ++i; i &lt; textLength; ++i )</span>
+            {
+<span class="fc" id="L1829">                char c = text.charAt( i );</span>
+<span class="pc bpc" id="L1830" title="1 of 4 branches missed.">                if ( c == RIGHT_SQUARE_BRACKET &amp;&amp; previous != BACKSLASH )</span>
+                {
+<span class="fc" id="L1832">                    break;</span>
+                }
+<span class="fc" id="L1834">                previous = c;</span>
+            }
+<span class="pc bpc" id="L1836" title="1 of 2 branches missed.">            if ( i == textLength )</span>
+            {
+<span class="nc" id="L1838">                throw new AptParseException( &quot;missing '&quot; + RIGHT_SQUARE_BRACKET + &quot;'&quot; );</span>
+            }
+
+<span class="fc" id="L1841">            return i;</span>
+        }
+
+        /**
+         * Skip spaces.
+         *
+         * @param i offset.
+         * @return int.
+         */
+        protected final int skipSpaceFrom( int i )
+        {
+<span class="fc" id="L1852">            return AptParser.skipSpace( text, textLength, i );</span>
+        }
+    }
+
+    /** A ListBreak Block. */
+    private class ListBreak
+        extends AptParser.Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public ListBreak( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L1869">        {</span>
+<span class="fc" id="L1870">            super( AptParser.LIST_BREAK, indent, firstLine );</span>
+<span class="fc" id="L1871">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="nc" id="L1877">            throw new AptParseException( &quot;internal error: traversing list break&quot; );</span>
+        }
+    }
+
+    /** A Title Block. */
+    private class Title
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Title( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L1894">        {</span>
+<span class="fc" id="L1895">            super( TITLE, indent, firstLine );</span>
+<span class="fc" id="L1896">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L1902">            StringTokenizer lines = new StringTokenizer( text, EOL );</span>
+<span class="fc" id="L1903">            int separator = -1;</span>
+<span class="fc" id="L1904">            boolean firstLine = true;</span>
+<span class="fc" id="L1905">            boolean title = false;</span>
+<span class="fc" id="L1906">            boolean author = false;</span>
+<span class="fc" id="L1907">            boolean date = false;</span>
+
+<span class="fc bfc" id="L1909" title="All 2 branches covered.">            loop: while ( lines.hasMoreTokens() )</span>
+            {
+<span class="fc" id="L1911">                String line = lines.nextToken().trim();</span>
+<span class="fc" id="L1912">                int lineLength = line.length();</span>
+
+<span class="fc bfc" id="L1914" title="All 2 branches covered.">                if ( AptParser.charAt( line, lineLength, 0 ) == MINUS</span>
+<span class="pc bpc" id="L1915" title="1 of 2 branches missed.">                    &amp;&amp; AptParser.charAt( line, lineLength, 1 ) == MINUS</span>
+<span class="pc bpc" id="L1916" title="1 of 2 branches missed.">                    &amp;&amp; AptParser.charAt( line, lineLength, 2 ) == MINUS )</span>
+                {
+<span class="fc bfc" id="L1918" title="All 4 branches covered.">                    switch ( separator )</span>
+                    {
+                        case 0:
+<span class="pc bpc" id="L1921" title="1 of 2 branches missed.">                            if ( title )</span>
+                            {
+<span class="fc" id="L1923">                                AptParser.this.sink.title_();</span>
+                            }
+                            else
+                            {
+<span class="nc" id="L1927">                                throw new AptParseException( &quot;missing title&quot; );</span>
+                            }
+                            break;
+                        case 1:
+<span class="pc bpc" id="L1931" title="1 of 2 branches missed.">                            if ( author )</span>
+                            {
+<span class="fc" id="L1933">                                AptParser.this.sink.author_();</span>
+                            }
+                            break;
+                        case 2:
+                            // Note that an extra decorative line is allowed
+                            // at the end of the author.
+<span class="fc" id="L1939">                            break loop;</span>
+                        default:
+                            break;
+                    }
+
+<span class="fc" id="L1944">                    ++separator;</span>
+<span class="fc" id="L1945">                    firstLine = true;</span>
+                }
+                else
+                {
+<span class="pc bpc" id="L1949" title="1 of 2 branches missed.">                    if ( firstLine )</span>
+                    {
+<span class="fc" id="L1951">                        firstLine = false;</span>
+<span class="pc bpc" id="L1952" title="1 of 4 branches missed.">                        switch ( separator )</span>
+                        {
+                            case 0:
+<span class="fc" id="L1955">                                title = true;</span>
+<span class="fc" id="L1956">                                AptParser.this.sink.title();</span>
+<span class="fc" id="L1957">                                break;</span>
+                            case 1:
+<span class="fc" id="L1959">                                author = true;</span>
+<span class="fc" id="L1960">                                AptParser.this.sink.author();</span>
+<span class="fc" id="L1961">                                break;</span>
+                            case 2:
+<span class="fc" id="L1963">                                date = true;</span>
+<span class="fc" id="L1964">                                AptParser.this.sink.date();</span>
+<span class="fc" id="L1965">                                break;</span>
+                            default:
+<span class="nc" id="L1967">                                break;</span>
+                        }
+                    }
+                    else
+                    {
+                        // An implicit lineBreak separates title lines.
+<span class="nc" id="L1973">                        AptParser.this.sink.lineBreak();</span>
+                    }
+
+<span class="fc" id="L1976">                    AptParser.this.doTraverseText( line, 0, lineLength, AptParser.this.sink );</span>
+                }
+<span class="fc" id="L1978">            }</span>
+
+<span class="pc bpc" id="L1980" title="3 of 4 branches missed.">            switch ( separator )</span>
+            {
+                case 0:
+<span class="nc bnc" id="L1983" title="All 2 branches missed.">                    if ( title )</span>
+                    {
+<span class="nc" id="L1985">                        AptParser.this.sink.title_();</span>
+                    }
+                    else
+                    {
+<span class="nc" id="L1989">                        throw new AptParseException( &quot;missing title&quot; );</span>
+                    }
+                    break;
+                case 1:
+<span class="nc bnc" id="L1993" title="All 2 branches missed.">                    if ( author )</span>
+                    {
+<span class="nc" id="L1995">                        AptParser.this.sink.author_();</span>
+                    }
+                    break;
+                case 2:
+<span class="fc bfc" id="L1999" title="All 2 branches covered.">                    if ( date )</span>
+                    {
+<span class="fc" id="L2001">                        AptParser.this.sink.date_();</span>
+                    }
+                    break;
+                default:
+                    break;
+            }
+<span class="fc" id="L2007">        }</span>
+    }
+
+    /** A Section Block. */
+    private abstract class Section
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param type type.
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Section( int type, int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2024">        {</span>
+<span class="fc" id="L2025">            super( type, indent, firstLine );</span>
+<span class="fc" id="L2026">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2032">            Title();</span>
+<span class="fc" id="L2033">            traverseText( skipLeadingBullets() );</span>
+<span class="fc" id="L2034">            Title_();</span>
+<span class="fc" id="L2035">        }</span>
+
+        /** Start a title. */
+        public abstract void Title();
+
+        /** End a title. */
+        public abstract void Title_();
+    }
+
+    /** A Section1 Block. */
+    private class Section1
+        extends Section
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Section1( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2057">        {</span>
+<span class="fc" id="L2058">            super( SECTION1, indent, firstLine );</span>
+<span class="fc" id="L2059">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title()
+        {
+<span class="fc" id="L2064">            AptParser.this.sink.sectionTitle1();</span>
+<span class="fc" id="L2065">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title_()
+        {
+<span class="fc" id="L2070">            AptParser.this.sink.sectionTitle1_();</span>
+<span class="fc" id="L2071">        }</span>
+    }
+
+    /** A Section2 Block. */
+    private class Section2
+        extends Section
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Section2( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2087">        {</span>
+<span class="fc" id="L2088">            super( SECTION2, indent, firstLine );</span>
+<span class="fc" id="L2089">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title()
+        {
+<span class="fc" id="L2094">            AptParser.this.sink.sectionTitle2();</span>
+<span class="fc" id="L2095">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title_()
+        {
+<span class="fc" id="L2100">            AptParser.this.sink.sectionTitle2_();</span>
+<span class="fc" id="L2101">        }</span>
+    }
+
+    /** A Section3 Block. */
+    private class Section3
+        extends Section
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Section3( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2117">        {</span>
+<span class="fc" id="L2118">            super( SECTION3, indent, firstLine );</span>
+<span class="fc" id="L2119">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title()
+        {
+<span class="fc" id="L2124">            AptParser.this.sink.sectionTitle3();</span>
+<span class="fc" id="L2125">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title_()
+        {
+<span class="fc" id="L2130">            AptParser.this.sink.sectionTitle3_();</span>
+<span class="fc" id="L2131">        }</span>
+    }
+
+    /** A Section4 Block. */
+    private class Section4
+        extends Section
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Section4( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2147">        {</span>
+<span class="fc" id="L2148">            super( SECTION4, indent, firstLine );</span>
+<span class="fc" id="L2149">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title()
+        {
+<span class="fc" id="L2154">            AptParser.this.sink.sectionTitle4();</span>
+<span class="fc" id="L2155">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title_()
+        {
+<span class="fc" id="L2160">            AptParser.this.sink.sectionTitle4_();</span>
+<span class="fc" id="L2161">        }</span>
+    }
+
+    /** A Section5 Block. */
+    private class Section5
+        extends Section
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Section5( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2177">        {</span>
+<span class="fc" id="L2178">            super( SECTION5, indent, firstLine );</span>
+<span class="fc" id="L2179">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title()
+        {
+<span class="fc" id="L2184">            AptParser.this.sink.sectionTitle5();</span>
+<span class="fc" id="L2185">        }</span>
+
+        /** {@inheritDoc} */
+        public void Title_()
+        {
+<span class="fc" id="L2190">            AptParser.this.sink.sectionTitle5_();</span>
+<span class="fc" id="L2191">        }</span>
+    }
+
+    /** A Paragraph Block. */
+    private class Paragraph
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Paragraph( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2207">        {</span>
+<span class="fc" id="L2208">            super( PARAGRAPH, indent, firstLine );</span>
+<span class="fc" id="L2209">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2215">            AptParser.this.sink.paragraph();</span>
+<span class="fc" id="L2216">            traverseText( skipSpaceFrom( 0 ) );</span>
+<span class="fc" id="L2217">            AptParser.this.sink.paragraph_();</span>
+<span class="fc" id="L2218">        }</span>
+    }
+
+    /** A Comment Block. */
+    private class Comment
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param line the comment line.
+         * @throws AptParseException AptParseException
+         */
+        public Comment( String line )
+            throws AptParseException
+<span class="fc" id="L2233">        {</span>
+<span class="fc" id="L2234">            super( COMMENT_BLOCK, 0, line );</span>
+<span class="fc" id="L2235">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="pc bpc" id="L2241" title="1 of 2 branches missed.">            if ( isEmitComments() )</span>
+            {
+<span class="fc" id="L2243">                AptParser.this.sink.comment( text );</span>
+            }
+<span class="fc" id="L2245">        }</span>
+    }
+
+    /** A Verbatim Block. */
+    private class Verbatim
+        extends Block
+    {
+        /** boxed. */
+        private boolean boxed;
+
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Verbatim( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2264">        {</span>
+<span class="fc" id="L2265">            super( VERBATIM, indent, null );</span>
+
+            // Read block (first line already skipped) ---
+
+<span class="fc" id="L2269">            StringBuilder buffer = new StringBuilder();</span>
+<span class="fc" id="L2270">            char firstChar = firstLine.charAt( 0 );</span>
+<span class="fc bfc" id="L2271" title="All 2 branches covered.">            boxed = ( firstChar == PLUS );</span>
+
+<span class="pc bpc" id="L2273" title="1 of 2 branches missed.">            while ( AptParser.this.line != null )</span>
+            {
+<span class="fc" id="L2275">                String l = AptParser.this.line;</span>
+<span class="fc" id="L2276">                int length = l.length();</span>
+
+<span class="pc bpc" id="L2278" title="1 of 4 branches missed.">                if ( AptParser.charAt( l, length, 0 ) == firstChar &amp;&amp; AptParser.charAt( l, length, 1 ) == MINUS</span>
+<span class="pc bpc" id="L2279" title="1 of 2 branches missed.">                    &amp;&amp; AptParser.charAt( l, length, 2 ) == MINUS )</span>
+                {
+<span class="fc" id="L2281">                    AptParser.this.nextLine();</span>
+
+<span class="fc" id="L2283">                    break;</span>
+                }
+
+                // Expand tabs ---
+
+                int prevColumn, column;
+
+<span class="fc" id="L2290">                column = 0;</span>
+
+<span class="fc bfc" id="L2292" title="All 2 branches covered.">                for ( int i = 0; i &lt; length; ++i )</span>
+                {
+<span class="fc" id="L2294">                    char c = l.charAt( i );</span>
+
+<span class="pc bpc" id="L2296" title="1 of 2 branches missed.">                    if ( c == TAB )</span>
+                    {
+<span class="nc" id="L2298">                        prevColumn = column;</span>
+
+<span class="nc" id="L2300">                        column = ( ( column + 1 + TAB_WIDTH - 1 ) / TAB_WIDTH ) * TAB_WIDTH;</span>
+
+<span class="nc" id="L2302">                        buffer.append( SPACES, 0, column - prevColumn );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L2306">                        ++column;</span>
+<span class="fc" id="L2307">                        buffer.append( c );</span>
+                    }
+                }
+<span class="fc" id="L2310">                buffer.append( EOL );</span>
+
+<span class="fc" id="L2312">                AptParser.this.nextLine();</span>
+<span class="fc" id="L2313">            }</span>
+
+            // The last '\n' is mandatory before the &quot;---&quot; delimeter but is
+            // not part of the verbatim text.
+<span class="fc" id="L2317">            textLength = buffer.length();</span>
+
+<span class="pc bpc" id="L2319" title="1 of 2 branches missed.">            if ( textLength &gt; 0 )</span>
+            {
+<span class="fc" id="L2321">                --textLength;</span>
+
+<span class="fc" id="L2323">                buffer.setLength( textLength );</span>
+            }
+
+<span class="fc" id="L2326">            text = buffer.toString();</span>
+<span class="fc" id="L2327">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc bfc" id="L2333" title="All 2 branches covered.">            AptParser.this.sink.verbatim( boxed ? SinkEventAttributeSet.BOXED : null );</span>
+<span class="fc" id="L2334">            AptParser.this.sink.text( text );</span>
+<span class="fc" id="L2335">            AptParser.this.sink.verbatim_();</span>
+<span class="fc" id="L2336">        }</span>
+    }
+
+    /** A Figure Block. */
+    private class Figure
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Figure( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2352">        {</span>
+<span class="fc" id="L2353">            super( FIGURE, indent, firstLine );</span>
+<span class="fc" id="L2354">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2360">            AptParser.this.sink.figure();</span>
+
+<span class="fc" id="L2362">            int i = skipFromLeftToRightBracket( 0 );</span>
+<span class="fc" id="L2363">            AptParser.this.sink.figureGraphics( text.substring( 1, i ) );</span>
+
+<span class="fc" id="L2365">            i = skipSpaceFrom( i + 1 );</span>
+<span class="pc bpc" id="L2366" title="1 of 2 branches missed.">            if ( i &lt; textLength )</span>
+            {
+<span class="fc" id="L2368">                AptParser.this.sink.figureCaption();</span>
+<span class="fc" id="L2369">                traverseText( i );</span>
+<span class="fc" id="L2370">                AptParser.this.sink.figureCaption_();</span>
+            }
+
+<span class="fc" id="L2373">            AptParser.this.sink.figure_();</span>
+<span class="fc" id="L2374">        }</span>
+    }
+
+    /** A Table Block. */
+    private class Table
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public Table( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2390">        {</span>
+<span class="fc" id="L2391">            super( TABLE, indent, firstLine );</span>
+<span class="fc" id="L2392">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2398">            int captionIndex = -1;</span>
+<span class="fc" id="L2399">            int nextLineIndex = 0;</span>
+<span class="fc" id="L2400">            int init = 2;</span>
+<span class="fc" id="L2401">            int[] justification = null;</span>
+<span class="fc" id="L2402">            int rows = 0;</span>
+<span class="fc" id="L2403">            int columns = 0;</span>
+<span class="fc" id="L2404">            StringBuilder[] cells = null;</span>
+<span class="fc" id="L2405">            boolean[] headers = null;</span>
+            boolean grid;
+
+<span class="fc" id="L2408">            AptParser.this.sink.table();</span>
+
+<span class="fc bfc" id="L2410" title="All 2 branches covered.">            while ( nextLineIndex &lt; textLength )</span>
+            {
+<span class="fc" id="L2412">                int i = text.indexOf( &quot;*--&quot;, nextLineIndex );</span>
+<span class="fc bfc" id="L2413" title="All 2 branches covered.">                if ( i &lt; 0 )</span>
+                {
+<span class="fc" id="L2415">                    captionIndex = nextLineIndex;</span>
+<span class="fc" id="L2416">                    break;</span>
+                }
+
+                String line;
+<span class="fc" id="L2420">                i = text.indexOf( '\n', nextLineIndex );</span>
+<span class="fc bfc" id="L2421" title="All 2 branches covered.">                if ( i &lt; 0 )</span>
+                {
+<span class="fc" id="L2423">                    line = text.substring( nextLineIndex );</span>
+<span class="fc" id="L2424">                    nextLineIndex = textLength;</span>
+                }
+                else
+                {
+<span class="fc" id="L2428">                    line = text.substring( nextLineIndex, i );</span>
+<span class="fc" id="L2429">                    nextLineIndex = i + 1;</span>
+                }
+<span class="fc" id="L2431">                int lineLength = line.length();</span>
+
+<span class="fc bfc" id="L2433" title="All 2 branches covered.">                if ( line.indexOf( &quot;*--&quot; ) == 0 )</span>
+                {
+<span class="fc bfc" id="L2435" title="All 2 branches covered.">                    if ( init == 2 )</span>
+                    {
+<span class="fc" id="L2437">                        init = 1;</span>
+<span class="fc" id="L2438">                        justification = parseJustification( line, lineLength );</span>
+<span class="fc" id="L2439">                        columns = justification.length;</span>
+<span class="fc" id="L2440">                        cells = new StringBuilder[columns];</span>
+<span class="fc" id="L2441">                        headers = new boolean[columns];</span>
+<span class="fc bfc" id="L2442" title="All 2 branches covered.">                        for ( i = 0; i &lt; columns; ++i )</span>
+                        {
+<span class="fc" id="L2444">                            cells[i] = new StringBuilder();</span>
+<span class="fc" id="L2445">                            headers[i] = false;</span>
+                        }
+                    }
+                    else
+                    {
+<span class="pc bpc" id="L2450" title="1 of 2 branches missed.">                        if ( traverseRow( cells, headers, justification ) )</span>
+                        {
+<span class="fc" id="L2452">                            ++rows;</span>
+                        }
+<span class="fc" id="L2454">                        justification = parseJustification( line, lineLength );</span>
+                    }
+                }
+                else
+                {
+<span class="fc bfc" id="L2459" title="All 2 branches covered.">                    if ( init == 1 )</span>
+                    {
+<span class="fc" id="L2461">                        init = 0;</span>
+<span class="fc bfc" id="L2462" title="All 2 branches covered.">                        grid = ( AptParser.charAt( line, lineLength, 0 ) == PIPE );</span>
+<span class="fc" id="L2463">                        AptParser.this.sink.tableRows( justification, grid );</span>
+                    }
+
+<span class="fc" id="L2466">                    line = replaceAll( line, &quot;\\|&quot;, &quot;\\u007C&quot; );</span>
+
+<span class="fc" id="L2468">                    StringTokenizer cellLines = new StringTokenizer( line, &quot;|&quot;, true );</span>
+
+<span class="fc" id="L2470">                    i = 0;</span>
+<span class="fc" id="L2471">                    boolean processedGrid = false;</span>
+<span class="fc bfc" id="L2472" title="All 2 branches covered.">                    while ( cellLines.hasMoreTokens() )</span>
+                    {
+<span class="fc" id="L2474">                        String cellLine = cellLines.nextToken();</span>
+<span class="fc bfc" id="L2475" title="All 2 branches covered.">                        if ( &quot;|&quot;.equals( cellLine ) )</span>
+                        {
+<span class="fc bfc" id="L2477" title="All 2 branches covered.">                            if ( processedGrid )</span>
+                            {
+<span class="fc" id="L2479">                                headers[i] = true;</span>
+                            }
+                            else
+                            {
+<span class="fc" id="L2483">                                processedGrid = true;</span>
+<span class="fc" id="L2484">                                headers[i] = false;</span>
+                            }
+<span class="fc" id="L2486">                            continue;</span>
+                        }
+<span class="fc" id="L2488">                        processedGrid = false;</span>
+<span class="fc" id="L2489">                        cellLine = replaceAll( cellLine, &quot;\\&quot;, &quot;\\u00A0&quot; ); // linebreak</span>
+                        // Escaped special characters: \~, \=, \-, \+, \*, \[, \], \&lt;, \&gt;, \{, \}, \\.
+<span class="fc" id="L2491">                        cellLine = replaceAll( cellLine, &quot;\\u00A0~&quot;, &quot;\\~&quot; );</span>
+<span class="fc" id="L2492">                        cellLine = replaceAll( cellLine, &quot;\\u00A0=&quot;, &quot;\\=&quot; );</span>
+<span class="fc" id="L2493">                        cellLine = replaceAll( cellLine, &quot;\\u00A0-&quot;, &quot;\\-&quot; );</span>
+<span class="fc" id="L2494">                        cellLine = replaceAll( cellLine, &quot;\\u00A0+&quot;, &quot;\\+&quot; );</span>
+<span class="fc" id="L2495">                        cellLine = replaceAll( cellLine, &quot;\\u00A0*&quot;, &quot;\\*&quot; );</span>
+<span class="fc" id="L2496">                        cellLine = replaceAll( cellLine, &quot;\\u00A0[&quot;, &quot;\\[&quot; );</span>
+<span class="fc" id="L2497">                        cellLine = replaceAll( cellLine, &quot;\\u00A0]&quot;, &quot;\\]&quot; );</span>
+<span class="fc" id="L2498">                        cellLine = replaceAll( cellLine, &quot;\\u00A0&lt;&quot;, &quot;\\&lt;&quot; );</span>
+<span class="fc" id="L2499">                        cellLine = replaceAll( cellLine, &quot;\\u00A0&gt;&quot;, &quot;\\&gt;&quot; );</span>
+<span class="fc" id="L2500">                        cellLine = replaceAll( cellLine, &quot;\\u00A0{&quot;, &quot;\\{&quot; );</span>
+<span class="fc" id="L2501">                        cellLine = replaceAll( cellLine, &quot;\\u00A0}&quot;, &quot;\\}&quot; );</span>
+<span class="fc" id="L2502">                        cellLine = replaceAll( cellLine, &quot;\\u00A0u&quot;, &quot;\\u&quot; );</span>
+<span class="fc" id="L2503">                        cellLine = replaceAll( cellLine, &quot;\\u00A0\\u00A0&quot;, &quot;\\\\&quot; );</span>
+<span class="fc" id="L2504">                        cellLine = cellLine.trim();</span>
+
+<span class="fc" id="L2506">                        StringBuilder cell = cells[i];</span>
+<span class="fc bfc" id="L2507" title="All 2 branches covered.">                        if ( cellLine.length() &gt; 0 )</span>
+                        {
+                            // line break in table cells
+<span class="fc bfc" id="L2510" title="All 2 branches covered.">                            if ( cell.toString().trim().endsWith( &quot;\\u00A0&quot; ) )</span>
+                            {
+<span class="fc" id="L2512">                                cell.append( &quot;\\\n&quot; );</span>
+                            }
+                            else
+                            {
+<span class="fc bfc" id="L2516" title="All 2 branches covered.">                                if ( cell.length() != 0 )</span>
+                                {
+                                    // Always add a space for multi line tables cells
+<span class="fc" id="L2519">                                    cell.append( &quot; &quot; );</span>
+                                }
+                            }
+
+<span class="fc" id="L2523">                            cell.append( cellLine );</span>
+                        }
+
+<span class="fc" id="L2526">                        ++i;</span>
+<span class="fc bfc" id="L2527" title="All 2 branches covered.">                        if ( i == columns )</span>
+                        {
+<span class="fc" id="L2529">                            break;</span>
+                        }
+<span class="fc" id="L2531">                    }</span>
+                }
+<span class="fc" id="L2533">            }</span>
+<span class="pc bpc" id="L2534" title="1 of 2 branches missed.">            if ( rows == 0 )</span>
+            {
+<span class="nc" id="L2536">                throw new AptParseException( &quot;no table rows&quot; );</span>
+            }
+<span class="fc" id="L2538">            AptParser.this.sink.tableRows_();</span>
+
+<span class="fc bfc" id="L2540" title="All 2 branches covered.">            if ( captionIndex &gt;= 0 )</span>
+            {
+<span class="fc" id="L2542">                AptParser.this.sink.tableCaption();</span>
+<span class="fc" id="L2543">                AptParser.this.doTraverseText( text, captionIndex, textLength, AptParser.this.sink );</span>
+<span class="fc" id="L2544">                AptParser.this.sink.tableCaption_();</span>
+            }
+
+<span class="fc" id="L2547">            AptParser.this.sink.table_();</span>
+<span class="fc" id="L2548">        }</span>
+
+        /**
+         * Parse a table justification line.
+         *
+         * @param jline the justification line.
+         * @param lineLength the length of the line. Must be &gt; 2.
+         * @return int[]
+         * @throws AptParseException if something goes wrong.
+         */
+        private int[] parseJustification( String jline, int lineLength )
+            throws AptParseException
+        {
+<span class="fc" id="L2561">            int columns = 0;</span>
+
+<span class="fc bfc" id="L2563" title="All 2 branches covered.">            for ( int i = 2 /*Skip '*--'*/; i &lt; lineLength; ++i )</span>
+            {
+<span class="fc bfc" id="L2565" title="All 2 branches covered.">                switch ( jline.charAt( i ) )</span>
+                {
+                    case STAR:
+                    case PLUS:
+                    case COLON:
+<span class="fc" id="L2570">                        ++columns;</span>
+<span class="fc" id="L2571">                        break;</span>
+                    default:
+                        break;
+                }
+            }
+
+<span class="pc bpc" id="L2577" title="1 of 2 branches missed.">            if ( columns == 0 )</span>
+            {
+<span class="nc" id="L2579">                throw new AptParseException( &quot;no columns specified&quot; );</span>
+            }
+
+<span class="fc" id="L2582">            int[] justification = new int[columns];</span>
+<span class="fc" id="L2583">            columns = 0;</span>
+<span class="fc bfc" id="L2584" title="All 2 branches covered.">            for ( int i = 2; i &lt; lineLength; ++i )</span>
+            {
+<span class="fc bfc" id="L2586" title="All 4 branches covered.">                switch ( jline.charAt( i ) )</span>
+                {
+                    case STAR:
+<span class="fc" id="L2589">                        justification[columns++] = Sink.JUSTIFY_CENTER;</span>
+<span class="fc" id="L2590">                        break;</span>
+                    case PLUS:
+<span class="fc" id="L2592">                        justification[columns++] = Sink.JUSTIFY_LEFT;</span>
+<span class="fc" id="L2593">                        break;</span>
+                    case COLON:
+<span class="fc" id="L2595">                        justification[columns++] = Sink.JUSTIFY_RIGHT;</span>
+<span class="fc" id="L2596">                        break;</span>
+                    default:
+                        break;
+                }
+            }
+
+<span class="fc" id="L2602">            return justification;</span>
+        }
+
+        /**
+         * Traverse a table row.
+         *
+         * @param cells The table cells.
+         * @param headers true for header cells.
+         * @param justification the justification for each cell.
+         * @return boolean
+         * @throws AptParseException if something goes wrong.
+         */
+        private boolean traverseRow( StringBuilder[] cells, boolean[] headers, int[] justification )
+            throws AptParseException
+        {
+            // Skip empty row (a decorative line).
+<span class="fc" id="L2618">            boolean traversed = false;</span>
+<span class="pc bpc" id="L2619" title="1 of 2 branches missed.">            for ( int i = 0; i &lt; cells.length; ++i )</span>
+            {
+<span class="pc bpc" id="L2621" title="1 of 2 branches missed.">                if ( cells[i].length() &gt; 0 )</span>
+                {
+<span class="fc" id="L2623">                    traversed = true;</span>
+<span class="fc" id="L2624">                    break;</span>
+                }
+            }
+
+<span class="pc bpc" id="L2628" title="1 of 2 branches missed.">            if ( traversed )</span>
+            {
+<span class="fc" id="L2630">                AptParser.this.sink.tableRow();</span>
+<span class="fc bfc" id="L2631" title="All 2 branches covered.">                for ( int i = 0; i &lt; cells.length; ++i )</span>
+                {
+<span class="fc" id="L2633">                    StringBuilder cell = cells[i];</span>
+
+                    SinkEventAttributes justif;
+<span class="pc bpc" id="L2636" title="1 of 4 branches missed.">                    switch ( justification[i] )</span>
+                    {
+                        case Sink.JUSTIFY_CENTER:
+<span class="fc" id="L2639">                            justif = SinkEventAttributeSet.CENTER;</span>
+<span class="fc" id="L2640">                            break;</span>
+                        case Sink.JUSTIFY_LEFT:
+<span class="fc" id="L2642">                            justif = SinkEventAttributeSet.LEFT;</span>
+<span class="fc" id="L2643">                            break;</span>
+                        case Sink.JUSTIFY_RIGHT:
+<span class="fc" id="L2645">                            justif = SinkEventAttributeSet.RIGHT;</span>
+<span class="fc" id="L2646">                            break;</span>
+                        default:
+<span class="nc" id="L2648">                            justif = SinkEventAttributeSet.LEFT;</span>
+                            break;
+                    }
+<span class="fc" id="L2651">                    SinkEventAttributeSet event = new SinkEventAttributeSet();</span>
+<span class="fc" id="L2652">                    event.addAttributes( justif );</span>
+
+<span class="fc bfc" id="L2654" title="All 2 branches covered.">                    if ( headers[i] )</span>
+                    {
+<span class="fc" id="L2656">                        AptParser.this.sink.tableHeaderCell( event );</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L2660">                        AptParser.this.sink.tableCell( event );</span>
+                    }
+<span class="fc bfc" id="L2662" title="All 2 branches covered.">                    if ( cell.length() &gt; 0 )</span>
+                    {
+<span class="fc" id="L2664">                        AptParser.this.doTraverseText( cell.toString(), 0, cell.length(), AptParser.this.sink );</span>
+<span class="fc" id="L2665">                        cell.setLength( 0 );</span>
+                    }
+<span class="fc bfc" id="L2667" title="All 2 branches covered.">                    if ( headers[i] )</span>
+                    {
+<span class="fc" id="L2669">                        AptParser.this.sink.tableHeaderCell_();</span>
+                        // DOXIA-404: reset header for next row
+<span class="fc" id="L2671">                        headers[i] = false;</span>
+                    }
+                    else
+                    {
+<span class="fc" id="L2675">                        AptParser.this.sink.tableCell_();</span>
+                    }
+                }
+<span class="fc" id="L2678">                AptParser.this.sink.tableRow_();</span>
+            }
+
+<span class="fc" id="L2681">            return traversed;</span>
+        }
+    }
+
+    /** A ListItem Block. */
+    private class ListItem
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public ListItem( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2698">        {</span>
+<span class="fc" id="L2699">            super( LIST_ITEM, indent, firstLine );</span>
+<span class="fc" id="L2700">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2706">            traverseText( skipLeadingBullets() );</span>
+<span class="fc" id="L2707">        }</span>
+    }
+
+    /** A NumberedListItem Block. */
+    private class NumberedListItem
+        extends Block
+    {
+        /** numbering. */
+        private int numbering;
+
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @param number numbering.
+         * @throws AptParseException AptParseException
+         */
+        public NumberedListItem( int indent, String firstLine, int number )
+            throws AptParseException
+<span class="fc" id="L2727">        {</span>
+<span class="fc" id="L2728">            super( NUMBERED_LIST_ITEM, indent, firstLine );</span>
+<span class="fc" id="L2729">            this.numbering = number;</span>
+<span class="fc" id="L2730">        }</span>
+
+        /**
+         * getNumbering.
+         *
+         * @return int
+         */
+        public int getNumbering()
+        {
+<span class="fc" id="L2739">            return numbering;</span>
+        }
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2746">            traverseText( skipItemNumber() );</span>
+<span class="fc" id="L2747">        }</span>
+
+        /**
+         * skipItemNumber.
+         *
+         * @return int
+         * @throws AptParseException AptParseException
+         */
+        private int skipItemNumber()
+            throws AptParseException
+        {
+<span class="fc" id="L2758">            int i = skipSpaceFrom( 0 );</span>
+
+<span class="fc" id="L2760">            char prevChar = SPACE;</span>
+<span class="pc bpc" id="L2761" title="1 of 2 branches missed.">            for ( ; i &lt; textLength; ++i )</span>
+            {
+<span class="fc" id="L2763">                char c = text.charAt( i );</span>
+<span class="fc bfc" id="L2764" title="All 4 branches covered.">                if ( c == RIGHT_SQUARE_BRACKET &amp;&amp; prevChar == RIGHT_SQUARE_BRACKET )</span>
+                {
+<span class="fc" id="L2766">                    break;</span>
+                }
+<span class="fc" id="L2768">                prevChar = c;</span>
+            }
+
+<span class="pc bpc" id="L2771" title="1 of 2 branches missed.">            if ( i == textLength )</span>
+            {
+<span class="nc" id="L2773">                throw new AptParseException( &quot;missing '&quot; + RIGHT_SQUARE_BRACKET + RIGHT_SQUARE_BRACKET + &quot;'&quot; );</span>
+            }
+
+<span class="fc" id="L2776">            return skipSpaceFrom( i + 1 );</span>
+        }
+    }
+
+    /** A DefinitionListItem Block. */
+    private class DefinitionListItem
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public DefinitionListItem( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2793">        {</span>
+<span class="fc" id="L2794">            super( DEFINITION_LIST_ITEM, indent, firstLine );</span>
+<span class="fc" id="L2795">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2801">            int i = skipSpaceFrom( 0 );</span>
+<span class="fc" id="L2802">            int j = skipFromLeftToRightBracket( i );</span>
+
+<span class="fc" id="L2804">            AptParser.this.sink.definedTerm();</span>
+<span class="fc" id="L2805">            traverseText( i + 1, j );</span>
+<span class="fc" id="L2806">            AptParser.this.sink.definedTerm_();</span>
+
+<span class="fc" id="L2808">            j = skipSpaceFrom( j + 1 );</span>
+<span class="pc bpc" id="L2809" title="1 of 2 branches missed.">            if ( j == textLength )</span>
+            {
+                // TODO: this doesn't handle the case of a dd in a paragraph
+                //throw new AptParseException( &quot;no definition&quot; );
+            }
+
+<span class="fc" id="L2815">            AptParser.this.sink.definition();</span>
+<span class="fc" id="L2816">            traverseText( j );</span>
+<span class="fc" id="L2817">        }</span>
+    }
+
+    /** A HorizontalRule Block. */
+    private class HorizontalRule
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public HorizontalRule( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2833">        {</span>
+<span class="fc" id="L2834">            super( HORIZONTAL_RULE, indent, firstLine );</span>
+<span class="fc" id="L2835">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2841">            AptParser.this.sink.horizontalRule();</span>
+<span class="fc" id="L2842">        }</span>
+    }
+
+    /** A PageBreak Block. */
+    private class PageBreak
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public PageBreak( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2858">        {</span>
+<span class="fc" id="L2859">            super( PG_BREAK, indent, firstLine );</span>
+<span class="fc" id="L2860">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc" id="L2866">            AptParser.this.sink.pageBreak();</span>
+<span class="fc" id="L2867">        }</span>
+    }
+
+    /** A MacroBlock Block. */
+    private class MacroBlock
+        extends Block
+    {
+        /**
+         * Constructor.
+         *
+         * @param indent indent.
+         * @param firstLine the first line.
+         * @throws AptParseException AptParseException
+         */
+        public MacroBlock( int indent, String firstLine )
+            throws AptParseException
+<span class="fc" id="L2883">        {</span>
+<span class="fc" id="L2884">            super( MACRO, indent );</span>
+
+<span class="fc" id="L2886">            text = firstLine;</span>
+<span class="fc" id="L2887">        }</span>
+
+        /** {@inheritDoc} */
+        public void traverse()
+            throws AptParseException
+        {
+<span class="fc bfc" id="L2893" title="All 2 branches covered.">            if ( isSecondParsing() )</span>
+            {
+<span class="fc" id="L2895">                return;</span>
+            }
+
+<span class="fc" id="L2898">            final int start = text.indexOf( '{' );</span>
+<span class="fc" id="L2899">            final int end = text.indexOf( '}' );</span>
+
+<span class="fc" id="L2901">            String s = text.substring( start + 1, end );</span>
+
+<span class="fc" id="L2903">            s = escapeForMacro( s );</span>
+
+<span class="fc" id="L2905">            String[] params = StringUtils.split( s, &quot;|&quot; );</span>
+
+<span class="fc" id="L2907">            String macroId = params[0];</span>
+
+<span class="fc" id="L2909">            Map&lt;String, Object&gt; parameters = new HashMap&lt;String, Object&gt;();</span>
+
+<span class="fc bfc" id="L2911" title="All 2 branches covered.">            for ( int i = 1; i &lt; params.length; i++ )</span>
+            {
+<span class="fc" id="L2913">                String[] param = StringUtils.split( params[i], &quot;=&quot; );</span>
+
+<span class="pc bpc" id="L2915" title="1 of 2 branches missed.">                if ( param.length == 1 )</span>
+                {
+<span class="nc" id="L2917">                    throw new AptParseException( &quot;Missing 'key=value' pair for macro parameter: &quot; + params[i] );</span>
+                }
+
+<span class="fc" id="L2920">                String key = unescapeForMacro( param[0] );</span>
+<span class="fc" id="L2921">                String value = unescapeForMacro( param[1] );</span>
+
+<span class="fc" id="L2923">                parameters.put( key, value );</span>
+            }
+
+            // getBasedir() does not work in multi-module builds, see DOXIA-373
+            // the basedir should be injected from here, see DOXIA-224
+<span class="fc" id="L2928">            MacroRequest request = new MacroRequest( sourceContent, new AptParser(), parameters, getBasedir() );</span>
+            try
+            {
+<span class="fc" id="L2931">                AptParser.this.executeMacro( macroId, request, sink );</span>
+            }
+<span class="nc" id="L2933">            catch ( MacroExecutionException e )</span>
+            {
+<span class="nc" id="L2935">                throw new AptParseException( &quot;Unable to execute macro in the APT document&quot;, e );</span>
+            }
+<span class="nc" id="L2937">            catch ( MacroNotFoundException e )</span>
+            {
+<span class="nc" id="L2939">                throw new AptParseException( &quot;Unable to find macro used in the APT document&quot;, e );</span>
+<span class="fc" id="L2940">            }</span>
+<span class="fc" id="L2941">        }</span>
+
+        /**
+         * escapeForMacro
+         *
+         * @param s String
+         * @return String
+         */
+        private String escapeForMacro( String s )
+        {
+<span class="pc bpc" id="L2951" title="2 of 4 branches missed.">            if ( s == null || s.length() &lt; 1 )</span>
+            {
+<span class="nc" id="L2953">                return s;</span>
+            }
+
+<span class="fc" id="L2956">            String result = s;</span>
+
+            // use some outrageously out-of-place chars for text
+            // (these are device control one/two in unicode)
+<span class="fc" id="L2960">            result = StringUtils.replace( result, &quot;\\=&quot;, &quot;\u0011&quot; );</span>
+<span class="fc" id="L2961">            result = StringUtils.replace( result, &quot;\\|&quot;, &quot;\u0012&quot; );</span>
+
+<span class="fc" id="L2963">            return result;</span>
+        }
+
+        /**
+         * unescapeForMacro
+         *
+         * @param s String
+         * @return String
+         */
+        private String unescapeForMacro( String s )
+        {
+<span class="pc bpc" id="L2974" title="2 of 4 branches missed.">            if ( s == null || s.length() &lt; 1 )</span>
+            {
+<span class="nc" id="L2976">                return s;</span>
+            }
+
+<span class="fc" id="L2979">            String result = s;</span>
+
+<span class="fc" id="L2981">            result = StringUtils.replace( result, &quot;\u0011&quot;, &quot;=&quot; );</span>
+<span class="fc" id="L2982">            result = StringUtils.replace( result, &quot;\u0012&quot;, &quot;|&quot; );</span>
+
+<span class="fc" id="L2984">            return result;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
