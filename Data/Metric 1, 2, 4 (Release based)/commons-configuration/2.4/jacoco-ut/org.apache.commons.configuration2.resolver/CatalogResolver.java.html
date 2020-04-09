@@ -38,7 +38,11 @@ import org.xml.sax.SAXException;
 /**
  * Thin wrapper around xml commons CatalogResolver to allow list of catalogs
  * to be provided.
+ * @author &lt;a
+ * href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons
+ * Configuration team&lt;/a&gt;
  * @since 1.7
+ * @version $Id$
  */
 public class CatalogResolver implements EntityResolver
 {
@@ -60,12 +64,12 @@ public class CatalogResolver implements EntityResolver
     /**
      * The CatalogManager
      */
-<span class="fc" id="L63">    private final CatalogManager manager = new CatalogManager();</span>
+<span class="fc" id="L67">    private final CatalogManager manager = new CatalogManager();</span>
 
     /**
      * The FileSystem in use.
      */
-<span class="fc" id="L68">    private FileSystem fs = FileLocatorUtils.DEFAULT_FILE_SYSTEM;</span>
+<span class="fc" id="L72">    private FileSystem fs = FileLocatorUtils.DEFAULT_FILE_SYSTEM;</span>
 
     /**
      * The CatalogResolver
@@ -81,50 +85,50 @@ public class CatalogResolver implements EntityResolver
      * Constructs the CatalogResolver
      */
     public CatalogResolver()
-<span class="fc" id="L84">    {</span>
-<span class="fc" id="L85">        manager.setIgnoreMissingProperties(true);</span>
-<span class="fc" id="L86">        manager.setUseStaticCatalog(false);</span>
-<span class="fc" id="L87">        manager.setFileSystem(fs);</span>
-<span class="fc" id="L88">        initLogger(null);</span>
-<span class="fc" id="L89">    }</span>
+<span class="fc" id="L88">    {</span>
+<span class="fc" id="L89">        manager.setIgnoreMissingProperties(true);</span>
+<span class="fc" id="L90">        manager.setUseStaticCatalog(false);</span>
+<span class="fc" id="L91">        manager.setFileSystem(fs);</span>
+<span class="fc" id="L92">        initLogger(null);</span>
+<span class="fc" id="L93">    }</span>
 
     /**
-     * Sets the list of catalog file names
+     * Set the list of catalog file names
      *
      * @param catalogs The delimited list of catalog files.
      */
     public void setCatalogFiles(final String catalogs)
     {
-<span class="fc" id="L98">        manager.setCatalogFiles(catalogs);</span>
-<span class="fc" id="L99">    }</span>
+<span class="fc" id="L102">        manager.setCatalogFiles(catalogs);</span>
+<span class="fc" id="L103">    }</span>
 
     /**
-     * Sets the FileSystem.
+     * Set the FileSystem.
      * @param fileSystem The FileSystem.
      */
     public void setFileSystem(final FileSystem fileSystem)
     {
-<span class="fc" id="L107">        this.fs = fileSystem;</span>
-<span class="fc" id="L108">        manager.setFileSystem(fileSystem);</span>
-<span class="fc" id="L109">    }</span>
+<span class="fc" id="L111">        this.fs = fileSystem;</span>
+<span class="fc" id="L112">        manager.setFileSystem(fileSystem);</span>
+<span class="fc" id="L113">    }</span>
 
     /**
-     * Sets the base path.
+     * Set the base path.
      * @param baseDir The base path String.
      */
     public void setBaseDir(final String baseDir)
     {
-<span class="fc" id="L117">        manager.setBaseDir(baseDir);</span>
-<span class="fc" id="L118">    }</span>
+<span class="fc" id="L121">        manager.setBaseDir(baseDir);</span>
+<span class="fc" id="L122">    }</span>
 
     /**
-     * Sets the {@code ConfigurationInterpolator}.
+     * Set the {@code ConfigurationInterpolator}.
      * @param ci the {@code ConfigurationInterpolator}
      */
     public void setInterpolator(final ConfigurationInterpolator ci)
     {
-<span class="fc" id="L126">        manager.setInterpolator(ci);</span>
-<span class="fc" id="L127">    }</span>
+<span class="fc" id="L130">        manager.setInterpolator(ci);</span>
+<span class="fc" id="L131">    }</span>
 
     /**
      * Enables debug logging of xml-commons Catalog processing.
@@ -132,15 +136,15 @@ public class CatalogResolver implements EntityResolver
      */
     public void setDebug(final boolean debug)
     {
-<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (debug)</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (debug)</span>
         {
-<span class="fc" id="L137">            manager.setVerbosity(DEBUG_ALL);</span>
+<span class="fc" id="L141">            manager.setVerbosity(DEBUG_ALL);</span>
         }
         else
         {
-<span class="nc" id="L141">            manager.setVerbosity(DEBUG_NONE);</span>
+<span class="nc" id="L145">            manager.setVerbosity(DEBUG_NONE);</span>
         }
-<span class="fc" id="L143">    }</span>
+<span class="fc" id="L147">    }</span>
 
     /**
      * &lt;p&gt;
@@ -167,56 +171,55 @@ public class CatalogResolver implements EntityResolver
      * @return An InputSource for the mapped identifier, or null.
      * @throws SAXException if an error occurs.
      */
-    @SuppressWarnings(&quot;resource&quot;) // InputSource wraps an InputStream.
     @Override
     public InputSource resolveEntity(final String publicId, final String systemId)
             throws SAXException
     {
-<span class="fc" id="L175">        String resolved = getResolver().getResolvedEntity(publicId, systemId);</span>
+<span class="fc" id="L178">        String resolved = getResolver().getResolvedEntity(publicId, systemId);</span>
 
-<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (resolved != null)</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (resolved != null)</span>
         {
-<span class="fc" id="L179">            final String badFilePrefix = &quot;file://&quot;;</span>
-<span class="fc" id="L180">            final String correctFilePrefix = &quot;file:///&quot;;</span>
+<span class="fc" id="L182">            final String badFilePrefix = &quot;file://&quot;;</span>
+<span class="fc" id="L183">            final String correctFilePrefix = &quot;file:///&quot;;</span>
 
             // Java 5 has a bug when constructing file URLS
-<span class="pc bpc" id="L183" title="3 of 4 branches missed.">            if (resolved.startsWith(badFilePrefix) &amp;&amp; !resolved.startsWith(correctFilePrefix))</span>
+<span class="pc bpc" id="L186" title="3 of 4 branches missed.">            if (resolved.startsWith(badFilePrefix) &amp;&amp; !resolved.startsWith(correctFilePrefix))</span>
             {
-<span class="nc" id="L185">                resolved = correctFilePrefix + resolved.substring(badFilePrefix.length());</span>
+<span class="nc" id="L188">                resolved = correctFilePrefix + resolved.substring(badFilePrefix.length());</span>
             }
 
             try
             {
-<span class="fc" id="L190">                final URL url = locate(fs, null, resolved);</span>
-<span class="pc bpc" id="L191" title="1 of 2 branches missed.">                if (url == null)</span>
+<span class="fc" id="L193">                final URL url = locate(fs, null, resolved);</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">                if (url == null)</span>
                 {
-<span class="nc" id="L193">                    throw new ConfigurationException(&quot;Could not locate &quot;</span>
+<span class="nc" id="L196">                    throw new ConfigurationException(&quot;Could not locate &quot;</span>
                             + resolved);
                 }
-<span class="fc" id="L196">                final InputStream inputStream = fs.getInputStream(url);</span>
-<span class="fc" id="L197">                final InputSource inputSource = new InputSource(resolved);</span>
-<span class="fc" id="L198">                inputSource.setPublicId(publicId);</span>
-<span class="fc" id="L199">                inputSource.setByteStream(inputStream);</span>
-<span class="fc" id="L200">                return inputSource;</span>
+<span class="fc" id="L199">                final InputStream is = fs.getInputStream(url);</span>
+<span class="fc" id="L200">                final InputSource iSource = new InputSource(resolved);</span>
+<span class="fc" id="L201">                iSource.setPublicId(publicId);</span>
+<span class="fc" id="L202">                iSource.setByteStream(is);</span>
+<span class="fc" id="L203">                return iSource;</span>
             }
-<span class="nc" id="L202">            catch (final Exception e)</span>
+<span class="nc" id="L205">            catch (final Exception e)</span>
             {
-<span class="nc" id="L204">                log.warn(&quot;Failed to create InputSource for &quot; + resolved, e);</span>
-<span class="nc" id="L205">                return null;</span>
+<span class="nc" id="L207">                log.warn(&quot;Failed to create InputSource for &quot; + resolved, e);</span>
+<span class="nc" id="L208">                return null;</span>
             }
         }
 
-<span class="nc" id="L209">        return null;</span>
+<span class="nc" id="L212">        return null;</span>
     }
 
     /**
-     * Gets the logger used by this configuration object.
+     * Returns the logger used by this configuration object.
      *
      * @return the logger
      */
     public ConfigurationLogger getLogger()
     {
-<span class="fc" id="L219">        return log;</span>
+<span class="fc" id="L222">        return log;</span>
     }
 
     /**
@@ -231,8 +234,8 @@ public class CatalogResolver implements EntityResolver
      */
     public void setLogger(final ConfigurationLogger log)
     {
-<span class="fc" id="L234">        initLogger(log);</span>
-<span class="fc" id="L235">    }</span>
+<span class="fc" id="L237">        initLogger(log);</span>
+<span class="fc" id="L238">    }</span>
 
     /**
      * Initializes the logger. Checks for null parameters.
@@ -241,20 +244,20 @@ public class CatalogResolver implements EntityResolver
      */
     private void initLogger(final ConfigurationLogger log)
     {
-<span class="fc bfc" id="L244" title="All 2 branches covered.">        this.log = log != null ? log : ConfigurationLogger.newDummyLogger();</span>
-<span class="fc" id="L245">    }</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        this.log = (log != null) ? log : ConfigurationLogger.newDummyLogger();</span>
+<span class="fc" id="L248">    }</span>
 
     private synchronized org.apache.xml.resolver.tools.CatalogResolver getResolver()
     {
-<span class="fc bfc" id="L249" title="All 2 branches covered.">        if (resolver == null)</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (resolver == null)</span>
         {
-<span class="fc" id="L251">            resolver = new org.apache.xml.resolver.tools.CatalogResolver(manager);</span>
+<span class="fc" id="L254">            resolver = new org.apache.xml.resolver.tools.CatalogResolver(manager);</span>
         }
-<span class="fc" id="L253">        return resolver;</span>
+<span class="fc" id="L256">        return resolver;</span>
     }
 
     /**
-     * Locates a given file. This implementation delegates to
+     * Helper method for locating a given file. This implementation delegates to
      * the corresponding method in {@link FileLocatorUtils}.
      *
      * @param fs the {@code FileSystem}
@@ -265,15 +268,15 @@ public class CatalogResolver implements EntityResolver
     private static URL locate(final FileSystem fs, final String basePath, final String name)
     {
         final FileLocator locator =
-<span class="fc" id="L268">                FileLocatorUtils.fileLocator().fileSystem(fs)</span>
-<span class="fc" id="L269">                        .basePath(basePath).fileName(name).create();</span>
-<span class="fc" id="L270">        return FileLocatorUtils.locate(locator);</span>
+<span class="fc" id="L271">                FileLocatorUtils.fileLocator().fileSystem(fs)</span>
+<span class="fc" id="L272">                        .basePath(basePath).fileName(name).create();</span>
+<span class="fc" id="L273">        return FileLocatorUtils.locate(locator);</span>
     }
 
     /**
-     * Extends the CatalogManager to make the FileSystem and base directory accessible.
+     * Extend the CatalogManager to make the FileSystem and base directory accessible.
      */
-<span class="fc" id="L276">    public static class CatalogManager extends org.apache.xml.resolver.CatalogManager</span>
+<span class="fc" id="L279">    public static class CatalogManager extends org.apache.xml.resolver.CatalogManager</span>
     {
         /** The static catalog used by this manager. */
         private static org.apache.xml.resolver.Catalog staticCatalog;
@@ -282,73 +285,63 @@ public class CatalogResolver implements EntityResolver
         private FileSystem fs;
 
         /** The base directory */
-<span class="fc" id="L285">        private String baseDir = System.getProperty(&quot;user.dir&quot;);</span>
+<span class="fc" id="L288">        private String baseDir = System.getProperty(&quot;user.dir&quot;);</span>
 
         /** The object for handling interpolation. */
         private ConfigurationInterpolator interpolator;
 
         /**
-         * Sets the FileSystem
+         * Set the FileSystem
          * @param fileSystem The FileSystem in use.
          */
         public void setFileSystem(final FileSystem fileSystem)
         {
-<span class="fc" id="L296">            this.fs = fileSystem;</span>
-<span class="fc" id="L297">        }</span>
+<span class="fc" id="L299">            this.fs = fileSystem;</span>
+<span class="fc" id="L300">        }</span>
 
         /**
-         * Gets the FileSystem.
+         * Retrieve the FileSystem.
          * @return The FileSystem.
          */
         public FileSystem getFileSystem()
         {
-<span class="fc" id="L305">            return this.fs;</span>
+<span class="fc" id="L308">            return this.fs;</span>
         }
 
         /**
-         * Sets the base directory.
+         * Set the base directory.
          * @param baseDir The base directory.
          */
         public void setBaseDir(final String baseDir)
         {
-<span class="pc bpc" id="L314" title="1 of 2 branches missed.">            if (baseDir != null)</span>
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">            if (baseDir != null)</span>
             {
-<span class="fc" id="L316">                this.baseDir = baseDir;</span>
+<span class="fc" id="L319">                this.baseDir = baseDir;</span>
             }
-<span class="fc" id="L318">        }</span>
+<span class="fc" id="L321">        }</span>
 
         /**
-         * Gets the base directory.
+         * Return the base directory.
          * @return The base directory.
          */
         public String getBaseDir()
         {
-<span class="fc" id="L326">            return this.baseDir;</span>
+<span class="fc" id="L329">            return this.baseDir;</span>
         }
 
-        /**
-         * Sets the ConfigurationInterpolator.
-         *
-         * @param configurationInterpolator the ConfigurationInterpolator.
-         */
-        public void setInterpolator(final ConfigurationInterpolator configurationInterpolator)
+        public void setInterpolator(final ConfigurationInterpolator ci)
         {
-<span class="fc" id="L336">            interpolator = configurationInterpolator;</span>
-<span class="fc" id="L337">        }</span>
+<span class="fc" id="L334">            interpolator = ci;</span>
+<span class="fc" id="L335">        }</span>
 
-        /**
-         * Gets the ConfigurationInterpolator.
-         *
-         * @return the ConfigurationInterpolator.
-         */
         public ConfigurationInterpolator getInterpolator()
         {
-<span class="fc" id="L346">            return interpolator;</span>
+<span class="fc" id="L339">            return interpolator;</span>
         }
 
 
         /**
-         * Gets a new catalog instance. This method is only overridden because xml-resolver
+         * Get a new catalog instance. This method is only overridden because xml-resolver
          * might be in a parent ClassLoader and will be incapable of loading our Catalog
          * implementation.
          *
@@ -358,33 +351,33 @@ public class CatalogResolver implements EntityResolver
         @Override
         public org.apache.xml.resolver.Catalog getPrivateCatalog()
         {
-<span class="fc" id="L361">            org.apache.xml.resolver.Catalog catalog = staticCatalog;</span>
+<span class="fc" id="L354">            org.apache.xml.resolver.Catalog catalog = staticCatalog;</span>
 
-<span class="pc bpc" id="L363" title="3 of 4 branches missed.">            if (catalog == null || !getUseStaticCatalog())</span>
+<span class="pc bpc" id="L356" title="3 of 4 branches missed.">            if (catalog == null || !getUseStaticCatalog())</span>
             {
                 try
                 {
-<span class="fc" id="L367">                    catalog = new Catalog();</span>
-<span class="fc" id="L368">                    catalog.setCatalogManager(this);</span>
-<span class="fc" id="L369">                    catalog.setupReaders();</span>
-<span class="fc" id="L370">                    catalog.loadSystemCatalogs();</span>
+<span class="fc" id="L360">                    catalog = new Catalog();</span>
+<span class="fc" id="L361">                    catalog.setCatalogManager(this);</span>
+<span class="fc" id="L362">                    catalog.setupReaders();</span>
+<span class="fc" id="L363">                    catalog.loadSystemCatalogs();</span>
                 }
-<span class="nc" id="L372">                catch (final Exception ex)</span>
+<span class="nc" id="L365">                catch (final Exception ex)</span>
                 {
-<span class="nc" id="L374">                    ex.printStackTrace();</span>
-<span class="fc" id="L375">                }</span>
+<span class="nc" id="L367">                    ex.printStackTrace();</span>
+<span class="fc" id="L368">                }</span>
 
-<span class="pc bpc" id="L377" title="1 of 2 branches missed.">                if (getUseStaticCatalog())</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">                if (getUseStaticCatalog())</span>
                 {
-<span class="nc" id="L379">                    staticCatalog = catalog;</span>
+<span class="nc" id="L372">                    staticCatalog = catalog;</span>
                 }
             }
 
-<span class="fc" id="L383">            return catalog;</span>
+<span class="fc" id="L376">            return catalog;</span>
         }
 
         /**
-         * Gets a catalog instance.
+         * Get a catalog instance.
          *
          * If this manager uses static catalogs, the same static catalog will
          * always be returned. Otherwise a new catalog will be returned.
@@ -393,20 +386,20 @@ public class CatalogResolver implements EntityResolver
         @Override
         public org.apache.xml.resolver.Catalog getCatalog()
         {
-<span class="fc" id="L396">            return getPrivateCatalog();</span>
+<span class="fc" id="L389">            return getPrivateCatalog();</span>
         }
     }
 
     /**
      * Overrides the Catalog implementation to use the underlying FileSystem.
      */
-<span class="fc" id="L403">    public static class Catalog extends org.apache.xml.resolver.Catalog</span>
+<span class="fc" id="L396">    public static class Catalog extends org.apache.xml.resolver.Catalog</span>
     {
         /** The FileSystem */
         private FileSystem fs;
 
         /** FileNameMap to determine the mime type */
-<span class="fc" id="L409">        private final FileNameMap fileNameMap = URLConnection.getFileNameMap();</span>
+<span class="fc" id="L402">        private final FileNameMap fileNameMap = URLConnection.getFileNameMap();</span>
 
         /**
          * Load the catalogs.
@@ -415,105 +408,107 @@ public class CatalogResolver implements EntityResolver
         @Override
         public void loadSystemCatalogs() throws IOException
         {
-<span class="fc" id="L418">            fs = ((CatalogManager) catalogManager).getFileSystem();</span>
-<span class="fc" id="L419">            final String base = ((CatalogManager) catalogManager).getBaseDir();</span>
+<span class="fc" id="L411">            fs = ((CatalogManager) catalogManager).getFileSystem();</span>
+<span class="fc" id="L412">            final String base = ((CatalogManager) catalogManager).getBaseDir();</span>
 
             // This is safe because the catalog manager returns a vector of strings.
-<span class="fc" id="L422">            final Vector&lt;String&gt; catalogs = catalogManager.getCatalogFiles();</span>
-<span class="pc bpc" id="L423" title="1 of 2 branches missed.">            if (catalogs != null)</span>
+            @SuppressWarnings(&quot;unchecked&quot;)
+            final
+<span class="fc" id="L417">            Vector&lt;String&gt; catalogs = catalogManager.getCatalogFiles();</span>
+<span class="pc bpc" id="L418" title="1 of 2 branches missed.">            if (catalogs != null)</span>
             {
-<span class="fc bfc" id="L425" title="All 2 branches covered.">                for (int count = 0; count &lt; catalogs.size(); count++)</span>
+<span class="fc bfc" id="L420" title="All 2 branches covered.">                for (int count = 0; count &lt; catalogs.size(); count++)</span>
                 {
-<span class="fc" id="L427">                    final String fileName = catalogs.elementAt(count);</span>
+<span class="fc" id="L422">                    final String fileName = catalogs.elementAt(count);</span>
 
-<span class="fc" id="L429">                    URL url = null;</span>
-<span class="fc" id="L430">                    InputStream inputStream = null;</span>
+<span class="fc" id="L424">                    URL url = null;</span>
+<span class="fc" id="L425">                    InputStream is = null;</span>
 
                     try
                     {
-<span class="fc" id="L434">                        url = locate(fs, base, fileName);</span>
-<span class="pc bpc" id="L435" title="1 of 2 branches missed.">                        if (url != null)</span>
+<span class="fc" id="L429">                        url = locate(fs, base, fileName);</span>
+<span class="pc bpc" id="L430" title="1 of 2 branches missed.">                        if (url != null)</span>
                         {
-<span class="fc" id="L437">                            inputStream = fs.getInputStream(url);</span>
+<span class="fc" id="L432">                            is = fs.getInputStream(url);</span>
                         }
                     }
-<span class="nc" id="L440">                    catch (final ConfigurationException ce)</span>
+<span class="nc" id="L435">                    catch (final ConfigurationException ce)</span>
                     {
-<span class="nc" id="L442">                        final String name = url.toString();</span>
+<span class="nc" id="L437">                        final String name = url.toString();</span>
                         // Ignore the exception.
-<span class="nc" id="L444">                        catalogManager.debug.message(DEBUG_ALL,</span>
-<span class="nc" id="L445">                            &quot;Unable to get input stream for &quot; + name + &quot;. &quot; + ce.getMessage());</span>
-<span class="fc" id="L446">                    }</span>
-<span class="pc bpc" id="L447" title="1 of 2 branches missed.">                    if (inputStream != null)</span>
+<span class="nc" id="L439">                        catalogManager.debug.message(DEBUG_ALL,</span>
+<span class="nc" id="L440">                            &quot;Unable to get input stream for &quot; + name + &quot;. &quot; + ce.getMessage());</span>
+<span class="fc" id="L441">                    }</span>
+<span class="pc bpc" id="L442" title="1 of 2 branches missed.">                    if (is != null)</span>
                     {
-<span class="fc" id="L449">                        final String mimeType = fileNameMap.getContentTypeFor(fileName);</span>
+<span class="fc" id="L444">                        final String mimeType = fileNameMap.getContentTypeFor(fileName);</span>
                         try
                         {
-<span class="pc bpc" id="L452" title="1 of 2 branches missed.">                            if (mimeType != null)</span>
+<span class="pc bpc" id="L447" title="1 of 2 branches missed.">                            if (mimeType != null)</span>
                             {
-<span class="nc" id="L454">                                parseCatalog(mimeType, inputStream);</span>
+<span class="nc" id="L449">                                parseCatalog(mimeType, is);</span>
                                 continue;
                             }
                         }
-<span class="fc" id="L458">                        catch (final Exception ex)</span>
+<span class="fc" id="L453">                        catch (final Exception ex)</span>
                         {
                             // Ignore the exception.
-<span class="fc" id="L461">                            catalogManager.debug.message(DEBUG_ALL,</span>
+<span class="fc" id="L456">                            catalogManager.debug.message(DEBUG_ALL,</span>
                                 &quot;Exception caught parsing input stream for &quot; + fileName + &quot;. &quot;
-<span class="fc" id="L463">                                + ex.getMessage());</span>
+<span class="fc" id="L458">                                + ex.getMessage());</span>
                         }
                         finally
                         {
-<span class="fc" id="L467">                            inputStream.close();</span>
+<span class="fc" id="L462">                            is.close();</span>
                         }
                     }
-<span class="fc" id="L470">                    parseCatalog(base, fileName);</span>
+<span class="fc" id="L465">                    parseCatalog(base, fileName);</span>
                 }
             }
 
-<span class="fc" id="L474">        }</span>
+<span class="fc" id="L469">        }</span>
 
         /**
-         * Parses the specified catalog file.
+         * Parse the specified catalog file.
          * @param baseDir The base directory, if not included in the file name.
          * @param fileName The catalog file. May be a full URI String.
          * @throws IOException If an error occurs.
          */
         public void parseCatalog(final String baseDir, final String fileName) throws IOException
         {
-<span class="fc" id="L484">            base = locate(fs, baseDir, fileName);</span>
-<span class="fc" id="L485">            catalogCwd = base;</span>
-<span class="fc" id="L486">            default_override = catalogManager.getPreferPublic();</span>
-<span class="fc" id="L487">            catalogManager.debug.message(DEBUG_NORMAL, &quot;Parse catalog: &quot; + fileName);</span>
+<span class="fc" id="L479">            base = locate(fs, baseDir, fileName);</span>
+<span class="fc" id="L480">            catalogCwd = base;</span>
+<span class="fc" id="L481">            default_override = catalogManager.getPreferPublic();</span>
+<span class="fc" id="L482">            catalogManager.debug.message(DEBUG_NORMAL, &quot;Parse catalog: &quot; + fileName);</span>
 
-<span class="fc" id="L489">            boolean parsed = false;</span>
+<span class="fc" id="L484">            boolean parsed = false;</span>
 
-<span class="pc bpc" id="L491" title="1 of 4 branches missed.">            for (int count = 0; !parsed &amp;&amp; count &lt; readerArr.size(); count++)</span>
+<span class="pc bpc" id="L486" title="1 of 4 branches missed.">            for (int count = 0; !parsed &amp;&amp; count &lt; readerArr.size(); count++)</span>
             {
-<span class="fc" id="L493">                final CatalogReader reader = (CatalogReader) readerArr.get(count);</span>
-                InputStream inputStream;
+<span class="fc" id="L488">                final CatalogReader reader = (CatalogReader) readerArr.get(count);</span>
+                InputStream inStream;
 
                 try
                 {
-<span class="fc" id="L498">                    inputStream = fs.getInputStream(base);</span>
+<span class="fc" id="L493">                    inStream = fs.getInputStream(base);</span>
                 }
-<span class="nc" id="L500">                catch (final Exception ex)</span>
+<span class="nc" id="L495">                catch (final Exception ex)</span>
                 {
-<span class="nc" id="L502">                    catalogManager.debug.message(DEBUG_NORMAL, &quot;Unable to access &quot; + base</span>
-<span class="nc" id="L503">                        + ex.getMessage());</span>
-<span class="nc" id="L504">                    break;</span>
-<span class="fc" id="L505">                }</span>
+<span class="nc" id="L497">                    catalogManager.debug.message(DEBUG_NORMAL, &quot;Unable to access &quot; + base</span>
+<span class="nc" id="L498">                        + ex.getMessage());</span>
+<span class="nc" id="L499">                    break;</span>
+<span class="fc" id="L500">                }</span>
 
                 try
                 {
-<span class="fc" id="L509">                    reader.readCatalog(this, inputStream);</span>
-<span class="fc" id="L510">                    parsed = true;</span>
+<span class="fc" id="L504">                    reader.readCatalog(this, inStream);</span>
+<span class="fc" id="L505">                    parsed = true;</span>
                 }
-<span class="nc" id="L512">                catch (final CatalogException ce)</span>
+<span class="nc" id="L507">                catch (final CatalogException ce)</span>
                 {
-<span class="nc" id="L514">                    catalogManager.debug.message(DEBUG_NORMAL, &quot;Parse failed for &quot; + fileName</span>
-<span class="nc" id="L515">                            + ce.getMessage());</span>
-<span class="nc bnc" id="L516" title="All 2 branches missed.">                    if (ce.getExceptionType() == CatalogException.PARSE_FAILED)</span>
+<span class="nc" id="L509">                    catalogManager.debug.message(DEBUG_NORMAL, &quot;Parse failed for &quot; + fileName</span>
+<span class="nc" id="L510">                            + ce.getMessage());</span>
+<span class="nc bnc" id="L511" title="All 2 branches missed.">                    if (ce.getExceptionType() == CatalogException.PARSE_FAILED)</span>
                     {
                         break;
                     }
@@ -524,24 +519,24 @@ public class CatalogResolver implements EntityResolver
                 {
                     try
                     {
-<span class="fc" id="L527">                        inputStream.close();</span>
+<span class="fc" id="L522">                        inStream.close();</span>
                     }
-<span class="nc" id="L529">                    catch (final IOException ioe)</span>
+<span class="nc" id="L524">                    catch (final IOException ioe)</span>
                     {
                         // Ignore the exception.
-<span class="nc" id="L532">                        inputStream = null;</span>
-<span class="fc" id="L533">                    }</span>
+<span class="nc" id="L527">                        inStream = null;</span>
+<span class="fc" id="L528">                    }</span>
                 }
             }
 
-<span class="pc bpc" id="L537" title="1 of 2 branches missed.">            if (parsed)</span>
+<span class="pc bpc" id="L532" title="1 of 2 branches missed.">            if (parsed)</span>
             {
-<span class="fc" id="L539">                parsePendingCatalogs();</span>
+<span class="fc" id="L534">                parsePendingCatalogs();</span>
             }
-<span class="fc" id="L541">        }</span>
+<span class="fc" id="L536">        }</span>
 
         /**
-         * Performs character normalization on a URI reference.
+         * Perform character normalization on a URI reference.
          *
          * @param uriref The URI reference
          * @return The normalized URI reference.
@@ -549,9 +544,9 @@ public class CatalogResolver implements EntityResolver
         @Override
         protected String normalizeURI(final String uriref)
         {
-<span class="fc" id="L552">            final ConfigurationInterpolator ci = ((CatalogManager) catalogManager).getInterpolator();</span>
-<span class="fc bfc" id="L553" title="All 2 branches covered.">            final String resolved = ci != null ? String.valueOf(ci.interpolate(uriref)) : uriref;</span>
-<span class="fc" id="L554">            return super.normalizeURI(resolved);</span>
+<span class="fc" id="L547">            final ConfigurationInterpolator ci = ((CatalogManager) catalogManager).getInterpolator();</span>
+<span class="fc bfc" id="L548" title="All 2 branches covered.">            final String resolved = ci != null ? String.valueOf(ci.interpolate(uriref)) : uriref;</span>
+<span class="fc" id="L549">            return super.normalizeURI(resolved);</span>
         }
     }
 }

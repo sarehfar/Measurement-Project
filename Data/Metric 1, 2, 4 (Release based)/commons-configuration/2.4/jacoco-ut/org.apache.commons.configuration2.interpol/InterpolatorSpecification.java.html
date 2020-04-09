@@ -52,6 +52,7 @@ import java.util.Map;
  * class. They are then immutable.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public final class InterpolatorSpecification
@@ -75,16 +76,16 @@ public final class InterpolatorSpecification
      * @param builder the builder
      */
     private InterpolatorSpecification(final Builder builder)
-<span class="fc" id="L78">    {</span>
-<span class="fc" id="L79">        interpolator = builder.interpolator;</span>
-<span class="fc" id="L80">        parentInterpolator = builder.parentInterpolator;</span>
-<span class="fc" id="L81">        prefixLookups =</span>
-<span class="fc" id="L82">                Collections.unmodifiableMap(new HashMap&lt;&gt;(</span>
-<span class="fc" id="L83">                        builder.prefixLookups));</span>
-<span class="fc" id="L84">        defaultLookups =</span>
-<span class="fc" id="L85">                Collections.unmodifiableCollection(new ArrayList&lt;&gt;(</span>
-<span class="fc" id="L86">                        builder.defLookups));</span>
-<span class="fc" id="L87">    }</span>
+<span class="fc" id="L79">    {</span>
+<span class="fc" id="L80">        interpolator = builder.interpolator;</span>
+<span class="fc" id="L81">        parentInterpolator = builder.parentInterpolator;</span>
+<span class="fc" id="L82">        prefixLookups =</span>
+<span class="fc" id="L83">                Collections.unmodifiableMap(new HashMap&lt;&gt;(</span>
+<span class="fc" id="L84">                        builder.prefixLookups));</span>
+<span class="fc" id="L85">        defaultLookups =</span>
+<span class="fc" id="L86">                Collections.unmodifiableCollection(new ArrayList&lt;&gt;(</span>
+<span class="fc" id="L87">                        builder.defLookups));</span>
+<span class="fc" id="L88">    }</span>
 
     /**
      * Returns the {@code ConfigurationInterpolator} instance to be used
@@ -94,7 +95,7 @@ public final class InterpolatorSpecification
      */
     public ConfigurationInterpolator getInterpolator()
     {
-<span class="fc" id="L97">        return interpolator;</span>
+<span class="fc" id="L98">        return interpolator;</span>
     }
 
     /**
@@ -104,7 +105,7 @@ public final class InterpolatorSpecification
      */
     public ConfigurationInterpolator getParentInterpolator()
     {
-<span class="fc" id="L107">        return parentInterpolator;</span>
+<span class="fc" id="L108">        return parentInterpolator;</span>
     }
 
     /**
@@ -116,7 +117,7 @@ public final class InterpolatorSpecification
      */
     public Map&lt;String, Lookup&gt; getPrefixLookups()
     {
-<span class="fc" id="L119">        return prefixLookups;</span>
+<span class="fc" id="L120">        return prefixLookups;</span>
     }
 
     /**
@@ -127,7 +128,7 @@ public final class InterpolatorSpecification
      */
     public Collection&lt;Lookup&gt; getDefaultLookups()
     {
-<span class="fc" id="L130">        return defaultLookups;</span>
+<span class="fc" id="L131">        return defaultLookups;</span>
     }
 
     /**
@@ -154,10 +155,10 @@ public final class InterpolatorSpecification
         private ConfigurationInterpolator parentInterpolator;
 
         public Builder()
-<span class="fc" id="L157">        {</span>
-<span class="fc" id="L158">            prefixLookups = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L159">            defLookups = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L160">        }</span>
+<span class="fc" id="L158">        {</span>
+<span class="fc" id="L159">            prefixLookups = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L160">            defLookups = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L161">        }</span>
 
         /**
          * Adds a {@code Lookup} object for a given prefix.
@@ -169,13 +170,13 @@ public final class InterpolatorSpecification
          */
         public Builder withPrefixLookup(final String prefix, final Lookup lookup)
         {
-<span class="fc bfc" id="L172" title="All 2 branches covered.">            if (prefix == null)</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">            if (prefix == null)</span>
             {
-<span class="fc" id="L174">                throw new IllegalArgumentException(&quot;Prefix must not be null!&quot;);</span>
+<span class="fc" id="L175">                throw new IllegalArgumentException(&quot;Prefix must not be null!&quot;);</span>
             }
-<span class="fc" id="L176">            checkLookup(lookup);</span>
-<span class="fc" id="L177">            prefixLookups.put(prefix, lookup);</span>
-<span class="fc" id="L178">            return this;</span>
+<span class="fc" id="L177">            checkLookup(lookup);</span>
+<span class="fc" id="L178">            prefixLookups.put(prefix, lookup);</span>
+<span class="fc" id="L179">            return this;</span>
         }
 
         /**
@@ -190,14 +191,14 @@ public final class InterpolatorSpecification
          */
         public Builder withPrefixLookups(final Map&lt;String, ? extends Lookup&gt; lookups)
         {
-<span class="fc bfc" id="L193" title="All 2 branches covered.">            if (lookups != null)</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">            if (lookups != null)</span>
             {
-<span class="fc bfc" id="L195" title="All 2 branches covered.">                for (final Map.Entry&lt;String, ? extends Lookup&gt; e : lookups.entrySet())</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">                for (final Map.Entry&lt;String, ? extends Lookup&gt; e : lookups.entrySet())</span>
                 {
-<span class="fc" id="L197">                    withPrefixLookup(e.getKey(), e.getValue());</span>
-<span class="fc" id="L198">                }</span>
+<span class="fc" id="L198">                    withPrefixLookup(e.getKey(), e.getValue());</span>
+<span class="fc" id="L199">                }</span>
             }
-<span class="fc" id="L200">            return this;</span>
+<span class="fc" id="L201">            return this;</span>
         }
 
         /**
@@ -209,9 +210,9 @@ public final class InterpolatorSpecification
          */
         public Builder withDefaultLookup(final Lookup lookup)
         {
-<span class="fc" id="L212">            checkLookup(lookup);</span>
-<span class="fc" id="L213">            defLookups.add(lookup);</span>
-<span class="fc" id="L214">            return this;</span>
+<span class="fc" id="L213">            checkLookup(lookup);</span>
+<span class="fc" id="L214">            defLookups.add(lookup);</span>
+<span class="fc" id="L215">            return this;</span>
         }
 
         /**
@@ -226,14 +227,14 @@ public final class InterpolatorSpecification
          */
         public Builder withDefaultLookups(final Collection&lt;? extends Lookup&gt; lookups)
         {
-<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (lookups != null)</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">            if (lookups != null)</span>
             {
-<span class="fc bfc" id="L231" title="All 2 branches covered.">                for (final Lookup l : lookups)</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">                for (final Lookup l : lookups)</span>
                 {
-<span class="fc" id="L233">                    withDefaultLookup(l);</span>
-<span class="fc" id="L234">                }</span>
+<span class="fc" id="L234">                    withDefaultLookup(l);</span>
+<span class="fc" id="L235">                }</span>
             }
-<span class="fc" id="L236">            return this;</span>
+<span class="fc" id="L237">            return this;</span>
         }
 
         /**
@@ -247,8 +248,8 @@ public final class InterpolatorSpecification
          */
         public Builder withInterpolator(final ConfigurationInterpolator ci)
         {
-<span class="fc" id="L250">            interpolator = ci;</span>
-<span class="fc" id="L251">            return this;</span>
+<span class="fc" id="L251">            interpolator = ci;</span>
+<span class="fc" id="L252">            return this;</span>
         }
 
         /**
@@ -262,8 +263,8 @@ public final class InterpolatorSpecification
          */
         public Builder withParentInterpolator(final ConfigurationInterpolator parent)
         {
-<span class="fc" id="L265">            parentInterpolator = parent;</span>
-<span class="fc" id="L266">            return this;</span>
+<span class="fc" id="L266">            parentInterpolator = parent;</span>
+<span class="fc" id="L267">            return this;</span>
         }
 
         /**
@@ -275,10 +276,10 @@ public final class InterpolatorSpecification
          */
         public InterpolatorSpecification create()
         {
-<span class="fc" id="L278">            final InterpolatorSpecification spec =</span>
+<span class="fc" id="L279">            final InterpolatorSpecification spec =</span>
                     new InterpolatorSpecification(this);
-<span class="fc" id="L280">            reset();</span>
-<span class="fc" id="L281">            return spec;</span>
+<span class="fc" id="L281">            reset();</span>
+<span class="fc" id="L282">            return spec;</span>
         }
 
         /**
@@ -287,11 +288,11 @@ public final class InterpolatorSpecification
          */
         public void reset()
         {
-<span class="fc" id="L290">            interpolator = null;</span>
-<span class="fc" id="L291">            parentInterpolator = null;</span>
-<span class="fc" id="L292">            prefixLookups.clear();</span>
-<span class="fc" id="L293">            defLookups.clear();</span>
-<span class="fc" id="L294">        }</span>
+<span class="fc" id="L291">            interpolator = null;</span>
+<span class="fc" id="L292">            parentInterpolator = null;</span>
+<span class="fc" id="L293">            prefixLookups.clear();</span>
+<span class="fc" id="L294">            defLookups.clear();</span>
+<span class="fc" id="L295">        }</span>
 
         /**
          * Helper method for checking a lookup. Throws an exception if the
@@ -302,11 +303,11 @@ public final class InterpolatorSpecification
          */
         private static void checkLookup(final Lookup lookup)
         {
-<span class="fc bfc" id="L305" title="All 2 branches covered.">            if (lookup == null)</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">            if (lookup == null)</span>
             {
-<span class="fc" id="L307">                throw new IllegalArgumentException(&quot;Lookup must not be null!&quot;);</span>
+<span class="fc" id="L308">                throw new IllegalArgumentException(&quot;Lookup must not be null!&quot;);</span>
             }
-<span class="fc" id="L309">        }</span>
+<span class="fc" id="L310">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -16,203 +16,54 @@
  */
 package org.apache.commons.configuration2.interpol;
 
-import org.apache.commons.text.lookup.StringLookupFactory;
-
 /**
  * &lt;p&gt;
- * An enumeration class defining constants for the {@code Lookup} objects available for each {@code Configuration}
- * object per default.
+ * An enumeration class defining constants for the {@code Lookup} objects
+ * available for each {@code Configuration} object per default.
  * &lt;/p&gt;
  * &lt;p&gt;
- * When a new configuration object derived from {@code AbstractConfiguration} is created it installs a
- * {@link ConfigurationInterpolator} with a default set of {@link Lookup} objects. These lookups are defined by this
- * enumeration class.
+ * When a new configuration object derived from {@code AbstractConfiguration} is
+ * created it installs a {@link ConfigurationInterpolator} with a default set of
+ * {@link Lookup} objects. These lookups are defined by this enumeration class.
  * &lt;/p&gt;
  * &lt;p&gt;
- * All the default {@code Lookup} classes are state-less, thus their instances can be shared between multiple
- * configuration objects. Therefore, it makes sense to keep shared instances in this enumeration class.
+ * All the default {@code Lookup} classes are state-less, thus their instances
+ * can be shared between multiple configuration objects. Therefore, it makes
+ * sense to keep shared instances in this enumeration class.
  * &lt;/p&gt;
  *
- * Provides access to lookups defined in Apache Commons Text:
- * &lt;ul&gt;
- * &lt;li&gt;&quot;base64Decoder&quot; for the {@code Base64DecoderStringLookup} since Apache Commons Text 1.6.&lt;/li&gt;
- * &lt;li&gt;&quot;base64Encoder&quot; for the {@code Base64EncoderStringLookup} since Apache Commons Text 1.6.&lt;/li&gt;
- * &lt;li&gt;&quot;const&quot; for the {@code ConstantStringLookup} since Apache Commons Text 1.5.&lt;/li&gt;
- * &lt;li&gt;&quot;date&quot; for the {@code DateStringLookup}.&lt;/li&gt;
- * &lt;li&gt;&quot;env&quot; for the {@code EnvironmentVariableStringLookup}.&lt;/li&gt;
- * &lt;li&gt;&quot;file&quot; for the {@code FileStringLookup} since Apache Commons Text 1.5.&lt;/li&gt;
- * &lt;li&gt;&quot;java&quot; for the {@code JavaPlatformStringLookup}.&lt;/li&gt;
- * &lt;li&gt;&quot;localhost&quot; for the {@code LocalHostStringLookup}, see {@code #localHostStringLookup()} for key names; since
- * Apache Commons Text 1.3.&lt;/li&gt;
- * &lt;li&gt;&quot;properties&quot; for the {@code PropertiesStringLookup} since Apache Commons Text 1.5.&lt;/li&gt;
- * &lt;li&gt;&quot;resourceBundle&quot; for the {@code ResourceBundleStringLookup} since Apache Commons Text 1.5.&lt;/li&gt;
- * &lt;li&gt;&quot;script&quot; for the {@code ScriptStringLookup} since Apache Commons Text 1.5.&lt;/li&gt;
- * &lt;li&gt;&quot;sys&quot; for the {@code SystemPropertyStringLookup}.&lt;/li&gt;
- * &lt;li&gt;&quot;url&quot; for the {@code UrlStringLookup} since Apache Commons Text 1.5.&lt;/li&gt;
- * &lt;li&gt;&quot;urlDecoder&quot; for the {@code UrlDecoderStringLookup} since Apache Commons Text 1.6.&lt;/li&gt;
- * &lt;li&gt;&quot;urlEncoder&quot; for the {@code UrlEncoderStringLookup} since Apache Commons Text 1.6.&lt;/li&gt;
- * &lt;li&gt;&quot;xml&quot; for the {@code XmlStringLookup} since Apache Commons Text 1.5.&lt;/li&gt;
- * &lt;/ul&gt;
- *
+ * @version $Id$
  * @since 2.0
  */
-<span class="fc" id="L59">public enum DefaultLookups</span>
+<span class="fc" id="L38">public enum DefaultLookups</span>
 {
+    /** The lookup for system properties. */
+<span class="fc" id="L41">    SYSTEM_PROPERTIES(&quot;sys&quot;, new SystemPropertiesLookup()),</span>
 
-    /**
-     * The lookup for Base64 decoding.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L67">    BASE64_DECODER(StringLookupFactory.KEY_BASE64_DECODER,</span>
-<span class="fc" id="L68">            new StringLookupAdapter(StringLookupFactory.INSTANCE.base64DecoderStringLookup())),</span>
+    /** The lookup for environment properties. */
+<span class="fc" id="L44">    ENVIRONMENT(&quot;env&quot;, new EnvironmentLookup()),</span>
 
-    /**
-     * The lookup for Base64 decoding.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L75">    BASE64_ENCODER(StringLookupFactory.KEY_BASE64_ENCODER,</span>
-<span class="fc" id="L76">            new StringLookupAdapter(StringLookupFactory.INSTANCE.base64EncoderStringLookup())),</span>
-
-    /**
-     * The lookup for constants.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L83">    CONST(StringLookupFactory.KEY_CONST, new StringLookupAdapter(StringLookupFactory.INSTANCE.constantStringLookup())),</span>
-
-    /**
-     * The lookup for dates.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L90">    DATE(StringLookupFactory.KEY_DATE, new StringLookupAdapter(StringLookupFactory.INSTANCE.dateStringLookup())),</span>
-
-    /**
-     * The lookup for DNS.
-     *
-     * @since 2.6
-     */
-<span class="fc" id="L97">    DNS(StringLookupFactory.KEY_DNS, new StringLookupAdapter(StringLookupFactory.INSTANCE.dnsStringLookup())),</span>
-
-    /**
-     * The lookup for environment properties.
-     */
-<span class="fc" id="L102">    ENVIRONMENT(StringLookupFactory.KEY_ENV,</span>
-<span class="fc" id="L103">            new StringLookupAdapter(StringLookupFactory.INSTANCE.environmentVariableStringLookup())),</span>
-
-    /**
-     * The lookup for files.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L110">    FILE(StringLookupFactory.KEY_FILE, new StringLookupAdapter(StringLookupFactory.INSTANCE.fileStringLookup())),</span>
-
-    /**
-     * The lookup for Java platform information.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L117">    JAVA(StringLookupFactory.KEY_JAVA,</span>
-<span class="fc" id="L118">            new StringLookupAdapter(StringLookupFactory.INSTANCE.javaPlatformStringLookup())),</span>
-
-    /**
-     * The lookup for localhost information.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L125">    LOCAL_HOST(StringLookupFactory.KEY_LOCALHOST,</span>
-<span class="fc" id="L126">            new StringLookupAdapter(StringLookupFactory.INSTANCE.localHostStringLookup())),</span>
-
-    /**
-     * The lookup for properties.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L133">    PROPERTIES(StringLookupFactory.KEY_PROPERTIES,</span>
-<span class="fc" id="L134">            new StringLookupAdapter(StringLookupFactory.INSTANCE.propertiesStringLookup())),</span>
-
-    /**
-     * The lookup for resource bundles.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L141">    RESOURCE_BUNDLE(StringLookupFactory.KEY_RESOURCE_BUNDLE,</span>
-<span class="fc" id="L142">            new StringLookupAdapter(StringLookupFactory.INSTANCE.resourceBundleStringLookup())),</span>
-
-    /**
-     * The lookup for scripts.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L149">    SCRIPT(StringLookupFactory.KEY_SCRIPT, new StringLookupAdapter(StringLookupFactory.INSTANCE.scriptStringLookup())),</span>
-
-    /**
-     * The lookup for system properties.
-     */
-<span class="fc" id="L154">    SYSTEM_PROPERTIES(StringLookupFactory.KEY_SYS,</span>
-<span class="fc" id="L155">            new StringLookupAdapter(StringLookupFactory.INSTANCE.systemPropertyStringLookup())),</span>
-
-    /**
-     * The lookup for URLs.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L162">    URL(StringLookupFactory.KEY_URL, new StringLookupAdapter(StringLookupFactory.INSTANCE.urlStringLookup())),</span>
-
-    /**
-     * The lookup for URL decoding.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L169">    URL_DECODER(StringLookupFactory.KEY_URL_DECODER,</span>
-<span class="fc" id="L170">            new StringLookupAdapter(StringLookupFactory.INSTANCE.urlDecoderStringLookup())),</span>
-
-    /**
-     * The lookup for URL decoding.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L177">    URL_ENCODER(StringLookupFactory.KEY_URL_ENCODER,</span>
-<span class="fc" id="L178">            new StringLookupAdapter(StringLookupFactory.INSTANCE.urlEncoderStringLookup())),</span>
-
-    /**
-     * The lookup for URL decoding.
-     *
-     * @since 2.4
-     */
-<span class="fc" id="L185">    XML(StringLookupFactory.KEY_XML, new StringLookupAdapter(StringLookupFactory.INSTANCE.xmlStringLookup()));</span>
-
-    /** The associated lookup instance. */
-    private final Lookup lookup;
+    /** The lookup for constants. */
+<span class="fc" id="L47">    CONST(&quot;const&quot;, new ConstantLookup());</span>
 
     /** The prefix under which the associated lookup object is registered. */
     private final String prefix;
 
-    /**
-     * Creates a new instance of {@code DefaultLookups} and sets the prefix and the associated lookup instance.
-     *
-     * @param prefix
-     *            the prefix
-     * @param lookup
-     *            the {@code Lookup} instance
-     */
-    private DefaultLookups(final String prefix, final Lookup lookup)
-<span class="fc" id="L202">    {</span>
-<span class="fc" id="L203">        this.prefix = prefix;</span>
-<span class="fc" id="L204">        this.lookup = lookup;</span>
-<span class="fc" id="L205">    }</span>
+    /** The associated lookup instance. */
+    private final Lookup lookup;
 
     /**
-     * Returns the standard {@code Lookup} instance of this kind.
+     * Creates a new instance of {@code DefaultLookups} and sets the prefix and
+     * the associated lookup instance.
      *
-     * @return the associated {@code Lookup} object
+     * @param prfx the prefix
+     * @param look the {@code Lookup} instance
      */
-    public Lookup getLookup()
-    {
-<span class="fc" id="L214">        return lookup;</span>
-    }
+    private DefaultLookups(String prfx, Lookup look)
+<span class="fc" id="L63">    {</span>
+<span class="fc" id="L64">        prefix = prfx;</span>
+<span class="fc" id="L65">        lookup = look;</span>
+<span class="fc" id="L66">    }</span>
 
     /**
      * Returns the standard prefix for the lookup object of this kind.
@@ -221,7 +72,17 @@ import org.apache.commons.text.lookup.StringLookupFactory;
      */
     public String getPrefix()
     {
-<span class="fc" id="L224">        return prefix;</span>
+<span class="fc" id="L75">        return prefix;</span>
+    }
+
+    /**
+     * Returns the standard {@code Lookup} instance of this kind.
+     *
+     * @return the associated {@code Lookup} object
+     */
+    public Lookup getLookup()
+    {
+<span class="fc" id="L85">        return lookup;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

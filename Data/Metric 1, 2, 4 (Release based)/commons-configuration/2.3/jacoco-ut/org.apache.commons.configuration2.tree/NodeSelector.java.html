@@ -43,6 +43,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * shared between arbitrary components.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class NodeSelector
@@ -56,10 +57,10 @@ public class NodeSelector
      *
      * @param key the key
      */
-    public NodeSelector(final String key)
+    public NodeSelector(String key)
     {
-<span class="fc" id="L61">        this(Collections.singletonList(key));</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L62">        this(Collections.singletonList(key));</span>
+<span class="fc" id="L63">    }</span>
 
     /**
      * Creates a new instance of {@code NodeSelector} and initializes it with
@@ -67,10 +68,10 @@ public class NodeSelector
      *
      * @param keys the keys for selecting nodes
      */
-    private NodeSelector(final List&lt;String&gt; keys)
-<span class="fc" id="L71">    {</span>
-<span class="fc" id="L72">        nodeKeys = keys;</span>
-<span class="fc" id="L73">    }</span>
+    private NodeSelector(List&lt;String&gt; keys)
+<span class="fc" id="L72">    {</span>
+<span class="fc" id="L73">        nodeKeys = keys;</span>
+<span class="fc" id="L74">    }</span>
 
     /**
      * Applies this {@code NodeSelector} on the specified root node. This method
@@ -83,28 +84,28 @@ public class NodeSelector
      * @param handler the {@code NodeHandler}
      * @return the selected target node or &lt;b&gt;null&lt;/b&gt;
      */
-    public ImmutableNode select(final ImmutableNode root,
-            final NodeKeyResolver&lt;ImmutableNode&gt; resolver,
-            final NodeHandler&lt;ImmutableNode&gt; handler)
+    public ImmutableNode select(ImmutableNode root,
+            NodeKeyResolver&lt;ImmutableNode&gt; resolver,
+            NodeHandler&lt;ImmutableNode&gt; handler)
     {
-<span class="fc" id="L90">        List&lt;ImmutableNode&gt; nodes = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L91">        final Iterator&lt;String&gt; itKeys = nodeKeys.iterator();</span>
-<span class="fc" id="L92">        getFilteredResults(root, resolver, handler, itKeys.next(), nodes);</span>
+<span class="fc" id="L91">        List&lt;ImmutableNode&gt; nodes = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L92">        Iterator&lt;String&gt; itKeys = nodeKeys.iterator();</span>
+<span class="fc" id="L93">        getFilteredResults(root, resolver, handler, itKeys.next(), nodes);</span>
 
-<span class="fc bfc" id="L94" title="All 2 branches covered.">        while (itKeys.hasNext())</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        while (itKeys.hasNext())</span>
         {
-<span class="fc" id="L96">            final String currentKey = itKeys.next();</span>
-<span class="fc" id="L97">            final List&lt;ImmutableNode&gt; currentResults =</span>
+<span class="fc" id="L97">            String currentKey = itKeys.next();</span>
+<span class="fc" id="L98">            List&lt;ImmutableNode&gt; currentResults =</span>
                     new LinkedList&lt;&gt;();
-<span class="fc bfc" id="L99" title="All 2 branches covered.">            for (final ImmutableNode currentRoot : nodes)</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            for (ImmutableNode currentRoot : nodes)</span>
             {
-<span class="fc" id="L101">                getFilteredResults(currentRoot, resolver, handler, currentKey,</span>
+<span class="fc" id="L102">                getFilteredResults(currentRoot, resolver, handler, currentKey,</span>
                         currentResults);
-<span class="fc" id="L103">            }</span>
-<span class="fc" id="L104">            nodes = currentResults;</span>
-<span class="fc" id="L105">        }</span>
+<span class="fc" id="L104">            }</span>
+<span class="fc" id="L105">            nodes = currentResults;</span>
+<span class="fc" id="L106">        }</span>
 
-<span class="fc bfc" id="L107" title="All 2 branches covered.">        return nodes.size() == 1 ? nodes.get(0) : null;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        return (nodes.size() == 1) ? nodes.get(0) : null;</span>
     }
 
     /**
@@ -116,12 +117,12 @@ public class NodeSelector
      * @param subKey the additional key for the sub selector
      * @return the sub {@code NodeSelector} instance
      */
-    public NodeSelector subSelector(final String subKey)
+    public NodeSelector subSelector(String subKey)
     {
-<span class="fc" id="L121">        final List&lt;String&gt; keys = new ArrayList&lt;&gt;(nodeKeys.size() + 1);</span>
-<span class="fc" id="L122">        keys.addAll(nodeKeys);</span>
-<span class="fc" id="L123">        keys.add(subKey);</span>
-<span class="fc" id="L124">        return new NodeSelector(keys);</span>
+<span class="fc" id="L122">        List&lt;String&gt; keys = new ArrayList&lt;&gt;(nodeKeys.size() + 1);</span>
+<span class="fc" id="L123">        keys.addAll(nodeKeys);</span>
+<span class="fc" id="L124">        keys.add(subKey);</span>
+<span class="fc" id="L125">        return new NodeSelector(keys);</span>
     }
 
     /**
@@ -133,19 +134,19 @@ public class NodeSelector
      * @return a flag whether these objects are equal
      */
     @Override
-    public boolean equals(final Object obj)
+    public boolean equals(Object obj)
     {
-<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (this == obj)</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (this == obj)</span>
         {
-<span class="fc" id="L140">            return true;</span>
+<span class="fc" id="L141">            return true;</span>
         }
-<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (!(obj instanceof NodeSelector))</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (!(obj instanceof NodeSelector))</span>
         {
-<span class="fc" id="L144">            return false;</span>
+<span class="fc" id="L145">            return false;</span>
         }
 
-<span class="fc" id="L147">        final NodeSelector c = (NodeSelector) obj;</span>
-<span class="fc" id="L148">        return nodeKeys.equals(c.nodeKeys);</span>
+<span class="fc" id="L148">        NodeSelector c = (NodeSelector) obj;</span>
+<span class="fc" id="L149">        return nodeKeys.equals(c.nodeKeys);</span>
     }
 
     /**
@@ -156,7 +157,7 @@ public class NodeSelector
     @Override
     public int hashCode()
     {
-<span class="fc" id="L159">        return nodeKeys.hashCode();</span>
+<span class="fc" id="L160">        return nodeKeys.hashCode();</span>
     }
 
     /**
@@ -168,7 +169,7 @@ public class NodeSelector
     @Override
     public String toString()
     {
-<span class="fc" id="L171">        return new ToStringBuilder(this).append(&quot;keys&quot;, nodeKeys).toString();</span>
+<span class="fc" id="L172">        return new ToStringBuilder(this).append(&quot;keys&quot;, nodeKeys).toString();</span>
     }
 
     /**
@@ -180,20 +181,20 @@ public class NodeSelector
      * @param key the key
      * @param nodes here the results are stored
      */
-    private void getFilteredResults(final ImmutableNode root,
-            final NodeKeyResolver&lt;ImmutableNode&gt; resolver,
-            final NodeHandler&lt;ImmutableNode&gt; handler, final String key,
-            final List&lt;ImmutableNode&gt; nodes)
+    private void getFilteredResults(ImmutableNode root,
+            NodeKeyResolver&lt;ImmutableNode&gt; resolver,
+            NodeHandler&lt;ImmutableNode&gt; handler, String key,
+            List&lt;ImmutableNode&gt; nodes)
     {
-<span class="fc" id="L188">        final List&lt;QueryResult&lt;ImmutableNode&gt;&gt; results =</span>
-<span class="fc" id="L189">                resolver.resolveKey(root, key, handler);</span>
-<span class="fc bfc" id="L190" title="All 2 branches covered.">        for (final QueryResult&lt;ImmutableNode&gt; result : results)</span>
+<span class="fc" id="L189">        List&lt;QueryResult&lt;ImmutableNode&gt;&gt; results =</span>
+<span class="fc" id="L190">                resolver.resolveKey(root, key, handler);</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        for (QueryResult&lt;ImmutableNode&gt; result : results)</span>
         {
-<span class="fc bfc" id="L192" title="All 2 branches covered.">            if (!result.isAttributeResult())</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">            if (!result.isAttributeResult())</span>
             {
-<span class="fc" id="L194">                nodes.add(result.getNode());</span>
+<span class="fc" id="L195">                nodes.add(result.getNode());</span>
             }
-<span class="fc" id="L196">        }</span>
-<span class="fc" id="L197">    }</span>
+<span class="fc" id="L197">        }</span>
+<span class="fc" id="L198">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

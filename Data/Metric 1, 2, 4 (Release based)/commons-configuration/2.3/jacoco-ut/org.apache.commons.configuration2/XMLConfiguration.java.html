@@ -180,7 +180,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * &lt;p&gt;
  * More information about the basic functionality supported by
  * {@code XMLConfiguration} can be found at the user's guide at
- * &lt;a href=&quot;https://commons.apache.org/proper/commons-configuration/userguide/howto_basicfeatures.html&quot;&gt;
+ * &lt;a href=&quot;http://commons.apache.org/proper/commons-configuration/userguide/howto_basicfeatures.html&quot;&gt;
  * Basic features and AbstractConfiguration&lt;/a&gt;. There is
  * also a separate chapter dealing with
  * &lt;a href=&quot;commons.apache.org/proper/commons-configuration/userguide/howto_xml.html&quot;&gt;
@@ -188,16 +188,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * &lt;/p&gt;
  *
  * @since commons-configuration 1.0
+ * @author J&amp;ouml;rg Schaible
+ * @version $Id$
  */
 public class XMLConfiguration extends BaseHierarchicalConfiguration implements
         FileBasedConfiguration, FileLocatorAware, InputStreamSupport
 {
-    /** Constant for the default indent size. */
-    static final int DEFAULT_INDENT_SIZE = 2;
-
-    /** Constant for output property name used on a transformer to specify the indent amount. */
-    static final String INDENT_AMOUNT_PROPERTY = &quot;{http://xml.apache.org/xslt}indent-amount&quot;;
-
     /** Constant for the default root element name. */
     private static final String DEFAULT_ROOT_NAME = &quot;configuration&quot;;
 
@@ -237,7 +233,7 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
     private boolean schemaValidation;
 
     /** The EntityResolver to use */
-<span class="fc" id="L240">    private EntityResolver entityResolver = new DefaultEntityResolver();</span>
+<span class="fc" id="L236">    private EntityResolver entityResolver = new DefaultEntityResolver();</span>
 
     /** The current file locator. */
     private FileLocator locator;
@@ -247,9 +243,9 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public XMLConfiguration()
     {
-<span class="fc" id="L250">        super();</span>
-<span class="fc" id="L251">        initLogger(new ConfigurationLogger(XMLConfiguration.class));</span>
-<span class="fc" id="L252">    }</span>
+<span class="fc" id="L246">        super();</span>
+<span class="fc" id="L247">        initLogger(new ConfigurationLogger(XMLConfiguration.class));</span>
+<span class="fc" id="L248">    }</span>
 
     /**
      * Creates a new instance of {@code XMLConfiguration} and copies the
@@ -261,13 +257,13 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param c the configuration to copy
      * @since 1.4
      */
-    public XMLConfiguration(final HierarchicalConfiguration&lt;ImmutableNode&gt; c)
+    public XMLConfiguration(HierarchicalConfiguration&lt;ImmutableNode&gt; c)
     {
-<span class="fc" id="L266">        super(c);</span>
-<span class="fc" id="L267">        rootElementName =</span>
-<span class="fc bfc" id="L268" title="All 2 branches covered.">                c != null ? c.getRootElementName() : null;</span>
-<span class="fc" id="L269">        initLogger(new ConfigurationLogger(XMLConfiguration.class));</span>
-<span class="fc" id="L270">    }</span>
+<span class="fc" id="L262">        super(c);</span>
+<span class="fc" id="L263">        rootElementName =</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                (c != null) ? c.getRootElementName() : null;</span>
+<span class="fc" id="L265">        initLogger(new ConfigurationLogger(XMLConfiguration.class));</span>
+<span class="fc" id="L266">    }</span>
 
     /**
      * Returns the name of the root element. If this configuration was loaded
@@ -280,12 +276,15 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
     @Override
     protected String getRootElementNameInternal()
     {
-<span class="fc" id="L283">        final Document doc = getDocument();</span>
-<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (doc == null)</span>
+<span class="fc" id="L279">        Document doc = getDocument();</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">        if (doc == null)</span>
         {
-<span class="fc bfc" id="L286" title="All 2 branches covered.">            return rootElementName == null ? DEFAULT_ROOT_NAME : rootElementName;</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">            return (rootElementName == null) ? DEFAULT_ROOT_NAME : rootElementName;</span>
         }
-<span class="fc" id="L288">        return doc.getDocumentElement().getNodeName();</span>
+        else
+        {
+<span class="fc" id="L286">            return doc.getDocumentElement().getNodeName();</span>
+        }
     }
 
     /**
@@ -300,24 +299,24 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      *
      * @param name the name of the root element
      */
-    public void setRootElementName(final String name)
+    public void setRootElementName(String name)
     {
-<span class="fc" id="L305">        beginRead(true);</span>
+<span class="fc" id="L304">        beginRead(true);</span>
         try
         {
-<span class="fc bfc" id="L308" title="All 2 branches covered.">            if (getDocument() != null)</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">            if (getDocument() != null)</span>
             {
-<span class="fc" id="L310">                throw new UnsupportedOperationException(</span>
+<span class="fc" id="L309">                throw new UnsupportedOperationException(</span>
                         &quot;The name of the root element &quot;
                                 + &quot;cannot be changed when loaded from an XML document!&quot;);
             }
-<span class="fc" id="L314">            rootElementName = name;</span>
+<span class="fc" id="L313">            rootElementName = name;</span>
         }
         finally
         {
-<span class="fc" id="L318">            endRead();</span>
+<span class="fc" id="L317">            endRead();</span>
         }
-<span class="fc" id="L320">    }</span>
+<span class="fc" id="L319">    }</span>
 
     /**
      * Returns the {@code DocumentBuilder} object that is used for
@@ -329,7 +328,7 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public DocumentBuilder getDocumentBuilder()
     {
-<span class="fc" id="L332">        return documentBuilder;</span>
+<span class="fc" id="L331">        return documentBuilder;</span>
     }
 
     /**
@@ -342,10 +341,10 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * default builder will be used
      * @since 1.2
      */
-    public void setDocumentBuilder(final DocumentBuilder documentBuilder)
+    public void setDocumentBuilder(DocumentBuilder documentBuilder)
     {
-<span class="fc" id="L347">        this.documentBuilder = documentBuilder;</span>
-<span class="fc" id="L348">    }</span>
+<span class="fc" id="L346">        this.documentBuilder = documentBuilder;</span>
+<span class="fc" id="L347">    }</span>
 
     /**
      * Returns the public ID of the DOCTYPE declaration from the loaded XML
@@ -357,14 +356,14 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public String getPublicID()
     {
-<span class="fc" id="L360">        beginRead(false);</span>
+<span class="fc" id="L359">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L363">            return publicID;</span>
+<span class="fc" id="L362">            return publicID;</span>
         }
         finally
         {
-<span class="fc" id="L367">            endRead();</span>
+<span class="fc" id="L366">            endRead();</span>
         }
     }
 
@@ -376,18 +375,18 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param publicID the public ID
      * @since 1.3
      */
-    public void setPublicID(final String publicID)
+    public void setPublicID(String publicID)
     {
-<span class="fc" id="L381">        beginWrite(false);</span>
+<span class="fc" id="L380">        beginWrite(false);</span>
         try
         {
-<span class="fc" id="L384">            this.publicID = publicID;</span>
+<span class="fc" id="L383">            this.publicID = publicID;</span>
         }
         finally
         {
-<span class="fc" id="L388">            endWrite();</span>
+<span class="fc" id="L387">            endWrite();</span>
         }
-<span class="fc" id="L390">    }</span>
+<span class="fc" id="L389">    }</span>
 
     /**
      * Returns the system ID of the DOCTYPE declaration from the loaded XML
@@ -399,14 +398,14 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public String getSystemID()
     {
-<span class="fc" id="L402">        beginRead(false);</span>
+<span class="fc" id="L401">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L405">            return systemID;</span>
+<span class="fc" id="L404">            return systemID;</span>
         }
         finally
         {
-<span class="fc" id="L409">            endRead();</span>
+<span class="fc" id="L408">            endRead();</span>
         }
     }
 
@@ -418,18 +417,18 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param systemID the system ID
      * @since 1.3
      */
-    public void setSystemID(final String systemID)
+    public void setSystemID(String systemID)
     {
-<span class="fc" id="L423">        beginWrite(false);</span>
+<span class="fc" id="L422">        beginWrite(false);</span>
         try
         {
-<span class="fc" id="L426">            this.systemID = systemID;</span>
+<span class="fc" id="L425">            this.systemID = systemID;</span>
         }
         finally
         {
-<span class="fc" id="L430">            endWrite();</span>
+<span class="fc" id="L429">            endWrite();</span>
         }
-<span class="fc" id="L432">    }</span>
+<span class="fc" id="L431">    }</span>
 
     /**
      * Returns the value of the validating flag.
@@ -439,7 +438,7 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public boolean isValidating()
     {
-<span class="fc" id="L442">        return validating;</span>
+<span class="fc" id="L441">        return validating;</span>
     }
 
     /**
@@ -450,13 +449,13 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param validating the validating flag
      * @since 1.2
      */
-    public void setValidating(final boolean validating)
+    public void setValidating(boolean validating)
     {
-<span class="fc bfc" id="L455" title="All 2 branches covered.">        if (!schemaValidation)</span>
+<span class="fc bfc" id="L454" title="All 2 branches covered.">        if (!schemaValidation)</span>
         {
-<span class="fc" id="L457">            this.validating = validating;</span>
+<span class="fc" id="L456">            this.validating = validating;</span>
         }
-<span class="fc" id="L459">    }</span>
+<span class="fc" id="L458">    }</span>
 
 
     /**
@@ -467,7 +466,7 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public boolean isSchemaValidation()
     {
-<span class="fc" id="L470">        return schemaValidation;</span>
+<span class="fc" id="L469">        return schemaValidation;</span>
     }
 
     /**
@@ -480,14 +479,14 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param schemaValidation the validating flag
      * @since 1.7
      */
-    public void setSchemaValidation(final boolean schemaValidation)
+    public void setSchemaValidation(boolean schemaValidation)
     {
-<span class="fc" id="L485">        this.schemaValidation = schemaValidation;</span>
-<span class="fc bfc" id="L486" title="All 2 branches covered.">        if (schemaValidation)</span>
+<span class="fc" id="L484">        this.schemaValidation = schemaValidation;</span>
+<span class="fc bfc" id="L485" title="All 2 branches covered.">        if (schemaValidation)</span>
         {
-<span class="fc" id="L488">            this.validating = true;</span>
+<span class="fc" id="L487">            this.validating = true;</span>
         }
-<span class="fc" id="L490">    }</span>
+<span class="fc" id="L489">    }</span>
 
     /**
      * Sets a new EntityResolver. Setting this will cause RegisterEntityId to have no
@@ -495,10 +494,10 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param resolver The EntityResolver to use.
      * @since 1.7
      */
-    public void setEntityResolver(final EntityResolver resolver)
+    public void setEntityResolver(EntityResolver resolver)
     {
-<span class="fc" id="L500">        this.entityResolver = resolver;</span>
-<span class="fc" id="L501">    }</span>
+<span class="fc" id="L499">        this.entityResolver = resolver;</span>
+<span class="fc" id="L500">    }</span>
 
     /**
      * Returns the EntityResolver.
@@ -507,7 +506,7 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public EntityResolver getEntityResolver()
     {
-<span class="fc" id="L510">        return this.entityResolver;</span>
+<span class="fc" id="L509">        return this.entityResolver;</span>
     }
 
     /**
@@ -519,8 +518,8 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public Document getDocument()
     {
-<span class="fc" id="L522">        final XMLDocumentHelper docHelper = getDocumentHelper();</span>
-<span class="fc bfc" id="L523" title="All 2 branches covered.">        return docHelper != null ? docHelper.getDocument() : null;</span>
+<span class="fc" id="L521">        XMLDocumentHelper docHelper = getDocumentHelper();</span>
+<span class="fc bfc" id="L522" title="All 2 branches covered.">        return (docHelper != null) ? docHelper.getDocument() : null;</span>
     }
 
     /**
@@ -530,8 +529,8 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     private XMLDocumentHelper getDocumentHelper()
     {
-<span class="fc" id="L533">        final ReferenceNodeHandler handler = getReferenceHandler();</span>
-<span class="fc" id="L534">        return (XMLDocumentHelper) handler.getReference(handler.getRootNode());</span>
+<span class="fc" id="L532">        ReferenceNodeHandler handler = getReferenceHandler();</span>
+<span class="fc" id="L533">        return (XMLDocumentHelper) handler.getReference(handler.getRootNode());</span>
     }
 
     /**
@@ -541,7 +540,7 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     private ReferenceNodeHandler getReferenceHandler()
     {
-<span class="fc" id="L544">        return getSubConfigurationParentModel().getReferenceNodeHandler();</span>
+<span class="fc" id="L543">        return getSubConfigurationParentModel().getReferenceNodeHandler();</span>
     }
 
     /**
@@ -550,27 +549,27 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param docHelper the helper object with the document to be parsed
      * @param elemRefs a flag whether references to the XML elements should be set
      */
-    private void initProperties(final XMLDocumentHelper docHelper, final boolean elemRefs)
+    private void initProperties(XMLDocumentHelper docHelper, boolean elemRefs)
     {
-<span class="fc" id="L555">        final Document document = docHelper.getDocument();</span>
-<span class="fc" id="L556">        setPublicID(docHelper.getSourcePublicID());</span>
-<span class="fc" id="L557">        setSystemID(docHelper.getSourceSystemID());</span>
+<span class="fc" id="L554">        Document document = docHelper.getDocument();</span>
+<span class="fc" id="L555">        setPublicID(docHelper.getSourcePublicID());</span>
+<span class="fc" id="L556">        setSystemID(docHelper.getSourceSystemID());</span>
 
-<span class="fc" id="L559">        final ImmutableNode.Builder rootBuilder = new ImmutableNode.Builder();</span>
-<span class="fc" id="L560">        final MutableObject&lt;String&gt; rootValue = new MutableObject&lt;&gt;();</span>
-        final Map&lt;ImmutableNode, Object&gt; elemRefMap =
-<span class="fc bfc" id="L562" title="All 2 branches covered.">                elemRefs ? new HashMap&lt;&gt;() : null;</span>
-<span class="fc" id="L563">        final Map&lt;String, String&gt; attributes =</span>
-<span class="fc" id="L564">                constructHierarchy(rootBuilder, rootValue,</span>
-<span class="fc" id="L565">                        document.getDocumentElement(), elemRefMap, true, 0);</span>
-<span class="fc" id="L566">        attributes.remove(ATTR_SPACE_INTERNAL);</span>
-<span class="fc" id="L567">        final ImmutableNode top =</span>
-<span class="fc" id="L568">                rootBuilder.value(rootValue.getValue())</span>
-<span class="fc" id="L569">                        .addAttributes(attributes).create();</span>
-<span class="fc" id="L570">        getSubConfigurationParentModel().mergeRoot(top,</span>
-<span class="fc" id="L571">                document.getDocumentElement().getTagName(), elemRefMap,</span>
-<span class="fc bfc" id="L572" title="All 2 branches covered.">                elemRefs ? docHelper : null, this);</span>
-<span class="fc" id="L573">    }</span>
+<span class="fc" id="L558">        ImmutableNode.Builder rootBuilder = new ImmutableNode.Builder();</span>
+<span class="fc" id="L559">        MutableObject&lt;String&gt; rootValue = new MutableObject&lt;&gt;();</span>
+        Map&lt;ImmutableNode, Object&gt; elemRefMap =
+<span class="fc bfc" id="L561" title="All 2 branches covered.">                elemRefs ? new HashMap&lt;ImmutableNode, Object&gt;() : null;</span>
+<span class="fc" id="L562">        Map&lt;String, String&gt; attributes =</span>
+<span class="fc" id="L563">                constructHierarchy(rootBuilder, rootValue,</span>
+<span class="fc" id="L564">                        document.getDocumentElement(), elemRefMap, true, 0);</span>
+<span class="fc" id="L565">        attributes.remove(ATTR_SPACE_INTERNAL);</span>
+<span class="fc" id="L566">        ImmutableNode top =</span>
+<span class="fc" id="L567">                rootBuilder.value(rootValue.getValue())</span>
+<span class="fc" id="L568">                        .addAttributes(attributes).create();</span>
+<span class="fc" id="L569">        getSubConfigurationParentModel().mergeRoot(top,</span>
+<span class="fc" id="L570">                document.getDocumentElement().getTagName(), elemRefMap,</span>
+<span class="fc bfc" id="L571" title="All 2 branches covered.">                elemRefs ? docHelper : null, this);</span>
+<span class="fc" id="L572">    }</span>
 
     /**
      * Helper method for building the internal storage hierarchy. The XML
@@ -588,60 +587,60 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      *         this map also contains the value of the trim flag for this node
      *         under the key {@value #ATTR_SPACE}
      */
-    private Map&lt;String, String&gt; constructHierarchy(final ImmutableNode.Builder node,
-            final MutableObject&lt;String&gt; refValue, final Element element,
-            final Map&lt;ImmutableNode, Object&gt; elemRefs, final boolean trim, final int level)
+    private Map&lt;String, String&gt; constructHierarchy(ImmutableNode.Builder node,
+            MutableObject&lt;String&gt; refValue, Element element,
+            Map&lt;ImmutableNode, Object&gt; elemRefs, boolean trim, int level)
     {
-<span class="fc" id="L595">        final boolean trimFlag = shouldTrim(element, trim);</span>
-<span class="fc" id="L596">        final Map&lt;String, String&gt; attributes = processAttributes(element);</span>
-<span class="fc" id="L597">        attributes.put(ATTR_SPACE_INTERNAL, String.valueOf(trimFlag));</span>
-<span class="fc" id="L598">        final StringBuilder buffer = new StringBuilder();</span>
-<span class="fc" id="L599">        final NodeList list = element.getChildNodes();</span>
-<span class="fc" id="L600">        boolean hasChildren = false;</span>
+<span class="fc" id="L594">        boolean trimFlag = shouldTrim(element, trim);</span>
+<span class="fc" id="L595">        Map&lt;String, String&gt; attributes = processAttributes(element);</span>
+<span class="fc" id="L596">        attributes.put(ATTR_SPACE_INTERNAL, String.valueOf(trimFlag));</span>
+<span class="fc" id="L597">        StringBuilder buffer = new StringBuilder();</span>
+<span class="fc" id="L598">        NodeList list = element.getChildNodes();</span>
+<span class="fc" id="L599">        boolean hasChildren = false;</span>
 
-<span class="fc bfc" id="L602" title="All 2 branches covered.">        for (int i = 0; i &lt; list.getLength(); i++)</span>
+<span class="fc bfc" id="L601" title="All 2 branches covered.">        for (int i = 0; i &lt; list.getLength(); i++)</span>
         {
-<span class="fc" id="L604">            final org.w3c.dom.Node w3cNode = list.item(i);</span>
-<span class="fc bfc" id="L605" title="All 2 branches covered.">            if (w3cNode instanceof Element)</span>
+<span class="fc" id="L603">            org.w3c.dom.Node w3cNode = list.item(i);</span>
+<span class="fc bfc" id="L604" title="All 2 branches covered.">            if (w3cNode instanceof Element)</span>
             {
-<span class="fc" id="L607">                final Element child = (Element) w3cNode;</span>
-<span class="fc" id="L608">                final ImmutableNode.Builder childNode = new ImmutableNode.Builder();</span>
-<span class="fc" id="L609">                childNode.name(child.getTagName());</span>
-<span class="fc" id="L610">                final MutableObject&lt;String&gt; refChildValue =</span>
+<span class="fc" id="L606">                Element child = (Element) w3cNode;</span>
+<span class="fc" id="L607">                ImmutableNode.Builder childNode = new ImmutableNode.Builder();</span>
+<span class="fc" id="L608">                childNode.name(child.getTagName());</span>
+<span class="fc" id="L609">                MutableObject&lt;String&gt; refChildValue =</span>
                         new MutableObject&lt;&gt;();
-<span class="fc" id="L612">                final Map&lt;String, String&gt; attrmap =</span>
-<span class="fc" id="L613">                        constructHierarchy(childNode, refChildValue, child,</span>
+<span class="fc" id="L611">                Map&lt;String, String&gt; attrmap =</span>
+<span class="fc" id="L612">                        constructHierarchy(childNode, refChildValue, child,</span>
                                 elemRefs, trimFlag, level + 1);
-<span class="fc" id="L615">                final Boolean childTrim = Boolean.valueOf(attrmap.remove(ATTR_SPACE_INTERNAL));</span>
-<span class="fc" id="L616">                childNode.addAttributes(attrmap);</span>
-<span class="fc" id="L617">                final ImmutableNode newChild =</span>
-<span class="fc" id="L618">                        createChildNodeWithValue(node, childNode, child,</span>
-<span class="fc" id="L619">                                refChildValue.getValue(),</span>
-<span class="fc" id="L620">                                childTrim.booleanValue(), attrmap, elemRefs);</span>
-<span class="fc bfc" id="L621" title="All 4 branches covered.">                if (elemRefs != null &amp;&amp; !elemRefs.containsKey(newChild))</span>
+<span class="fc" id="L614">                Boolean childTrim = Boolean.valueOf(attrmap.remove(ATTR_SPACE_INTERNAL));</span>
+<span class="fc" id="L615">                childNode.addAttributes(attrmap);</span>
+<span class="fc" id="L616">                ImmutableNode newChild =</span>
+<span class="fc" id="L617">                        createChildNodeWithValue(node, childNode, child,</span>
+<span class="fc" id="L618">                                refChildValue.getValue(),</span>
+<span class="fc" id="L619">                                childTrim.booleanValue(), attrmap, elemRefs);</span>
+<span class="fc bfc" id="L620" title="All 4 branches covered.">                if (elemRefs != null &amp;&amp; !elemRefs.containsKey(newChild))</span>
                 {
-<span class="fc" id="L623">                    elemRefs.put(newChild, child);</span>
+<span class="fc" id="L622">                    elemRefs.put(newChild, child);</span>
                 }
-<span class="fc" id="L625">                hasChildren = true;</span>
-<span class="fc" id="L626">            }</span>
-<span class="fc bfc" id="L627" title="All 2 branches covered.">            else if (w3cNode instanceof Text)</span>
+<span class="fc" id="L624">                hasChildren = true;</span>
+<span class="fc" id="L625">            }</span>
+<span class="fc bfc" id="L626" title="All 2 branches covered.">            else if (w3cNode instanceof Text)</span>
             {
-<span class="fc" id="L629">                final Text data = (Text) w3cNode;</span>
-<span class="fc" id="L630">                buffer.append(data.getData());</span>
+<span class="fc" id="L628">                Text data = (Text) w3cNode;</span>
+<span class="fc" id="L629">                buffer.append(data.getData());</span>
             }
         }
 
-<span class="fc" id="L634">        boolean childrenFlag = false;</span>
-<span class="fc bfc" id="L635" title="All 4 branches covered.">        if (hasChildren || trimFlag)</span>
+<span class="fc" id="L633">        boolean childrenFlag = false;</span>
+<span class="fc bfc" id="L634" title="All 4 branches covered.">        if (hasChildren || trimFlag)</span>
         {
-<span class="fc bfc" id="L637" title="All 4 branches covered.">            childrenFlag = hasChildren || attributes.size() &gt; 1;</span>
+<span class="fc bfc" id="L636" title="All 4 branches covered.">            childrenFlag = hasChildren || attributes.size() &gt; 1;</span>
         }
-<span class="fc" id="L639">        final String text = determineValue(buffer.toString(), childrenFlag, trimFlag);</span>
-<span class="fc bfc" id="L640" title="All 6 branches covered.">        if (text.length() &gt; 0 || (!childrenFlag &amp;&amp; level != 0))</span>
+<span class="fc" id="L638">        String text = determineValue(buffer.toString(), childrenFlag, trimFlag);</span>
+<span class="fc bfc" id="L639" title="All 6 branches covered.">        if (text.length() &gt; 0 || (!childrenFlag &amp;&amp; level != 0))</span>
         {
-<span class="fc" id="L642">            refValue.setValue(text);</span>
+<span class="fc" id="L641">            refValue.setValue(text);</span>
         }
-<span class="fc" id="L644">        return attributes;</span>
+<span class="fc" id="L643">        return attributes;</span>
     }
 
     /**
@@ -656,12 +655,12 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param trimFlag the trim flag
      * @return the value to be stored for this node
      */
-    private static String determineValue(final String content, final boolean hasChildren,
-            final boolean trimFlag)
+    private static String determineValue(String content, boolean hasChildren,
+            boolean trimFlag)
     {
-<span class="fc bfc" id="L662" title="All 2 branches covered.">        final boolean shouldTrim =</span>
-<span class="fc bfc" id="L663" title="All 4 branches covered.">                trimFlag || (StringUtils.isBlank(content) &amp;&amp; hasChildren);</span>
-<span class="fc bfc" id="L664" title="All 2 branches covered.">        return shouldTrim ? content.trim() : content;</span>
+<span class="fc bfc" id="L661" title="All 2 branches covered.">        boolean shouldTrim =</span>
+<span class="fc bfc" id="L662" title="All 4 branches covered.">                trimFlag || (StringUtils.isBlank(content) &amp;&amp; hasChildren);</span>
+<span class="fc bfc" id="L663" title="All 2 branches covered.">        return shouldTrim ? content.trim() : content;</span>
     }
 
     /**
@@ -671,22 +670,22 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param element the current XML element
      * @return a map with all attribute values extracted for the current node
      */
-    private static Map&lt;String, String&gt; processAttributes(final Element element)
+    private static Map&lt;String, String&gt; processAttributes(Element element)
     {
-<span class="fc" id="L676">        final NamedNodeMap attributes = element.getAttributes();</span>
-<span class="fc" id="L677">        final Map&lt;String, String&gt; attrmap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L675">        NamedNodeMap attributes = element.getAttributes();</span>
+<span class="fc" id="L676">        Map&lt;String, String&gt; attrmap = new HashMap&lt;&gt;();</span>
 
-<span class="fc bfc" id="L679" title="All 2 branches covered.">        for (int i = 0; i &lt; attributes.getLength(); ++i)</span>
+<span class="fc bfc" id="L678" title="All 2 branches covered.">        for (int i = 0; i &lt; attributes.getLength(); ++i)</span>
         {
-<span class="fc" id="L681">            final org.w3c.dom.Node w3cNode = attributes.item(i);</span>
-<span class="pc bpc" id="L682" title="1 of 2 branches missed.">            if (w3cNode instanceof Attr)</span>
+<span class="fc" id="L680">            org.w3c.dom.Node w3cNode = attributes.item(i);</span>
+<span class="pc bpc" id="L681" title="1 of 2 branches missed.">            if (w3cNode instanceof Attr)</span>
             {
-<span class="fc" id="L684">                final Attr attr = (Attr) w3cNode;</span>
-<span class="fc" id="L685">                attrmap.put(attr.getName(), attr.getValue());</span>
+<span class="fc" id="L683">                Attr attr = (Attr) w3cNode;</span>
+<span class="fc" id="L684">                attrmap.put(attr.getName(), attr.getValue());</span>
             }
         }
 
-<span class="fc" id="L689">        return attrmap;</span>
+<span class="fc" id="L688">        return attrmap;</span>
     }
 
     /**
@@ -705,60 +704,60 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      *        &lt;b&gt;null&lt;/b&gt;, then reference objects are irrelevant
      * @return the first child node added to the parent
      */
-    private ImmutableNode createChildNodeWithValue(final ImmutableNode.Builder parent,
-            final ImmutableNode.Builder child, final Element elem, final String value,
-            final boolean trim, final Map&lt;String, String&gt; attrmap,
-            final Map&lt;ImmutableNode, Object&gt; elemRefs)
+    private ImmutableNode createChildNodeWithValue(ImmutableNode.Builder parent,
+            ImmutableNode.Builder child, Element elem, String value,
+            boolean trim, Map&lt;String, String&gt; attrmap,
+            Map&lt;ImmutableNode, Object&gt; elemRefs)
     {
         ImmutableNode addedChildNode;
         Collection&lt;String&gt; values;
 
-<span class="fc bfc" id="L716" title="All 2 branches covered.">        if (value != null)</span>
+<span class="fc bfc" id="L715" title="All 2 branches covered.">        if (value != null)</span>
         {
-<span class="fc" id="L718">            values = getListDelimiterHandler().split(value, trim);</span>
+<span class="fc" id="L717">            values = getListDelimiterHandler().split(value, trim);</span>
         }
         else
         {
-<span class="fc" id="L722">            values = Collections.emptyList();</span>
+<span class="fc" id="L721">            values = Collections.emptyList();</span>
         }
 
-<span class="fc bfc" id="L725" title="All 2 branches covered.">        if (values.size() &gt; 1)</span>
+<span class="fc bfc" id="L724" title="All 2 branches covered.">        if (values.size() &gt; 1)</span>
         {
-<span class="fc bfc" id="L727" title="All 2 branches covered.">            final Map&lt;ImmutableNode, Object&gt; refs = isSingleElementList(elem) ? elemRefs : null;</span>
-<span class="fc" id="L728">            final Iterator&lt;String&gt; it = values.iterator();</span>
+<span class="fc bfc" id="L726" title="All 2 branches covered.">            Map&lt;ImmutableNode, Object&gt; refs = isSingleElementList(elem) ? elemRefs : null;</span>
+<span class="fc" id="L727">            Iterator&lt;String&gt; it = values.iterator();</span>
             // Create new node for the original child's first value
-<span class="fc" id="L730">            child.value(it.next());</span>
-<span class="fc" id="L731">            addedChildNode = child.create();</span>
-<span class="fc" id="L732">            parent.addChild(addedChildNode);</span>
-<span class="fc" id="L733">            XMLListReference.assignListReference(refs, addedChildNode, elem);</span>
+<span class="fc" id="L729">            child.value(it.next());</span>
+<span class="fc" id="L730">            addedChildNode = child.create();</span>
+<span class="fc" id="L731">            parent.addChild(addedChildNode);</span>
+<span class="fc" id="L732">            XMLListReference.assignListReference(refs, addedChildNode, elem);</span>
 
             // add multiple new children
-<span class="fc bfc" id="L736" title="All 2 branches covered.">            while (it.hasNext())</span>
+<span class="fc bfc" id="L735" title="All 2 branches covered.">            while (it.hasNext())</span>
             {
-<span class="fc" id="L738">                final ImmutableNode.Builder c = new ImmutableNode.Builder();</span>
-<span class="fc" id="L739">                c.name(addedChildNode.getNodeName());</span>
-<span class="fc" id="L740">                c.value(it.next());</span>
-<span class="fc" id="L741">                c.addAttributes(attrmap);</span>
-<span class="fc" id="L742">                final ImmutableNode newChild = c.create();</span>
-<span class="fc" id="L743">                parent.addChild(newChild);</span>
-<span class="fc" id="L744">                XMLListReference.assignListReference(refs, newChild, null);</span>
-<span class="fc" id="L745">            }</span>
-<span class="fc" id="L746">        }</span>
-<span class="fc bfc" id="L747" title="All 2 branches covered.">        else if (values.size() == 1)</span>
+<span class="fc" id="L737">                ImmutableNode.Builder c = new ImmutableNode.Builder();</span>
+<span class="fc" id="L738">                c.name(addedChildNode.getNodeName());</span>
+<span class="fc" id="L739">                c.value(it.next());</span>
+<span class="fc" id="L740">                c.addAttributes(attrmap);</span>
+<span class="fc" id="L741">                ImmutableNode newChild = c.create();</span>
+<span class="fc" id="L742">                parent.addChild(newChild);</span>
+<span class="fc" id="L743">                XMLListReference.assignListReference(refs, newChild, null);</span>
+<span class="fc" id="L744">            }</span>
+<span class="fc" id="L745">        }</span>
+<span class="fc bfc" id="L746" title="All 2 branches covered.">        else if (values.size() == 1)</span>
         {
             // we will have to replace the value because it might
             // contain escaped delimiters
-<span class="fc" id="L751">            child.value(values.iterator().next());</span>
-<span class="fc" id="L752">            addedChildNode = child.create();</span>
-<span class="fc" id="L753">            parent.addChild(addedChildNode);</span>
+<span class="fc" id="L750">            child.value(values.iterator().next());</span>
+<span class="fc" id="L751">            addedChildNode = child.create();</span>
+<span class="fc" id="L752">            parent.addChild(addedChildNode);</span>
         }
         else
         {
-<span class="fc" id="L757">            addedChildNode = child.create();</span>
-<span class="fc" id="L758">            parent.addChild(addedChildNode);</span>
+<span class="fc" id="L756">            addedChildNode = child.create();</span>
+<span class="fc" id="L757">            parent.addChild(addedChildNode);</span>
         }
 
-<span class="fc" id="L761">        return addedChildNode;</span>
+<span class="fc" id="L760">        return addedChildNode;</span>
     }
 
     /**
@@ -768,10 +767,10 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param element the element to be checked
      * @return a flag whether this is the only element defining the list
      */
-    private static boolean isSingleElementList(final Element element)
+    private static boolean isSingleElementList(Element element)
     {
-<span class="fc" id="L773">        final Node parentNode = element.getParentNode();</span>
-<span class="fc bfc" id="L774" title="All 2 branches covered.">        return countChildElements(parentNode, element.getTagName()) == 1;</span>
+<span class="fc" id="L772">        Node parentNode = element.getParentNode();</span>
+<span class="fc bfc" id="L773" title="All 2 branches covered.">        return countChildElements(parentNode, element.getTagName()) == 1;</span>
     }
 
     /**
@@ -782,22 +781,22 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param name the name in question
      * @return the number of child elements with this name
      */
-    private static int countChildElements(final Node parent, final String name)
+    private static int countChildElements(Node parent, String name)
     {
-<span class="fc" id="L787">        final NodeList childNodes = parent.getChildNodes();</span>
-<span class="fc" id="L788">        int count = 0;</span>
-<span class="fc bfc" id="L789" title="All 2 branches covered.">        for (int i = 0; i &lt; childNodes.getLength(); i++)</span>
+<span class="fc" id="L786">        NodeList childNodes = parent.getChildNodes();</span>
+<span class="fc" id="L787">        int count = 0;</span>
+<span class="fc bfc" id="L788" title="All 2 branches covered.">        for (int i = 0; i &lt; childNodes.getLength(); i++)</span>
         {
-<span class="fc" id="L791">            final Node item = childNodes.item(i);</span>
-<span class="fc bfc" id="L792" title="All 2 branches covered.">            if (item instanceof Element)</span>
+<span class="fc" id="L790">            Node item = childNodes.item(i);</span>
+<span class="fc bfc" id="L791" title="All 2 branches covered.">            if (item instanceof Element)</span>
             {
-<span class="fc bfc" id="L794" title="All 2 branches covered.">                if (name.equals(((Element) item).getTagName()))</span>
+<span class="fc bfc" id="L793" title="All 2 branches covered.">                if (name.equals(((Element) item).getTagName()))</span>
                 {
-<span class="fc" id="L796">                    count++;</span>
+<span class="fc" id="L795">                    count++;</span>
                 }
             }
         }
-<span class="fc" id="L800">        return count;</span>
+<span class="fc" id="L799">        return count;</span>
     }
 
     /**
@@ -811,15 +810,18 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param currentTrim the current trim flag
      * @return a flag whether the content of this element should be trimmed
      */
-    private static boolean shouldTrim(final Element element, final boolean currentTrim)
+    private static boolean shouldTrim(Element element, boolean currentTrim)
     {
-<span class="fc" id="L816">        final Attr attr = element.getAttributeNode(ATTR_SPACE);</span>
+<span class="fc" id="L815">        Attr attr = element.getAttributeNode(ATTR_SPACE);</span>
 
-<span class="fc bfc" id="L818" title="All 2 branches covered.">        if (attr == null)</span>
+<span class="fc bfc" id="L817" title="All 2 branches covered.">        if (attr == null)</span>
         {
-<span class="fc" id="L820">            return currentTrim;</span>
+<span class="fc" id="L819">            return currentTrim;</span>
         }
-<span class="fc bfc" id="L822" title="All 2 branches covered.">        return !VALUE_PRESERVE.equals(attr.getValue());</span>
+        else
+        {
+<span class="fc bfc" id="L823" title="All 2 branches covered.">            return !VALUE_PRESERVE.equals(attr.getValue());</span>
+        }
     }
 
     /**
@@ -838,44 +840,47 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
     protected DocumentBuilder createDocumentBuilder()
             throws ParserConfigurationException
     {
-<span class="fc bfc" id="L841" title="All 2 branches covered.">        if (getDocumentBuilder() != null)</span>
+<span class="fc bfc" id="L843" title="All 2 branches covered.">        if (getDocumentBuilder() != null)</span>
         {
-<span class="fc" id="L843">            return getDocumentBuilder();</span>
+<span class="fc" id="L845">            return getDocumentBuilder();</span>
         }
-        final DocumentBuilderFactory factory = DocumentBuilderFactory
-<span class="fc" id="L846">                .newInstance();</span>
-<span class="fc bfc" id="L847" title="All 2 branches covered.">        if (isValidating())</span>
+        else
         {
-<span class="fc" id="L849">            factory.setValidating(true);</span>
-<span class="fc bfc" id="L850" title="All 2 branches covered.">            if (isSchemaValidation())</span>
+            DocumentBuilderFactory factory = DocumentBuilderFactory
+<span class="fc" id="L850">                    .newInstance();</span>
+<span class="fc bfc" id="L851" title="All 2 branches covered.">            if (isValidating())</span>
             {
-<span class="fc" id="L852">                factory.setNamespaceAware(true);</span>
-<span class="fc" id="L853">                factory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);</span>
-            }
-        }
-
-<span class="fc" id="L857">        final DocumentBuilder result = factory.newDocumentBuilder();</span>
-<span class="fc" id="L858">        result.setEntityResolver(this.entityResolver);</span>
-
-<span class="fc bfc" id="L860" title="All 2 branches covered.">        if (isValidating())</span>
-        {
-            // register an error handler which detects validation errors
-<span class="fc" id="L863">            result.setErrorHandler(new DefaultHandler()</span>
-<span class="fc" id="L864">            {</span>
-                @Override
-                public void error(final SAXParseException ex) throws SAXException
+<span class="fc" id="L853">                factory.setValidating(true);</span>
+<span class="fc bfc" id="L854" title="All 2 branches covered.">                if (isSchemaValidation())</span>
                 {
-<span class="fc" id="L868">                    throw ex;</span>
+<span class="fc" id="L856">                    factory.setNamespaceAware(true);</span>
+<span class="fc" id="L857">                    factory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);</span>
                 }
-            });
+            }
+
+<span class="fc" id="L861">            DocumentBuilder result = factory.newDocumentBuilder();</span>
+<span class="fc" id="L862">            result.setEntityResolver(this.entityResolver);</span>
+
+<span class="fc bfc" id="L864" title="All 2 branches covered.">            if (isValidating())</span>
+            {
+                // register an error handler which detects validation errors
+<span class="fc" id="L867">                result.setErrorHandler(new DefaultHandler()</span>
+<span class="fc" id="L868">                {</span>
+                    @Override
+                    public void error(SAXParseException ex) throws SAXException
+                    {
+<span class="fc" id="L872">                        throw ex;</span>
+                    }
+                });
+            }
+<span class="fc" id="L876">            return result;</span>
         }
-<span class="fc" id="L872">        return result;</span>
     }
 
     /**
      * Creates and initializes the transformer used for save operations. This
      * base implementation initializes all of the default settings like
-     * indentation mode and the DOCTYPE. Derived classes may overload this method
+     * indention mode and the DOCTYPE. Derived classes may overload this method
      * if they have specific needs.
      *
      * @return the transformer to use for a save operation
@@ -884,24 +889,25 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     protected Transformer createTransformer() throws ConfigurationException
     {
-<span class="fc" id="L887">        final Transformer transformer = XMLDocumentHelper.createTransformer();</span>
+<span class="fc" id="L892">        Transformer transformer = XMLDocumentHelper.createTransformer();</span>
 
-<span class="fc" id="L889">        transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
-<span class="fc" id="L890">        transformer.setOutputProperty(INDENT_AMOUNT_PROPERTY, Integer.toString(DEFAULT_INDENT_SIZE));</span>
-<span class="fc bfc" id="L891" title="All 4 branches covered.">        if (locator != null &amp;&amp; locator.getEncoding() != null)</span>
+<span class="fc" id="L894">        transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="fc bfc" id="L895" title="All 2 branches covered.">        if (locator.getEncoding() != null)</span>
         {
-<span class="fc" id="L893">            transformer.setOutputProperty(OutputKeys.ENCODING, locator.getEncoding());</span>
+<span class="fc" id="L897">            transformer.setOutputProperty(OutputKeys.ENCODING, locator.getEncoding());</span>
         }
-<span class="fc bfc" id="L895" title="All 2 branches covered.">        if (publicID != null)</span>
+<span class="fc bfc" id="L899" title="All 2 branches covered.">        if (publicID != null)</span>
         {
-<span class="fc" id="L897">            transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, publicID);</span>
+<span class="fc" id="L901">            transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC,</span>
+                    publicID);
         }
-<span class="fc bfc" id="L899" title="All 2 branches covered.">        if (systemID != null)</span>
+<span class="fc bfc" id="L904" title="All 2 branches covered.">        if (systemID != null)</span>
         {
-<span class="fc" id="L901">            transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, systemID);</span>
+<span class="fc" id="L906">            transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,</span>
+                    systemID);
         }
 
-<span class="fc" id="L904">        return transformer;</span>
+<span class="fc" id="L910">        return transformer;</span>
     }
 
     /**
@@ -912,21 +918,21 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     private Document createDocument() throws ConfigurationException
     {
-<span class="fc" id="L915">        final ReferenceNodeHandler handler = getReferenceHandler();</span>
-<span class="fc" id="L916">        final XMLDocumentHelper docHelper =</span>
-<span class="fc" id="L917">                (XMLDocumentHelper) handler.getReference(handler.getRootNode());</span>
-        final XMLDocumentHelper newHelper =
-<span class="fc bfc" id="L919" title="All 2 branches covered.">                docHelper == null ? XMLDocumentHelper</span>
-<span class="fc" id="L920">                        .forNewDocument(getRootElementName()) : docHelper</span>
-<span class="fc" id="L921">                        .createCopy();</span>
+<span class="fc" id="L921">        ReferenceNodeHandler handler = getReferenceHandler();</span>
+<span class="fc" id="L922">        XMLDocumentHelper docHelper =</span>
+<span class="fc" id="L923">                (XMLDocumentHelper) handler.getReference(handler.getRootNode());</span>
+        XMLDocumentHelper newHelper =
+<span class="fc bfc" id="L925" title="All 2 branches covered.">                (docHelper == null) ? XMLDocumentHelper</span>
+<span class="fc" id="L926">                        .forNewDocument(getRootElementName()) : docHelper</span>
+<span class="fc" id="L927">                        .createCopy();</span>
 
-<span class="fc" id="L923">        final XMLBuilderVisitor builder =</span>
-<span class="fc" id="L924">                new XMLBuilderVisitor(newHelper, getListDelimiterHandler());</span>
-<span class="fc" id="L925">        builder.handleRemovedNodes(handler);</span>
-<span class="fc" id="L926">        builder.processDocument(handler);</span>
-<span class="fc" id="L927">        initRootElementText(newHelper.getDocument(), getModel()</span>
-<span class="fc" id="L928">                .getNodeHandler().getRootNode().getValue());</span>
-<span class="fc" id="L929">        return newHelper.getDocument();</span>
+<span class="fc" id="L929">        XMLBuilderVisitor builder =</span>
+<span class="fc" id="L930">                new XMLBuilderVisitor(newHelper, getListDelimiterHandler());</span>
+<span class="fc" id="L931">        builder.handleRemovedNodes(handler);</span>
+<span class="fc" id="L932">        builder.processDocument(handler);</span>
+<span class="fc" id="L933">        initRootElementText(newHelper.getDocument(), getModel()</span>
+<span class="fc" id="L934">                .getNodeHandler().getRootNode().getValue());</span>
+<span class="fc" id="L935">        return newHelper.getDocument();</span>
     }
 
     /**
@@ -935,36 +941,36 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param doc the document
      * @param value the new text to be set
      */
-    private void initRootElementText(final Document doc, final Object value)
+    private void initRootElementText(Document doc, Object value)
     {
-<span class="fc" id="L940">        final Element elem = doc.getDocumentElement();</span>
-<span class="fc" id="L941">        final NodeList children = elem.getChildNodes();</span>
+<span class="fc" id="L946">        Element elem = doc.getDocumentElement();</span>
+<span class="fc" id="L947">        NodeList children = elem.getChildNodes();</span>
 
         // Remove all existing text nodes
-<span class="fc bfc" id="L944" title="All 2 branches covered.">        for (int i = 0; i &lt; children.getLength(); i++)</span>
+<span class="fc bfc" id="L950" title="All 2 branches covered.">        for (int i = 0; i &lt; children.getLength(); i++)</span>
         {
-<span class="fc" id="L946">            final org.w3c.dom.Node nd = children.item(i);</span>
-<span class="fc bfc" id="L947" title="All 2 branches covered.">            if (nd.getNodeType() == org.w3c.dom.Node.TEXT_NODE)</span>
+<span class="fc" id="L952">            org.w3c.dom.Node nd = children.item(i);</span>
+<span class="fc bfc" id="L953" title="All 2 branches covered.">            if (nd.getNodeType() == org.w3c.dom.Node.TEXT_NODE)</span>
             {
-<span class="fc" id="L949">                elem.removeChild(nd);</span>
+<span class="fc" id="L955">                elem.removeChild(nd);</span>
             }
         }
 
-<span class="fc bfc" id="L953" title="All 2 branches covered.">        if (value != null)</span>
+<span class="fc bfc" id="L959" title="All 2 branches covered.">        if (value != null)</span>
         {
             // Add a new text node
-<span class="fc" id="L956">            elem.appendChild(doc.createTextNode(String.valueOf(value)));</span>
+<span class="fc" id="L962">            elem.appendChild(doc.createTextNode(String.valueOf(value)));</span>
         }
-<span class="fc" id="L958">    }</span>
+<span class="fc" id="L964">    }</span>
 
     /**
      * {@inheritDoc} Stores the passed in locator for the upcoming IO operation.
      */
     @Override
-    public void initFileLocator(final FileLocator loc)
+    public void initFileLocator(FileLocator loc)
     {
-<span class="fc" id="L966">        locator = loc;</span>
-<span class="fc" id="L967">    }</span>
+<span class="fc" id="L972">        locator = loc;</span>
+<span class="fc" id="L973">    }</span>
 
     /**
      * Loads the configuration from the given reader.
@@ -977,10 +983,10 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @throws IOException if an IO error occurs
      */
     @Override
-    public void read(final Reader in) throws ConfigurationException, IOException
+    public void read(Reader in) throws ConfigurationException, IOException
     {
-<span class="fc" id="L982">        load(new InputSource(in));</span>
-<span class="fc" id="L983">    }</span>
+<span class="fc" id="L988">        load(new InputSource(in));</span>
+<span class="fc" id="L989">    }</span>
 
     /**
      * Loads the configuration from the given input stream. This is analogous to
@@ -994,10 +1000,10 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @throws IOException if an IO error occurs
      */
     @Override
-    public void read(final InputStream in) throws ConfigurationException, IOException
+    public void read(InputStream in) throws ConfigurationException, IOException
     {
-<span class="fc" id="L999">        load(new InputSource(in));</span>
-<span class="fc" id="L1000">    }</span>
+<span class="fc" id="L1005">        load(new InputSource(in));</span>
+<span class="fc" id="L1006">    }</span>
 
     /**
      * Loads a configuration file from the specified input source.
@@ -1005,39 +1011,39 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @param source the input source
      * @throws ConfigurationException if an error occurs
      */
-    private void load(final InputSource source) throws ConfigurationException
+    private void load(InputSource source) throws ConfigurationException
     {
-<span class="fc bfc" id="L1010" title="All 2 branches covered.">        if (locator == null)</span>
+<span class="fc bfc" id="L1016" title="All 2 branches covered.">        if (locator == null)</span>
         {
-<span class="fc" id="L1012">            throw new ConfigurationException(&quot;Load operation not properly &quot;</span>
+<span class="fc" id="L1018">            throw new ConfigurationException(&quot;Load operation not properly &quot;</span>
                     + &quot;initialized! Do not call read(InputStream) directly,&quot;
                     + &quot; but use a FileHandler to load a configuration.&quot;);
         }
 
         try
         {
-<span class="fc" id="L1019">            final URL sourceURL = locator.getSourceURL();</span>
-<span class="fc bfc" id="L1020" title="All 2 branches covered.">            if (sourceURL != null)</span>
+<span class="fc" id="L1025">            URL sourceURL = locator.getSourceURL();</span>
+<span class="fc bfc" id="L1026" title="All 2 branches covered.">            if (sourceURL != null)</span>
             {
-<span class="fc" id="L1022">                source.setSystemId(sourceURL.toString());</span>
+<span class="fc" id="L1028">                source.setSystemId(sourceURL.toString());</span>
             }
 
-<span class="fc" id="L1025">            final DocumentBuilder builder = createDocumentBuilder();</span>
-<span class="fc" id="L1026">            final Document newDocument = builder.parse(source);</span>
-<span class="fc" id="L1027">            final Document oldDocument = getDocument();</span>
-<span class="fc bfc" id="L1028" title="All 2 branches covered.">            initProperties(XMLDocumentHelper.forSourceDocument(newDocument),</span>
+<span class="fc" id="L1031">            DocumentBuilder builder = createDocumentBuilder();</span>
+<span class="fc" id="L1032">            Document newDocument = builder.parse(source);</span>
+<span class="fc" id="L1033">            Document oldDocument = getDocument();</span>
+<span class="fc bfc" id="L1034" title="All 2 branches covered.">            initProperties(XMLDocumentHelper.forSourceDocument(newDocument),</span>
                     oldDocument == null);
         }
-<span class="fc" id="L1031">        catch (final SAXParseException spe)</span>
+<span class="fc" id="L1037">        catch (SAXParseException spe)</span>
         {
-<span class="fc" id="L1033">            throw new ConfigurationException(&quot;Error parsing &quot; + source.getSystemId(), spe);</span>
+<span class="fc" id="L1039">            throw new ConfigurationException(&quot;Error parsing &quot; + source.getSystemId(), spe);</span>
         }
-<span class="nc" id="L1035">        catch (final Exception e)</span>
+<span class="nc" id="L1041">        catch (Exception e)</span>
         {
-<span class="nc" id="L1037">            this.getLogger().debug(&quot;Unable to load the configuration: &quot; + e);</span>
-<span class="nc" id="L1038">            throw new ConfigurationException(&quot;Unable to load the configuration&quot;, e);</span>
-<span class="fc" id="L1039">        }</span>
-<span class="fc" id="L1040">    }</span>
+<span class="nc" id="L1043">            this.getLogger().debug(&quot;Unable to load the configuration: &quot; + e);</span>
+<span class="nc" id="L1044">            throw new ConfigurationException(&quot;Unable to load the configuration&quot;, e);</span>
+<span class="fc" id="L1045">        }</span>
+<span class="fc" id="L1046">    }</span>
 
     /**
      * Saves the configuration to the specified writer.
@@ -1047,25 +1053,13 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      * @throws IOException if an IO error occurs
      */
     @Override
-    public void write(final Writer writer) throws ConfigurationException, IOException
+    public void write(Writer writer) throws ConfigurationException, IOException
     {
-<span class="fc" id="L1052">        write(writer, createTransformer());</span>
-<span class="fc" id="L1053">    }</span>
-
-    /**
-     * Saves the configuration to the specified writer.
-     *
-     * @param writer the writer used to save the configuration.
-     * @param transformer How to transform this configuration.
-     * @throws ConfigurationException if an error occurs.
-     * @since 2.7.0
-     */
-    public void write(final Writer writer, final Transformer transformer) throws ConfigurationException
-    {
-<span class="fc" id="L1065">        final Source source = new DOMSource(createDocument());</span>
-<span class="fc" id="L1066">        final Result result = new StreamResult(writer);</span>
-<span class="fc" id="L1067">        XMLDocumentHelper.transform(transformer, source, result);</span>
-<span class="fc" id="L1068">    }</span>
+<span class="fc" id="L1058">        Transformer transformer = createTransformer();</span>
+<span class="fc" id="L1059">        Source source = new DOMSource(createDocument());</span>
+<span class="fc" id="L1060">        Result result = new StreamResult(writer);</span>
+<span class="fc" id="L1061">        XMLDocumentHelper.transform(transformer, source, result);</span>
+<span class="fc" id="L1062">    }</span>
 
     /**
      * Validate the document against the Schema.
@@ -1073,35 +1067,35 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
      */
     public void validate() throws ConfigurationException
     {
-<span class="fc" id="L1076">        beginWrite(false);</span>
+<span class="fc" id="L1070">        beginWrite(false);</span>
         try
         {
-<span class="fc" id="L1079">            final Transformer transformer = createTransformer();</span>
-<span class="fc" id="L1080">            final Source source = new DOMSource(createDocument());</span>
-<span class="fc" id="L1081">            final StringWriter writer = new StringWriter();</span>
-<span class="fc" id="L1082">            final Result result = new StreamResult(writer);</span>
-<span class="fc" id="L1083">            XMLDocumentHelper.transform(transformer, source, result);</span>
-<span class="fc" id="L1084">            final Reader reader = new StringReader(writer.getBuffer().toString());</span>
-<span class="fc" id="L1085">            final DocumentBuilder builder = createDocumentBuilder();</span>
-<span class="fc" id="L1086">            builder.parse(new InputSource(reader));</span>
+<span class="fc" id="L1073">            Transformer transformer = createTransformer();</span>
+<span class="fc" id="L1074">            Source source = new DOMSource(createDocument());</span>
+<span class="fc" id="L1075">            StringWriter writer = new StringWriter();</span>
+<span class="fc" id="L1076">            Result result = new StreamResult(writer);</span>
+<span class="fc" id="L1077">            XMLDocumentHelper.transform(transformer, source, result);</span>
+<span class="fc" id="L1078">            Reader reader = new StringReader(writer.getBuffer().toString());</span>
+<span class="fc" id="L1079">            DocumentBuilder builder = createDocumentBuilder();</span>
+<span class="fc" id="L1080">            builder.parse(new InputSource(reader));</span>
         }
-<span class="fc" id="L1088">        catch (final SAXException e)</span>
+<span class="fc" id="L1082">        catch (SAXException e)</span>
         {
-<span class="fc" id="L1090">            throw new ConfigurationException(&quot;Validation failed&quot;, e);</span>
+<span class="fc" id="L1084">            throw new ConfigurationException(&quot;Validation failed&quot;, e);</span>
         }
-<span class="nc" id="L1092">        catch (final IOException e)</span>
+<span class="nc" id="L1086">        catch (IOException e)</span>
         {
-<span class="nc" id="L1094">            throw new ConfigurationException(&quot;Validation failed&quot;, e);</span>
+<span class="nc" id="L1088">            throw new ConfigurationException(&quot;Validation failed&quot;, e);</span>
         }
-<span class="nc" id="L1096">        catch (final ParserConfigurationException pce)</span>
+<span class="nc" id="L1090">        catch (ParserConfigurationException pce)</span>
         {
-<span class="nc" id="L1098">            throw new ConfigurationException(&quot;Validation failed&quot;, pce);</span>
+<span class="nc" id="L1092">            throw new ConfigurationException(&quot;Validation failed&quot;, pce);</span>
         }
         finally
         {
-<span class="fc" id="L1102">            endWrite();</span>
+<span class="fc" id="L1096">            endWrite();</span>
         }
-<span class="fc" id="L1104">    }</span>
+<span class="fc" id="L1098">    }</span>
 
     /**
      * A concrete {@code BuilderVisitor} that can construct XML
@@ -1128,14 +1122,14 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          * @param handler the delimiter handler for properties with multiple
          *        values
          */
-        public XMLBuilderVisitor(final XMLDocumentHelper docHelper,
-                final ListDelimiterHandler handler)
-<span class="fc" id="L1133">        {</span>
-<span class="fc" id="L1134">            document = docHelper.getDocument();</span>
-<span class="fc" id="L1135">            elementMapping = docHelper.getElementMapping();</span>
-<span class="fc" id="L1136">            listDelimiterHandler = handler;</span>
-<span class="fc" id="L1137">            newElements = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L1138">        }</span>
+        public XMLBuilderVisitor(XMLDocumentHelper docHelper,
+                ListDelimiterHandler handler)
+<span class="fc" id="L1127">        {</span>
+<span class="fc" id="L1128">            document = docHelper.getDocument();</span>
+<span class="fc" id="L1129">            elementMapping = docHelper.getElementMapping();</span>
+<span class="fc" id="L1130">            listDelimiterHandler = handler;</span>
+<span class="fc" id="L1131">            newElements = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L1132">        }</span>
 
         /**
          * Processes the specified document, updates element values, and adds
@@ -1143,12 +1137,12 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          *
          * @param refHandler the {@code ReferenceNodeHandler}
          */
-        public void processDocument(final ReferenceNodeHandler refHandler)
+        public void processDocument(ReferenceNodeHandler refHandler)
         {
-<span class="fc" id="L1148">            updateAttributes(refHandler.getRootNode(), document.getDocumentElement());</span>
-<span class="fc" id="L1149">            NodeTreeWalker.INSTANCE.walkDFS(refHandler.getRootNode(), this,</span>
+<span class="fc" id="L1142">            updateAttributes(refHandler.getRootNode(), document.getDocumentElement());</span>
+<span class="fc" id="L1143">            NodeTreeWalker.INSTANCE.walkDFS(refHandler.getRootNode(), this,</span>
                     refHandler);
-<span class="fc" id="L1151">        }</span>
+<span class="fc" id="L1145">        }</span>
 
         /**
          * Updates the current XML document regarding removed nodes. The
@@ -1156,58 +1150,58 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          *
          * @param refHandler the {@code ReferenceNodeHandler}
          */
-        public void handleRemovedNodes(final ReferenceNodeHandler refHandler)
+        public void handleRemovedNodes(ReferenceNodeHandler refHandler)
         {
-<span class="fc bfc" id="L1161" title="All 2 branches covered.">            for (final Object ref : refHandler.removedReferences())</span>
+<span class="fc bfc" id="L1155" title="All 2 branches covered.">            for (Object ref : refHandler.removedReferences())</span>
             {
-<span class="fc bfc" id="L1163" title="All 2 branches covered.">                if (ref instanceof Node)</span>
+<span class="fc bfc" id="L1157" title="All 2 branches covered.">                if (ref instanceof Node)</span>
                 {
-<span class="fc" id="L1165">                    final Node removedElem = (Node) ref;</span>
-<span class="fc" id="L1166">                    removeReference((Element) elementMapping.get(removedElem));</span>
+<span class="fc" id="L1159">                    Node removedElem = (Node) ref;</span>
+<span class="fc" id="L1160">                    removeReference((Element) elementMapping.get(removedElem));</span>
                 }
-<span class="fc" id="L1168">            }</span>
-<span class="fc" id="L1169">        }</span>
+<span class="fc" id="L1162">            }</span>
+<span class="fc" id="L1163">        }</span>
 
         /**
          * {@inheritDoc} This implementation ensures that the correct XML
          * element is created and inserted between the given siblings.
          */
         @Override
-        protected void insert(final ImmutableNode newNode, final ImmutableNode parent,
-                final ImmutableNode sibling1, final ImmutableNode sibling2,
-                final ReferenceNodeHandler refHandler)
+        protected void insert(ImmutableNode newNode, ImmutableNode parent,
+                ImmutableNode sibling1, ImmutableNode sibling2,
+                ReferenceNodeHandler refHandler)
         {
-<span class="fc bfc" id="L1180" title="All 2 branches covered.">            if (XMLListReference.isListNode(newNode, refHandler))</span>
+<span class="fc bfc" id="L1174" title="All 2 branches covered.">            if (XMLListReference.isListNode(newNode, refHandler))</span>
             {
-<span class="fc" id="L1182">                return;</span>
+<span class="fc" id="L1176">                return;</span>
             }
 
-<span class="fc" id="L1185">            final Element elem = document.createElement(newNode.getNodeName());</span>
-<span class="fc" id="L1186">            newElements.put(newNode, elem);</span>
-<span class="fc" id="L1187">            updateAttributes(newNode, elem);</span>
-<span class="fc bfc" id="L1188" title="All 2 branches covered.">            if (newNode.getValue() != null)</span>
+<span class="fc" id="L1179">            Element elem = document.createElement(newNode.getNodeName());</span>
+<span class="fc" id="L1180">            newElements.put(newNode, elem);</span>
+<span class="fc" id="L1181">            updateAttributes(newNode, elem);</span>
+<span class="fc bfc" id="L1182" title="All 2 branches covered.">            if (newNode.getValue() != null)</span>
             {
-<span class="fc" id="L1190">                final String txt =</span>
-<span class="fc" id="L1191">                        String.valueOf(listDelimiterHandler.escape(</span>
-<span class="fc" id="L1192">                                newNode.getValue(),</span>
+<span class="fc" id="L1184">                String txt =</span>
+<span class="fc" id="L1185">                        String.valueOf(listDelimiterHandler.escape(</span>
+<span class="fc" id="L1186">                                newNode.getValue(),</span>
                                 ListDelimiterHandler.NOOP_TRANSFORMER));
-<span class="fc" id="L1194">                elem.appendChild(document.createTextNode(txt));</span>
+<span class="fc" id="L1188">                elem.appendChild(document.createTextNode(txt));</span>
             }
-<span class="fc bfc" id="L1196" title="All 2 branches covered.">            if (sibling2 == null)</span>
+<span class="fc bfc" id="L1190" title="All 2 branches covered.">            if (sibling2 == null)</span>
             {
-<span class="fc" id="L1198">                getElement(parent, refHandler).appendChild(elem);</span>
+<span class="fc" id="L1192">                getElement(parent, refHandler).appendChild(elem);</span>
             }
-<span class="pc bpc" id="L1200" title="1 of 2 branches missed.">            else if (sibling1 != null)</span>
+<span class="pc bpc" id="L1194" title="1 of 2 branches missed.">            else if (sibling1 != null)</span>
             {
-<span class="fc" id="L1202">                getElement(parent, refHandler).insertBefore(elem,</span>
-<span class="fc" id="L1203">                        getElement(sibling1, refHandler).getNextSibling());</span>
+<span class="fc" id="L1196">                getElement(parent, refHandler).insertBefore(elem,</span>
+<span class="fc" id="L1197">                        getElement(sibling1, refHandler).getNextSibling());</span>
             }
             else
             {
-<span class="nc" id="L1207">                getElement(parent, refHandler).insertBefore(elem,</span>
-<span class="nc" id="L1208">                        getElement(parent, refHandler).getFirstChild());</span>
+<span class="nc" id="L1201">                getElement(parent, refHandler).insertBefore(elem,</span>
+<span class="nc" id="L1202">                        getElement(parent, refHandler).getFirstChild());</span>
             }
-<span class="fc" id="L1210">        }</span>
+<span class="fc" id="L1204">        }</span>
 
         /**
          * {@inheritDoc} This implementation determines the XML element
@@ -1215,32 +1209,32 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          * attributes are set accordingly.
          */
         @Override
-        protected void update(final ImmutableNode node, final Object reference,
-                final ReferenceNodeHandler refHandler)
+        protected void update(ImmutableNode node, Object reference,
+                ReferenceNodeHandler refHandler)
         {
-<span class="fc bfc" id="L1221" title="All 2 branches covered.">            if (XMLListReference.isListNode(node, refHandler))</span>
+<span class="fc bfc" id="L1215" title="All 2 branches covered.">            if (XMLListReference.isListNode(node, refHandler))</span>
             {
-<span class="fc bfc" id="L1223" title="All 2 branches covered.">                if (XMLListReference.isFirstListItem(node, refHandler))</span>
+<span class="fc bfc" id="L1217" title="All 2 branches covered.">                if (XMLListReference.isFirstListItem(node, refHandler))</span>
                 {
-<span class="fc" id="L1225">                    final String value = XMLListReference.listValue(node, refHandler, listDelimiterHandler);</span>
-<span class="fc" id="L1226">                    updateElement(node, refHandler, value);</span>
-<span class="fc" id="L1227">                }</span>
+<span class="fc" id="L1219">                    String value = XMLListReference.listValue(node, refHandler, listDelimiterHandler);</span>
+<span class="fc" id="L1220">                    updateElement(node, refHandler, value);</span>
+<span class="fc" id="L1221">                }</span>
             }
             else
             {
-<span class="fc" id="L1231">                final Object value = listDelimiterHandler.escape(refHandler.getValue(node),</span>
+<span class="fc" id="L1225">                Object value = listDelimiterHandler.escape(refHandler.getValue(node),</span>
                         ListDelimiterHandler.NOOP_TRANSFORMER);
-<span class="fc" id="L1233">                updateElement(node, refHandler, value);</span>
+<span class="fc" id="L1227">                updateElement(node, refHandler, value);</span>
             }
-<span class="fc" id="L1235">        }</span>
+<span class="fc" id="L1229">        }</span>
 
-        private void updateElement(final ImmutableNode node, final ReferenceNodeHandler refHandler,
-                                   final Object value)
+        private void updateElement(ImmutableNode node, ReferenceNodeHandler refHandler,
+                                   Object value)
         {
-<span class="fc" id="L1240">            final Element element = getElement(node, refHandler);</span>
-<span class="fc" id="L1241">            updateElement(element, value);</span>
-<span class="fc" id="L1242">            updateAttributes(node, element);</span>
-<span class="fc" id="L1243">        }</span>
+<span class="fc" id="L1234">            Element element = getElement(node, refHandler);</span>
+<span class="fc" id="L1235">            updateElement(element, value);</span>
+<span class="fc" id="L1236">            updateAttributes(node, element);</span>
+<span class="fc" id="L1237">        }</span>
 
         /**
          * Updates the node's value if it represents an element node.
@@ -1248,51 +1242,51 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          * @param element the element
          * @param value the new value
          */
-        private void updateElement(final Element element, final Object value)
+        private void updateElement(Element element, Object value)
         {
-<span class="fc" id="L1253">            Text txtNode = findTextNodeForUpdate(element);</span>
-<span class="fc bfc" id="L1254" title="All 2 branches covered.">            if (value == null)</span>
+<span class="fc" id="L1247">            Text txtNode = findTextNodeForUpdate(element);</span>
+<span class="fc bfc" id="L1248" title="All 2 branches covered.">            if (value == null)</span>
             {
                 // remove text
-<span class="fc bfc" id="L1257" title="All 2 branches covered.">                if (txtNode != null)</span>
+<span class="fc bfc" id="L1251" title="All 2 branches covered.">                if (txtNode != null)</span>
                 {
-<span class="fc" id="L1259">                    element.removeChild(txtNode);</span>
+<span class="fc" id="L1253">                    element.removeChild(txtNode);</span>
                 }
             }
             else
             {
-<span class="fc" id="L1264">                final String newValue = String.valueOf(value);</span>
-<span class="fc bfc" id="L1265" title="All 2 branches covered.">                if (txtNode == null)</span>
+<span class="fc" id="L1258">                String newValue = String.valueOf(value);</span>
+<span class="fc bfc" id="L1259" title="All 2 branches covered.">                if (txtNode == null)</span>
                 {
-<span class="fc" id="L1267">                    txtNode = document.createTextNode(newValue);</span>
-<span class="fc bfc" id="L1268" title="All 2 branches covered.">                    if (element.getFirstChild() != null)</span>
+<span class="fc" id="L1261">                    txtNode = document.createTextNode(newValue);</span>
+<span class="fc bfc" id="L1262" title="All 2 branches covered.">                    if (element.getFirstChild() != null)</span>
                     {
-<span class="fc" id="L1270">                        element.insertBefore(txtNode, element.getFirstChild());</span>
+<span class="fc" id="L1264">                        element.insertBefore(txtNode, element.getFirstChild());</span>
                     }
                     else
                     {
-<span class="fc" id="L1274">                        element.appendChild(txtNode);</span>
+<span class="fc" id="L1268">                        element.appendChild(txtNode);</span>
                     }
                 }
                 else
                 {
-<span class="fc" id="L1279">                    txtNode.setNodeValue(newValue);</span>
+<span class="fc" id="L1273">                    txtNode.setNodeValue(newValue);</span>
                 }
             }
-<span class="fc" id="L1282">        }</span>
+<span class="fc" id="L1276">        }</span>
 
         /**
          * Updates the associated XML elements when a node is removed.
          * @param element the element to be removed
          */
-        private void removeReference(final Element element)
+        private void removeReference(Element element)
         {
-<span class="fc" id="L1290">            final org.w3c.dom.Node parentElem = element.getParentNode();</span>
-<span class="pc bpc" id="L1291" title="1 of 2 branches missed.">            if (parentElem != null)</span>
+<span class="fc" id="L1284">            org.w3c.dom.Node parentElem = element.getParentNode();</span>
+<span class="pc bpc" id="L1285" title="1 of 2 branches missed.">            if (parentElem != null)</span>
             {
-<span class="fc" id="L1293">                parentElem.removeChild(element);</span>
+<span class="fc" id="L1287">                parentElem.removeChild(element);</span>
             }
-<span class="fc" id="L1295">        }</span>
+<span class="fc" id="L1289">        }</span>
 
         /**
          * Helper method for accessing the element of the specified node.
@@ -1301,34 +1295,34 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          * @param refHandler the {@code ReferenceNodeHandler}
          * @return the element of this node
          */
-        private Element getElement(final ImmutableNode node,
-                final ReferenceNodeHandler refHandler)
+        private Element getElement(ImmutableNode node,
+                ReferenceNodeHandler refHandler)
         {
-<span class="fc" id="L1307">            final Element elementNew = newElements.get(node);</span>
-<span class="fc bfc" id="L1308" title="All 2 branches covered.">            if (elementNew != null)</span>
+<span class="fc" id="L1301">            Element elementNew = newElements.get(node);</span>
+<span class="fc bfc" id="L1302" title="All 2 branches covered.">            if (elementNew != null)</span>
             {
-<span class="fc" id="L1310">                return elementNew;</span>
+<span class="fc" id="L1304">                return elementNew;</span>
             }
 
             // special treatment for root node of the hierarchy
-<span class="fc" id="L1314">            final Object reference = refHandler.getReference(node);</span>
+<span class="fc" id="L1308">            Object reference = refHandler.getReference(node);</span>
             Node element;
-<span class="fc bfc" id="L1316" title="All 2 branches covered.">            if (reference instanceof XMLDocumentHelper)</span>
+<span class="fc bfc" id="L1310" title="All 2 branches covered.">            if (reference instanceof XMLDocumentHelper)</span>
             {
-<span class="fc" id="L1318">                element =</span>
-<span class="fc" id="L1319">                        ((XMLDocumentHelper) reference).getDocument()</span>
-<span class="fc" id="L1320">                                .getDocumentElement();</span>
+<span class="fc" id="L1312">                element =</span>
+<span class="fc" id="L1313">                        ((XMLDocumentHelper) reference).getDocument()</span>
+<span class="fc" id="L1314">                                .getDocumentElement();</span>
             }
-<span class="fc bfc" id="L1322" title="All 2 branches covered.">            else if (reference instanceof XMLListReference)</span>
+<span class="fc bfc" id="L1316" title="All 2 branches covered.">            else if (reference instanceof XMLListReference)</span>
             {
-<span class="fc" id="L1324">                element = ((XMLListReference) reference).getElement();</span>
+<span class="fc" id="L1318">                element = ((XMLListReference) reference).getElement();</span>
             }
             else
             {
-<span class="fc" id="L1328">                element = (Node) reference;</span>
+<span class="fc" id="L1322">                element = (Node) reference;</span>
             }
-<span class="fc bfc" id="L1330" title="All 2 branches covered.">            return element != null ? (Element) elementMapping.get(element)</span>
-<span class="fc" id="L1331">                    : document.getDocumentElement();</span>
+<span class="fc bfc" id="L1324" title="All 2 branches covered.">            return (element != null) ? (Element) elementMapping.get(element)</span>
+<span class="fc" id="L1325">                    : document.getDocumentElement();</span>
         }
 
         /**
@@ -1338,35 +1332,35 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          * @param node the affected node
          * @param elem the element that is associated with this node
          */
-        private static void updateAttributes(final ImmutableNode node, final Element elem)
+        private static void updateAttributes(ImmutableNode node, Element elem)
         {
-<span class="pc bpc" id="L1343" title="2 of 4 branches missed.">            if (node != null &amp;&amp; elem != null)</span>
+<span class="pc bpc" id="L1337" title="2 of 4 branches missed.">            if (node != null &amp;&amp; elem != null)</span>
             {
-<span class="fc" id="L1345">                clearAttributes(elem);</span>
-<span class="fc bfc" id="L1346" title="All 2 branches covered.">                for (final Map.Entry&lt;String, Object&gt; e : node.getAttributes()</span>
-<span class="fc" id="L1347">                        .entrySet())</span>
+<span class="fc" id="L1339">                clearAttributes(elem);</span>
+<span class="fc bfc" id="L1340" title="All 2 branches covered.">                for (Map.Entry&lt;String, Object&gt; e : node.getAttributes()</span>
+<span class="fc" id="L1341">                        .entrySet())</span>
                 {
-<span class="pc bpc" id="L1349" title="1 of 2 branches missed.">                    if (e.getValue() != null)</span>
+<span class="pc bpc" id="L1343" title="1 of 2 branches missed.">                    if (e.getValue() != null)</span>
                     {
-<span class="fc" id="L1351">                        elem.setAttribute(e.getKey(), e.getValue().toString());</span>
+<span class="fc" id="L1345">                        elem.setAttribute(e.getKey(), e.getValue().toString());</span>
                     }
-<span class="fc" id="L1353">                }</span>
+<span class="fc" id="L1347">                }</span>
             }
-<span class="fc" id="L1355">        }</span>
+<span class="fc" id="L1349">        }</span>
 
         /**
          * Removes all attributes of the given element.
          *
          * @param elem the element
          */
-        private static void clearAttributes(final Element elem)
+        private static void clearAttributes(Element elem)
         {
-<span class="fc" id="L1364">            final NamedNodeMap attributes = elem.getAttributes();</span>
-<span class="fc bfc" id="L1365" title="All 2 branches covered.">            for (int i = 0; i &lt; attributes.getLength(); i++)</span>
+<span class="fc" id="L1358">            NamedNodeMap attributes = elem.getAttributes();</span>
+<span class="fc bfc" id="L1359" title="All 2 branches covered.">            for (int i = 0; i &lt; attributes.getLength(); i++)</span>
             {
-<span class="fc" id="L1367">                elem.removeAttribute(attributes.item(i).getNodeName());</span>
+<span class="fc" id="L1361">                elem.removeAttribute(attributes.item(i).getNodeName());</span>
             }
-<span class="fc" id="L1369">        }</span>
+<span class="fc" id="L1363">        }</span>
 
         /**
          * Returns the only text node of an element for update. This method is
@@ -1377,42 +1371,42 @@ public class XMLConfiguration extends BaseHierarchicalConfiguration implements
          * @param elem the element
          * @return the first and only text node
          */
-        private static Text findTextNodeForUpdate(final Element elem)
+        private static Text findTextNodeForUpdate(Element elem)
         {
-<span class="fc" id="L1382">            Text result = null;</span>
+<span class="fc" id="L1376">            Text result = null;</span>
             // Find all Text nodes
-<span class="fc" id="L1384">            final NodeList children = elem.getChildNodes();</span>
-<span class="fc" id="L1385">            final Collection&lt;org.w3c.dom.Node&gt; textNodes =</span>
+<span class="fc" id="L1378">            NodeList children = elem.getChildNodes();</span>
+<span class="fc" id="L1379">            Collection&lt;org.w3c.dom.Node&gt; textNodes =</span>
                     new ArrayList&lt;&gt;();
-<span class="fc bfc" id="L1387" title="All 2 branches covered.">            for (int i = 0; i &lt; children.getLength(); i++)</span>
+<span class="fc bfc" id="L1381" title="All 2 branches covered.">            for (int i = 0; i &lt; children.getLength(); i++)</span>
             {
-<span class="fc" id="L1389">                final org.w3c.dom.Node nd = children.item(i);</span>
-<span class="fc bfc" id="L1390" title="All 2 branches covered.">                if (nd instanceof Text)</span>
+<span class="fc" id="L1383">                org.w3c.dom.Node nd = children.item(i);</span>
+<span class="fc bfc" id="L1384" title="All 2 branches covered.">                if (nd instanceof Text)</span>
                 {
-<span class="fc bfc" id="L1392" title="All 2 branches covered.">                    if (result == null)</span>
+<span class="fc bfc" id="L1386" title="All 2 branches covered.">                    if (result == null)</span>
                     {
-<span class="fc" id="L1394">                        result = (Text) nd;</span>
+<span class="fc" id="L1388">                        result = (Text) nd;</span>
                     }
                     else
                     {
-<span class="fc" id="L1398">                        textNodes.add(nd);</span>
+<span class="fc" id="L1392">                        textNodes.add(nd);</span>
                     }
                 }
             }
 
             // We don't want CDATAs
-<span class="pc bpc" id="L1404" title="1 of 2 branches missed.">            if (result instanceof CDATASection)</span>
+<span class="pc bpc" id="L1398" title="1 of 2 branches missed.">            if (result instanceof CDATASection)</span>
             {
-<span class="nc" id="L1406">                textNodes.add(result);</span>
-<span class="nc" id="L1407">                result = null;</span>
+<span class="nc" id="L1400">                textNodes.add(result);</span>
+<span class="nc" id="L1401">                result = null;</span>
             }
 
             // Remove all but the first Text node
-<span class="fc bfc" id="L1411" title="All 2 branches covered.">            for (final org.w3c.dom.Node tn : textNodes)</span>
+<span class="fc bfc" id="L1405" title="All 2 branches covered.">            for (org.w3c.dom.Node tn : textNodes)</span>
             {
-<span class="fc" id="L1413">                elem.removeChild(tn);</span>
-<span class="fc" id="L1414">            }</span>
-<span class="fc" id="L1415">            return result;</span>
+<span class="fc" id="L1407">                elem.removeChild(tn);</span>
+<span class="fc" id="L1408">            }</span>
+<span class="fc" id="L1409">            return result;</span>
         }
     }
 }

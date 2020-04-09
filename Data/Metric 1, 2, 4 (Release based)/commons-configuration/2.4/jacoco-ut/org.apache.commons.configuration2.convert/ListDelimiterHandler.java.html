@@ -51,6 +51,7 @@ import java.util.List;
  * they have to deal with properties with multiple values.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public interface ListDelimiterHandler
@@ -61,7 +62,14 @@ public interface ListDelimiterHandler
      * passed in object without changes. This instance can be used by
      * configurations which do not require additional encoding.
      */
-<span class="fc" id="L64">    ValueTransformer NOOP_TRANSFORMER = value -&gt; value;</span>
+<span class="fc" id="L65">    ValueTransformer NOOP_TRANSFORMER = new ValueTransformer()</span>
+<span class="fc" id="L66">    {</span>
+        @Override
+        public Object transformValue(final Object value)
+        {
+<span class="fc" id="L70">            return value;</span>
+        }
+    };
 
     /**
      * Parses the specified value for list delimiters and splits it if

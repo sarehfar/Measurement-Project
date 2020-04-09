@@ -30,7 +30,7 @@ import org.apache.commons.vfs2.VFS;
 /**
  * &lt;p&gt;
  * A file-based reloading strategy that uses &lt;a
- * href=&quot;https://commons.apache.org/vfs/&quot;&gt;Commons VFS&lt;/a&gt; to determine when a
+ * href=&quot;http://commons.apache.org/vfs/&quot;&gt;Commons VFS&lt;/a&gt; to determine when a
  * file was changed.
  * &lt;/p&gt;
  * &lt;p&gt;
@@ -42,12 +42,16 @@ import org.apache.commons.vfs2.VFS;
  * This strategy only works with FileConfiguration instances.
  * &lt;/p&gt;
  *
+ * @author &lt;a
+ *         href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons
+ *         Configuration team&lt;/a&gt;
+ * @version $Id$
  * @since 1.7
  */
 public class VFSFileHandlerReloadingDetector extends FileHandlerReloadingDetector
 {
     /** Stores the logger.*/
-<span class="fc" id="L50">    private final Log log = LogFactory.getLog(getClass());</span>
+<span class="fc" id="L54">    private final Log log = LogFactory.getLog(getClass());</span>
 
     /**
      * Creates a new instance of {@code VFSFileHandlerReloadingDetector} and
@@ -55,8 +59,8 @@ public class VFSFileHandlerReloadingDetector extends FileHandlerReloadingDetecto
      */
     public VFSFileHandlerReloadingDetector()
     {
-<span class="fc" id="L58">        super();</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L62">        super();</span>
+<span class="fc" id="L63">    }</span>
 
     /**
      * Creates a new instance of {@code VFSFileHandlerReloadingDetector} and
@@ -69,8 +73,8 @@ public class VFSFileHandlerReloadingDetector extends FileHandlerReloadingDetecto
     public VFSFileHandlerReloadingDetector(final FileHandler handler,
             final long refreshDelay)
     {
-<span class="fc" id="L72">        super(handler, refreshDelay);</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L76">        super(handler, refreshDelay);</span>
+<span class="fc" id="L77">    }</span>
 
     /**
      * Creates a new instance of {@code VFSFileHandlerReloadingDetector} and
@@ -80,8 +84,8 @@ public class VFSFileHandlerReloadingDetector extends FileHandlerReloadingDetecto
      */
     public VFSFileHandlerReloadingDetector(final FileHandler handler)
     {
-<span class="fc" id="L83">        super(handler);</span>
-<span class="fc" id="L84">    }</span>
+<span class="fc" id="L87">        super(handler);</span>
+<span class="fc" id="L88">    }</span>
 
     /**
      * {@inheritDoc} This implementation uses Commons VFS to obtain a
@@ -90,21 +94,21 @@ public class VFSFileHandlerReloadingDetector extends FileHandlerReloadingDetecto
     @Override
     protected long getLastModificationDate()
     {
-<span class="fc" id="L93">        final FileObject file = getFileObject();</span>
+<span class="fc" id="L97">        final FileObject file = getFileObject();</span>
         try
         {
-<span class="fc bfc" id="L96" title="All 4 branches covered.">            if (file == null || !file.exists())</span>
+<span class="fc bfc" id="L100" title="All 4 branches covered.">            if (file == null || !file.exists())</span>
             {
-<span class="fc" id="L98">                return 0;</span>
+<span class="fc" id="L102">                return 0;</span>
             }
 
-<span class="fc" id="L101">            return file.getContent().getLastModifiedTime();</span>
+<span class="fc" id="L105">            return file.getContent().getLastModifiedTime();</span>
         }
-<span class="fc" id="L103">        catch (final FileSystemException ex)</span>
+<span class="fc" id="L107">        catch (final FileSystemException ex)</span>
         {
-<span class="fc" id="L105">            log.error(&quot;Unable to get last modified time for&quot;</span>
-<span class="fc" id="L106">                    + file.getName().getURI(), ex);</span>
-<span class="fc" id="L107">            return 0;</span>
+<span class="fc" id="L109">            log.error(&quot;Unable to get last modified time for&quot;</span>
+<span class="fc" id="L110">                    + file.getName().getURI(), ex);</span>
+<span class="fc" id="L111">            return 0;</span>
         }
     }
 
@@ -116,26 +120,26 @@ public class VFSFileHandlerReloadingDetector extends FileHandlerReloadingDetecto
      */
     protected FileObject getFileObject()
     {
-<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (!getFileHandler().isLocationDefined())</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (!getFileHandler().isLocationDefined())</span>
         {
-<span class="fc" id="L121">            return null;</span>
+<span class="fc" id="L125">            return null;</span>
         }
 
         try
         {
-<span class="fc" id="L126">            final FileSystemManager fsManager = VFS.getManager();</span>
-<span class="fc" id="L127">            final String uri = resolveFileURI();</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">            if (uri == null)</span>
+<span class="fc" id="L130">            final FileSystemManager fsManager = VFS.getManager();</span>
+<span class="fc" id="L131">            final String uri = resolveFileURI();</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            if (uri == null)</span>
             {
-<span class="fc" id="L130">                throw new ConfigurationRuntimeException(&quot;Unable to determine file to monitor&quot;);</span>
+<span class="fc" id="L134">                throw new ConfigurationRuntimeException(&quot;Unable to determine file to monitor&quot;);</span>
             }
-<span class="fc" id="L132">            return fsManager.resolveFile(uri);</span>
+<span class="fc" id="L136">            return fsManager.resolveFile(uri);</span>
         }
-<span class="nc" id="L134">        catch (final FileSystemException fse)</span>
+<span class="nc" id="L138">        catch (final FileSystemException fse)</span>
         {
-<span class="nc" id="L136">            final String msg = &quot;Unable to monitor &quot; + getFileHandler().getURL().toString();</span>
-<span class="nc" id="L137">            log.error(msg);</span>
-<span class="nc" id="L138">            throw new ConfigurationRuntimeException(msg, fse);</span>
+<span class="nc" id="L140">            final String msg = &quot;Unable to monitor &quot; + getFileHandler().getURL().toString();</span>
+<span class="nc" id="L141">            log.error(msg);</span>
+<span class="nc" id="L142">            throw new ConfigurationRuntimeException(msg, fse);</span>
         }
     }
 
@@ -147,11 +151,11 @@ public class VFSFileHandlerReloadingDetector extends FileHandlerReloadingDetecto
      */
     protected String resolveFileURI()
     {
-<span class="fc" id="L150">        final FileSystem fs = getFileHandler().getFileSystem();</span>
-<span class="fc" id="L151">        final String uri =</span>
-<span class="fc" id="L152">                fs.getPath(null, getFileHandler().getURL(), getFileHandler()</span>
-<span class="fc" id="L153">                        .getBasePath(), getFileHandler().getFileName());</span>
-<span class="fc" id="L154">        return uri;</span>
+<span class="fc" id="L154">        final FileSystem fs = getFileHandler().getFileSystem();</span>
+<span class="fc" id="L155">        final String uri =</span>
+<span class="fc" id="L156">                fs.getPath(null, getFileHandler().getURL(), getFileHandler()</span>
+<span class="fc" id="L157">                        .getBasePath(), getFileHandler().getFileName());</span>
+<span class="fc" id="L158">        return uri;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

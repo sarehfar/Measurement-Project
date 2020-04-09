@@ -40,6 +40,7 @@ import java.util.Map;
  * perform the update based on a passed in instance.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  * @param &lt;T&gt; the type of nodes involved in this update operation
  */
@@ -67,15 +68,15 @@ public class NodeUpdateData&lt;T&gt;
      * @param removedNodes the collection with the nodes to be removed
      * @param key the key of the update operation
      */
-    public NodeUpdateData(final Map&lt;QueryResult&lt;T&gt;, Object&gt; changedValues,
-            final Collection&lt;Object&gt; newValues,
-            final Collection&lt;QueryResult&lt;T&gt;&gt; removedNodes, final String key)
-<span class="fc" id="L73">    {</span>
-<span class="fc" id="L74">        this.changedValues = copyMap(changedValues);</span>
-<span class="fc" id="L75">        this.newValues = copyCollection(newValues);</span>
-<span class="fc" id="L76">        this.removedNodes = copyCollection(removedNodes);</span>
-<span class="fc" id="L77">        this.key = key;</span>
-<span class="fc" id="L78">    }</span>
+    public NodeUpdateData(Map&lt;QueryResult&lt;T&gt;, Object&gt; changedValues,
+            Collection&lt;Object&gt; newValues,
+            Collection&lt;QueryResult&lt;T&gt;&gt; removedNodes, String key)
+<span class="fc" id="L74">    {</span>
+<span class="fc" id="L75">        this.changedValues = copyMap(changedValues);</span>
+<span class="fc" id="L76">        this.newValues = copyCollection(newValues);</span>
+<span class="fc" id="L77">        this.removedNodes = copyCollection(removedNodes);</span>
+<span class="fc" id="L78">        this.key = key;</span>
+<span class="fc" id="L79">    }</span>
 
     /**
      * Returns an unmodifiable map with the values to be changed. The keys of
@@ -86,7 +87,7 @@ public class NodeUpdateData&lt;T&gt;
      */
     public Map&lt;QueryResult&lt;T&gt;, Object&gt; getChangedValues()
     {
-<span class="fc" id="L89">        return changedValues;</span>
+<span class="fc" id="L90">        return changedValues;</span>
     }
 
     /**
@@ -98,7 +99,7 @@ public class NodeUpdateData&lt;T&gt;
      */
     public Collection&lt;Object&gt; getNewValues()
     {
-<span class="fc" id="L101">        return newValues;</span>
+<span class="fc" id="L102">        return newValues;</span>
     }
 
     /**
@@ -110,7 +111,7 @@ public class NodeUpdateData&lt;T&gt;
      */
     public Collection&lt;QueryResult&lt;T&gt;&gt; getRemovedNodes()
     {
-<span class="fc" id="L113">        return removedNodes;</span>
+<span class="fc" id="L114">        return removedNodes;</span>
     }
 
     /**
@@ -120,7 +121,7 @@ public class NodeUpdateData&lt;T&gt;
      */
     public String getKey()
     {
-<span class="nc" id="L123">        return key;</span>
+<span class="nc" id="L124">        return key;</span>
     }
 
     /**
@@ -132,13 +133,16 @@ public class NodeUpdateData&lt;T&gt;
      * @param &lt;V&gt; the type of the values involved
      * @return the unmodifiable copy
      */
-    private static &lt;K, V&gt; Map&lt;K, V&gt; copyMap(final Map&lt;? extends K, ? extends V&gt; map)
+    private static &lt;K, V&gt; Map&lt;K, V&gt; copyMap(Map&lt;? extends K, ? extends V&gt; map)
     {
-<span class="fc bfc" id="L137" title="All 2 branches covered.">        if (map == null)</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (map == null)</span>
         {
-<span class="fc" id="L139">            return Collections.emptyMap();</span>
+<span class="fc" id="L140">            return Collections.emptyMap();</span>
         }
-<span class="fc" id="L141">        return Collections.unmodifiableMap(new HashMap&lt;&gt;(map));</span>
+        else
+        {
+<span class="fc" id="L144">            return Collections.unmodifiableMap(new HashMap&lt;&gt;(map));</span>
+        }
     }
 
     /**
@@ -149,13 +153,16 @@ public class NodeUpdateData&lt;T&gt;
      * @param &lt;T&gt; the element type of the collection
      * @return the unmodifiable copy
      */
-    private static &lt;T&gt; Collection&lt;T&gt; copyCollection(final Collection&lt;? extends T&gt; col)
+    private static &lt;T&gt; Collection&lt;T&gt; copyCollection(Collection&lt;? extends T&gt; col)
     {
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (col == null)</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (col == null)</span>
         {
-<span class="fc" id="L156">            return Collections.emptySet();</span>
+<span class="fc" id="L160">            return Collections.emptySet();</span>
         }
-<span class="fc" id="L158">        return Collections.unmodifiableCollection(new ArrayList&lt;&gt;(col));</span>
+        else
+        {
+<span class="fc" id="L164">            return Collections.unmodifiableCollection(new ArrayList&lt;&gt;(col));</span>
+        }
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

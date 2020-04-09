@@ -16,16 +16,17 @@
  */
 package org.apache.commons.configuration2;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.convert.ListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.configuration2.tree.ReferenceNodeHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Element;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * &lt;p&gt;
@@ -51,10 +52,10 @@ final class XMLListReference
      *
      * @param e the associated element
      */
-    private XMLListReference(final Element e)
-<span class="fc" id="L55">    {</span>
-<span class="fc" id="L56">        element = e;</span>
-<span class="fc" id="L57">    }</span>
+    private XMLListReference(Element e)
+<span class="fc" id="L56">    {</span>
+<span class="fc" id="L57">        element = e;</span>
+<span class="fc" id="L58">    }</span>
 
     /**
      * Returns the associated element.
@@ -63,7 +64,7 @@ final class XMLListReference
      */
     public Element getElement()
     {
-<span class="fc" id="L66">        return element;</span>
+<span class="fc" id="L67">        return element;</span>
     }
 
     /**
@@ -75,14 +76,14 @@ final class XMLListReference
      * @param node the affected configuration node
      * @param elem the current XML element
      */
-    public static void assignListReference(final Map&lt;ImmutableNode, Object&gt; refs,
-            final ImmutableNode node, final Element elem)
+    public static void assignListReference(Map&lt;ImmutableNode, Object&gt; refs,
+            ImmutableNode node, Element elem)
     {
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (refs != null)</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (refs != null)</span>
         {
-<span class="fc" id="L83">            refs.put(node, new XMLListReference(elem));</span>
+<span class="fc" id="L84">            refs.put(node, new XMLListReference(elem));</span>
         }
-<span class="fc" id="L85">    }</span>
+<span class="fc" id="L86">    }</span>
 
     /**
      * Checks whether the specified configuration node has to be taken into
@@ -96,27 +97,27 @@ final class XMLListReference
      * @param handler the reference node handler
      * @return a flag whether this node is relevant for list handling
      */
-    public static boolean isListNode(final ImmutableNode node,
-            final ReferenceNodeHandler handler)
+    public static boolean isListNode(ImmutableNode node,
+            ReferenceNodeHandler handler)
     {
-<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (hasListReference(node, handler))</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (hasListReference(node, handler))</span>
         {
-<span class="fc" id="L104">            return true;</span>
+<span class="fc" id="L105">            return true;</span>
         }
 
-<span class="fc" id="L107">        final ImmutableNode parent = handler.getParent(node);</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (parent != null)</span>
+<span class="fc" id="L108">        ImmutableNode parent = handler.getParent(node);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (parent != null)</span>
         {
-<span class="fc bfc" id="L110" title="All 2 branches covered.">            for (int i = 0; i &lt; handler.getChildrenCount(parent, null); i++)</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            for (int i = 0; i &lt; handler.getChildrenCount(parent, null); i++)</span>
             {
-<span class="fc" id="L112">                final ImmutableNode child = handler.getChild(parent, i);</span>
-<span class="fc bfc" id="L113" title="All 4 branches covered.">                if (hasListReference(child, handler) &amp;&amp; nameEquals(node, child))</span>
+<span class="fc" id="L113">                ImmutableNode child = handler.getChild(parent, i);</span>
+<span class="fc bfc" id="L114" title="All 4 branches covered.">                if (hasListReference(child, handler) &amp;&amp; nameEquals(node, child))</span>
                 {
-<span class="fc" id="L115">                    return true;</span>
+<span class="fc" id="L116">                    return true;</span>
                 }
             }
         }
-<span class="fc" id="L119">        return false;</span>
+<span class="fc" id="L120">        return false;</span>
     }
 
     /**
@@ -131,22 +132,22 @@ final class XMLListReference
      * @param handler the reference node handler
      * @return a flag whether this is the first node of a list
      */
-    public static boolean isFirstListItem(final ImmutableNode node,
-            final ReferenceNodeHandler handler)
+    public static boolean isFirstListItem(ImmutableNode node,
+            ReferenceNodeHandler handler)
     {
-<span class="fc" id="L137">        final ImmutableNode parent = handler.getParent(node);</span>
-<span class="fc" id="L138">        ImmutableNode firstItem = null;</span>
-<span class="fc" id="L139">        int idx = 0;</span>
-<span class="fc bfc" id="L140" title="All 2 branches covered.">        while (firstItem == null)</span>
+<span class="fc" id="L138">        ImmutableNode parent = handler.getParent(node);</span>
+<span class="fc" id="L139">        ImmutableNode firstItem = null;</span>
+<span class="fc" id="L140">        int idx = 0;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        while (firstItem == null)</span>
         {
-<span class="fc" id="L142">            final ImmutableNode child = handler.getChild(parent, idx);</span>
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">            if (nameEquals(node, child))</span>
+<span class="fc" id="L143">            ImmutableNode child = handler.getChild(parent, idx);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">            if (nameEquals(node, child))</span>
             {
-<span class="fc" id="L145">                firstItem = child;</span>
+<span class="fc" id="L146">                firstItem = child;</span>
             }
-<span class="fc" id="L147">            idx++;</span>
-<span class="fc" id="L148">        }</span>
-<span class="fc bfc" id="L149" title="All 2 branches covered.">        return firstItem == node;</span>
+<span class="fc" id="L148">            idx++;</span>
+<span class="fc" id="L149">        }</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        return firstItem == node;</span>
     }
 
     /**
@@ -163,27 +164,27 @@ final class XMLListReference
      * @throws ConfigurationRuntimeException if the list delimiter handler does
      *         not support the transformation of list items to a string
      */
-    public static String listValue(final ImmutableNode node,
-            final ReferenceNodeHandler nodeHandler,
-            final ListDelimiterHandler delimiterHandler)
+    public static String listValue(ImmutableNode node,
+            ReferenceNodeHandler nodeHandler,
+            ListDelimiterHandler delimiterHandler)
     {
         // cannot be null if the current node is a list node
-<span class="fc" id="L171">        final ImmutableNode parent = nodeHandler.getParent(node);</span>
-<span class="fc" id="L172">        final List&lt;ImmutableNode&gt; items =</span>
-<span class="fc" id="L173">                nodeHandler.getChildren(parent, node.getNodeName());</span>
-<span class="fc" id="L174">        final List&lt;Object&gt; values = new ArrayList&lt;&gt;(items.size());</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">        for (final ImmutableNode n : items)</span>
+<span class="fc" id="L172">        ImmutableNode parent = nodeHandler.getParent(node);</span>
+<span class="fc" id="L173">        List&lt;ImmutableNode&gt; items =</span>
+<span class="fc" id="L174">                nodeHandler.getChildren(parent, node.getNodeName());</span>
+<span class="fc" id="L175">        List&lt;Object&gt; values = new ArrayList&lt;&gt;(items.size());</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        for (ImmutableNode n : items)</span>
         {
-<span class="fc" id="L177">            values.add(n.getValue());</span>
-<span class="fc" id="L178">        }</span>
+<span class="fc" id="L178">            values.add(n.getValue());</span>
+<span class="fc" id="L179">        }</span>
         try
         {
-<span class="fc" id="L181">            return String.valueOf(delimiterHandler.escapeList(values,</span>
-                    ListDelimiterHandler.NOOP_TRANSFORMER));
+<span class="fc" id="L182">            return String.valueOf(delimiterHandler.escapeList(values,</span>
+                    DefaultListDelimiterHandler.NOOP_TRANSFORMER));
         }
-<span class="fc" id="L184">        catch (final UnsupportedOperationException e)</span>
+<span class="fc" id="L185">        catch (UnsupportedOperationException e)</span>
         {
-<span class="fc" id="L186">            throw new ConfigurationRuntimeException(</span>
+<span class="fc" id="L187">            throw new ConfigurationRuntimeException(</span>
                     &quot;List handling not supported by &quot;
                             + &quot;the current ListDelimiterHandler! Make sure that the same delimiter &quot;
                             + &quot;handler is used for loading and saving the configuration.&quot;,
@@ -199,10 +200,10 @@ final class XMLListReference
      * @param handler the reference handler
      * @return a flag whether this node has a list reference
      */
-    private static boolean hasListReference(final ImmutableNode node,
-            final ReferenceNodeHandler handler)
+    private static boolean hasListReference(ImmutableNode node,
+            ReferenceNodeHandler handler)
     {
-<span class="fc" id="L205">        return handler.getReference(node) instanceof XMLListReference;</span>
+<span class="fc" id="L206">        return handler.getReference(node) instanceof XMLListReference;</span>
     }
 
     /**
@@ -212,9 +213,9 @@ final class XMLListReference
      * @param n2 node 2
      * @return a flag whether these nodes have equal names
      */
-    private static boolean nameEquals(final ImmutableNode n1, final ImmutableNode n2)
+    private static boolean nameEquals(ImmutableNode n1, ImmutableNode n2)
     {
-<span class="fc" id="L217">        return StringUtils.equals(n2.getNodeName(), n1.getNodeName());</span>
+<span class="fc" id="L218">        return StringUtils.equals(n2.getNodeName(), n1.getNodeName());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

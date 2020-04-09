@@ -78,6 +78,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
  * settings for the configurations to be created.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  * @see org.apache.commons.configuration2.builder.DefaultParametersManager
  */
@@ -91,8 +92,8 @@ public class Configurations
      */
     public Configurations()
     {
-<span class="fc" id="L94">        this(null);</span>
-<span class="fc" id="L95">    }</span>
+<span class="fc" id="L95">        this(null);</span>
+<span class="fc" id="L96">    }</span>
 
     /**
      * Creates a new instance of {@code Configurations} and initializes it with
@@ -102,9 +103,9 @@ public class Configurations
      *        instance is created)
      */
     public Configurations(final Parameters params)
-<span class="fc" id="L105">    {</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">        parameters = params != null ? params : new Parameters();</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L106">    {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        parameters = (params != null) ? params : new Parameters();</span>
+<span class="fc" id="L108">    }</span>
 
     /**
      * Returns the {@code Parameters} instance associated with this object.
@@ -113,7 +114,7 @@ public class Configurations
      */
     public Parameters getParameters()
     {
-<span class="fc" id="L116">        return parameters;</span>
+<span class="fc" id="L117">        return parameters;</span>
     }
 
     /**
@@ -128,7 +129,7 @@ public class Configurations
     public &lt;T extends FileBasedConfiguration&gt; FileBasedConfigurationBuilder&lt;T&gt; fileBasedBuilder(
             final Class&lt;T&gt; configClass, final File file)
     {
-<span class="fc" id="L131">        return createFileBasedBuilder(configClass, fileParams(file));</span>
+<span class="fc" id="L132">        return createFileBasedBuilder(configClass, fileParams(file));</span>
     }
 
     /**
@@ -144,7 +145,7 @@ public class Configurations
     public &lt;T extends FileBasedConfiguration&gt; FileBasedConfigurationBuilder&lt;T&gt; fileBasedBuilder(
             final Class&lt;T&gt; configClass, final URL url)
     {
-<span class="fc" id="L147">        return createFileBasedBuilder(configClass, fileParams(url));</span>
+<span class="fc" id="L148">        return createFileBasedBuilder(configClass, fileParams(url));</span>
     }
 
     /**
@@ -160,7 +161,7 @@ public class Configurations
     public &lt;T extends FileBasedConfiguration&gt; FileBasedConfigurationBuilder&lt;T&gt; fileBasedBuilder(
             final Class&lt;T&gt; configClass, final String path)
     {
-<span class="fc" id="L163">        return createFileBasedBuilder(configClass, fileParams(path));</span>
+<span class="fc" id="L164">        return createFileBasedBuilder(configClass, fileParams(path));</span>
     }
 
     /**
@@ -180,7 +181,7 @@ public class Configurations
     public &lt;T extends FileBasedConfiguration&gt; T fileBased(final Class&lt;T&gt; configClass,
             final File file) throws ConfigurationException
     {
-<span class="fc" id="L183">        return fileBasedBuilder(configClass, file).getConfiguration();</span>
+<span class="fc" id="L184">        return fileBasedBuilder(configClass, file).getConfiguration();</span>
     }
 
     /**
@@ -200,7 +201,7 @@ public class Configurations
     public &lt;T extends FileBasedConfiguration&gt; T fileBased(final Class&lt;T&gt; configClass,
             final URL url) throws ConfigurationException
     {
-<span class="fc" id="L203">        return fileBasedBuilder(configClass, url).getConfiguration();</span>
+<span class="fc" id="L204">        return fileBasedBuilder(configClass, url).getConfiguration();</span>
     }
 
     /**
@@ -221,18 +222,7 @@ public class Configurations
     public &lt;T extends FileBasedConfiguration&gt; T fileBased(final Class&lt;T&gt; configClass,
             final String path) throws ConfigurationException
     {
-<span class="fc" id="L224">        return fileBasedBuilder(configClass, path).getConfiguration();</span>
-    }
-
-    /**
-     * Creates a builder for a {@code PropertiesConfiguration}.
-     *
-     * @return the newly created {@code FileBasedConfigurationBuilder}
-     * @since 2.6
-     */
-    public FileBasedConfigurationBuilder&lt;PropertiesConfiguration&gt; propertiesBuilder()
-    {
-<span class="fc" id="L235">        return createFileBasedBuilder(PropertiesConfiguration.class);</span>
+<span class="fc" id="L225">        return fileBasedBuilder(configClass, path).getConfiguration();</span>
     }
 
     /**
@@ -245,21 +235,7 @@ public class Configurations
     public FileBasedConfigurationBuilder&lt;PropertiesConfiguration&gt; propertiesBuilder(
             final File file)
     {
-<span class="fc" id="L248">        return fileBasedBuilder(PropertiesConfiguration.class, file);</span>
-    }
-
-    /**
-     * Creates a builder for a {@code PropertiesConfiguration} and initializes
-     * it with the given parameters to be loaded.
-     *
-     * @param parameters the parameters to be loaded
-     * @return the newly created {@code FileBasedConfigurationBuilder}
-     * @since 2.6
-     */
-    public FileBasedConfigurationBuilder&lt;PropertiesConfiguration&gt; propertiesBuilder(
-            PropertiesBuilderParameters parameters)
-    {
-<span class="fc" id="L262">        return propertiesBuilder().configure(parameters);</span>
+<span class="fc" id="L238">        return fileBasedBuilder(PropertiesConfiguration.class, file);</span>
     }
 
     /**
@@ -272,7 +248,7 @@ public class Configurations
     public FileBasedConfigurationBuilder&lt;PropertiesConfiguration&gt; propertiesBuilder(
             final URL url)
     {
-<span class="fc" id="L275">        return fileBasedBuilder(PropertiesConfiguration.class, url);</span>
+<span class="fc" id="L251">        return fileBasedBuilder(PropertiesConfiguration.class, url);</span>
     }
 
     /**
@@ -285,7 +261,7 @@ public class Configurations
     public FileBasedConfigurationBuilder&lt;PropertiesConfiguration&gt; propertiesBuilder(
             final String path)
     {
-<span class="fc" id="L288">        return fileBasedBuilder(PropertiesConfiguration.class, path);</span>
+<span class="fc" id="L264">        return fileBasedBuilder(PropertiesConfiguration.class, path);</span>
     }
 
     /**
@@ -303,7 +279,7 @@ public class Configurations
     public PropertiesConfiguration properties(final File file)
             throws ConfigurationException
     {
-<span class="fc" id="L306">        return propertiesBuilder(file).getConfiguration();</span>
+<span class="fc" id="L282">        return propertiesBuilder(file).getConfiguration();</span>
     }
 
     /**
@@ -321,7 +297,7 @@ public class Configurations
     public PropertiesConfiguration properties(final URL url)
             throws ConfigurationException
     {
-<span class="fc" id="L324">        return propertiesBuilder(url).getConfiguration();</span>
+<span class="fc" id="L300">        return propertiesBuilder(url).getConfiguration();</span>
     }
 
     /**
@@ -339,7 +315,7 @@ public class Configurations
     public PropertiesConfiguration properties(final String path)
             throws ConfigurationException
     {
-<span class="fc" id="L342">        return propertiesBuilder(path).getConfiguration();</span>
+<span class="fc" id="L318">        return propertiesBuilder(path).getConfiguration();</span>
     }
 
     /**
@@ -351,7 +327,7 @@ public class Configurations
      */
     public FileBasedConfigurationBuilder&lt;XMLConfiguration&gt; xmlBuilder(final File file)
     {
-<span class="fc" id="L354">        return fileBasedBuilder(XMLConfiguration.class, file);</span>
+<span class="fc" id="L330">        return fileBasedBuilder(XMLConfiguration.class, file);</span>
     }
 
     /**
@@ -363,7 +339,7 @@ public class Configurations
      */
     public FileBasedConfigurationBuilder&lt;XMLConfiguration&gt; xmlBuilder(final URL url)
     {
-<span class="fc" id="L366">        return fileBasedBuilder(XMLConfiguration.class, url);</span>
+<span class="fc" id="L342">        return fileBasedBuilder(XMLConfiguration.class, url);</span>
     }
 
     /**
@@ -376,7 +352,7 @@ public class Configurations
     public FileBasedConfigurationBuilder&lt;XMLConfiguration&gt; xmlBuilder(
             final String path)
     {
-<span class="fc" id="L379">        return fileBasedBuilder(XMLConfiguration.class, path);</span>
+<span class="fc" id="L355">        return fileBasedBuilder(XMLConfiguration.class, path);</span>
     }
 
     /**
@@ -392,7 +368,7 @@ public class Configurations
      */
     public XMLConfiguration xml(final File file) throws ConfigurationException
     {
-<span class="fc" id="L395">        return xmlBuilder(file).getConfiguration();</span>
+<span class="fc" id="L371">        return xmlBuilder(file).getConfiguration();</span>
     }
 
     /**
@@ -408,7 +384,7 @@ public class Configurations
      */
     public XMLConfiguration xml(final URL url) throws ConfigurationException
     {
-<span class="fc" id="L411">        return xmlBuilder(url).getConfiguration();</span>
+<span class="fc" id="L387">        return xmlBuilder(url).getConfiguration();</span>
     }
 
     /**
@@ -424,7 +400,7 @@ public class Configurations
      */
     public XMLConfiguration xml(final String path) throws ConfigurationException
     {
-<span class="fc" id="L427">        return xmlBuilder(path).getConfiguration();</span>
+<span class="fc" id="L403">        return xmlBuilder(path).getConfiguration();</span>
     }
 
     /**
@@ -436,7 +412,7 @@ public class Configurations
      */
     public FileBasedConfigurationBuilder&lt;INIConfiguration&gt; iniBuilder(final File file)
     {
-<span class="fc" id="L439">        return fileBasedBuilder(INIConfiguration.class, file);</span>
+<span class="fc" id="L415">        return fileBasedBuilder(INIConfiguration.class, file);</span>
     }
 
     /**
@@ -448,7 +424,7 @@ public class Configurations
      */
     public FileBasedConfigurationBuilder&lt;INIConfiguration&gt; iniBuilder(final URL url)
     {
-<span class="fc" id="L451">        return fileBasedBuilder(INIConfiguration.class, url);</span>
+<span class="fc" id="L427">        return fileBasedBuilder(INIConfiguration.class, url);</span>
     }
 
     /**
@@ -461,7 +437,7 @@ public class Configurations
     public FileBasedConfigurationBuilder&lt;INIConfiguration&gt; iniBuilder(
             final String path)
     {
-<span class="fc" id="L464">        return fileBasedBuilder(INIConfiguration.class, path);</span>
+<span class="fc" id="L440">        return fileBasedBuilder(INIConfiguration.class, path);</span>
     }
 
     /**
@@ -477,7 +453,7 @@ public class Configurations
      */
     public INIConfiguration ini(final File file) throws ConfigurationException
     {
-<span class="fc" id="L480">        return iniBuilder(file).getConfiguration();</span>
+<span class="fc" id="L456">        return iniBuilder(file).getConfiguration();</span>
     }
 
     /**
@@ -493,7 +469,7 @@ public class Configurations
      */
     public INIConfiguration ini(final URL url) throws ConfigurationException
     {
-<span class="fc" id="L496">        return iniBuilder(url).getConfiguration();</span>
+<span class="fc" id="L472">        return iniBuilder(url).getConfiguration();</span>
     }
 
     /**
@@ -509,7 +485,7 @@ public class Configurations
      */
     public INIConfiguration ini(final String path) throws ConfigurationException
     {
-<span class="fc" id="L512">        return iniBuilder(path).getConfiguration();</span>
+<span class="fc" id="L488">        return iniBuilder(path).getConfiguration();</span>
     }
 
     /**
@@ -521,7 +497,7 @@ public class Configurations
      */
     public CombinedConfigurationBuilder combinedBuilder(final File file)
     {
-<span class="fc" id="L524">        return new CombinedConfigurationBuilder().configure(fileParams(file));</span>
+<span class="fc" id="L500">        return new CombinedConfigurationBuilder().configure(fileParams(file));</span>
     }
 
     /**
@@ -533,7 +509,7 @@ public class Configurations
      */
     public CombinedConfigurationBuilder combinedBuilder(final URL url)
     {
-<span class="fc" id="L536">        return new CombinedConfigurationBuilder().configure(fileParams(url));</span>
+<span class="fc" id="L512">        return new CombinedConfigurationBuilder().configure(fileParams(url));</span>
     }
 
     /**
@@ -545,7 +521,7 @@ public class Configurations
      */
     public CombinedConfigurationBuilder combinedBuilder(final String path)
     {
-<span class="fc" id="L548">        return new CombinedConfigurationBuilder().configure(fileParams(path));</span>
+<span class="fc" id="L524">        return new CombinedConfigurationBuilder().configure(fileParams(path));</span>
     }
 
     /**
@@ -562,7 +538,7 @@ public class Configurations
     public CombinedConfiguration combined(final File file)
             throws ConfigurationException
     {
-<span class="fc" id="L565">        return combinedBuilder(file).getConfiguration();</span>
+<span class="fc" id="L541">        return combinedBuilder(file).getConfiguration();</span>
     }
 
     /**
@@ -579,7 +555,7 @@ public class Configurations
     public CombinedConfiguration combined(final URL url)
             throws ConfigurationException
     {
-<span class="fc" id="L582">        return combinedBuilder(url).getConfiguration();</span>
+<span class="fc" id="L558">        return combinedBuilder(url).getConfiguration();</span>
     }
 
     /**
@@ -596,22 +572,7 @@ public class Configurations
     public CombinedConfiguration combined(final String path)
             throws ConfigurationException
     {
-<span class="fc" id="L599">        return combinedBuilder(path).getConfiguration();</span>
-    }
-
-    /**
-     * Creates a configured builder for a file-based configuration of the
-     * specified type.
-     *
-     * @param configClass the configuration class
-     * @param &lt;T&gt; the type of the configuration to be constructed
-     * @return the newly created builder
-     * @since 2.6
-     */
-    private &lt;T extends FileBasedConfiguration&gt; FileBasedConfigurationBuilder&lt;T&gt; createFileBasedBuilder(
-            final Class&lt;T&gt; configClass)
-    {
-<span class="fc" id="L614">        return new FileBasedConfigurationBuilder&lt;&gt;(configClass);</span>
+<span class="fc" id="L575">        return combinedBuilder(path).getConfiguration();</span>
     }
 
     /**
@@ -626,7 +587,8 @@ public class Configurations
     private &lt;T extends FileBasedConfiguration&gt; FileBasedConfigurationBuilder&lt;T&gt; createFileBasedBuilder(
             final Class&lt;T&gt; configClass, final FileBasedBuilderParameters params)
     {
-<span class="fc" id="L629">        return createFileBasedBuilder(configClass).configure(params);</span>
+<span class="fc" id="L590">        return new FileBasedConfigurationBuilder&lt;&gt;(configClass)</span>
+<span class="fc" id="L591">                .configure(params);</span>
     }
 
     /**
@@ -637,7 +599,7 @@ public class Configurations
      */
     private FileBasedBuilderParameters fileParams()
     {
-<span class="fc" id="L640">        return getParameters().fileBased();</span>
+<span class="fc" id="L602">        return getParameters().fileBased();</span>
     }
 
     /**
@@ -649,7 +611,7 @@ public class Configurations
      */
     private FileBasedBuilderParameters fileParams(final File file)
     {
-<span class="fc" id="L652">        return fileParams().setFile(file);</span>
+<span class="fc" id="L614">        return fileParams().setFile(file);</span>
     }
 
     /**
@@ -661,7 +623,7 @@ public class Configurations
      */
     private FileBasedBuilderParameters fileParams(final URL url)
     {
-<span class="fc" id="L664">        return fileParams().setURL(url);</span>
+<span class="fc" id="L626">        return fileParams().setURL(url);</span>
     }
 
     /**
@@ -673,8 +635,7 @@ public class Configurations
      */
     private FileBasedBuilderParameters fileParams(final String path)
     {
-<span class="fc" id="L676">        return fileParams().setFileName(path);</span>
+<span class="fc" id="L638">        return fileParams().setFileName(path);</span>
     }
-
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

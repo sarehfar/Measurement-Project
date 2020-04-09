@@ -110,9 +110,10 @@ import java.util.List;
  * first node is used.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 1.3
  */
-<span class="fc" id="L115">public class UnionCombiner extends NodeCombiner</span>
+<span class="fc" id="L116">public class UnionCombiner extends NodeCombiner</span>
 {
     /**
      * Combines the given nodes to a new union node.
@@ -125,37 +126,37 @@ import java.util.List;
     public ImmutableNode combine(final ImmutableNode node1,
             final ImmutableNode node2)
     {
-<span class="fc" id="L128">        final ImmutableNode.Builder result = new ImmutableNode.Builder();</span>
-<span class="fc" id="L129">        result.name(node1.getNodeName());</span>
+<span class="fc" id="L129">        final ImmutableNode.Builder result = new ImmutableNode.Builder();</span>
+<span class="fc" id="L130">        result.name(node1.getNodeName());</span>
 
         // attributes of the first node take precedence
-<span class="fc" id="L132">        result.addAttributes(node2.getAttributes());</span>
-<span class="fc" id="L133">        result.addAttributes(node1.getAttributes());</span>
+<span class="fc" id="L133">        result.addAttributes(node2.getAttributes());</span>
+<span class="fc" id="L134">        result.addAttributes(node1.getAttributes());</span>
 
         // Check if nodes can be combined
-<span class="fc" id="L136">        final List&lt;ImmutableNode&gt; children2 = new LinkedList&lt;&gt;(node2.getChildren());</span>
-<span class="fc bfc" id="L137" title="All 2 branches covered.">        for (final ImmutableNode child1 : node1.getChildren())</span>
+<span class="fc" id="L137">        final List&lt;ImmutableNode&gt; children2 = new LinkedList&lt;&gt;(node2.getChildren());</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (final ImmutableNode child1 : node1.getChildren())</span>
         {
-<span class="fc" id="L139">            final ImmutableNode child2 = findCombineNode(node1, node2, child1</span>
+<span class="fc" id="L140">            final ImmutableNode child2 = findCombineNode(node1, node2, child1</span>
             );
-<span class="fc bfc" id="L141" title="All 2 branches covered.">            if (child2 != null)</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">            if (child2 != null)</span>
             {
-<span class="fc" id="L143">                result.addChild(combine(child1, child2));</span>
-<span class="fc" id="L144">                children2.remove(child2);</span>
+<span class="fc" id="L144">                result.addChild(combine(child1, child2));</span>
+<span class="fc" id="L145">                children2.remove(child2);</span>
             }
             else
             {
-<span class="fc" id="L148">                result.addChild(child1);</span>
+<span class="fc" id="L149">                result.addChild(child1);</span>
             }
-<span class="fc" id="L150">        }</span>
+<span class="fc" id="L151">        }</span>
 
         // Add remaining children of node 2
-<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (final ImmutableNode c : children2)</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        for (final ImmutableNode c : children2)</span>
         {
-<span class="fc" id="L155">            result.addChild(c);</span>
-<span class="fc" id="L156">        }</span>
+<span class="fc" id="L156">            result.addChild(c);</span>
+<span class="fc" id="L157">        }</span>
 
-<span class="fc" id="L158">        return result.create();</span>
+<span class="fc" id="L159">        return result.create();</span>
     }
 
     /**
@@ -191,18 +192,18 @@ import java.util.List;
     protected ImmutableNode findCombineNode(final ImmutableNode node1,
             final ImmutableNode node2, final ImmutableNode child)
     {
-<span class="fc bfc" id="L194" title="All 4 branches covered.">        if (child.getValue() == null &amp;&amp; !isListNode(child)</span>
-<span class="fc bfc" id="L195" title="All 2 branches covered.">                &amp;&amp; HANDLER.getChildrenCount(node1, child.getNodeName()) == 1</span>
-<span class="fc bfc" id="L196" title="All 2 branches covered.">                &amp;&amp; HANDLER.getChildrenCount(node2, child.getNodeName()) == 1)</span>
+<span class="fc bfc" id="L195" title="All 4 branches covered.">        if (child.getValue() == null &amp;&amp; !isListNode(child)</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">                &amp;&amp; HANDLER.getChildrenCount(node1, child.getNodeName()) == 1</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">                &amp;&amp; HANDLER.getChildrenCount(node2, child.getNodeName()) == 1)</span>
         {
-<span class="fc" id="L198">            final ImmutableNode child2 =</span>
-<span class="fc" id="L199">                    HANDLER.getChildren(node2, child.getNodeName()).get(0);</span>
-<span class="fc bfc" id="L200" title="All 2 branches covered.">            if (child2.getValue() == null)</span>
+<span class="fc" id="L199">            final ImmutableNode child2 =</span>
+<span class="fc" id="L200">                    HANDLER.getChildren(node2, child.getNodeName()).get(0);</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            if (child2.getValue() == null)</span>
             {
-<span class="fc" id="L202">                return child2;</span>
+<span class="fc" id="L203">                return child2;</span>
             }
         }
-<span class="fc" id="L205">        return null;</span>
+<span class="fc" id="L206">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

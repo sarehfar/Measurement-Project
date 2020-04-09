@@ -30,6 +30,7 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
  * a configuration node.
  * &lt;/p&gt;
  *
+ * @version $Id $
  * @since 2.0
  * @param &lt;T&gt; the type of the nodes this pointer deals with
  */
@@ -49,14 +50,14 @@ class ConfigurationAttributePointer&lt;T&gt; extends NodePointer
      * @param parent the parent node pointer
      * @param attrName the name of the managed attribute
      */
-    public ConfigurationAttributePointer(final ConfigurationNodePointer&lt;T&gt; parent,
-            final String attrName)
+    public ConfigurationAttributePointer(ConfigurationNodePointer&lt;T&gt; parent,
+            String attrName)
     {
-<span class="fc" id="L55">        super(parent);</span>
-<span class="fc" id="L56">        attributeResult =</span>
-<span class="fc" id="L57">                QueryResult.createAttributeResult(</span>
-<span class="fc" id="L58">                        parent.getConfigurationNode(), attrName);</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L56">        super(parent);</span>
+<span class="fc" id="L57">        attributeResult =</span>
+<span class="fc" id="L58">                QueryResult.createAttributeResult(</span>
+<span class="fc" id="L59">                        parent.getConfigurationNode(), attrName);</span>
+<span class="fc" id="L60">    }</span>
 
     /**
      * Returns a reference to the parent node pointer.
@@ -68,7 +69,6 @@ class ConfigurationAttributePointer&lt;T&gt; extends NodePointer
         // safe to cast because the constructor only expects pointers of this
         // type
         @SuppressWarnings(&quot;unchecked&quot;)
-        final
 <span class="fc" id="L72">        ConfigurationNodePointer&lt;T&gt; configurationNodePointer =</span>
 <span class="fc" id="L73">                (ConfigurationNodePointer&lt;T&gt;) getParent();</span>
 <span class="fc" id="L74">        return configurationNodePointer;</span>
@@ -83,7 +83,7 @@ class ConfigurationAttributePointer&lt;T&gt; extends NodePointer
      * @return the order of these pointers
      */
     @Override
-    public int compareChildNodePointers(final NodePointer p1, final NodePointer p2)
+    public int compareChildNodePointers(NodePointer p1, NodePointer p2)
     {
 <span class="nc" id="L88">        return 0;</span>
     }
@@ -188,7 +188,7 @@ class ConfigurationAttributePointer&lt;T&gt; extends NodePointer
      * @param value the new value
      */
     @Override
-    public void setValue(final Object value)
+    public void setValue(Object value)
     {
 <span class="fc" id="L193">        throw new UnsupportedOperationException(</span>
                 &quot;Updating the value is not supported!&quot;);
@@ -202,7 +202,7 @@ class ConfigurationAttributePointer&lt;T&gt; extends NodePointer
      * @return a flag if this node corresponds to the test
      */
     @Override
-    public boolean testNode(final NodeTest test)
+    public boolean testNode(NodeTest test)
     {
 <span class="pc bpc" id="L207" title="1 of 2 branches missed.">        if (test instanceof NodeTypeTest</span>
 <span class="fc bfc" id="L208" title="All 2 branches covered.">                &amp;&amp; ((NodeTypeTest) test).getNodeType() == Compiler.NODE_TYPE_TEXT)</span>

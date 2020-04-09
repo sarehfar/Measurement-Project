@@ -47,14 +47,15 @@ import org.apache.commons.configuration2.builder.DefaultParametersManager;
  * {@code ConfigurationBuilder}.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class CombinedBuilderParametersImpl extends BasicBuilderParameters
         implements CombinedBuilderProperties&lt;CombinedBuilderParametersImpl&gt;
 {
     /** Constant for the key in the parameters map used by this class. */
-<span class="fc" id="L56">    private static final String PARAM_KEY = RESERVED_PARAMETER_PREFIX</span>
-<span class="fc" id="L57">            + CombinedBuilderParametersImpl.class.getName();</span>
+<span class="fc" id="L57">    private static final String PARAM_KEY = RESERVED_PARAMETER_PREFIX</span>
+<span class="fc" id="L58">            + CombinedBuilderParametersImpl.class.getName();</span>
 
     /** The definition configuration builder. */
     private ConfigurationBuilder&lt;? extends HierarchicalConfiguration&lt;?&gt;&gt; definitionBuilder;
@@ -81,11 +82,11 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      * Creates a new instance of {@code CombinedBuilderParametersImpl}.
      */
     public CombinedBuilderParametersImpl()
-<span class="fc" id="L84">    {</span>
-<span class="fc" id="L85">        providers = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L86">        childParameters = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L87">        inheritSettings = true;</span>
-<span class="fc" id="L88">    }</span>
+<span class="fc" id="L85">    {</span>
+<span class="fc" id="L86">        providers = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L87">        childParameters = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L88">        inheritSettings = true;</span>
+<span class="fc" id="L89">    }</span>
 
     /**
      * Looks up an instance of this class in the specified parameters map. This
@@ -96,9 +97,9 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      * @throws NullPointerException if the map is &lt;b&gt;null&lt;/b&gt;
      */
     public static CombinedBuilderParametersImpl fromParameters(
-            final Map&lt;String, ?&gt; params)
+            Map&lt;String, ?&gt; params)
     {
-<span class="fc" id="L101">        return fromParameters(params, false);</span>
+<span class="fc" id="L102">        return fromParameters(params, false);</span>
     }
 
     /**
@@ -115,15 +116,15 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      * @throws NullPointerException if the map is &lt;b&gt;null&lt;/b&gt;
      */
     public static CombinedBuilderParametersImpl fromParameters(
-            final Map&lt;String, ?&gt; params, final boolean createIfMissing)
+            Map&lt;String, ?&gt; params, boolean createIfMissing)
     {
-<span class="fc" id="L120">        CombinedBuilderParametersImpl result =</span>
-<span class="fc" id="L121">                (CombinedBuilderParametersImpl) params.get(PARAM_KEY);</span>
-<span class="fc bfc" id="L122" title="All 4 branches covered.">        if (result == null &amp;&amp; createIfMissing)</span>
+<span class="fc" id="L121">        CombinedBuilderParametersImpl result =</span>
+<span class="fc" id="L122">                (CombinedBuilderParametersImpl) params.get(PARAM_KEY);</span>
+<span class="fc bfc" id="L123" title="All 4 branches covered.">        if (result == null &amp;&amp; createIfMissing)</span>
         {
-<span class="fc" id="L124">            result = new CombinedBuilderParametersImpl();</span>
+<span class="fc" id="L125">            result = new CombinedBuilderParametersImpl();</span>
         }
-<span class="fc" id="L126">        return result;</span>
+<span class="fc" id="L127">        return result;</span>
     }
 
     /**
@@ -131,18 +132,18 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      * defined by this class.
      */
     @Override
-    public void inheritFrom(final Map&lt;String, ?&gt; source)
+    public void inheritFrom(Map&lt;String, ?&gt; source)
     {
-<span class="fc" id="L136">        super.inheritFrom(source);</span>
+<span class="fc" id="L137">        super.inheritFrom(source);</span>
 
-<span class="fc" id="L138">        final CombinedBuilderParametersImpl srcParams = fromParameters(source);</span>
-<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (srcParams != null)</span>
+<span class="fc" id="L139">        CombinedBuilderParametersImpl srcParams = fromParameters(source);</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (srcParams != null)</span>
         {
-<span class="fc" id="L141">            setChildDefaultParametersManager(</span>
-<span class="fc" id="L142">                    srcParams.getChildDefaultParametersManager());</span>
-<span class="fc" id="L143">            setInheritSettings(srcParams.isInheritSettings());</span>
+<span class="fc" id="L142">            setChildDefaultParametersManager(</span>
+<span class="fc" id="L143">                    srcParams.getChildDefaultParametersManager());</span>
+<span class="fc" id="L144">            setInheritSettings(srcParams.isInheritSettings());</span>
         }
-<span class="fc" id="L145">    }</span>
+<span class="fc" id="L146">    }</span>
 
     /**
      * Returns the current value of the flag that controls whether the settings
@@ -154,15 +155,15 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     public boolean isInheritSettings()
     {
-<span class="fc" id="L157">        return inheritSettings;</span>
+<span class="fc" id="L158">        return inheritSettings;</span>
     }
 
     @Override
     public CombinedBuilderParametersImpl setInheritSettings(
-            final boolean inheritSettings)
+            boolean inheritSettings)
     {
-<span class="fc" id="L164">        this.inheritSettings = inheritSettings;</span>
-<span class="fc" id="L165">        return this;</span>
+<span class="fc" id="L165">        this.inheritSettings = inheritSettings;</span>
+<span class="fc" id="L166">        return this;</span>
     }
 
     /**
@@ -173,7 +174,7 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     public ConfigurationBuilder&lt;? extends HierarchicalConfiguration&lt;?&gt;&gt; getDefinitionBuilder()
     {
-<span class="fc" id="L176">        return definitionBuilder;</span>
+<span class="fc" id="L177">        return definitionBuilder;</span>
     }
 
     /**
@@ -186,10 +187,10 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     @Override
     public CombinedBuilderParametersImpl setDefinitionBuilder(
-            final ConfigurationBuilder&lt;? extends HierarchicalConfiguration&lt;?&gt;&gt; builder)
+            ConfigurationBuilder&lt;? extends HierarchicalConfiguration&lt;?&gt;&gt; builder)
     {
-<span class="fc" id="L191">        definitionBuilder = builder;</span>
-<span class="fc" id="L192">        return this;</span>
+<span class="fc" id="L192">        definitionBuilder = builder;</span>
+<span class="fc" id="L193">        return this;</span>
     }
 
     /**
@@ -205,20 +206,20 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      * @throws IllegalArgumentException if a required parameter is missing
      */
     @Override
-    public CombinedBuilderParametersImpl registerProvider(final String tagName,
-            final ConfigurationBuilderProvider provider)
+    public CombinedBuilderParametersImpl registerProvider(String tagName,
+            ConfigurationBuilderProvider provider)
     {
-<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (tagName == null)</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        if (tagName == null)</span>
         {
-<span class="fc" id="L213">            throw new IllegalArgumentException(&quot;Tag name must not be null!&quot;);</span>
+<span class="fc" id="L214">            throw new IllegalArgumentException(&quot;Tag name must not be null!&quot;);</span>
         }
-<span class="fc bfc" id="L215" title="All 2 branches covered.">        if (provider == null)</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        if (provider == null)</span>
         {
-<span class="fc" id="L217">            throw new IllegalArgumentException(&quot;Provider must not be null!&quot;);</span>
+<span class="fc" id="L218">            throw new IllegalArgumentException(&quot;Provider must not be null!&quot;);</span>
         }
 
-<span class="fc" id="L220">        providers.put(tagName, provider);</span>
-<span class="fc" id="L221">        return this;</span>
+<span class="fc" id="L221">        providers.put(tagName, provider);</span>
+<span class="fc" id="L222">        return this;</span>
     }
 
     /**
@@ -237,23 +238,23 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      *         or contains &lt;b&gt;null&lt;/b&gt; entries
      */
     public CombinedBuilderParametersImpl registerMissingProviders(
-            final Map&lt;String, ConfigurationBuilderProvider&gt; providers)
+            Map&lt;String, ConfigurationBuilderProvider&gt; providers)
     {
-<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (providers == null)</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        if (providers == null)</span>
         {
-<span class="fc" id="L244">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L245">            throw new IllegalArgumentException(</span>
                     &quot;Map with providers must not be null!&quot;);
         }
 
-<span class="fc bfc" id="L248" title="All 2 branches covered.">        for (final Map.Entry&lt;String, ConfigurationBuilderProvider&gt; e : providers</span>
-<span class="fc" id="L249">                .entrySet())</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">        for (Map.Entry&lt;String, ConfigurationBuilderProvider&gt; e : providers</span>
+<span class="fc" id="L250">                .entrySet())</span>
         {
-<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (!this.providers.containsKey(e.getKey()))</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">            if (!this.providers.containsKey(e.getKey()))</span>
             {
-<span class="fc" id="L253">                registerProvider(e.getKey(), e.getValue());</span>
+<span class="fc" id="L254">                registerProvider(e.getKey(), e.getValue());</span>
             }
-<span class="fc" id="L255">        }</span>
-<span class="fc" id="L256">        return this;</span>
+<span class="fc" id="L256">        }</span>
+<span class="fc" id="L257">        return this;</span>
     }
 
     /**
@@ -269,14 +270,14 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      *         &lt;b&gt;null&lt;/b&gt;
      */
     public CombinedBuilderParametersImpl registerMissingProviders(
-            final CombinedBuilderParametersImpl params)
+            CombinedBuilderParametersImpl params)
     {
-<span class="fc bfc" id="L274" title="All 2 branches covered.">        if (params == null)</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (params == null)</span>
         {
-<span class="fc" id="L276">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L277">            throw new IllegalArgumentException(</span>
                     &quot;Source parameters must not be null!&quot;);
         }
-<span class="fc" id="L279">        return registerMissingProviders(params.getProviders());</span>
+<span class="fc" id="L280">        return registerMissingProviders(params.getProviders());</span>
     }
 
     /**
@@ -288,7 +289,7 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     public Map&lt;String, ConfigurationBuilderProvider&gt; getProviders()
     {
-<span class="fc" id="L291">        return Collections.unmodifiableMap(providers);</span>
+<span class="fc" id="L292">        return Collections.unmodifiableMap(providers);</span>
     }
 
     /**
@@ -299,9 +300,9 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      * @param tagName the tag name
      * @return the provider registered for this tag or &lt;b&gt;null&lt;/b&gt;
      */
-    public ConfigurationBuilderProvider providerForTag(final String tagName)
+    public ConfigurationBuilderProvider providerForTag(String tagName)
     {
-<span class="fc" id="L304">        return providers.get(tagName);</span>
+<span class="fc" id="L305">        return providers.get(tagName);</span>
     }
 
     /**
@@ -312,7 +313,7 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     public String getBasePath()
     {
-<span class="fc" id="L315">        return basePath;</span>
+<span class="fc" id="L316">        return basePath;</span>
     }
 
     /**
@@ -327,10 +328,10 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      * @return a reference to this object for method chaining
      */
     @Override
-    public CombinedBuilderParametersImpl setBasePath(final String path)
+    public CombinedBuilderParametersImpl setBasePath(String path)
     {
-<span class="fc" id="L332">        basePath = path;</span>
-<span class="fc" id="L333">        return this;</span>
+<span class="fc" id="L333">        basePath = path;</span>
+<span class="fc" id="L334">        return this;</span>
     }
 
     /**
@@ -342,7 +343,7 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     public BuilderParameters getDefinitionBuilderParameters()
     {
-<span class="fc" id="L345">        return definitionBuilderParameters;</span>
+<span class="fc" id="L346">        return definitionBuilderParameters;</span>
     }
 
     /**
@@ -359,10 +360,10 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     @Override
     public CombinedBuilderParametersImpl setDefinitionBuilderParameters(
-            final BuilderParameters params)
+            BuilderParameters params)
     {
-<span class="fc" id="L364">        definitionBuilderParameters = params;</span>
-<span class="fc" id="L365">        return this;</span>
+<span class="fc" id="L365">        definitionBuilderParameters = params;</span>
+<span class="fc" id="L366">        return this;</span>
     }
 
     /**
@@ -376,7 +377,7 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     public Collection&lt;? extends BuilderParameters&gt; getDefaultChildParameters()
     {
-<span class="nc" id="L379">        return new ArrayList&lt;&gt;(childParameters);</span>
+<span class="nc" id="L380">        return new ArrayList&lt;&gt;(childParameters);</span>
     }
 
     /**
@@ -390,11 +391,11 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     public DefaultParametersManager getChildDefaultParametersManager()
     {
-<span class="fc bfc" id="L393" title="All 2 branches covered.">        if (childDefaultParametersManager == null)</span>
+<span class="fc bfc" id="L394" title="All 2 branches covered.">        if (childDefaultParametersManager == null)</span>
         {
-<span class="fc" id="L395">            childDefaultParametersManager = new DefaultParametersManager();</span>
+<span class="fc" id="L396">            childDefaultParametersManager = new DefaultParametersManager();</span>
         }
-<span class="fc" id="L397">        return childDefaultParametersManager;</span>
+<span class="fc" id="L398">        return childDefaultParametersManager;</span>
     }
 
     /**
@@ -405,10 +406,10 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     @Override
     public CombinedBuilderParametersImpl setChildDefaultParametersManager(
-            final DefaultParametersManager manager)
+            DefaultParametersManager manager)
     {
-<span class="fc" id="L410">        childDefaultParametersManager = manager;</span>
-<span class="fc" id="L411">        return this;</span>
+<span class="fc" id="L411">        childDefaultParametersManager = manager;</span>
+<span class="fc" id="L412">        return this;</span>
     }
 
     /**
@@ -418,11 +419,11 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     @Override
     public &lt;D&gt; CombinedBuilderParametersImpl registerChildDefaultsHandler(
-            final Class&lt;D&gt; paramClass, final DefaultParametersHandler&lt;? super D&gt; handler)
+            Class&lt;D&gt; paramClass, DefaultParametersHandler&lt;? super D&gt; handler)
     {
-<span class="fc" id="L423">        getChildDefaultParametersManager().registerDefaultsHandler(paramClass,</span>
+<span class="fc" id="L424">        getChildDefaultParametersManager().registerDefaultsHandler(paramClass,</span>
                 handler);
-<span class="fc" id="L425">        return this;</span>
+<span class="fc" id="L426">        return this;</span>
     }
 
     /**
@@ -432,12 +433,12 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
      */
     @Override
     public &lt;D&gt; CombinedBuilderParametersImpl registerChildDefaultsHandler(
-            final Class&lt;D&gt; paramClass, final DefaultParametersHandler&lt;? super D&gt; handler,
-            final Class&lt;?&gt; startClass)
+            Class&lt;D&gt; paramClass, DefaultParametersHandler&lt;? super D&gt; handler,
+            Class&lt;?&gt; startClass)
     {
-<span class="fc" id="L438">        getChildDefaultParametersManager().registerDefaultsHandler(paramClass,</span>
+<span class="fc" id="L439">        getChildDefaultParametersManager().registerDefaultsHandler(paramClass,</span>
                 handler, startClass);
-<span class="fc" id="L440">        return this;</span>
+<span class="fc" id="L441">        return this;</span>
     }
 
     /**
@@ -448,9 +449,9 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
     @Override
     public Map&lt;String, Object&gt; getParameters()
     {
-<span class="fc" id="L451">        final Map&lt;String, Object&gt; params = super.getParameters();</span>
-<span class="fc" id="L452">        params.put(PARAM_KEY, this);</span>
-<span class="fc" id="L453">        return params;</span>
+<span class="fc" id="L452">        Map&lt;String, Object&gt; params = super.getParameters();</span>
+<span class="fc" id="L453">        params.put(PARAM_KEY, this);</span>
+<span class="fc" id="L454">        return params;</span>
     }
 
     /**
@@ -460,11 +461,11 @@ public class CombinedBuilderParametersImpl extends BasicBuilderParameters
     @Override
     public CombinedBuilderParametersImpl clone()
     {
-<span class="fc" id="L463">        final CombinedBuilderParametersImpl copy =</span>
-<span class="fc" id="L464">                (CombinedBuilderParametersImpl) super.clone();</span>
-<span class="fc" id="L465">        copy.setDefinitionBuilderParameters((BuilderParameters) ConfigurationUtils</span>
-<span class="fc" id="L466">                .cloneIfPossible(getDefinitionBuilderParameters()));</span>
-<span class="fc" id="L467">        return copy;</span>
+<span class="fc" id="L464">        CombinedBuilderParametersImpl copy =</span>
+<span class="fc" id="L465">                (CombinedBuilderParametersImpl) super.clone();</span>
+<span class="fc" id="L466">        copy.setDefinitionBuilderParameters((BuilderParameters) ConfigurationUtils</span>
+<span class="fc" id="L467">                .cloneIfPossible(getDefinitionBuilderParameters()));</span>
+<span class="fc" id="L468">        return copy;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

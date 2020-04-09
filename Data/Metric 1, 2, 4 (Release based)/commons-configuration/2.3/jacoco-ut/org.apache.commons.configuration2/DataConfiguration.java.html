@@ -33,7 +33,6 @@ import java.util.NoSuchElementException;
 import org.apache.commons.configuration2.convert.ConversionHandler;
 import org.apache.commons.configuration2.convert.DefaultConversionHandler;
 import org.apache.commons.configuration2.ex.ConversionException;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -95,6 +94,8 @@ import org.apache.commons.lang3.StringUtils;
  * config.setConversionHandler(handler);
  * &lt;/pre&gt;
  *
+ * @author &lt;a href=&quot;ebourg@apache.org&quot;&gt;Emmanuel Bourg&lt;/a&gt;
+ * @version $Id$
  * @since 1.1
  */
 public class DataConfiguration extends AbstractConfiguration
@@ -105,32 +106,8 @@ public class DataConfiguration extends AbstractConfiguration
     /** The default format for dates. */
     public static final String DEFAULT_DATE_FORMAT = &quot;yyyy-MM-dd HH:mm:ss&quot;;
 
-    /** Empty array constant. */
-<span class="fc" id="L109">    private static final URL[] EMPTY_URL_ARRAY = new URL[0];</span>
-
-    /** Empty array constant. */
-<span class="fc" id="L112">    private static final URI[] EMPTY_URI_ARRAY = new URI[0];</span>
-
-    /** Empty array constant. */
-<span class="fc" id="L115">    private static final Locale[] EMPTY_LOCALE_ARRAY = new Locale[0];</span>
-
-    /** Empty array constant. */
-<span class="fc" id="L118">    private static final Date[] EMPTY_DATE_ARRAY = new Date[0];</span>
-
-    /** Empty array constant. */
-<span class="fc" id="L121">    private static final Color[] EMPTY_COLOR_ARRAY = new Color[0];</span>
-
-    /** Empty array constant. */
-<span class="fc" id="L124">    private static final Calendar[] EMPTY_CALENDARD_ARRAY = new Calendar[0];</span>
-
-    /** Empty array constant. */
-<span class="fc" id="L127">    private static final BigInteger[] EMPTY_BIG_INTEGER_ARRAY = new BigInteger[0];</span>
-
-    /** Empty array constant. */
-<span class="fc" id="L130">    private static final BigDecimal[] EMPTY_BIG_DECIMAL_ARRAY = new BigDecimal[0];</span>
-
     /** Stores temporary date formats. */
-<span class="fc" id="L133">    private static final ThreadLocal&lt;String&gt; TEMP_DATE_FORMAT = new ThreadLocal&lt;&gt;();</span>
+<span class="fc" id="L110">    private static final ThreadLocal&lt;String&gt; TEMP_DATE_FORMAT = new ThreadLocal&lt;&gt;();</span>
 
     /** Stores the wrapped configuration.*/
     private final Configuration configuration;
@@ -144,11 +121,11 @@ public class DataConfiguration extends AbstractConfiguration
      *
      * @param configuration the wrapped configuration
      */
-    public DataConfiguration(final Configuration configuration)
-<span class="fc" id="L148">    {</span>
-<span class="fc" id="L149">        this.configuration = configuration;</span>
-<span class="fc" id="L150">        dataConversionHandler = new DataConversionHandler();</span>
-<span class="fc" id="L151">    }</span>
+    public DataConfiguration(Configuration configuration)
+<span class="fc" id="L125">    {</span>
+<span class="fc" id="L126">        this.configuration = configuration;</span>
+<span class="fc" id="L127">        dataConversionHandler = new DataConversionHandler();</span>
+<span class="fc" id="L128">    }</span>
 
     /**
      * Return the configuration decorated by this DataConfiguration.
@@ -157,7 +134,7 @@ public class DataConfiguration extends AbstractConfiguration
      */
     public Configuration getConfiguration()
     {
-<span class="fc" id="L160">        return configuration;</span>
+<span class="fc" id="L137">        return configuration;</span>
     }
 
     /**
@@ -167,62 +144,62 @@ public class DataConfiguration extends AbstractConfiguration
     @Override
     public ConversionHandler getConversionHandler()
     {
-<span class="fc" id="L170">        return dataConversionHandler;</span>
+<span class="fc" id="L147">        return dataConversionHandler;</span>
     }
 
     @Override
-    protected Object getPropertyInternal(final String key)
+    protected Object getPropertyInternal(String key)
     {
-<span class="fc" id="L176">        return configuration.getProperty(key);</span>
+<span class="fc" id="L153">        return configuration.getProperty(key);</span>
     }
 
     @Override
-    protected void addPropertyInternal(final String key, final Object obj)
+    protected void addPropertyInternal(String key, Object obj)
     {
-<span class="fc" id="L182">        configuration.addProperty(key, obj);</span>
-<span class="fc" id="L183">    }</span>
+<span class="fc" id="L159">        configuration.addProperty(key, obj);</span>
+<span class="fc" id="L160">    }</span>
 
     @Override
-    protected void addPropertyDirect(final String key, final Object value)
+    protected void addPropertyDirect(String key, Object value)
     {
-<span class="pc bpc" id="L188" title="1 of 2 branches missed.">        if (configuration instanceof AbstractConfiguration)</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (configuration instanceof AbstractConfiguration)</span>
         {
-<span class="fc" id="L190">            ((AbstractConfiguration) configuration).addPropertyDirect(key, value);</span>
+<span class="fc" id="L167">            ((AbstractConfiguration) configuration).addPropertyDirect(key, value);</span>
         }
         else
         {
-<span class="nc" id="L194">            configuration.addProperty(key, value);</span>
+<span class="nc" id="L171">            configuration.addProperty(key, value);</span>
         }
-<span class="fc" id="L196">    }</span>
+<span class="fc" id="L173">    }</span>
 
     @Override
     protected boolean isEmptyInternal()
     {
-<span class="fc" id="L201">        return configuration.isEmpty();</span>
+<span class="fc" id="L178">        return configuration.isEmpty();</span>
     }
 
     @Override
-    protected boolean containsKeyInternal(final String key)
+    protected boolean containsKeyInternal(String key)
     {
-<span class="fc" id="L207">        return configuration.containsKey(key);</span>
+<span class="fc" id="L184">        return configuration.containsKey(key);</span>
     }
 
     @Override
-    protected void clearPropertyDirect(final String key)
+    protected void clearPropertyDirect(String key)
     {
-<span class="fc" id="L213">        configuration.clearProperty(key);</span>
-<span class="fc" id="L214">    }</span>
+<span class="fc" id="L190">        configuration.clearProperty(key);</span>
+<span class="fc" id="L191">    }</span>
 
     @Override
-    protected void setPropertyInternal(final String key, final Object value)
+    protected void setPropertyInternal(String key, Object value)
     {
-<span class="fc" id="L219">        configuration.setProperty(key, value);</span>
-<span class="fc" id="L220">    }</span>
+<span class="fc" id="L196">        configuration.setProperty(key, value);</span>
+<span class="fc" id="L197">    }</span>
 
     @Override
     protected Iterator&lt;String&gt; getKeysInternal()
     {
-<span class="fc" id="L225">        return configuration.getKeys();</span>
+<span class="fc" id="L202">        return configuration.getKeys();</span>
     }
 
     /**
@@ -236,9 +213,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of booleans.
      */
-    public List&lt;Boolean&gt; getBooleanList(final String key)
+    public List&lt;Boolean&gt; getBooleanList(String key)
     {
-<span class="fc" id="L241">        return getBooleanList(key, new ArrayList&lt;Boolean&gt;());</span>
+<span class="fc" id="L218">        return getBooleanList(key, new ArrayList&lt;Boolean&gt;());</span>
     }
 
     /**
@@ -253,9 +230,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of booleans.
      */
-    public List&lt;Boolean&gt; getBooleanList(final String key, final List&lt;Boolean&gt; defaultValue)
+    public List&lt;Boolean&gt; getBooleanList(String key, List&lt;Boolean&gt; defaultValue)
     {
-<span class="fc" id="L258">         return getList(Boolean.class, key, defaultValue);</span>
+<span class="fc" id="L235">         return getList(Boolean.class, key, defaultValue);</span>
     }
 
     /**
@@ -269,9 +246,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of booleans.
      */
-    public boolean[] getBooleanArray(final String key)
+    public boolean[] getBooleanArray(String key)
     {
-<span class="fc" id="L274">        return (boolean[]) getArray(Boolean.TYPE, key);</span>
+<span class="fc" id="L251">        return (boolean[]) getArray(Boolean.TYPE, key);</span>
     }
 
     /**
@@ -286,9 +263,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of booleans.
      */
-    public boolean[] getBooleanArray(final String key, final boolean... defaultValue)
+    public boolean[] getBooleanArray(String key, boolean[] defaultValue)
     {
-<span class="fc" id="L291">        return get(boolean[].class, key, defaultValue);</span>
+<span class="fc" id="L268">        return get(boolean[].class, key, defaultValue);</span>
     }
 
     /**
@@ -301,9 +278,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of bytes.
      */
-    public List&lt;Byte&gt; getByteList(final String key)
+    public List&lt;Byte&gt; getByteList(String key)
     {
-<span class="fc" id="L306">        return getByteList(key, new ArrayList&lt;Byte&gt;());</span>
+<span class="fc" id="L283">        return getByteList(key, new ArrayList&lt;Byte&gt;());</span>
     }
 
     /**
@@ -318,9 +295,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of bytes.
      */
-    public List&lt;Byte&gt; getByteList(final String key, final List&lt;Byte&gt; defaultValue)
+    public List&lt;Byte&gt; getByteList(String key, List&lt;Byte&gt; defaultValue)
     {
-<span class="fc" id="L323">        return getList(Byte.class, key, defaultValue);</span>
+<span class="fc" id="L300">        return getList(Byte.class, key, defaultValue);</span>
     }
 
     /**
@@ -334,9 +311,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of bytes.
      */
-    public byte[] getByteArray(final String key)
+    public byte[] getByteArray(String key)
     {
-<span class="fc" id="L339">        return getByteArray(key, ArrayUtils.EMPTY_BYTE_ARRAY);</span>
+<span class="fc" id="L316">        return getByteArray(key, new byte[0]);</span>
     }
 
     /**
@@ -351,9 +328,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of bytes.
      */
-    public byte[] getByteArray(final String key, final byte... defaultValue)
+    public byte[] getByteArray(String key, byte[] defaultValue)
     {
-<span class="fc" id="L356">        return get(byte[].class, key, defaultValue);</span>
+<span class="fc" id="L333">        return get(byte[].class, key, defaultValue);</span>
     }
 
     /**
@@ -366,9 +343,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of shorts.
      */
-    public List&lt;Short&gt; getShortList(final String key)
+    public List&lt;Short&gt; getShortList(String key)
     {
-<span class="fc" id="L371">        return getShortList(key, new ArrayList&lt;Short&gt;());</span>
+<span class="fc" id="L348">        return getShortList(key, new ArrayList&lt;Short&gt;());</span>
     }
 
     /**
@@ -383,9 +360,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of shorts.
      */
-    public List&lt;Short&gt; getShortList(final String key, final List&lt;Short&gt; defaultValue)
+    public List&lt;Short&gt; getShortList(String key, List&lt;Short&gt; defaultValue)
     {
-<span class="fc" id="L388">        return getList(Short.class, key, defaultValue);</span>
+<span class="fc" id="L365">        return getList(Short.class, key, defaultValue);</span>
     }
 
     /**
@@ -399,9 +376,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of shorts.
      */
-    public short[] getShortArray(final String key)
+    public short[] getShortArray(String key)
     {
-<span class="fc" id="L404">        return getShortArray(key, ArrayUtils.EMPTY_SHORT_ARRAY);</span>
+<span class="fc" id="L381">        return getShortArray(key, new short[0]);</span>
     }
 
     /**
@@ -416,9 +393,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of shorts.
      */
-    public short[] getShortArray(final String key, final short... defaultValue)
+    public short[] getShortArray(String key, short[] defaultValue)
     {
-<span class="fc" id="L421">        return get(short[].class, key, defaultValue);</span>
+<span class="fc" id="L398">        return get(short[].class, key, defaultValue);</span>
     }
 
     /**
@@ -432,9 +409,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of integers.
      */
-    public List&lt;Integer&gt; getIntegerList(final String key)
+    public List&lt;Integer&gt; getIntegerList(String key)
     {
-<span class="fc" id="L437">        return getIntegerList(key, new ArrayList&lt;Integer&gt;());</span>
+<span class="fc" id="L414">        return getIntegerList(key, new ArrayList&lt;Integer&gt;());</span>
     }
 
     /**
@@ -449,9 +426,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of integers.
      */
-    public List&lt;Integer&gt; getIntegerList(final String key, final List&lt;Integer&gt; defaultValue)
+    public List&lt;Integer&gt; getIntegerList(String key, List&lt;Integer&gt; defaultValue)
     {
-<span class="fc" id="L454">        return getList(Integer.class, key, defaultValue);</span>
+<span class="fc" id="L431">        return getList(Integer.class, key, defaultValue);</span>
     }
 
     /**
@@ -465,9 +442,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of integers.
      */
-    public int[] getIntArray(final String key)
+    public int[] getIntArray(String key)
     {
-<span class="fc" id="L470">        return getIntArray(key, ArrayUtils.EMPTY_INT_ARRAY);</span>
+<span class="fc" id="L447">        return getIntArray(key, new int[0]);</span>
     }
 
     /**
@@ -482,9 +459,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of integers.
      */
-    public int[] getIntArray(final String key, final int... defaultValue)
+    public int[] getIntArray(String key, int[] defaultValue)
     {
-<span class="fc" id="L487">        return get(int[].class, key, defaultValue);</span>
+<span class="fc" id="L464">        return get(int[].class, key, defaultValue);</span>
     }
 
     /**
@@ -497,9 +474,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of longs.
      */
-    public List&lt;Long&gt; getLongList(final String key)
+    public List&lt;Long&gt; getLongList(String key)
     {
-<span class="fc" id="L502">        return getLongList(key, new ArrayList&lt;Long&gt;());</span>
+<span class="fc" id="L479">        return getLongList(key, new ArrayList&lt;Long&gt;());</span>
     }
 
     /**
@@ -514,9 +491,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of longs.
      */
-    public List&lt;Long&gt; getLongList(final String key, final List&lt;Long&gt; defaultValue)
+    public List&lt;Long&gt; getLongList(String key, List&lt;Long&gt; defaultValue)
     {
-<span class="fc" id="L519">        return getList(Long.class, key, defaultValue);</span>
+<span class="fc" id="L496">        return getList(Long.class, key, defaultValue);</span>
     }
 
     /**
@@ -530,9 +507,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of longs.
      */
-    public long[] getLongArray(final String key)
+    public long[] getLongArray(String key)
     {
-<span class="fc" id="L535">        return getLongArray(key, ArrayUtils.EMPTY_LONG_ARRAY);</span>
+<span class="fc" id="L512">        return getLongArray(key, new long[0]);</span>
     }
 
     /**
@@ -547,9 +524,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of longs.
      */
-    public long[] getLongArray(final String key, final long... defaultValue)
+    public long[] getLongArray(String key, long[] defaultValue)
     {
-<span class="fc" id="L552">        return get(long[].class, key, defaultValue);</span>
+<span class="fc" id="L529">        return get(long[].class, key, defaultValue);</span>
     }
 
     /**
@@ -562,9 +539,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of floats.
      */
-    public List&lt;Float&gt; getFloatList(final String key)
+    public List&lt;Float&gt; getFloatList(String key)
     {
-<span class="fc" id="L567">        return getFloatList(key, new ArrayList&lt;Float&gt;());</span>
+<span class="fc" id="L544">        return getFloatList(key, new ArrayList&lt;Float&gt;());</span>
     }
 
     /**
@@ -579,9 +556,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of floats.
      */
-    public List&lt;Float&gt; getFloatList(final String key, final List&lt;Float&gt; defaultValue)
+    public List&lt;Float&gt; getFloatList(String key, List&lt;Float&gt; defaultValue)
     {
-<span class="fc" id="L584">        return getList(Float.class, key, defaultValue);</span>
+<span class="fc" id="L561">        return getList(Float.class, key, defaultValue);</span>
     }
 
     /**
@@ -595,9 +572,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of floats.
      */
-    public float[] getFloatArray(final String key)
+    public float[] getFloatArray(String key)
     {
-<span class="fc" id="L600">        return getFloatArray(key, ArrayUtils.EMPTY_FLOAT_ARRAY);</span>
+<span class="fc" id="L577">        return getFloatArray(key, new float[0]);</span>
     }
 
     /**
@@ -612,9 +589,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of floats.
      */
-    public float[] getFloatArray(final String key, final float... defaultValue)
+    public float[] getFloatArray(String key, float[] defaultValue)
     {
-<span class="fc" id="L617">        return get(float[].class, key, defaultValue);</span>
+<span class="fc" id="L594">        return get(float[].class, key, defaultValue);</span>
     }
 
     /**
@@ -628,9 +605,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of doubles.
      */
-    public List&lt;Double&gt; getDoubleList(final String key)
+    public List&lt;Double&gt; getDoubleList(String key)
     {
-<span class="fc" id="L633">        return getDoubleList(key, new ArrayList&lt;Double&gt;());</span>
+<span class="fc" id="L610">        return getDoubleList(key, new ArrayList&lt;Double&gt;());</span>
     }
 
     /**
@@ -645,9 +622,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of doubles.
      */
-    public List&lt;Double&gt; getDoubleList(final String key, final List&lt;Double&gt; defaultValue)
+    public List&lt;Double&gt; getDoubleList(String key, List&lt;Double&gt; defaultValue)
     {
-<span class="fc" id="L650">        return getList(Double.class, key, defaultValue);</span>
+<span class="fc" id="L627">        return getList(Double.class, key, defaultValue);</span>
     }
 
     /**
@@ -661,9 +638,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of doubles.
      */
-    public double[] getDoubleArray(final String key)
+    public double[] getDoubleArray(String key)
     {
-<span class="fc" id="L666">        return getDoubleArray(key, ArrayUtils.EMPTY_DOUBLE_ARRAY);</span>
+<span class="fc" id="L643">        return getDoubleArray(key, new double[0]);</span>
     }
 
     /**
@@ -678,9 +655,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of doubles.
      */
-    public double[] getDoubleArray(final String key, final double... defaultValue)
+    public double[] getDoubleArray(String key, double[] defaultValue)
     {
-<span class="fc" id="L683">        return get(double[].class, key, defaultValue);</span>
+<span class="fc" id="L660">        return get(double[].class, key, defaultValue);</span>
     }
 
     /**
@@ -693,9 +670,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigIntegers.
      */
-    public List&lt;BigInteger&gt; getBigIntegerList(final String key)
+    public List&lt;BigInteger&gt; getBigIntegerList(String key)
     {
-<span class="fc" id="L698">        return getBigIntegerList(key, new ArrayList&lt;BigInteger&gt;());</span>
+<span class="fc" id="L675">        return getBigIntegerList(key, new ArrayList&lt;BigInteger&gt;());</span>
     }
 
     /**
@@ -710,9 +687,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigIntegers.
      */
-    public List&lt;BigInteger&gt; getBigIntegerList(final String key, final List&lt;BigInteger&gt; defaultValue)
+    public List&lt;BigInteger&gt; getBigIntegerList(String key, List&lt;BigInteger&gt; defaultValue)
     {
-<span class="fc" id="L715">        return getList(BigInteger.class, key, defaultValue);</span>
+<span class="fc" id="L692">        return getList(BigInteger.class, key, defaultValue);</span>
     }
 
     /**
@@ -726,9 +703,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigIntegers.
      */
-    public BigInteger[] getBigIntegerArray(final String key)
+    public BigInteger[] getBigIntegerArray(String key)
     {
-<span class="fc" id="L731">        return getBigIntegerArray(key, EMPTY_BIG_INTEGER_ARRAY);</span>
+<span class="fc" id="L708">        return getBigIntegerArray(key, new BigInteger[0]);</span>
     }
 
     /**
@@ -743,9 +720,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigIntegers.
      */
-    public BigInteger[] getBigIntegerArray(final String key, final BigInteger... defaultValue)
+    public BigInteger[] getBigIntegerArray(String key, BigInteger[] defaultValue)
     {
-<span class="fc" id="L748">        return get(BigInteger[].class, key, defaultValue);</span>
+<span class="fc" id="L725">        return get(BigInteger[].class, key, defaultValue);</span>
     }
 
     /**
@@ -758,9 +735,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigDecimals.
      */
-    public List&lt;BigDecimal&gt; getBigDecimalList(final String key)
+    public List&lt;BigDecimal&gt; getBigDecimalList(String key)
     {
-<span class="fc" id="L763">        return getBigDecimalList(key, new ArrayList&lt;BigDecimal&gt;());</span>
+<span class="fc" id="L740">        return getBigDecimalList(key, new ArrayList&lt;BigDecimal&gt;());</span>
     }
 
     /**
@@ -775,9 +752,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigDecimals.
      */
-    public List&lt;BigDecimal&gt; getBigDecimalList(final String key, final List&lt;BigDecimal&gt; defaultValue)
+    public List&lt;BigDecimal&gt; getBigDecimalList(String key, List&lt;BigDecimal&gt; defaultValue)
     {
-<span class="fc" id="L780">        return getList(BigDecimal.class, key, defaultValue);</span>
+<span class="fc" id="L757">        return getList(BigDecimal.class, key, defaultValue);</span>
     }
 
     /**
@@ -791,9 +768,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigDecimals.
      */
-    public BigDecimal[] getBigDecimalArray(final String key)
+    public BigDecimal[] getBigDecimalArray(String key)
     {
-<span class="fc" id="L796">        return getBigDecimalArray(key, EMPTY_BIG_DECIMAL_ARRAY);</span>
+<span class="fc" id="L773">        return getBigDecimalArray(key, new BigDecimal[0]);</span>
     }
 
     /**
@@ -808,9 +785,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of BigDecimals.
      */
-    public BigDecimal[] getBigDecimalArray(final String key, final BigDecimal... defaultValue)
+    public BigDecimal[] getBigDecimalArray(String key, BigDecimal[] defaultValue)
     {
-<span class="fc" id="L813">        return get(BigDecimal[].class, key, defaultValue);</span>
+<span class="fc" id="L790">        return get(BigDecimal[].class, key, defaultValue);</span>
     }
 
     /**
@@ -822,9 +799,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not an URI.
      */
-    public URI getURI(final String key)
+    public URI getURI(String key)
     {
-<span class="fc" id="L827">        return get(URI.class, key);</span>
+<span class="fc" id="L804">        return get(URI.class, key);</span>
     }
 
     /**
@@ -839,9 +816,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not an URI.
      */
-    public URI getURI(final String key, final URI defaultValue)
+    public URI getURI(String key, URI defaultValue)
     {
-<span class="fc" id="L844">        return get(URI.class, key, defaultValue);</span>
+<span class="fc" id="L821">        return get(URI.class, key, defaultValue);</span>
     }
 
     /**
@@ -854,9 +831,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URIs.
      */
-    public URI[] getURIArray(final String key)
+    public URI[] getURIArray(String key)
     {
-<span class="fc" id="L859">        return getURIArray(key, EMPTY_URI_ARRAY);</span>
+<span class="fc" id="L836">        return getURIArray(key, new URI[0]);</span>
     }
 
     /**
@@ -870,9 +847,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URIs.
      */
-    public URI[] getURIArray(final String key, final URI... defaultValue)
+    public URI[] getURIArray(String key, URI[] defaultValue)
     {
-<span class="fc" id="L875">        return get(URI[].class, key, defaultValue);</span>
+<span class="fc" id="L852">        return get(URI[].class, key, defaultValue);</span>
     }
 
     /**
@@ -885,9 +862,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URIs.
      */
-    public List&lt;URI&gt; getURIList(final String key)
+    public List&lt;URI&gt; getURIList(String key)
     {
-<span class="fc" id="L890">        return getURIList(key, new ArrayList&lt;URI&gt;());</span>
+<span class="fc" id="L867">        return getURIList(key, new ArrayList&lt;URI&gt;());</span>
     }
 
     /**
@@ -902,9 +879,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URIs.
      */
-    public List&lt;URI&gt; getURIList(final String key, final List&lt;URI&gt; defaultValue)
+    public List&lt;URI&gt; getURIList(String key, List&lt;URI&gt; defaultValue)
     {
-<span class="fc" id="L907">        return getList(URI.class, key, defaultValue);</span>
+<span class="fc" id="L884">        return getList(URI.class, key, defaultValue);</span>
     }
 
     /**
@@ -916,9 +893,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not an URL.
      */
-    public URL getURL(final String key)
+    public URL getURL(String key)
     {
-<span class="fc" id="L921">        return get(URL.class, key);</span>
+<span class="fc" id="L898">        return get(URL.class, key);</span>
     }
 
     /**
@@ -933,9 +910,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not an URL.
      */
-    public URL getURL(final String key, final URL defaultValue)
+    public URL getURL(String key, URL defaultValue)
     {
-<span class="fc" id="L938">        return get(URL.class, key, defaultValue);</span>
+<span class="fc" id="L915">        return get(URL.class, key, defaultValue);</span>
     }
 
     /**
@@ -948,9 +925,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URLs.
      */
-    public List&lt;URL&gt; getURLList(final String key)
+    public List&lt;URL&gt; getURLList(String key)
     {
-<span class="fc" id="L953">        return getURLList(key, new ArrayList&lt;URL&gt;());</span>
+<span class="fc" id="L930">        return getURLList(key, new ArrayList&lt;URL&gt;());</span>
     }
 
     /**
@@ -965,9 +942,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URLs.
      */
-    public List&lt;URL&gt; getURLList(final String key, final List&lt;URL&gt; defaultValue)
+    public List&lt;URL&gt; getURLList(String key, List&lt;URL&gt; defaultValue)
     {
-<span class="fc" id="L970">        return getList(URL.class, key, defaultValue);</span>
+<span class="fc" id="L947">        return getList(URL.class, key, defaultValue);</span>
     }
 
     /**
@@ -980,9 +957,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URLs.
      */
-    public URL[] getURLArray(final String key)
+    public URL[] getURLArray(String key)
     {
-<span class="fc" id="L985">        return getURLArray(key, EMPTY_URL_ARRAY);</span>
+<span class="fc" id="L962">        return getURLArray(key, new URL[0]);</span>
     }
 
     /**
@@ -996,9 +973,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of URLs.
      */
-    public URL[] getURLArray(final String key, final URL... defaultValue)
+    public URL[] getURLArray(String key, URL[] defaultValue)
     {
-<span class="fc" id="L1001">        return get(URL[].class, key, defaultValue);</span>
+<span class="fc" id="L978">        return get(URL[].class, key, defaultValue);</span>
     }
 
     /**
@@ -1013,9 +990,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Date.
      */
-    public Date getDate(final String key)
+    public Date getDate(String key)
     {
-<span class="fc" id="L1018">        return get(Date.class, key);</span>
+<span class="fc" id="L995">        return get(Date.class, key);</span>
     }
 
     /**
@@ -1029,20 +1006,20 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Date.
      */
-    public Date getDate(final String key, final String format)
+    public Date getDate(String key, String format)
     {
-<span class="fc" id="L1034">        final Date value = getDate(key, null, format);</span>
-<span class="fc bfc" id="L1035" title="All 2 branches covered.">        if (value != null)</span>
+<span class="fc" id="L1011">        Date value = getDate(key, null, format);</span>
+<span class="fc bfc" id="L1012" title="All 2 branches covered.">        if (value != null)</span>
         {
-<span class="fc" id="L1037">            return value;</span>
+<span class="fc" id="L1014">            return value;</span>
         }
-<span class="fc bfc" id="L1039" title="All 2 branches covered.">        else if (isThrowExceptionOnMissing())</span>
+<span class="fc bfc" id="L1016" title="All 2 branches covered.">        else if (isThrowExceptionOnMissing())</span>
         {
-<span class="fc" id="L1041">            throw new NoSuchElementException('\'' + key + &quot;' doesn't map to an existing object&quot;);</span>
+<span class="fc" id="L1018">            throw new NoSuchElementException('\'' + key + &quot;' doesn't map to an existing object&quot;);</span>
         }
         else
         {
-<span class="fc" id="L1045">            return null;</span>
+<span class="fc" id="L1022">            return null;</span>
         }
     }
 
@@ -1060,9 +1037,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Date.
      */
-    public Date getDate(final String key, final Date defaultValue)
+    public Date getDate(String key, Date defaultValue)
     {
-<span class="fc" id="L1065">        return getDate(key, defaultValue, null);</span>
+<span class="fc" id="L1042">        return getDate(key, defaultValue, null);</span>
     }
 
     /**
@@ -1079,22 +1056,22 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Date.
      */
-    public Date getDate(final String key, final Date defaultValue, final String format)
+    public Date getDate(String key, Date defaultValue, String format)
     {
-<span class="fc" id="L1084">        TEMP_DATE_FORMAT.set(format);</span>
+<span class="fc" id="L1061">        TEMP_DATE_FORMAT.set(format);</span>
         try
         {
-<span class="fc" id="L1087">            return get(Date.class, key, defaultValue);</span>
+<span class="fc" id="L1064">            return get(Date.class, key, defaultValue);</span>
         }
         finally
         {
-<span class="fc" id="L1091">            TEMP_DATE_FORMAT.remove();</span>
+<span class="fc" id="L1068">            TEMP_DATE_FORMAT.remove();</span>
         }
     }
 
-    public List&lt;Date&gt; getDateList(final String key)
+    public List&lt;Date&gt; getDateList(String key)
     {
-<span class="fc" id="L1097">        return getDateList(key, new ArrayList&lt;Date&gt;());</span>
+<span class="fc" id="L1074">        return getDateList(key, new ArrayList&lt;Date&gt;());</span>
     }
 
     /**
@@ -1110,9 +1087,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Dates.
      */
-    public List&lt;Date&gt; getDateList(final String key, final String format)
+    public List&lt;Date&gt; getDateList(String key, String format)
     {
-<span class="nc" id="L1115">        return getDateList(key, new ArrayList&lt;Date&gt;(), format);</span>
+<span class="nc" id="L1092">        return getDateList(key, new ArrayList&lt;Date&gt;(), format);</span>
     }
 
     /**
@@ -1130,9 +1107,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Dates.
      */
-    public List&lt;Date&gt; getDateList(final String key, final List&lt;Date&gt; defaultValue)
+    public List&lt;Date&gt; getDateList(String key, List&lt;Date&gt; defaultValue)
     {
-<span class="fc" id="L1135">        return getDateList(key, defaultValue, null);</span>
+<span class="fc" id="L1112">        return getDateList(key, defaultValue, null);</span>
     }
 
     /**
@@ -1149,16 +1126,16 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Dates.
      */
-    public List&lt;Date&gt; getDateList(final String key, final List&lt;Date&gt; defaultValue, final String format)
+    public List&lt;Date&gt; getDateList(String key, List&lt;Date&gt; defaultValue, String format)
     {
-<span class="fc" id="L1154">        TEMP_DATE_FORMAT.set(format);</span>
+<span class="fc" id="L1131">        TEMP_DATE_FORMAT.set(format);</span>
         try
         {
-<span class="fc" id="L1157">            return getList(Date.class, key, defaultValue);</span>
+<span class="fc" id="L1134">            return getList(Date.class, key, defaultValue);</span>
         }
         finally
         {
-<span class="fc" id="L1161">            TEMP_DATE_FORMAT.remove();</span>
+<span class="fc" id="L1138">            TEMP_DATE_FORMAT.remove();</span>
         }
     }
 
@@ -1175,9 +1152,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Dates.
      */
-    public Date[] getDateArray(final String key)
+    public Date[] getDateArray(String key)
     {
-<span class="fc" id="L1180">        return getDateArray(key, EMPTY_DATE_ARRAY);</span>
+<span class="fc" id="L1157">        return getDateArray(key, new Date[0]);</span>
     }
 
     /**
@@ -1193,9 +1170,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Dates.
      */
-    public Date[] getDateArray(final String key, final String format)
+    public Date[] getDateArray(String key, String format)
     {
-<span class="fc" id="L1198">        return getDateArray(key, EMPTY_DATE_ARRAY, format);</span>
+<span class="fc" id="L1175">        return getDateArray(key, new Date[0], format);</span>
     }
 
     /**
@@ -1212,9 +1189,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Dates.
      */
-    public Date[] getDateArray(final String key, final Date... defaultValue)
+    public Date[] getDateArray(String key, Date[] defaultValue)
     {
-<span class="fc" id="L1217">        return getDateArray(key, defaultValue, null);</span>
+<span class="fc" id="L1194">        return getDateArray(key, defaultValue, null);</span>
     }
 
     /**
@@ -1231,16 +1208,16 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Dates.
      */
-    public Date[] getDateArray(final String key, final Date[] defaultValue, final String format)
+    public Date[] getDateArray(String key, Date[] defaultValue, String format)
     {
-<span class="fc" id="L1236">        TEMP_DATE_FORMAT.set(format);</span>
+<span class="fc" id="L1213">        TEMP_DATE_FORMAT.set(format);</span>
         try
         {
-<span class="fc" id="L1239">            return get(Date[].class, key, defaultValue);</span>
+<span class="fc" id="L1216">            return get(Date[].class, key, defaultValue);</span>
         }
         finally
         {
-<span class="fc" id="L1243">            TEMP_DATE_FORMAT.remove();</span>
+<span class="fc" id="L1220">            TEMP_DATE_FORMAT.remove();</span>
         }
     }
 
@@ -1256,9 +1233,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Calendar.
      */
-    public Calendar getCalendar(final String key)
+    public Calendar getCalendar(String key)
     {
-<span class="fc" id="L1261">        return get(Calendar.class, key);</span>
+<span class="fc" id="L1238">        return get(Calendar.class, key);</span>
     }
 
     /**
@@ -1273,20 +1250,20 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Calendar.
      */
-    public Calendar getCalendar(final String key, final String format)
+    public Calendar getCalendar(String key, String format)
     {
-<span class="fc" id="L1278">        final Calendar value = getCalendar(key, null, format);</span>
-<span class="fc bfc" id="L1279" title="All 2 branches covered.">        if (value != null)</span>
+<span class="fc" id="L1255">        Calendar value = getCalendar(key, null, format);</span>
+<span class="fc bfc" id="L1256" title="All 2 branches covered.">        if (value != null)</span>
         {
-<span class="fc" id="L1281">            return value;</span>
+<span class="fc" id="L1258">            return value;</span>
         }
-<span class="fc bfc" id="L1283" title="All 2 branches covered.">        else if (isThrowExceptionOnMissing())</span>
+<span class="fc bfc" id="L1260" title="All 2 branches covered.">        else if (isThrowExceptionOnMissing())</span>
         {
-<span class="fc" id="L1285">            throw new NoSuchElementException('\'' + key + &quot;' doesn't map to an existing object&quot;);</span>
+<span class="fc" id="L1262">            throw new NoSuchElementException('\'' + key + &quot;' doesn't map to an existing object&quot;);</span>
         }
         else
         {
-<span class="fc" id="L1289">            return null;</span>
+<span class="fc" id="L1266">            return null;</span>
         }
     }
 
@@ -1304,9 +1281,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Calendar.
      */
-    public Calendar getCalendar(final String key, final Calendar defaultValue)
+    public Calendar getCalendar(String key, Calendar defaultValue)
     {
-<span class="fc" id="L1309">        return getCalendar(key, defaultValue, null);</span>
+<span class="fc" id="L1286">        return getCalendar(key, defaultValue, null);</span>
     }
 
     /**
@@ -1323,16 +1300,16 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Calendar.
      */
-    public Calendar getCalendar(final String key, final Calendar defaultValue, final String format)
+    public Calendar getCalendar(String key, Calendar defaultValue, String format)
     {
-<span class="fc" id="L1328">        TEMP_DATE_FORMAT.set(format);</span>
+<span class="fc" id="L1305">        TEMP_DATE_FORMAT.set(format);</span>
         try
         {
-<span class="fc" id="L1331">            return get(Calendar.class, key, defaultValue);</span>
+<span class="fc" id="L1308">            return get(Calendar.class, key, defaultValue);</span>
         }
         finally
         {
-<span class="fc" id="L1335">            TEMP_DATE_FORMAT.remove();</span>
+<span class="fc" id="L1312">            TEMP_DATE_FORMAT.remove();</span>
         }
     }
 
@@ -1349,9 +1326,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public List&lt;Calendar&gt; getCalendarList(final String key)
+    public List&lt;Calendar&gt; getCalendarList(String key)
     {
-<span class="fc" id="L1354">        return getCalendarList(key, new ArrayList&lt;Calendar&gt;());</span>
+<span class="fc" id="L1331">        return getCalendarList(key, new ArrayList&lt;Calendar&gt;());</span>
     }
 
     /**
@@ -1367,9 +1344,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public List&lt;Calendar&gt; getCalendarList(final String key, final String format)
+    public List&lt;Calendar&gt; getCalendarList(String key, String format)
     {
-<span class="nc" id="L1372">        return getCalendarList(key, new ArrayList&lt;Calendar&gt;(), format);</span>
+<span class="nc" id="L1349">        return getCalendarList(key, new ArrayList&lt;Calendar&gt;(), format);</span>
     }
 
     /**
@@ -1387,9 +1364,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public List&lt;Calendar&gt; getCalendarList(final String key, final List&lt;Calendar&gt; defaultValue)
+    public List&lt;Calendar&gt; getCalendarList(String key, List&lt;Calendar&gt; defaultValue)
     {
-<span class="fc" id="L1392">        return getCalendarList(key, defaultValue, null);</span>
+<span class="fc" id="L1369">        return getCalendarList(key, defaultValue, null);</span>
     }
 
     /**
@@ -1406,16 +1383,16 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public List&lt;Calendar&gt; getCalendarList(final String key, final List&lt;Calendar&gt; defaultValue, final String format)
+    public List&lt;Calendar&gt; getCalendarList(String key, List&lt;Calendar&gt; defaultValue, String format)
     {
-<span class="fc" id="L1411">        TEMP_DATE_FORMAT.set(format);</span>
+<span class="fc" id="L1388">        TEMP_DATE_FORMAT.set(format);</span>
         try
         {
-<span class="fc" id="L1414">            return getList(Calendar.class, key, defaultValue);</span>
+<span class="fc" id="L1391">            return getList(Calendar.class, key, defaultValue);</span>
         }
         finally
         {
-<span class="fc" id="L1418">            TEMP_DATE_FORMAT.remove();</span>
+<span class="fc" id="L1395">            TEMP_DATE_FORMAT.remove();</span>
         }
     }
 
@@ -1432,9 +1409,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public Calendar[] getCalendarArray(final String key)
+    public Calendar[] getCalendarArray(String key)
     {
-<span class="fc" id="L1437">        return getCalendarArray(key, EMPTY_CALENDARD_ARRAY);</span>
+<span class="fc" id="L1414">        return getCalendarArray(key, new Calendar[0]);</span>
     }
 
     /**
@@ -1450,9 +1427,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public Calendar[] getCalendarArray(final String key, final String format)
+    public Calendar[] getCalendarArray(String key, String format)
     {
-<span class="fc" id="L1455">        return getCalendarArray(key, EMPTY_CALENDARD_ARRAY, format);</span>
+<span class="fc" id="L1432">        return getCalendarArray(key, new Calendar[0], format);</span>
     }
 
     /**
@@ -1469,9 +1446,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public Calendar[] getCalendarArray(final String key, final Calendar... defaultValue)
+    public Calendar[] getCalendarArray(String key, Calendar[] defaultValue)
     {
-<span class="fc" id="L1474">        return getCalendarArray(key, defaultValue, null);</span>
+<span class="fc" id="L1451">        return getCalendarArray(key, defaultValue, null);</span>
     }
 
     /**
@@ -1488,16 +1465,16 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Calendars.
      */
-    public Calendar[] getCalendarArray(final String key, final Calendar[] defaultValue, final String format)
+    public Calendar[] getCalendarArray(String key, Calendar[] defaultValue, String format)
     {
-<span class="fc" id="L1493">        TEMP_DATE_FORMAT.set(format);</span>
+<span class="fc" id="L1470">        TEMP_DATE_FORMAT.set(format);</span>
         try
         {
-<span class="fc" id="L1496">            return get(Calendar[].class, key, defaultValue);</span>
+<span class="fc" id="L1473">            return get(Calendar[].class, key, defaultValue);</span>
         }
         finally
         {
-<span class="fc" id="L1500">            TEMP_DATE_FORMAT.remove();</span>
+<span class="fc" id="L1477">            TEMP_DATE_FORMAT.remove();</span>
         }
     }
 
@@ -1509,7 +1486,7 @@ public class DataConfiguration extends AbstractConfiguration
      */
     private String getDefaultDateFormat()
     {
-<span class="fc" id="L1512">        return getString(DATE_FORMAT_KEY, DEFAULT_DATE_FORMAT);</span>
+<span class="fc" id="L1489">        return getString(DATE_FORMAT_KEY, DEFAULT_DATE_FORMAT);</span>
     }
 
     /**
@@ -1521,9 +1498,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Locale.
      */
-    public Locale getLocale(final String key)
+    public Locale getLocale(String key)
     {
-<span class="fc" id="L1526">        return get(Locale.class, key);</span>
+<span class="fc" id="L1503">        return get(Locale.class, key);</span>
     }
 
     /**
@@ -1538,9 +1515,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Locale.
      */
-    public Locale getLocale(final String key, final Locale defaultValue)
+    public Locale getLocale(String key, Locale defaultValue)
     {
-<span class="fc" id="L1543">        return get(Locale.class, key, defaultValue);</span>
+<span class="fc" id="L1520">        return get(Locale.class, key, defaultValue);</span>
     }
 
     /**
@@ -1553,9 +1530,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Locales.
      */
-    public List&lt;Locale&gt; getLocaleList(final String key)
+    public List&lt;Locale&gt; getLocaleList(String key)
     {
-<span class="fc" id="L1558">        return getLocaleList(key, new ArrayList&lt;Locale&gt;());</span>
+<span class="fc" id="L1535">        return getLocaleList(key, new ArrayList&lt;Locale&gt;());</span>
     }
 
     /**
@@ -1570,9 +1547,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Locales.
      */
-    public List&lt;Locale&gt; getLocaleList(final String key, final List&lt;Locale&gt; defaultValue)
+    public List&lt;Locale&gt; getLocaleList(String key, List&lt;Locale&gt; defaultValue)
     {
-<span class="fc" id="L1575">        return getList(Locale.class, key, defaultValue);</span>
+<span class="fc" id="L1552">        return getList(Locale.class, key, defaultValue);</span>
     }
 
     /**
@@ -1586,9 +1563,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Locales.
      */
-    public Locale[] getLocaleArray(final String key)
+    public Locale[] getLocaleArray(String key)
     {
-<span class="fc" id="L1591">        return getLocaleArray(key, EMPTY_LOCALE_ARRAY);</span>
+<span class="fc" id="L1568">        return getLocaleArray(key, new Locale[0]);</span>
     }
 
     /**
@@ -1603,9 +1580,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Locales.
      */
-    public Locale[] getLocaleArray(final String key, final Locale... defaultValue)
+    public Locale[] getLocaleArray(String key, Locale[] defaultValue)
     {
-<span class="fc" id="L1608">        return get(Locale[].class, key, defaultValue);</span>
+<span class="fc" id="L1585">        return get(Locale[].class, key, defaultValue);</span>
     }
 
     /**
@@ -1617,9 +1594,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Color.
      */
-    public Color getColor(final String key)
+    public Color getColor(String key)
     {
-<span class="fc" id="L1622">        return get(Color.class, key);</span>
+<span class="fc" id="L1599">        return get(Color.class, key);</span>
     }
 
     /**
@@ -1634,9 +1611,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a Color.
      */
-    public Color getColor(final String key, final Color defaultValue)
+    public Color getColor(String key, Color defaultValue)
     {
-<span class="fc" id="L1639">        return get(Color.class, key, defaultValue);</span>
+<span class="fc" id="L1616">        return get(Color.class, key, defaultValue);</span>
     }
 
     /**
@@ -1649,9 +1626,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Colors.
      */
-    public List&lt;Color&gt; getColorList(final String key)
+    public List&lt;Color&gt; getColorList(String key)
     {
-<span class="fc" id="L1654">        return getColorList(key, new ArrayList&lt;Color&gt;());</span>
+<span class="fc" id="L1631">        return getColorList(key, new ArrayList&lt;Color&gt;());</span>
     }
 
     /**
@@ -1666,9 +1643,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Colors.
      */
-    public List&lt;Color&gt; getColorList(final String key, final List&lt;Color&gt; defaultValue)
+    public List&lt;Color&gt; getColorList(String key, List&lt;Color&gt; defaultValue)
     {
-<span class="fc" id="L1671">        return getList(Color.class, key, defaultValue);</span>
+<span class="fc" id="L1648">        return getList(Color.class, key, defaultValue);</span>
     }
 
     /**
@@ -1682,9 +1659,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Colors.
      */
-    public Color[] getColorArray(final String key)
+    public Color[] getColorArray(String key)
     {
-<span class="fc" id="L1687">        return getColorArray(key, EMPTY_COLOR_ARRAY);</span>
+<span class="fc" id="L1664">        return getColorArray(key, new Color[0]);</span>
     }
 
     /**
@@ -1699,9 +1676,9 @@ public class DataConfiguration extends AbstractConfiguration
      * @throws ConversionException is thrown if the key maps to an
      *         object that is not a list of Colors.
      */
-    public Color[] getColorArray(final String key, final Color... defaultValue)
+    public Color[] getColorArray(String key, Color[] defaultValue)
     {
-<span class="fc" id="L1704">        return get(Color[].class, key, defaultValue);</span>
+<span class="fc" id="L1681">        return get(Color[].class, key, defaultValue);</span>
     }
 
     /**
@@ -1712,9 +1689,9 @@ public class DataConfiguration extends AbstractConfiguration
      */
     private DefaultConversionHandler getOriginalConversionHandler()
     {
-<span class="fc" id="L1715">        final ConversionHandler handler = super.getConversionHandler();</span>
-<span class="pc bpc" id="L1716" title="1 of 2 branches missed.">        return (DefaultConversionHandler) (handler instanceof DefaultConversionHandler ? handler</span>
-<span class="pc" id="L1717">                : null);</span>
+<span class="fc" id="L1692">        ConversionHandler handler = super.getConversionHandler();</span>
+<span class="pc bpc" id="L1693" title="1 of 2 branches missed.">        return (DefaultConversionHandler) ((handler instanceof DefaultConversionHandler) ? handler</span>
+<span class="pc" id="L1694">                : null);</span>
     }
 
     /**
@@ -1723,7 +1700,7 @@ public class DataConfiguration extends AbstractConfiguration
      * pattern can be defined as a property of the wrapped configuration or
      * temporarily passed when calling a conversion method.
      */
-<span class="fc" id="L1726">    private class DataConversionHandler extends DefaultConversionHandler</span>
+<span class="fc" id="L1703">    private class DataConversionHandler extends DefaultConversionHandler</span>
     {
         /**
          * {@inheritDoc} This implementation checks for a defined data format in
@@ -1740,18 +1717,18 @@ public class DataConfiguration extends AbstractConfiguration
         @Override
         public String getDateFormat()
         {
-<span class="fc bfc" id="L1743" title="All 2 branches covered.">            if (StringUtils.isNotEmpty(TEMP_DATE_FORMAT.get()))</span>
+<span class="fc bfc" id="L1720" title="All 2 branches covered.">            if (StringUtils.isNotEmpty(TEMP_DATE_FORMAT.get()))</span>
             {
-<span class="fc" id="L1745">                return TEMP_DATE_FORMAT.get();</span>
+<span class="fc" id="L1722">                return TEMP_DATE_FORMAT.get();</span>
             }
-<span class="fc bfc" id="L1747" title="All 2 branches covered.">            if (containsKey(DATE_FORMAT_KEY))</span>
+<span class="fc bfc" id="L1724" title="All 2 branches covered.">            if (containsKey(DATE_FORMAT_KEY))</span>
             {
-<span class="fc" id="L1749">                return getDefaultDateFormat();</span>
+<span class="fc" id="L1726">                return getDefaultDateFormat();</span>
             }
 
-<span class="fc" id="L1752">            final DefaultConversionHandler orgHandler =</span>
-<span class="fc" id="L1753">                    getOriginalConversionHandler();</span>
-<span class="pc bpc" id="L1754" title="1 of 2 branches missed.">            return orgHandler != null ? orgHandler.getDateFormat() : null;</span>
+<span class="fc" id="L1729">            DefaultConversionHandler orgHandler =</span>
+<span class="fc" id="L1730">                    getOriginalConversionHandler();</span>
+<span class="pc bpc" id="L1731" title="1 of 2 branches missed.">            return (orgHandler != null) ? orgHandler.getDateFormat() : null;</span>
         }
     }
 }

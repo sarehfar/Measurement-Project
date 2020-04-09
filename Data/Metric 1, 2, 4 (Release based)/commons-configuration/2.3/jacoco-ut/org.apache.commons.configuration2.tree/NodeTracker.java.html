@@ -58,6 +58,7 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
  * creating new instances which are then stored by the owning node model.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 class NodeTracker
@@ -71,8 +72,8 @@ class NodeTracker
      */
     public NodeTracker()
     {
-<span class="fc" id="L74">        this(Collections.&lt;NodeSelector, TrackedNodeData&gt; emptyMap());</span>
-<span class="fc" id="L75">    }</span>
+<span class="fc" id="L75">        this(Collections.&lt;NodeSelector, TrackedNodeData&gt; emptyMap());</span>
+<span class="fc" id="L76">    }</span>
 
     /**
      * Creates a new instance of {@code NodeTracker} and initializes it with the
@@ -81,10 +82,10 @@ class NodeTracker
      *
      * @param map the map with tracked nodes
      */
-    private NodeTracker(final Map&lt;NodeSelector, TrackedNodeData&gt; map)
-<span class="fc" id="L85">    {</span>
-<span class="fc" id="L86">        trackedNodes = map;</span>
-<span class="fc" id="L87">    }</span>
+    private NodeTracker(Map&lt;NodeSelector, TrackedNodeData&gt; map)
+<span class="fc" id="L86">    {</span>
+<span class="fc" id="L87">        trackedNodes = map;</span>
+<span class="fc" id="L88">    }</span>
 
     /**
      * Adds a node to be tracked. The passed in selector must select exactly one
@@ -99,18 +100,18 @@ class NodeTracker
      * @throws ConfigurationRuntimeException if the selector does not select a
      *         single node
      */
-    public NodeTracker trackNode(final ImmutableNode root, final NodeSelector selector,
-            final NodeKeyResolver&lt;ImmutableNode&gt; resolver,
-            final NodeHandler&lt;ImmutableNode&gt; handler)
+    public NodeTracker trackNode(ImmutableNode root, NodeSelector selector,
+            NodeKeyResolver&lt;ImmutableNode&gt; resolver,
+            NodeHandler&lt;ImmutableNode&gt; handler)
     {
-<span class="fc" id="L106">        final Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
+<span class="fc" id="L107">        Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
                 new HashMap&lt;&gt;(trackedNodes);
-<span class="fc" id="L108">        final TrackedNodeData trackData = newState.get(selector);</span>
-<span class="fc" id="L109">        newState.put(</span>
+<span class="fc" id="L109">        TrackedNodeData trackData = newState.get(selector);</span>
+<span class="fc" id="L110">        newState.put(</span>
                 selector,
-<span class="fc" id="L111">                trackDataForAddedObserver(root, selector, resolver, handler,</span>
+<span class="fc" id="L112">                trackDataForAddedObserver(root, selector, resolver, handler,</span>
                         trackData));
-<span class="fc" id="L113">        return new NodeTracker(newState);</span>
+<span class="fc" id="L114">        return new NodeTracker(newState);</span>
     }
 
     /**
@@ -121,28 +122,28 @@ class NodeTracker
      * @param nodes a collection with the nodes to be tracked
      * @return the updated instance
      */
-    public NodeTracker trackNodes(final Collection&lt;NodeSelector&gt; selectors,
-            final Collection&lt;ImmutableNode&gt; nodes)
+    public NodeTracker trackNodes(Collection&lt;NodeSelector&gt; selectors,
+            Collection&lt;ImmutableNode&gt; nodes)
     {
-<span class="fc" id="L127">        final Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
+<span class="fc" id="L128">        Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
                 new HashMap&lt;&gt;(trackedNodes);
-<span class="fc" id="L129">        final Iterator&lt;ImmutableNode&gt; itNodes = nodes.iterator();</span>
-<span class="fc bfc" id="L130" title="All 2 branches covered.">        for (final NodeSelector selector : selectors)</span>
+<span class="fc" id="L130">        Iterator&lt;ImmutableNode&gt; itNodes = nodes.iterator();</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        for (NodeSelector selector : selectors)</span>
         {
-<span class="fc" id="L132">            final ImmutableNode node = itNodes.next();</span>
-<span class="fc" id="L133">            TrackedNodeData trackData = newState.get(selector);</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">            if (trackData == null)</span>
+<span class="fc" id="L133">            ImmutableNode node = itNodes.next();</span>
+<span class="fc" id="L134">            TrackedNodeData trackData = newState.get(selector);</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            if (trackData == null)</span>
             {
-<span class="fc" id="L136">                trackData = new TrackedNodeData(node);</span>
+<span class="fc" id="L137">                trackData = new TrackedNodeData(node);</span>
             }
             else
             {
-<span class="fc" id="L140">                trackData = trackData.observerAdded();</span>
+<span class="fc" id="L141">                trackData = trackData.observerAdded();</span>
             }
-<span class="fc" id="L142">            newState.put(selector, trackData);</span>
-<span class="fc" id="L143">        }</span>
+<span class="fc" id="L143">            newState.put(selector, trackData);</span>
+<span class="fc" id="L144">        }</span>
 
-<span class="fc" id="L145">        return new NodeTracker(newState);</span>
+<span class="fc" id="L146">        return new NodeTracker(newState);</span>
     }
 
     /**
@@ -155,22 +156,22 @@ class NodeTracker
      * @throws ConfigurationRuntimeException if no information about this node
      *         is available
      */
-    public NodeTracker untrackNode(final NodeSelector selector)
+    public NodeTracker untrackNode(NodeSelector selector)
     {
-<span class="fc" id="L160">        final TrackedNodeData trackData = getTrackedNodeData(selector);</span>
+<span class="fc" id="L161">        TrackedNodeData trackData = getTrackedNodeData(selector);</span>
 
-<span class="fc" id="L162">        final Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
+<span class="fc" id="L163">        Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
                 new HashMap&lt;&gt;(trackedNodes);
-<span class="fc" id="L164">        final TrackedNodeData newTrackData = trackData.observerRemoved();</span>
-<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (newTrackData == null)</span>
+<span class="fc" id="L165">        TrackedNodeData newTrackData = trackData.observerRemoved();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        if (newTrackData == null)</span>
         {
-<span class="fc" id="L167">            newState.remove(selector);</span>
+<span class="fc" id="L168">            newState.remove(selector);</span>
         }
         else
         {
-<span class="fc" id="L171">            newState.put(selector, newTrackData);</span>
+<span class="fc" id="L172">            newState.put(selector, newTrackData);</span>
         }
-<span class="fc" id="L173">        return new NodeTracker(newState);</span>
+<span class="fc" id="L174">        return new NodeTracker(newState);</span>
     }
 
     /**
@@ -182,9 +183,9 @@ class NodeTracker
      * @throws ConfigurationRuntimeException if no data for this selector is
      *         available
      */
-    public ImmutableNode getTrackedNode(final NodeSelector selector)
+    public ImmutableNode getTrackedNode(NodeSelector selector)
     {
-<span class="fc" id="L187">        return getTrackedNodeData(selector).getNode();</span>
+<span class="fc" id="L188">        return getTrackedNodeData(selector).getNode();</span>
     }
 
     /**
@@ -195,9 +196,9 @@ class NodeTracker
      * @throws ConfigurationRuntimeException if no data for this selector is
      *         available
      */
-    public boolean isTrackedNodeDetached(final NodeSelector selector)
+    public boolean isTrackedNodeDetached(NodeSelector selector)
     {
-<span class="fc" id="L200">        return getTrackedNodeData(selector).isDetached();</span>
+<span class="fc" id="L201">        return getTrackedNodeData(selector).isDetached();</span>
     }
 
     /**
@@ -212,9 +213,9 @@ class NodeTracker
      * @throws ConfigurationRuntimeException if no data for this selector is
      *         available
      */
-    public InMemoryNodeModel getDetachedNodeModel(final NodeSelector selector)
+    public InMemoryNodeModel getDetachedNodeModel(NodeSelector selector)
     {
-<span class="fc" id="L217">        return getTrackedNodeData(selector).getDetachedModel();</span>
+<span class="fc" id="L218">        return getTrackedNodeData(selector).getDetachedModel();</span>
     }
 
     /**
@@ -237,28 +238,28 @@ class NodeTracker
      * @param handler the {@code NodeHandler}
      * @return the updated instance
      */
-    public NodeTracker update(final ImmutableNode root, final NodeSelector txTarget,
-            final NodeKeyResolver&lt;ImmutableNode&gt; resolver,
-            final NodeHandler&lt;ImmutableNode&gt; handler)
+    public NodeTracker update(ImmutableNode root, NodeSelector txTarget,
+            NodeKeyResolver&lt;ImmutableNode&gt; resolver,
+            NodeHandler&lt;ImmutableNode&gt; handler)
     {
-<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (trackedNodes.isEmpty())</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (trackedNodes.isEmpty())</span>
         {
             // there is not state to be updated
-<span class="fc" id="L247">            return this;</span>
+<span class="fc" id="L248">            return this;</span>
         }
 
-<span class="fc" id="L250">        final Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
+<span class="fc" id="L251">        Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
                 new HashMap&lt;&gt;();
-<span class="fc bfc" id="L252" title="All 2 branches covered.">        for (final Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e : trackedNodes</span>
-<span class="fc" id="L253">                .entrySet())</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        for (Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e : trackedNodes</span>
+<span class="fc" id="L254">                .entrySet())</span>
         {
-<span class="fc" id="L255">            newState.put(</span>
-<span class="fc" id="L256">                    e.getKey(),</span>
-<span class="fc" id="L257">                    determineUpdatedTrackedNodeData(root, txTarget, resolver,</span>
+<span class="fc" id="L256">            newState.put(</span>
+<span class="fc" id="L257">                    e.getKey(),</span>
+<span class="fc" id="L258">                    determineUpdatedTrackedNodeData(root, txTarget, resolver,</span>
                             handler, e));
-<span class="fc" id="L259">        }</span>
+<span class="fc" id="L260">        }</span>
 
-<span class="fc" id="L261">        return new NodeTracker(newState);</span>
+<span class="fc" id="L262">        return new NodeTracker(newState);</span>
     }
 
     /**
@@ -270,24 +271,24 @@ class NodeTracker
      */
     public NodeTracker detachAllTrackedNodes()
     {
-<span class="fc bfc" id="L273" title="All 2 branches covered.">        if (trackedNodes.isEmpty())</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">        if (trackedNodes.isEmpty())</span>
         {
             // there is not state to be updated
-<span class="fc" id="L276">            return this;</span>
+<span class="fc" id="L277">            return this;</span>
         }
 
-<span class="fc" id="L279">        final Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
+<span class="fc" id="L280">        Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
                 new HashMap&lt;&gt;();
-<span class="fc bfc" id="L281" title="All 2 branches covered.">        for (final Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e : trackedNodes</span>
-<span class="fc" id="L282">                .entrySet())</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        for (Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e : trackedNodes</span>
+<span class="fc" id="L283">                .entrySet())</span>
         {
-            final TrackedNodeData newData =
-<span class="pc bpc" id="L285" title="1 of 2 branches missed.">                    e.getValue().isDetached() ? e.getValue() : e.getValue()</span>
-<span class="fc" id="L286">                            .detach(null);</span>
-<span class="fc" id="L287">            newState.put(e.getKey(), newData);</span>
-<span class="fc" id="L288">        }</span>
+            TrackedNodeData newData =
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">                    e.getValue().isDetached() ? e.getValue() : e.getValue()</span>
+<span class="fc" id="L287">                            .detach(null);</span>
+<span class="fc" id="L288">            newState.put(e.getKey(), newData);</span>
+<span class="fc" id="L289">        }</span>
 
-<span class="fc" id="L290">        return new NodeTracker(newState);</span>
+<span class="fc" id="L291">        return new NodeTracker(newState);</span>
     }
 
     /**
@@ -299,13 +300,13 @@ class NodeTracker
      * @return the updated instance
      * @throws ConfigurationRuntimeException if the selector cannot be resolved
      */
-    public NodeTracker replaceAndDetachTrackedNode(final NodeSelector selector,
-            final ImmutableNode newNode)
+    public NodeTracker replaceAndDetachTrackedNode(NodeSelector selector,
+            ImmutableNode newNode)
     {
-<span class="fc" id="L305">        final Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
+<span class="fc" id="L306">        Map&lt;NodeSelector, TrackedNodeData&gt; newState =</span>
                 new HashMap&lt;&gt;(trackedNodes);
-<span class="fc" id="L307">        newState.put(selector, getTrackedNodeData(selector).detach(newNode));</span>
-<span class="fc" id="L308">        return new NodeTracker(newState);</span>
+<span class="fc" id="L308">        newState.put(selector, getTrackedNodeData(selector).detach(newNode));</span>
+<span class="fc" id="L309">        return new NodeTracker(newState);</span>
     }
 
     /**
@@ -316,15 +317,15 @@ class NodeTracker
      * @return the {@code TrackedNodeData} object for this selector
      * @throws ConfigurationRuntimeException if the selector cannot be resolved
      */
-    private TrackedNodeData getTrackedNodeData(final NodeSelector selector)
+    private TrackedNodeData getTrackedNodeData(NodeSelector selector)
     {
-<span class="fc" id="L321">        final TrackedNodeData trackData = trackedNodes.get(selector);</span>
-<span class="fc bfc" id="L322" title="All 2 branches covered.">        if (trackData == null)</span>
+<span class="fc" id="L322">        TrackedNodeData trackData = trackedNodes.get(selector);</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        if (trackData == null)</span>
         {
-<span class="fc" id="L324">            throw new ConfigurationRuntimeException(&quot;No tracked node found: &quot;</span>
+<span class="fc" id="L325">            throw new ConfigurationRuntimeException(&quot;No tracked node found: &quot;</span>
                     + selector);
         }
-<span class="fc" id="L327">        return trackData;</span>
+<span class="fc" id="L328">        return trackData;</span>
     }
 
     /**
@@ -341,35 +342,35 @@ class NodeTracker
      * @return the updated {@code TrackedNodeData}
      */
     private static TrackedNodeData determineUpdatedTrackedNodeData(
-            final ImmutableNode root, final NodeSelector txTarget,
-            final NodeKeyResolver&lt;ImmutableNode&gt; resolver,
-            final NodeHandler&lt;ImmutableNode&gt; handler,
-            final Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e)
+            ImmutableNode root, NodeSelector txTarget,
+            NodeKeyResolver&lt;ImmutableNode&gt; resolver,
+            NodeHandler&lt;ImmutableNode&gt; handler,
+            Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e)
     {
-<span class="pc bpc" id="L349" title="1 of 2 branches missed.">        if (e.getValue().isDetached())</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">        if (e.getValue().isDetached())</span>
         {
-<span class="nc" id="L351">            return e.getValue();</span>
+<span class="nc" id="L352">            return e.getValue();</span>
         }
 
         ImmutableNode newTarget;
         try
         {
-<span class="fc" id="L357">            newTarget = e.getKey().select(root, resolver, handler);</span>
+<span class="fc" id="L358">            newTarget = e.getKey().select(root, resolver, handler);</span>
         }
-<span class="fc" id="L359">        catch (final Exception ex)</span>
+<span class="fc" id="L360">        catch (Exception ex)</span>
         {
             /*
             Evaluation of the key caused an exception. This can happen for
             instance if the expression engine was changed. In this case,
             the node becomes detached.
             */
-<span class="fc" id="L366">            newTarget = null;</span>
-<span class="fc" id="L367">        }</span>
-<span class="fc bfc" id="L368" title="All 2 branches covered.">        if (newTarget == null)</span>
+<span class="fc" id="L367">            newTarget = null;</span>
+<span class="fc" id="L368">        }</span>
+<span class="fc bfc" id="L369" title="All 2 branches covered.">        if (newTarget == null)</span>
         {
-<span class="fc" id="L370">            return detachedTrackedNodeData(txTarget, e);</span>
+<span class="fc" id="L371">            return detachedTrackedNodeData(txTarget, e);</span>
         }
-<span class="fc" id="L372">        return e.getValue().updateNode(newTarget);</span>
+<span class="fc" id="L373">        return e.getValue().updateNode(newTarget);</span>
     }
 
     /**
@@ -385,12 +386,12 @@ class NodeTracker
      *         tracked node
      */
     private static TrackedNodeData detachedTrackedNodeData(
-            final NodeSelector txTarget, final Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e)
+            NodeSelector txTarget, Map.Entry&lt;NodeSelector, TrackedNodeData&gt; e)
     {
-        final ImmutableNode newNode =
-<span class="fc bfc" id="L391" title="All 2 branches covered.">                e.getKey().equals(txTarget) ? createEmptyTrackedNode(e</span>
-<span class="fc" id="L392">                        .getValue()) : null;</span>
-<span class="fc" id="L393">        return e.getValue().detach(newNode);</span>
+        ImmutableNode newNode =
+<span class="fc bfc" id="L392" title="All 2 branches covered.">                e.getKey().equals(txTarget) ? createEmptyTrackedNode(e</span>
+<span class="fc" id="L393">                        .getValue()) : null;</span>
+<span class="fc" id="L394">        return e.getValue().detach(newNode);</span>
     }
 
     /**
@@ -401,10 +402,10 @@ class NodeTracker
      * @param data the {@code TrackedNodeData}
      * @return the new node instance for this tracked node
      */
-    private static ImmutableNode createEmptyTrackedNode(final TrackedNodeData data)
+    private static ImmutableNode createEmptyTrackedNode(TrackedNodeData data)
     {
-<span class="fc" id="L406">        return new ImmutableNode.Builder().name(data.getNode().getNodeName())</span>
-<span class="fc" id="L407">                .create();</span>
+<span class="fc" id="L407">        return new ImmutableNode.Builder().name(data.getNode().getNodeName())</span>
+<span class="fc" id="L408">                .create();</span>
     }
 
     /**
@@ -421,21 +422,24 @@ class NodeTracker
      *         single node
      */
     private static TrackedNodeData trackDataForAddedObserver(
-            final ImmutableNode root, final NodeSelector selector,
-            final NodeKeyResolver&lt;ImmutableNode&gt; resolver,
-            final NodeHandler&lt;ImmutableNode&gt; handler, final TrackedNodeData trackData)
+            ImmutableNode root, NodeSelector selector,
+            NodeKeyResolver&lt;ImmutableNode&gt; resolver,
+            NodeHandler&lt;ImmutableNode&gt; handler, TrackedNodeData trackData)
     {
-<span class="fc bfc" id="L428" title="All 2 branches covered.">        if (trackData != null)</span>
+<span class="fc bfc" id="L429" title="All 2 branches covered.">        if (trackData != null)</span>
         {
-<span class="fc" id="L430">            return trackData.observerAdded();</span>
+<span class="fc" id="L431">            return trackData.observerAdded();</span>
         }
-<span class="fc" id="L432">        final ImmutableNode target = selector.select(root, resolver, handler);</span>
-<span class="fc bfc" id="L433" title="All 2 branches covered.">        if (target == null)</span>
+        else
         {
-<span class="fc" id="L435">            throw new ConfigurationRuntimeException(</span>
-                    &quot;Selector does not select unique node: &quot; + selector);
+<span class="fc" id="L435">            ImmutableNode target = selector.select(root, resolver, handler);</span>
+<span class="fc bfc" id="L436" title="All 2 branches covered.">            if (target == null)</span>
+            {
+<span class="fc" id="L438">                throw new ConfigurationRuntimeException(</span>
+                        &quot;Selector does not select unique node: &quot; + selector);
+            }
+<span class="fc" id="L441">            return new TrackedNodeData(target);</span>
         }
-<span class="fc" id="L438">        return new TrackedNodeData(target);</span>
     }
 
     /**
@@ -458,10 +462,10 @@ class NodeTracker
          *
          * @param nd the tracked node
          */
-        public TrackedNodeData(final ImmutableNode nd)
+        public TrackedNodeData(ImmutableNode nd)
         {
-<span class="fc" id="L463">            this(nd, 1, null);</span>
-<span class="fc" id="L464">        }</span>
+<span class="fc" id="L467">            this(nd, 1, null);</span>
+<span class="fc" id="L468">        }</span>
 
         /**
          * Creates a new instance of {@code TrackedNodeData} and initializes its
@@ -471,13 +475,13 @@ class NodeTracker
          * @param obsCount the observer count
          * @param detachedNodeModel a model to be used in detached mode
          */
-        private TrackedNodeData(final ImmutableNode nd, final int obsCount,
-                final InMemoryNodeModel detachedNodeModel)
-<span class="fc" id="L476">        {</span>
-<span class="fc" id="L477">            node = nd;</span>
-<span class="fc" id="L478">            observerCount = obsCount;</span>
-<span class="fc" id="L479">            detachedModel = detachedNodeModel;</span>
-<span class="fc" id="L480">        }</span>
+        private TrackedNodeData(ImmutableNode nd, int obsCount,
+                InMemoryNodeModel detachedNodeModel)
+<span class="fc" id="L480">        {</span>
+<span class="fc" id="L481">            node = nd;</span>
+<span class="fc" id="L482">            observerCount = obsCount;</span>
+<span class="fc" id="L483">            detachedModel = detachedNodeModel;</span>
+<span class="fc" id="L484">        }</span>
 
         /**
          * Returns the tracked node.
@@ -486,8 +490,8 @@ class NodeTracker
          */
         public ImmutableNode getNode()
         {
-<span class="fc bfc" id="L489" title="All 2 branches covered.">            return getDetachedModel() != null ? getDetachedModel()</span>
-<span class="fc" id="L490">                    .getRootNode() : node;</span>
+<span class="fc bfc" id="L493" title="All 2 branches covered.">            return (getDetachedModel() != null) ? getDetachedModel()</span>
+<span class="fc" id="L494">                    .getRootNode() : node;</span>
         }
 
         /**
@@ -498,7 +502,7 @@ class NodeTracker
          */
         public InMemoryNodeModel getDetachedModel()
         {
-<span class="fc" id="L501">            return detachedModel;</span>
+<span class="fc" id="L505">            return detachedModel;</span>
         }
 
         /**
@@ -508,7 +512,7 @@ class NodeTracker
          */
         public boolean isDetached()
         {
-<span class="fc bfc" id="L511" title="All 2 branches covered.">            return getDetachedModel() != null;</span>
+<span class="fc bfc" id="L515" title="All 2 branches covered.">            return getDetachedModel() != null;</span>
         }
 
         /**
@@ -519,7 +523,7 @@ class NodeTracker
          */
         public TrackedNodeData observerAdded()
         {
-<span class="fc" id="L522">            return new TrackedNodeData(node, observerCount + 1, getDetachedModel());</span>
+<span class="fc" id="L526">            return new TrackedNodeData(node, observerCount + 1, getDetachedModel());</span>
         }
 
         /**
@@ -532,8 +536,8 @@ class NodeTracker
          */
         public TrackedNodeData observerRemoved()
         {
-<span class="fc bfc" id="L535" title="All 2 branches covered.">            return observerCount &lt;= 1 ? null : new TrackedNodeData(node,</span>
-<span class="fc" id="L536">                    observerCount - 1, getDetachedModel());</span>
+<span class="fc bfc" id="L539" title="All 2 branches covered.">            return (observerCount &lt;= 1) ? null : new TrackedNodeData(node,</span>
+<span class="fc" id="L540">                    observerCount - 1, getDetachedModel());</span>
         }
 
         /**
@@ -544,9 +548,9 @@ class NodeTracker
          * @param newNode the new tracked node instance
          * @return the updated instance
          */
-        public TrackedNodeData updateNode(final ImmutableNode newNode)
+        public TrackedNodeData updateNode(ImmutableNode newNode)
         {
-<span class="fc" id="L549">            return new TrackedNodeData(newNode, observerCount, getDetachedModel());</span>
+<span class="fc" id="L553">            return new TrackedNodeData(newNode, observerCount, getDetachedModel());</span>
         }
 
         /**
@@ -559,11 +563,11 @@ class NodeTracker
          * @param newNode the new tracked node instance (may be &lt;b&gt;null&lt;/b&gt;)
          * @return the updated instance
          */
-        public TrackedNodeData detach(final ImmutableNode newNode)
+        public TrackedNodeData detach(ImmutableNode newNode)
         {
-            final ImmutableNode newTrackedNode =
-<span class="fc bfc" id="L565" title="All 2 branches covered.">                    newNode != null ? newNode : getNode();</span>
-<span class="fc" id="L566">            return new TrackedNodeData(newTrackedNode, observerCount,</span>
+            ImmutableNode newTrackedNode =
+<span class="fc bfc" id="L569" title="All 2 branches covered.">                    (newNode != null) ? newNode : getNode();</span>
+<span class="fc" id="L570">            return new TrackedNodeData(newTrackedNode, observerCount,</span>
                     new InMemoryNodeModel(newTrackedNode));
         }
     }

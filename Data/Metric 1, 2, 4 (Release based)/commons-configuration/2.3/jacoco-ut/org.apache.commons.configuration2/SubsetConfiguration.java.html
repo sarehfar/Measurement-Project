@@ -29,6 +29,8 @@ import org.apache.commons.configuration2.convert.ListDelimiterHandler;
  * {@link Configuration#subset(String)} method should be used,
  * which will return a correctly initialized instance.&lt;/p&gt;
  *
+ * @author Emmanuel Bourg
+ * @version $Id$
  */
 public class SubsetConfiguration extends AbstractConfiguration
 {
@@ -48,10 +50,10 @@ public class SubsetConfiguration extends AbstractConfiguration
      * @param prefix The prefix used to select the properties
      * @throws IllegalArgumentException if the parent configuration is &lt;b&gt;null&lt;/b&gt;
      */
-    public SubsetConfiguration(final Configuration parent, final String prefix)
+    public SubsetConfiguration(Configuration parent, String prefix)
     {
-<span class="fc" id="L53">        this(parent, prefix, null);</span>
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L55">        this(parent, prefix, null);</span>
+<span class="fc" id="L56">    }</span>
 
     /**
      * Create a subset of the specified configuration
@@ -61,19 +63,19 @@ public class SubsetConfiguration extends AbstractConfiguration
      * @param delimiter The prefix delimiter
      * @throws IllegalArgumentException if the parent configuration is &lt;b&gt;null&lt;/b&gt;
      */
-    public SubsetConfiguration(final Configuration parent, final String prefix, final String delimiter)
-<span class="fc" id="L65">    {</span>
-<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (parent == null)</span>
+    public SubsetConfiguration(Configuration parent, String prefix, String delimiter)
+<span class="fc" id="L67">    {</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (parent == null)</span>
         {
-<span class="fc" id="L68">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L70">            throw new IllegalArgumentException(</span>
                     &quot;Parent configuration must not be null!&quot;);
         }
 
-<span class="fc" id="L72">        this.parent = parent;</span>
-<span class="fc" id="L73">        this.prefix = prefix;</span>
-<span class="fc" id="L74">        this.delimiter = delimiter;</span>
-<span class="fc" id="L75">        initInterpolator();</span>
-<span class="fc" id="L76">    }</span>
+<span class="fc" id="L74">        this.parent = parent;</span>
+<span class="fc" id="L75">        this.prefix = prefix;</span>
+<span class="fc" id="L76">        this.delimiter = delimiter;</span>
+<span class="fc" id="L77">        initInterpolator();</span>
+<span class="fc" id="L78">    }</span>
 
     /**
      * Return the key in the parent configuration associated to the specified
@@ -82,13 +84,16 @@ public class SubsetConfiguration extends AbstractConfiguration
      * @param key The key in the subset.
      * @return the key as to be used by the parent
      */
-    protected String getParentKey(final String key)
+    protected String getParentKey(String key)
     {
-<span class="pc bpc" id="L87" title="1 of 4 branches missed.">        if (&quot;&quot;.equals(key) || key == null)</span>
+<span class="pc bpc" id="L89" title="1 of 4 branches missed.">        if (&quot;&quot;.equals(key) || key == null)</span>
         {
-<span class="fc" id="L89">            return prefix;</span>
+<span class="fc" id="L91">            return prefix;</span>
         }
-<span class="fc bfc" id="L91" title="All 2 branches covered.">        return delimiter == null ? prefix + key : prefix + delimiter + key;</span>
+        else
+        {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            return delimiter == null ? prefix + key : prefix + delimiter + key;</span>
+        }
     }
 
     /**
@@ -98,24 +103,27 @@ public class SubsetConfiguration extends AbstractConfiguration
      * @param key The key in the parent configuration.
      * @return the key in the context of this subset configuration
      */
-    protected String getChildKey(final String key)
+    protected String getChildKey(String key)
     {
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (!key.startsWith(prefix))</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (!key.startsWith(prefix))</span>
         {
-<span class="nc" id="L105">            throw new IllegalArgumentException(&quot;The parent key '&quot; + key + &quot;' is not in the subset.&quot;);</span>
-        }
-<span class="fc" id="L107">        String modifiedKey = null;</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (key.length() == prefix.length())</span>
-        {
-<span class="fc" id="L110">            modifiedKey = &quot;&quot;;</span>
+<span class="nc" id="L110">            throw new IllegalArgumentException(&quot;The parent key '&quot; + key + &quot;' is not in the subset.&quot;);</span>
         }
         else
         {
-<span class="fc bfc" id="L114" title="All 2 branches covered.">            final int i = prefix.length() + (delimiter != null ? delimiter.length() : 0);</span>
-<span class="fc" id="L115">            modifiedKey = key.substring(i);</span>
-        }
+<span class="fc" id="L114">            String modifiedKey = null;</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (key.length() == prefix.length())</span>
+            {
+<span class="fc" id="L117">                modifiedKey = &quot;&quot;;</span>
+            }
+            else
+            {
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                int i = prefix.length() + (delimiter != null ? delimiter.length() : 0);</span>
+<span class="fc" id="L122">                modifiedKey = key.substring(i);</span>
+            }
 
-<span class="fc" id="L118">        return modifiedKey;</span>
+<span class="fc" id="L125">            return modifiedKey;</span>
+        }
     }
 
     /**
@@ -125,7 +133,7 @@ public class SubsetConfiguration extends AbstractConfiguration
      */
     public Configuration getParent()
     {
-<span class="fc" id="L128">        return parent;</span>
+<span class="fc" id="L136">        return parent;</span>
     }
 
     /**
@@ -135,7 +143,7 @@ public class SubsetConfiguration extends AbstractConfiguration
      */
     public String getPrefix()
     {
-<span class="fc" id="L138">        return prefix;</span>
+<span class="fc" id="L146">        return prefix;</span>
     }
 
     /**
@@ -143,57 +151,57 @@ public class SubsetConfiguration extends AbstractConfiguration
      *
      * @param prefix the prefix
      */
-    public void setPrefix(final String prefix)
+    public void setPrefix(String prefix)
     {
-<span class="fc" id="L148">        this.prefix = prefix;</span>
-<span class="fc" id="L149">    }</span>
+<span class="fc" id="L156">        this.prefix = prefix;</span>
+<span class="fc" id="L157">    }</span>
 
     @Override
-    public Configuration subset(final String prefix)
+    public Configuration subset(String prefix)
     {
-<span class="fc" id="L154">        return parent.subset(getParentKey(prefix));</span>
+<span class="fc" id="L162">        return parent.subset(getParentKey(prefix));</span>
     }
 
     @Override
     protected boolean isEmptyInternal()
     {
-<span class="fc bfc" id="L160" title="All 2 branches covered.">        return !getKeysInternal().hasNext();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        return !getKeysInternal().hasNext();</span>
     }
 
     @Override
-    protected boolean containsKeyInternal(final String key)
+    protected boolean containsKeyInternal(String key)
     {
-<span class="fc" id="L166">        return parent.containsKey(getParentKey(key));</span>
+<span class="fc" id="L174">        return parent.containsKey(getParentKey(key));</span>
     }
 
     @Override
-    public void addPropertyDirect(final String key, final Object value)
+    public void addPropertyDirect(String key, Object value)
     {
-<span class="fc" id="L172">        parent.addProperty(getParentKey(key), value);</span>
-<span class="fc" id="L173">    }</span>
+<span class="fc" id="L180">        parent.addProperty(getParentKey(key), value);</span>
+<span class="fc" id="L181">    }</span>
 
     @Override
-    protected void clearPropertyDirect(final String key)
+    protected void clearPropertyDirect(String key)
     {
-<span class="fc" id="L178">        parent.clearProperty(getParentKey(key));</span>
-<span class="fc" id="L179">    }</span>
+<span class="fc" id="L186">        parent.clearProperty(getParentKey(key));</span>
+<span class="fc" id="L187">    }</span>
 
     @Override
-    protected Object getPropertyInternal(final String key)
+    protected Object getPropertyInternal(String key)
     {
-<span class="fc" id="L184">        return parent.getProperty(getParentKey(key));</span>
+<span class="fc" id="L192">        return parent.getProperty(getParentKey(key));</span>
     }
 
     @Override
-    protected Iterator&lt;String&gt; getKeysInternal(final String prefix)
+    protected Iterator&lt;String&gt; getKeysInternal(String prefix)
     {
-<span class="fc" id="L190">        return new SubsetIterator(parent.getKeys(getParentKey(prefix)));</span>
+<span class="fc" id="L198">        return new SubsetIterator(parent.getKeys(getParentKey(prefix)));</span>
     }
 
     @Override
     protected Iterator&lt;String&gt; getKeysInternal()
     {
-<span class="fc" id="L196">        return new SubsetIterator(parent.getKeys(prefix));</span>
+<span class="fc" id="L204">        return new SubsetIterator(parent.getKeys(prefix));</span>
     }
 
     /**
@@ -202,17 +210,17 @@ public class SubsetConfiguration extends AbstractConfiguration
      * Change the behavior of the parent configuration if it supports this feature.
      */
     @Override
-    public void setThrowExceptionOnMissing(final boolean throwExceptionOnMissing)
+    public void setThrowExceptionOnMissing(boolean throwExceptionOnMissing)
     {
-<span class="pc bpc" id="L207" title="1 of 2 branches missed.">        if (parent instanceof AbstractConfiguration)</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (parent instanceof AbstractConfiguration)</span>
         {
-<span class="fc" id="L209">            ((AbstractConfiguration) parent).setThrowExceptionOnMissing(throwExceptionOnMissing);</span>
+<span class="fc" id="L217">            ((AbstractConfiguration) parent).setThrowExceptionOnMissing(throwExceptionOnMissing);</span>
         }
         else
         {
-<span class="nc" id="L213">            super.setThrowExceptionOnMissing(throwExceptionOnMissing);</span>
+<span class="nc" id="L221">            super.setThrowExceptionOnMissing(throwExceptionOnMissing);</span>
         }
-<span class="fc" id="L215">    }</span>
+<span class="fc" id="L223">    }</span>
 
     /**
      * {@inheritDoc}
@@ -222,11 +230,14 @@ public class SubsetConfiguration extends AbstractConfiguration
     @Override
     public boolean isThrowExceptionOnMissing()
     {
-<span class="pc bpc" id="L225" title="1 of 2 branches missed.">        if (parent instanceof AbstractConfiguration)</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">        if (parent instanceof AbstractConfiguration)</span>
         {
-<span class="fc" id="L227">            return ((AbstractConfiguration) parent).isThrowExceptionOnMissing();</span>
+<span class="fc" id="L235">            return ((AbstractConfiguration) parent).isThrowExceptionOnMissing();</span>
         }
-<span class="nc" id="L229">        return super.isThrowExceptionOnMissing();</span>
+        else
+        {
+<span class="nc" id="L239">            return super.isThrowExceptionOnMissing();</span>
+        }
     }
 
     /**
@@ -237,8 +248,8 @@ public class SubsetConfiguration extends AbstractConfiguration
     @Override
     public ListDelimiterHandler getListDelimiterHandler()
     {
-<span class="fc bfc" id="L240" title="All 2 branches covered.">        return parent instanceof AbstractConfiguration ? ((AbstractConfiguration) parent)</span>
-<span class="fc" id="L241">                .getListDelimiterHandler() : super.getListDelimiterHandler();</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        return (parent instanceof AbstractConfiguration) ? ((AbstractConfiguration) parent)</span>
+<span class="fc" id="L252">                .getListDelimiterHandler() : super.getListDelimiterHandler();</span>
     }
 
     /**
@@ -248,18 +259,18 @@ public class SubsetConfiguration extends AbstractConfiguration
      */
     @Override
     public void setListDelimiterHandler(
-            final ListDelimiterHandler listDelimiterHandler)
+            ListDelimiterHandler listDelimiterHandler)
     {
-<span class="fc bfc" id="L253" title="All 2 branches covered.">        if (parent instanceof AbstractConfiguration)</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (parent instanceof AbstractConfiguration)</span>
         {
-<span class="fc" id="L255">            ((AbstractConfiguration) parent)</span>
-<span class="fc" id="L256">                    .setListDelimiterHandler(listDelimiterHandler);</span>
+<span class="fc" id="L266">            ((AbstractConfiguration) parent)</span>
+<span class="fc" id="L267">                    .setListDelimiterHandler(listDelimiterHandler);</span>
         }
         else
         {
-<span class="fc" id="L260">            super.setListDelimiterHandler(listDelimiterHandler);</span>
+<span class="fc" id="L271">            super.setListDelimiterHandler(listDelimiterHandler);</span>
         }
-<span class="fc" id="L262">    }</span>
+<span class="fc" id="L273">    }</span>
 
     /**
      * Initializes the {@code ConfigurationInterpolator} for this sub configuration.
@@ -268,8 +279,8 @@ public class SubsetConfiguration extends AbstractConfiguration
      */
     private void initInterpolator()
     {
-<span class="fc" id="L271">        getInterpolator().setParentInterpolator(getParent().getInterpolator());</span>
-<span class="fc" id="L272">    }</span>
+<span class="fc" id="L282">        getInterpolator().setParentInterpolator(getParent().getInterpolator());</span>
+<span class="fc" id="L283">    }</span>
 
     /**
      * A specialized iterator to be returned by the {@code getKeys()}
@@ -288,10 +299,10 @@ public class SubsetConfiguration extends AbstractConfiguration
          *
          * @param it the iterator of the parent configuration
          */
-        public SubsetIterator(final Iterator&lt;String&gt; it)
-<span class="fc" id="L292">        {</span>
-<span class="fc" id="L293">            parentIterator = it;</span>
-<span class="fc" id="L294">        }</span>
+        public SubsetIterator(Iterator&lt;String&gt; it)
+<span class="fc" id="L303">        {</span>
+<span class="fc" id="L304">            parentIterator = it;</span>
+<span class="fc" id="L305">        }</span>
 
         /**
          * Checks whether there are more elements. Delegates to the parent
@@ -302,7 +313,7 @@ public class SubsetConfiguration extends AbstractConfiguration
         @Override
         public boolean hasNext()
         {
-<span class="fc" id="L305">            return parentIterator.hasNext();</span>
+<span class="fc" id="L316">            return parentIterator.hasNext();</span>
         }
 
         /**
@@ -315,7 +326,7 @@ public class SubsetConfiguration extends AbstractConfiguration
         @Override
         public String next()
         {
-<span class="fc" id="L318">            return getChildKey(parentIterator.next());</span>
+<span class="fc" id="L329">            return getChildKey(parentIterator.next());</span>
         }
 
         /**
@@ -325,8 +336,8 @@ public class SubsetConfiguration extends AbstractConfiguration
         @Override
         public void remove()
         {
-<span class="fc" id="L328">            parentIterator.remove();</span>
-<span class="fc" id="L329">        }</span>
+<span class="fc" id="L339">            parentIterator.remove();</span>
+<span class="fc" id="L340">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

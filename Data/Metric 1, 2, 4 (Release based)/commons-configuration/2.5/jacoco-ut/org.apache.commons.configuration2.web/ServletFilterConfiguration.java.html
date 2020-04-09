@@ -28,6 +28,7 @@ import javax.servlet.FilterConfig;
  * read only, adding or removing a property will throw an
  * UnsupportedOperationException.
  *
+ * @author &lt;a href=&quot;mailto:ebourg@apache.org&quot;&gt;Emmanuel Bourg&lt;/a&gt;
  * @since 1.1
  */
 public class ServletFilterConfiguration extends BaseWebConfiguration
@@ -41,14 +42,14 @@ public class ServletFilterConfiguration extends BaseWebConfiguration
      * @param config the filter configuration
      */
     public ServletFilterConfiguration(final FilterConfig config)
-<span class="fc" id="L44">    {</span>
-<span class="fc" id="L45">        this.config = config;</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L45">    {</span>
+<span class="fc" id="L46">        this.config = config;</span>
+<span class="fc" id="L47">    }</span>
 
     @Override
     protected Object getPropertyInternal(final String key)
     {
-<span class="fc" id="L51">        return handleDelimiters(config.getInitParameter(key));</span>
+<span class="fc" id="L52">        return handleDelimiters(config.getInitParameter(key));</span>
     }
 
     @Override
@@ -56,8 +57,8 @@ public class ServletFilterConfiguration extends BaseWebConfiguration
     {
         // According to the documentation of getInitParameterNames() the
         // enumeration is of type String.
-<span class="fc" id="L59">        final Enumeration&lt;String&gt; en = config.getInitParameterNames();</span>
-<span class="fc" id="L60">        return Collections.list(en).iterator();</span>
+<span class="fc" id="L60">        final Enumeration&lt;String&gt; en = config.getInitParameterNames();</span>
+<span class="fc" id="L61">        return Collections.list(en).iterator();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -49,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
  * multiple {@code Configuration} instances.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
@@ -71,10 +72,10 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      *
      * @param listDelimiter the list delimiter character
      */
-    public LegacyListDelimiterHandler(final char listDelimiter)
-<span class="fc" id="L75">    {</span>
-<span class="fc" id="L76">        delimiter = listDelimiter;</span>
-<span class="fc" id="L77">    }</span>
+    public LegacyListDelimiterHandler(char listDelimiter)
+<span class="fc" id="L76">    {</span>
+<span class="fc" id="L77">        delimiter = listDelimiter;</span>
+<span class="fc" id="L78">    }</span>
 
     /**
      * Returns the list delimiter character.
@@ -83,7 +84,7 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      */
     public char getDelimiter()
     {
-<span class="fc" id="L86">        return delimiter;</span>
+<span class="fc" id="L87">        return delimiter;</span>
     }
 
     /**
@@ -91,9 +92,9 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      * single value (which is not part of a list).
      */
     @Override
-    public Object escape(final Object value, final ValueTransformer transformer)
+    public Object escape(Object value, ValueTransformer transformer)
     {
-<span class="fc" id="L96">        return escapeValue(value, false, transformer);</span>
+<span class="fc" id="L97">        return escapeValue(value, false, transformer);</span>
     }
 
     /**
@@ -102,30 +103,33 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      * escape character for a following list delimiter.
      */
     @Override
-    public Object escapeList(final List&lt;?&gt; values, final ValueTransformer transformer)
+    public Object escapeList(List&lt;?&gt; values, ValueTransformer transformer)
     {
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (!values.isEmpty())</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (!values.isEmpty())</span>
         {
-<span class="fc" id="L109">            final Iterator&lt;?&gt; it = values.iterator();</span>
-<span class="fc" id="L110">            String lastValue = escapeValue(it.next(), true, transformer);</span>
-<span class="fc" id="L111">            final StringBuilder buf = new StringBuilder(lastValue);</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">            while (it.hasNext())</span>
+<span class="fc" id="L110">            Iterator&lt;?&gt; it = values.iterator();</span>
+<span class="fc" id="L111">            String lastValue = escapeValue(it.next(), true, transformer);</span>
+<span class="fc" id="L112">            StringBuilder buf = new StringBuilder(lastValue);</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            while (it.hasNext())</span>
             {
                 // if the last value ended with an escape character, it has
                 // to be escaped itself; otherwise the list delimiter will
                 // be escaped
-<span class="fc bfc" id="L117" title="All 2 branches covered.">                if (lastValue.endsWith(ESCAPE)</span>
-<span class="fc bfc" id="L118" title="All 2 branches covered.">                        &amp;&amp; (countTrailingBS(lastValue) / 2) % 2 != 0)</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">                if (lastValue.endsWith(ESCAPE)</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                        &amp;&amp; (countTrailingBS(lastValue) / 2) % 2 != 0)</span>
                 {
-<span class="fc" id="L120">                    buf.append(ESCAPE).append(ESCAPE);</span>
+<span class="fc" id="L121">                    buf.append(ESCAPE).append(ESCAPE);</span>
                 }
-<span class="fc" id="L122">                buf.append(getDelimiter());</span>
-<span class="fc" id="L123">                lastValue = escapeValue(it.next(), true, transformer);</span>
-<span class="fc" id="L124">                buf.append(lastValue);</span>
+<span class="fc" id="L123">                buf.append(getDelimiter());</span>
+<span class="fc" id="L124">                lastValue = escapeValue(it.next(), true, transformer);</span>
+<span class="fc" id="L125">                buf.append(lastValue);</span>
             }
-<span class="fc" id="L126">            return buf.toString();</span>
+<span class="fc" id="L127">            return buf.toString();</span>
         }
-<span class="nc" id="L128">        return null;</span>
+        else
+        {
+<span class="nc" id="L131">            return null;</span>
+        }
     }
 
     /**
@@ -134,87 +138,87 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      * the delimiter character is not found, the input is returned unchanged.
      */
     @Override
-    protected Collection&lt;String&gt; splitString(final String s, final boolean trim)
+    protected Collection&lt;String&gt; splitString(String s, boolean trim)
     {
-<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (s.indexOf(getDelimiter()) &lt; 0)</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (s.indexOf(getDelimiter()) &lt; 0)</span>
         {
-<span class="fc" id="L141">            return Collections.singleton(s);</span>
+<span class="fc" id="L145">            return Collections.singleton(s);</span>
         }
 
-<span class="fc" id="L144">        final List&lt;String&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L148">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L146">        StringBuilder token = new StringBuilder();</span>
-<span class="fc" id="L147">        int begin = 0;</span>
-<span class="fc" id="L148">        boolean inEscape = false;</span>
-<span class="fc" id="L149">        final char esc = ESCAPE.charAt(0);</span>
+<span class="fc" id="L150">        StringBuilder token = new StringBuilder();</span>
+<span class="fc" id="L151">        int begin = 0;</span>
+<span class="fc" id="L152">        boolean inEscape = false;</span>
+<span class="fc" id="L153">        char esc = ESCAPE.charAt(0);</span>
 
-<span class="fc bfc" id="L151" title="All 2 branches covered.">        while (begin &lt; s.length())</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        while (begin &lt; s.length())</span>
         {
-<span class="fc" id="L153">            final char c = s.charAt(begin);</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (inEscape)</span>
+<span class="fc" id="L157">            char c = s.charAt(begin);</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">            if (inEscape)</span>
             {
                 // last character was the escape marker
                 // can current character be escaped?
-<span class="fc bfc" id="L158" title="All 4 branches covered.">                if (c != getDelimiter() &amp;&amp; c != esc)</span>
+<span class="fc bfc" id="L162" title="All 4 branches covered.">                if (c != getDelimiter() &amp;&amp; c != esc)</span>
                 {
                     // no, also add escape character
-<span class="fc" id="L161">                    token.append(esc);</span>
+<span class="fc" id="L165">                    token.append(esc);</span>
                 }
-<span class="fc" id="L163">                token.append(c);</span>
-<span class="fc" id="L164">                inEscape = false;</span>
+<span class="fc" id="L167">                token.append(c);</span>
+<span class="fc" id="L168">                inEscape = false;</span>
             }
 
             else
             {
-<span class="fc bfc" id="L169" title="All 2 branches covered.">                if (c == getDelimiter())</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                if (c == getDelimiter())</span>
                 {
                     // found a list delimiter -&gt; add token and
                     // resetDefaultFileSystem buffer
-<span class="fc" id="L173">                    String t = token.toString();</span>
-<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                    if (trim)</span>
+<span class="fc" id="L177">                    String t = token.toString();</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">                    if (trim)</span>
                     {
-<span class="fc" id="L176">                        t = t.trim();</span>
+<span class="fc" id="L180">                        t = t.trim();</span>
                     }
-<span class="fc" id="L178">                    list.add(t);</span>
-<span class="fc" id="L179">                    token = new StringBuilder();</span>
-<span class="fc" id="L180">                }</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">                else if (c == esc)</span>
+<span class="fc" id="L182">                    list.add(t);</span>
+<span class="fc" id="L183">                    token = new StringBuilder();</span>
+<span class="fc" id="L184">                }</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">                else if (c == esc)</span>
                 {
                     // eventually escape next character
-<span class="fc" id="L184">                    inEscape = true;</span>
+<span class="fc" id="L188">                    inEscape = true;</span>
                 }
                 else
                 {
-<span class="fc" id="L188">                    token.append(c);</span>
+<span class="fc" id="L192">                    token.append(c);</span>
                 }
             }
 
-<span class="fc" id="L192">            begin++;</span>
-<span class="fc" id="L193">        }</span>
+<span class="fc" id="L196">            begin++;</span>
+<span class="fc" id="L197">        }</span>
 
         // Trailing delimiter?
-<span class="fc bfc" id="L196" title="All 2 branches covered.">        if (inEscape)</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (inEscape)</span>
         {
-<span class="fc" id="L198">            token.append(esc);</span>
+<span class="fc" id="L202">            token.append(esc);</span>
         }
         // Add last token
-<span class="fc" id="L201">        String t = token.toString();</span>
-<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (trim)</span>
+<span class="fc" id="L205">        String t = token.toString();</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">        if (trim)</span>
         {
-<span class="fc" id="L204">            t = t.trim();</span>
+<span class="fc" id="L208">            t = t.trim();</span>
         }
-<span class="fc" id="L206">        list.add(t);</span>
+<span class="fc" id="L210">        list.add(t);</span>
 
-<span class="fc" id="L208">        return list;</span>
+<span class="fc" id="L212">        return list;</span>
     }
 
     /**
      * {@inheritDoc} This is just a dummy implementation. It is never called.
      */
     @Override
-    protected String escapeString(final String s)
+    protected String escapeString(String s)
     {
-<span class="nc" id="L217">        return null;</span>
+<span class="nc" id="L221">        return null;</span>
     }
 
     /**
@@ -229,16 +233,16 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      * @param inList a flag whether the value is part of a list
      * @return the value with escaped backslashes as string
      */
-    protected String escapeBackslashs(final Object value, final boolean inList)
+    protected String escapeBackslashs(Object value, boolean inList)
     {
-<span class="fc" id="L234">        String strValue = String.valueOf(value);</span>
+<span class="fc" id="L238">        String strValue = String.valueOf(value);</span>
 
-<span class="fc bfc" id="L236" title="All 4 branches covered.">        if (inList &amp;&amp; strValue.indexOf(DOUBLE_ESC) &gt;= 0)</span>
+<span class="fc bfc" id="L240" title="All 4 branches covered.">        if (inList &amp;&amp; strValue.indexOf(DOUBLE_ESC) &gt;= 0)</span>
         {
-<span class="fc" id="L238">            strValue = StringUtils.replace(strValue, DOUBLE_ESC, QUAD_ESC);</span>
+<span class="fc" id="L242">            strValue = StringUtils.replace(strValue, DOUBLE_ESC, QUAD_ESC);</span>
         }
 
-<span class="fc" id="L241">        return strValue;</span>
+<span class="fc" id="L245">        return strValue;</span>
     }
 
     /**
@@ -252,20 +256,20 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      * @param transformer the {@code ValueTransformer}
      * @return the escaped property value
      */
-    protected String escapeValue(final Object value, final boolean inList,
-            final ValueTransformer transformer)
+    protected String escapeValue(Object value, boolean inList,
+            ValueTransformer transformer)
     {
-<span class="fc" id="L258">        String escapedValue =</span>
-<span class="fc" id="L259">                String.valueOf(transformer.transformValue(escapeBackslashs(</span>
+<span class="fc" id="L262">        String escapedValue =</span>
+<span class="fc" id="L263">                String.valueOf(transformer.transformValue(escapeBackslashs(</span>
                         value, inList)));
-<span class="pc bpc" id="L261" title="1 of 2 branches missed.">        if (getDelimiter() != 0)</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if (getDelimiter() != 0)</span>
         {
-<span class="fc" id="L263">            escapedValue =</span>
-<span class="fc" id="L264">                    StringUtils.replace(escapedValue,</span>
-<span class="fc" id="L265">                            String.valueOf(getDelimiter()), ESCAPE</span>
-<span class="fc" id="L266">                                    + getDelimiter());</span>
+<span class="fc" id="L267">            escapedValue =</span>
+<span class="fc" id="L268">                    StringUtils.replace(escapedValue,</span>
+<span class="fc" id="L269">                            String.valueOf(getDelimiter()), ESCAPE</span>
+<span class="fc" id="L270">                                    + getDelimiter());</span>
         }
-<span class="fc" id="L268">        return escapedValue;</span>
+<span class="fc" id="L272">        return escapedValue;</span>
     }
 
     /**
@@ -275,15 +279,15 @@ public class LegacyListDelimiterHandler extends AbstractListDelimiterHandler
      * @param line the string to investigate
      * @return the number of trailing backslashes
      */
-    private static int countTrailingBS(final String line)
+    private static int countTrailingBS(String line)
     {
-<span class="fc" id="L280">        int bsCount = 0;</span>
-<span class="pc bpc" id="L281" title="1 of 4 branches missed.">        for (int idx = line.length() - 1; idx &gt;= 0 &amp;&amp; line.charAt(idx) == '\\'; idx--)</span>
+<span class="fc" id="L284">        int bsCount = 0;</span>
+<span class="pc bpc" id="L285" title="1 of 4 branches missed.">        for (int idx = line.length() - 1; idx &gt;= 0 &amp;&amp; line.charAt(idx) == '\\'; idx--)</span>
         {
-<span class="fc" id="L283">            bsCount++;</span>
+<span class="fc" id="L287">            bsCount++;</span>
         }
 
-<span class="fc" id="L286">        return bsCount;</span>
+<span class="fc" id="L290">        return bsCount;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

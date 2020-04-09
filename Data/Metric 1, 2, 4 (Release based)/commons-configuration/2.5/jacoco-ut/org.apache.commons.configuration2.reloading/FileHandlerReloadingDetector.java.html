@@ -85,7 +85,7 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     public FileHandlerReloadingDetector(final FileHandler handler, final long refreshDelay)
 <span class="fc" id="L87">    {</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        fileHandler = handler != null ? handler : new FileHandler();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        fileHandler = (handler != null) ? handler : new FileHandler();</span>
 <span class="fc" id="L89">        this.refreshDelay = refreshDelay;</span>
 <span class="fc" id="L90">    }</span>
 
@@ -205,7 +205,7 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
     protected long getLastModificationDate()
     {
 <span class="fc" id="L207">        final File file = getExistingFile();</span>
-<span class="fc bfc" id="L208" title="All 2 branches covered.">        return file != null ? file.lastModified() : 0;</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        return (file != null) ? file.lastModified() : 0;</span>
     }
 
     /**
@@ -232,7 +232,7 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
     protected File getFile()
     {
 <span class="fc" id="L234">        final URL url = getFileHandler().getURL();</span>
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        return url != null ? fileFromURL(url) : getFileHandler().getFile();</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        return (url != null) ? fileFromURL(url) : getFileHandler().getFile();</span>
     }
 
     /**

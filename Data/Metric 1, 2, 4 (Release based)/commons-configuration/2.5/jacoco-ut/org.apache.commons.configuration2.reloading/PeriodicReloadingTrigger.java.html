@@ -100,7 +100,7 @@ public class PeriodicReloadingTrigger
 <span class="fc" id="L100">        period = triggerPeriod;</span>
 <span class="fc" id="L101">        timeUnit = unit;</span>
 <span class="fc" id="L102">        executorService =</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">                exec != null ? exec : createDefaultExecutorService();</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                (exec != null) ? exec : createDefaultExecutorService();</span>
 <span class="fc" id="L104">    }</span>
 
     /**
@@ -209,7 +209,14 @@ public class PeriodicReloadingTrigger
      */
     private Runnable createTriggerTaskCommand()
     {
-<span class="fc" id="L212">        return () -&gt; controller.checkForReloading(controllerParam);</span>
+<span class="fc" id="L212">        return new Runnable()</span>
+<span class="fc" id="L213">        {</span>
+            @Override
+            public void run()
+            {
+<span class="fc" id="L217">                controller.checkForReloading(controllerParam);</span>
+<span class="fc" id="L218">            }</span>
+        };
     }
 
     /**
@@ -220,11 +227,11 @@ public class PeriodicReloadingTrigger
      */
     private static ScheduledExecutorService createDefaultExecutorService()
     {
-<span class="fc" id="L223">        final ThreadFactory factory =</span>
+<span class="fc" id="L230">        final ThreadFactory factory =</span>
                 new BasicThreadFactory.Builder()
-<span class="fc" id="L225">                        .namingPattern(&quot;ReloadingTrigger-%s&quot;).daemon(true)</span>
-<span class="fc" id="L226">                        .build();</span>
-<span class="fc" id="L227">        return Executors.newScheduledThreadPool(1, factory);</span>
+<span class="fc" id="L232">                        .namingPattern(&quot;ReloadingTrigger-%s&quot;).daemon(true)</span>
+<span class="fc" id="L233">                        .build();</span>
+<span class="fc" id="L234">        return Executors.newScheduledThreadPool(1, factory);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

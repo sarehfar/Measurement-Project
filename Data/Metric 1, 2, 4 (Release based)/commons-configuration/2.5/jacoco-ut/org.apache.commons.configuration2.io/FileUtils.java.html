@@ -37,26 +37,26 @@ import java.nio.charset.Charset;
 
     //-----------------------------------------------------------------------
     /**
-     * Convert from a {@code URL} to a {@code File}.
+     * Convert from a &lt;code&gt;URL&lt;/code&gt; to a &lt;code&gt;File&lt;/code&gt;.
      * &lt;p&gt;
      * From version 1.1 this method will decode the URL.
-     * Syntax such as {@code file:///my%20docs/file.txt} will be
-     * correctly decoded to {@code /my docs/file.txt}. Starting with version
+     * Syntax such as &lt;code&gt;file:///my%20docs/file.txt&lt;/code&gt; will be
+     * correctly decoded to &lt;code&gt;/my docs/file.txt&lt;/code&gt;. Starting with version
      * 1.5, this method uses UTF-8 to decode percent-encoded octets to characters.
      * Additionally, malformed percent-encoded octets are handled leniently by
      * passing them through literally.
      *
      * @param url  the file URL to convert, {@code null} returns {@code null}
-     * @return the equivalent {@code File} object, or {@code null}
-     *  if the URL's protocol is not {@code file}
+     * @return the equivalent &lt;code&gt;File&lt;/code&gt; object, or {@code null}
+     *  if the URL's protocol is not &lt;code&gt;file&lt;/code&gt;
      */
     public static File toFile(final URL url) {
 <span class="fc bfc" id="L54" title="All 4 branches covered.">        if (url == null || !&quot;file&quot;.equalsIgnoreCase(url.getProtocol())) {</span>
 <span class="fc" id="L55">            return null;</span>
         }
-<span class="fc" id="L57">        String fileName = url.getFile().replace('/', File.separatorChar);</span>
-<span class="fc" id="L58">        fileName = decodeUrl(fileName);</span>
-<span class="fc" id="L59">        return new File(fileName);</span>
+<span class="fc" id="L57">        String filename = url.getFile().replace('/', File.separatorChar);</span>
+<span class="fc" id="L58">        filename = decodeUrl(filename);</span>
+<span class="fc" id="L59">        return new File(filename);</span>
     }
 
     /**

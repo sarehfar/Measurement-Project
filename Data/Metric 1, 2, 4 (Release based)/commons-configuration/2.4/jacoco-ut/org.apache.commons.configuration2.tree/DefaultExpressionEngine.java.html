@@ -38,7 +38,7 @@ import org.apache.commons.lang3.StringUtils;
  * delimiter, which is by the default a dot (&amp;quot;.&amp;quot;).&lt;/li&gt;
  * &lt;li&gt;Navigating from a node to one of its attributes using the attribute node
  * delimiter, which by default follows the XPATH like syntax
- * {@code [@&amp;lt;attributeName&amp;gt;]}.&lt;/li&gt;
+ * &lt;code&gt;[@&amp;lt;attributeName&amp;gt;]&lt;/code&gt;.&lt;/li&gt;
  * &lt;li&gt;If there are multiple child or attribute nodes with the same name, a
  * specific node can be selected using a numerical index. By default indices are
  * written in parenthesis.&lt;/li&gt;
@@ -108,6 +108,10 @@ import org.apache.commons.lang3.StringUtils;
  * &lt;/p&gt;
  *
  * @since 1.3
+ * @author &lt;a
+ * href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons
+ * Configuration team&lt;/a&gt;
+ * @version $Id$
  */
 public class DefaultExpressionEngine implements ExpressionEngine
 {
@@ -115,7 +119,7 @@ public class DefaultExpressionEngine implements ExpressionEngine
      * A default instance of this class that is used as expression engine for
      * hierarchical configurations per default.
      */
-<span class="fc" id="L118">    public static final DefaultExpressionEngine INSTANCE =</span>
+<span class="fc" id="L122">    public static final DefaultExpressionEngine INSTANCE =</span>
             new DefaultExpressionEngine(
                     DefaultExpressionEngineSymbols.DEFAULT_SYMBOLS);
 
@@ -134,8 +138,8 @@ public class DefaultExpressionEngine implements ExpressionEngine
      */
     public DefaultExpressionEngine(final DefaultExpressionEngineSymbols syms)
     {
-<span class="fc" id="L137">        this(syms, null);</span>
-<span class="fc" id="L138">    }</span>
+<span class="fc" id="L141">        this(syms, null);</span>
+<span class="fc" id="L142">    }</span>
 
     /**
      * Creates a new instance of {@code DefaultExpressionEngine} and initializes
@@ -150,17 +154,17 @@ public class DefaultExpressionEngine implements ExpressionEngine
      */
     public DefaultExpressionEngine(final DefaultExpressionEngineSymbols syms,
             final NodeMatcher&lt;String&gt; nodeNameMatcher)
-<span class="fc" id="L153">    {</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (syms == null)</span>
+<span class="fc" id="L157">    {</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (syms == null)</span>
         {
-<span class="fc" id="L156">            throw new IllegalArgumentException(&quot;Symbols must not be null!&quot;);</span>
+<span class="fc" id="L160">            throw new IllegalArgumentException(&quot;Symbols must not be null!&quot;);</span>
         }
 
-<span class="fc" id="L159">        symbols = syms;</span>
-<span class="fc" id="L160">        nameMatcher =</span>
-<span class="fc bfc" id="L161" title="All 2 branches covered.">                nodeNameMatcher != null ? nodeNameMatcher</span>
-<span class="fc" id="L162">                        : NodeNameMatchers.EQUALS;</span>
-<span class="fc" id="L163">    }</span>
+<span class="fc" id="L163">        symbols = syms;</span>
+<span class="fc" id="L164">        nameMatcher =</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">                (nodeNameMatcher != null) ? nodeNameMatcher</span>
+<span class="fc" id="L166">                        : NodeNameMatchers.EQUALS;</span>
+<span class="fc" id="L167">    }</span>
 
     /**
      * Returns the {@code DefaultExpressionEngineSymbols} object associated with
@@ -171,7 +175,7 @@ public class DefaultExpressionEngine implements ExpressionEngine
      */
     public DefaultExpressionEngineSymbols getSymbols()
     {
-<span class="fc" id="L174">        return symbols;</span>
+<span class="fc" id="L178">        return symbols;</span>
     }
 
     /**
@@ -182,10 +186,10 @@ public class DefaultExpressionEngine implements ExpressionEngine
     public &lt;T&gt; List&lt;QueryResult&lt;T&gt;&gt; query(final T root, final String key,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L185">        final List&lt;QueryResult&lt;T&gt;&gt; results = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L186">        findNodesForKey(new DefaultConfigurationKey(this, key).iterator(),</span>
+<span class="fc" id="L189">        final List&lt;QueryResult&lt;T&gt;&gt; results = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L190">        findNodesForKey(new DefaultConfigurationKey(this, key).iterator(),</span>
                 root, results, handler);
-<span class="fc" id="L188">        return results;</span>
+<span class="fc" id="L192">        return results;</span>
     }
 
     /**
@@ -198,24 +202,24 @@ public class DefaultExpressionEngine implements ExpressionEngine
     @Override
     public &lt;T&gt; String nodeKey(final T node, final String parentKey, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (parentKey == null)</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (parentKey == null)</span>
         {
             // this is the root node
-<span class="fc" id="L204">            return StringUtils.EMPTY;</span>
+<span class="fc" id="L208">            return StringUtils.EMPTY;</span>
         }
-<span class="fc" id="L206">        final DefaultConfigurationKey key = new DefaultConfigurationKey(this,</span>
+<span class="fc" id="L210">        final DefaultConfigurationKey key = new DefaultConfigurationKey(this,</span>
                 parentKey);
-<span class="fc" id="L208">            key.append(handler.nodeName(node), true);</span>
-<span class="fc" id="L209">        return key.toString();</span>
+<span class="fc" id="L212">            key.append(handler.nodeName(node), true);</span>
+<span class="fc" id="L213">        return key.toString();</span>
     }
 
     @Override
     public String attributeKey(final String parentKey, final String attributeName)
     {
-<span class="fc" id="L215">        final DefaultConfigurationKey key =</span>
+<span class="fc" id="L219">        final DefaultConfigurationKey key =</span>
                 new DefaultConfigurationKey(this, parentKey);
-<span class="fc" id="L217">        key.appendAttribute(attributeName);</span>
-<span class="fc" id="L218">        return key.toString();</span>
+<span class="fc" id="L221">        key.appendAttribute(attributeName);</span>
+<span class="fc" id="L222">        return key.toString();</span>
     }
 
     /**
@@ -229,18 +233,18 @@ public class DefaultExpressionEngine implements ExpressionEngine
     public &lt;T&gt; String canonicalKey(final T node, final String parentKey,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L232">        final String nodeName = handler.nodeName(node);</span>
-<span class="fc" id="L233">        final T parent = handler.getParent(node);</span>
-<span class="fc" id="L234">        final DefaultConfigurationKey key =</span>
+<span class="fc" id="L236">        final String nodeName = handler.nodeName(node);</span>
+<span class="fc" id="L237">        final T parent = handler.getParent(node);</span>
+<span class="fc" id="L238">        final DefaultConfigurationKey key =</span>
                 new DefaultConfigurationKey(this, parentKey);
-<span class="fc" id="L236">        key.append(StringUtils.defaultString(nodeName));</span>
+<span class="fc" id="L240">        key.append(StringUtils.defaultString(nodeName));</span>
 
-<span class="fc bfc" id="L238" title="All 2 branches covered.">        if (parent != null)</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (parent != null)</span>
         {
             // this is not the root key
-<span class="fc" id="L241">            key.appendIndex(determineIndex(node, parent, nodeName, handler));</span>
+<span class="fc" id="L245">            key.appendIndex(determineIndex(node, parent, nodeName, handler));</span>
         }
-<span class="fc" id="L243">        return key.toString();</span>
+<span class="fc" id="L247">        return key.toString();</span>
     }
 
     /**
@@ -327,30 +331,30 @@ public class DefaultExpressionEngine implements ExpressionEngine
     @Override
     public &lt;T&gt; NodeAddData&lt;T&gt; prepareAdd(final T root, final String key, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L330">        final DefaultConfigurationKey.KeyIterator it = new DefaultConfigurationKey(</span>
-<span class="fc" id="L331">                this, key).iterator();</span>
-<span class="fc bfc" id="L332" title="All 2 branches covered.">        if (!it.hasNext())</span>
+<span class="fc" id="L334">        final DefaultConfigurationKey.KeyIterator it = new DefaultConfigurationKey(</span>
+<span class="fc" id="L335">                this, key).iterator();</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (!it.hasNext())</span>
         {
-<span class="fc" id="L334">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L338">            throw new IllegalArgumentException(</span>
                     &quot;Key for add operation must be defined!&quot;);
         }
 
-<span class="fc" id="L338">        final T parent = findLastPathNode(it, root, handler);</span>
-<span class="fc" id="L339">        final List&lt;String&gt; pathNodes = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L342">        final T parent = findLastPathNode(it, root, handler);</span>
+<span class="fc" id="L343">        final List&lt;String&gt; pathNodes = new LinkedList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L341" title="All 2 branches covered.">        while (it.hasNext())</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        while (it.hasNext())</span>
         {
-<span class="fc bfc" id="L343" title="All 2 branches covered.">            if (!it.isPropertyKey())</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">            if (!it.isPropertyKey())</span>
             {
-<span class="fc" id="L345">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L349">                throw new IllegalArgumentException(</span>
                         &quot;Invalid key for add operation: &quot; + key
                                 + &quot; (Attribute key in the middle.)&quot;);
             }
-<span class="fc" id="L349">            pathNodes.add(it.currentKey());</span>
-<span class="fc" id="L350">            it.next();</span>
+<span class="fc" id="L353">            pathNodes.add(it.currentKey());</span>
+<span class="fc" id="L354">            it.next();</span>
         }
 
-<span class="fc bfc" id="L353" title="All 2 branches covered.">        return new NodeAddData&lt;&gt;(parent, it.currentKey(), !it.isPropertyKey(),</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">        return new NodeAddData&lt;&gt;(parent, it.currentKey(), !it.isPropertyKey(),</span>
                 pathNodes);
     }
 
@@ -369,28 +373,28 @@ public class DefaultExpressionEngine implements ExpressionEngine
             final DefaultConfigurationKey.KeyIterator keyPart, final T node,
             final Collection&lt;QueryResult&lt;T&gt;&gt; results, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L372" title="All 2 branches covered.">        if (!keyPart.hasNext())</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">        if (!keyPart.hasNext())</span>
         {
-<span class="fc" id="L374">            results.add(QueryResult.createNodeResult(node));</span>
+<span class="fc" id="L378">            results.add(QueryResult.createNodeResult(node));</span>
         }
 
         else
         {
-<span class="fc" id="L379">            final String key = keyPart.nextKey(false);</span>
-<span class="fc bfc" id="L380" title="All 2 branches covered.">            if (keyPart.isPropertyKey())</span>
+<span class="fc" id="L383">            final String key = keyPart.nextKey(false);</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">            if (keyPart.isPropertyKey())</span>
             {
-<span class="fc" id="L382">                processSubNodes(keyPart, findChildNodesByName(handler, node, key),</span>
+<span class="fc" id="L386">                processSubNodes(keyPart, findChildNodesByName(handler, node, key),</span>
                         results, handler);
             }
-<span class="fc bfc" id="L385" title="All 4 branches covered.">            if (keyPart.isAttribute() &amp;&amp; !keyPart.hasNext())</span>
+<span class="fc bfc" id="L389" title="All 4 branches covered.">            if (keyPart.isAttribute() &amp;&amp; !keyPart.hasNext())</span>
             {
-<span class="fc bfc" id="L387" title="All 2 branches covered.">                if (handler.getAttributeValue(node, key) != null)</span>
+<span class="fc bfc" id="L391" title="All 2 branches covered.">                if (handler.getAttributeValue(node, key) != null)</span>
                 {
-<span class="fc" id="L389">                    results.add(QueryResult.createAttributeResult(node, key));</span>
+<span class="fc" id="L393">                    results.add(QueryResult.createAttributeResult(node, key));</span>
                 }
             }
         }
-<span class="fc" id="L393">    }</span>
+<span class="fc" id="L397">    }</span>
 
     /**
      * Finds the last existing node for an add operation. This method traverses
@@ -406,32 +410,32 @@ public class DefaultExpressionEngine implements ExpressionEngine
     protected &lt;T&gt; T findLastPathNode(final DefaultConfigurationKey.KeyIterator keyIt,
             final T node, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L409">        final String keyPart = keyIt.nextKey(false);</span>
+<span class="fc" id="L413">        final String keyPart = keyIt.nextKey(false);</span>
 
-<span class="fc bfc" id="L411" title="All 2 branches covered.">        if (keyIt.hasNext())</span>
+<span class="fc bfc" id="L415" title="All 2 branches covered.">        if (keyIt.hasNext())</span>
         {
-<span class="fc bfc" id="L413" title="All 2 branches covered.">            if (!keyIt.isPropertyKey())</span>
+<span class="fc bfc" id="L417" title="All 2 branches covered.">            if (!keyIt.isPropertyKey())</span>
             {
                 // Attribute keys can only appear as last elements of the path
-<span class="fc" id="L416">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L420">                throw new IllegalArgumentException(</span>
                         &quot;Invalid path for add operation: &quot;
                                 + &quot;Attribute key in the middle!&quot;);
             }
             final int idx =
-<span class="fc bfc" id="L421" title="All 2 branches covered.">                    keyIt.hasIndex() ? keyIt.getIndex() : handler</span>
-<span class="fc" id="L422">                            .getMatchingChildrenCount(node, nameMatcher,</span>
-<span class="fc" id="L423">                                    keyPart) - 1;</span>
-<span class="fc bfc" id="L424" title="All 2 branches covered.">            if (idx &lt; 0</span>
-<span class="pc bpc" id="L425" title="1 of 2 branches missed.">                    || idx &gt;= handler.getMatchingChildrenCount(node,</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">                    keyIt.hasIndex() ? keyIt.getIndex() : handler</span>
+<span class="fc" id="L426">                            .getMatchingChildrenCount(node, nameMatcher,</span>
+<span class="fc" id="L427">                                    keyPart) - 1;</span>
+<span class="fc bfc" id="L428" title="All 2 branches covered.">            if (idx &lt; 0</span>
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">                    || idx &gt;= handler.getMatchingChildrenCount(node,</span>
                             nameMatcher, keyPart))
             {
-<span class="fc" id="L428">                return node;</span>
+<span class="fc" id="L432">                return node;</span>
             }
-<span class="fc" id="L430">            return findLastPathNode(keyIt,</span>
-<span class="fc" id="L431">                    findChildNodesByName(handler, node, keyPart).get(idx),</span>
+<span class="fc" id="L434">            return findLastPathNode(keyIt,</span>
+<span class="fc" id="L435">                    findChildNodesByName(handler, node, keyPart).get(idx),</span>
                     handler);
         }
-<span class="fc" id="L434">        return node;</span>
+<span class="fc" id="L438">        return node;</span>
     }
 
     /**
@@ -448,23 +452,23 @@ public class DefaultExpressionEngine implements ExpressionEngine
     private &lt;T&gt; void processSubNodes(final DefaultConfigurationKey.KeyIterator keyPart,
             final List&lt;T&gt; subNodes, final Collection&lt;QueryResult&lt;T&gt;&gt; nodes, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L451" title="All 2 branches covered.">        if (keyPart.hasIndex())</span>
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        if (keyPart.hasIndex())</span>
         {
-<span class="fc bfc" id="L453" title="All 4 branches covered.">            if (keyPart.getIndex() &gt;= 0 &amp;&amp; keyPart.getIndex() &lt; subNodes.size())</span>
+<span class="fc bfc" id="L457" title="All 4 branches covered.">            if (keyPart.getIndex() &gt;= 0 &amp;&amp; keyPart.getIndex() &lt; subNodes.size())</span>
             {
-<span class="fc" id="L455">                findNodesForKey((DefaultConfigurationKey.KeyIterator) keyPart</span>
-<span class="fc" id="L456">                        .clone(), subNodes.get(keyPart.getIndex()), nodes, handler);</span>
+<span class="fc" id="L459">                findNodesForKey((DefaultConfigurationKey.KeyIterator) keyPart</span>
+<span class="fc" id="L460">                        .clone(), subNodes.get(keyPart.getIndex()), nodes, handler);</span>
             }
         }
         else
         {
-<span class="fc bfc" id="L461" title="All 2 branches covered.">            for (final T node : subNodes)</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">            for (final T node : subNodes)</span>
             {
-<span class="fc" id="L463">                findNodesForKey((DefaultConfigurationKey.KeyIterator) keyPart</span>
-<span class="fc" id="L464">                        .clone(), node, nodes, handler);</span>
-<span class="fc" id="L465">            }</span>
+<span class="fc" id="L467">                findNodesForKey((DefaultConfigurationKey.KeyIterator) keyPart</span>
+<span class="fc" id="L468">                        .clone(), node, nodes, handler);</span>
+<span class="fc" id="L469">            }</span>
         }
-<span class="fc" id="L467">    }</span>
+<span class="fc" id="L471">    }</span>
 
     /**
      * Determines the index of the given node based on its parent node.
@@ -479,7 +483,7 @@ public class DefaultExpressionEngine implements ExpressionEngine
     private &lt;T&gt; int determineIndex(final T node, final T parent, final String nodeName,
                                           final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L482">        return findChildNodesByName(handler, parent, nodeName).indexOf(node);</span>
+<span class="fc" id="L486">        return findChildNodesByName(handler, parent, nodeName).indexOf(node);</span>
     }
 
     /**
@@ -496,7 +500,7 @@ public class DefaultExpressionEngine implements ExpressionEngine
     private &lt;T&gt; List&lt;T&gt; findChildNodesByName(final NodeHandler&lt;T&gt; handler, final T parent,
             final String nodeName)
     {
-<span class="fc" id="L499">        return handler.getMatchingChildren(parent, nameMatcher, nodeName);</span>
+<span class="fc" id="L503">        return handler.getMatchingChildren(parent, nameMatcher, nodeName);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

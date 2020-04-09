@@ -42,13 +42,14 @@ import org.apache.commons.logging.LogFactory;
  * {@code FileHandler}: during load operations no auto-save is performed.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 class AutoSaveListener extends FileHandlerListenerAdapter implements
         EventListener&lt;ConfigurationEvent&gt;
 {
     /** The logger. */
-<span class="fc" id="L51">    private final Log log = LogFactory.getLog(getClass());</span>
+<span class="fc" id="L52">    private final Log log = LogFactory.getLog(getClass());</span>
 
     /** The associated builder. */
     private final FileBasedConfigurationBuilder&lt;?&gt; builder;
@@ -68,10 +69,10 @@ class AutoSaveListener extends FileHandlerListenerAdapter implements
      *
      * @param bldr the associated builder
      */
-    public AutoSaveListener(final FileBasedConfigurationBuilder&lt;?&gt; bldr)
-<span class="fc" id="L72">    {</span>
-<span class="fc" id="L73">        builder = bldr;</span>
-<span class="fc" id="L74">    }</span>
+    public AutoSaveListener(FileBasedConfigurationBuilder&lt;?&gt; bldr)
+<span class="fc" id="L73">    {</span>
+<span class="fc" id="L74">        builder = bldr;</span>
+<span class="fc" id="L75">    }</span>
 
     /**
      * {@inheritDoc} This implementation checks whether an auto-safe operation
@@ -80,40 +81,40 @@ class AutoSaveListener extends FileHandlerListenerAdapter implements
      * operation is in progress.
      */
     @Override
-    public void onEvent(final ConfigurationEvent event)
+    public void onEvent(ConfigurationEvent event)
     {
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (autoSaveRequired(event))</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (autoSaveRequired(event))</span>
         {
             try
             {
-<span class="fc" id="L89">                builder.save();</span>
+<span class="fc" id="L90">                builder.save();</span>
             }
-<span class="fc" id="L91">            catch (final ConfigurationException ce)</span>
+<span class="fc" id="L92">            catch (ConfigurationException ce)</span>
             {
-<span class="fc" id="L93">                log.warn(&quot;Auto save failed!&quot;, ce);</span>
-<span class="fc" id="L94">            }</span>
+<span class="fc" id="L94">                log.warn(&quot;Auto save failed!&quot;, ce);</span>
+<span class="fc" id="L95">            }</span>
         }
-<span class="fc" id="L96">    }</span>
+<span class="fc" id="L97">    }</span>
 
     /**
      * {@inheritDoc} This implementation increments the counter for load
      * operations in progress.
      */
     @Override
-    public synchronized void loading(final FileHandler handler)
+    public synchronized void loading(FileHandler handler)
     {
-<span class="fc" id="L105">        loading++;</span>
-<span class="fc" id="L106">    }</span>
+<span class="fc" id="L106">        loading++;</span>
+<span class="fc" id="L107">    }</span>
 
     /**
      * {@inheritDoc} This implementation decrements the counter for load
      * operations in progress.
      */
     @Override
-    public synchronized void loaded(final FileHandler handler)
+    public synchronized void loaded(FileHandler handler)
     {
-<span class="fc" id="L115">        loading--;</span>
-<span class="fc" id="L116">    }</span>
+<span class="fc" id="L116">        loading--;</span>
+<span class="fc" id="L117">    }</span>
 
     /**
      * Updates the {@code FileHandler}. This method is called by the builder
@@ -123,19 +124,19 @@ class AutoSaveListener extends FileHandlerListenerAdapter implements
      *
      * @param fh the new {@code FileHandler} (can be &lt;b&gt;null&lt;/b&gt;)
      */
-    public synchronized void updateFileHandler(final FileHandler fh)
+    public synchronized void updateFileHandler(FileHandler fh)
     {
-<span class="fc bfc" id="L128" title="All 2 branches covered.">        if (handler != null)</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (handler != null)</span>
         {
-<span class="fc" id="L130">            handler.removeFileHandlerListener(this);</span>
+<span class="fc" id="L131">            handler.removeFileHandlerListener(this);</span>
         }
 
-<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (fh != null)</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (fh != null)</span>
         {
-<span class="fc" id="L135">            fh.addFileHandlerListener(this);</span>
+<span class="fc" id="L136">            fh.addFileHandlerListener(this);</span>
         }
-<span class="fc" id="L137">        handler = fh;</span>
-<span class="fc" id="L138">    }</span>
+<span class="fc" id="L138">        handler = fh;</span>
+<span class="fc" id="L139">    }</span>
 
     /**
      * Returns a flag whether a load operation is currently in progress.
@@ -144,7 +145,7 @@ class AutoSaveListener extends FileHandlerListenerAdapter implements
      */
     private synchronized boolean inLoadOperation()
     {
-<span class="fc bfc" id="L147" title="All 2 branches covered.">        return loading &gt; 0;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        return loading &gt; 0;</span>
     }
 
     /**
@@ -155,9 +156,9 @@ class AutoSaveListener extends FileHandlerListenerAdapter implements
      * @return &lt;b&gt;true&lt;/b&gt; if a save operation should be performed, &lt;b&gt;false&lt;/b&gt;
      *         otherwise
      */
-    private boolean autoSaveRequired(final ConfigurationEvent event)
+    private boolean autoSaveRequired(ConfigurationEvent event)
     {
-<span class="fc bfc" id="L160" title="All 4 branches covered.">        return !event.isBeforeUpdate() &amp;&amp; !inLoadOperation();</span>
+<span class="fc bfc" id="L161" title="All 4 branches covered.">        return !event.isBeforeUpdate() &amp;&amp; !inLoadOperation();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

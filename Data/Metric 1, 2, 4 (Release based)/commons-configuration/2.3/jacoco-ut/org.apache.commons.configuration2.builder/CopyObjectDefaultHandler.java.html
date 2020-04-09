@@ -43,6 +43,7 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
  * feature.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class CopyObjectDefaultHandler implements
@@ -59,15 +60,15 @@ public class CopyObjectDefaultHandler implements
      * @param src the source object (must not be &lt;b&gt;null&lt;/b&gt;)
      * @throws IllegalArgumentException if the source object is &lt;b&gt;null&lt;/b&gt;
      */
-    public CopyObjectDefaultHandler(final BuilderParameters src)
-<span class="fc" id="L63">    {</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (src == null)</span>
+    public CopyObjectDefaultHandler(BuilderParameters src)
+<span class="fc" id="L64">    {</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (src == null)</span>
         {
-<span class="fc" id="L66">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L67">            throw new IllegalArgumentException(</span>
                     &quot;Source object must not be null!&quot;);
         }
-<span class="fc" id="L69">        source = src;</span>
-<span class="fc" id="L70">    }</span>
+<span class="fc" id="L70">        source = src;</span>
+<span class="fc" id="L71">    }</span>
 
     /**
      * Returns the source object of this handler. This is the object whose
@@ -77,7 +78,7 @@ public class CopyObjectDefaultHandler implements
      */
     public BuilderParameters getSource()
     {
-<span class="fc" id="L80">        return source;</span>
+<span class="fc" id="L81">        return source;</span>
     }
 
     /**
@@ -92,19 +93,19 @@ public class CopyObjectDefaultHandler implements
      * @see BuilderParameters#getParameters()
      */
     @Override
-    public void initializeDefaults(final Object parameters)
+    public void initializeDefaults(Object parameters)
     {
         try
         {
-<span class="fc" id="L99">            BeanHelper.copyProperties(parameters, getSource()</span>
-<span class="fc" id="L100">                    .getParameters());</span>
-<span class="fc" id="L101">            BeanHelper.copyProperties(parameters, getSource());</span>
+<span class="fc" id="L100">            BeanHelper.copyProperties(parameters, getSource()</span>
+<span class="fc" id="L101">                    .getParameters());</span>
+<span class="fc" id="L102">            BeanHelper.copyProperties(parameters, getSource());</span>
         }
-<span class="fc" id="L103">        catch (final Exception e)</span>
+<span class="fc" id="L104">        catch (Exception e)</span>
         {
             // Handle all reflection-related exceptions the same way
-<span class="fc" id="L106">            throw new ConfigurationRuntimeException(e);</span>
-<span class="fc" id="L107">        }</span>
-<span class="fc" id="L108">    }</span>
+<span class="fc" id="L107">            throw new ConfigurationRuntimeException(e);</span>
+<span class="fc" id="L108">        }</span>
+<span class="fc" id="L109">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

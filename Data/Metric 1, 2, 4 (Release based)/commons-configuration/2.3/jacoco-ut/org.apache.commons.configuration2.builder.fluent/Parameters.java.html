@@ -80,6 +80,7 @@ import org.apache.commons.configuration2.builder.combined.MultiFileBuilderParame
  * Implementation note: This class is thread-safe.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public final class Parameters
@@ -93,8 +94,8 @@ public final class Parameters
      */
     public Parameters()
     {
-<span class="fc" id="L96">        this(null);</span>
-<span class="fc" id="L97">    }</span>
+<span class="fc" id="L97">        this(null);</span>
+<span class="fc" id="L98">    }</span>
 
     /**
      * Creates a new instance of {@code Parameters} and initializes it with the
@@ -106,11 +107,11 @@ public final class Parameters
      * @param manager the {@code DefaultParametersHandler} (may be &lt;b&gt;null&lt;/b&gt;,
      *        then a new default instance is created)
      */
-    public Parameters(final DefaultParametersManager manager)
-<span class="fc" id="L110">    {</span>
-<span class="fc" id="L111">        defaultParametersManager =</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">                manager != null ? manager : new DefaultParametersManager();</span>
-<span class="fc" id="L113">    }</span>
+    public Parameters(DefaultParametersManager manager)
+<span class="fc" id="L111">    {</span>
+<span class="fc" id="L112">        defaultParametersManager =</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                (manager != null) ? manager : new DefaultParametersManager();</span>
+<span class="fc" id="L114">    }</span>
 
     /**
      * Returns the {@code DefaultParametersManager} associated with this object.
@@ -119,7 +120,7 @@ public final class Parameters
      */
     public DefaultParametersManager getDefaultParametersManager()
     {
-<span class="fc" id="L122">        return defaultParametersManager;</span>
+<span class="fc" id="L123">        return defaultParametersManager;</span>
     }
 
     /**
@@ -135,11 +136,11 @@ public final class Parameters
      * @throws IllegalArgumentException if a required parameter is missing
      * @see DefaultParametersManager
      */
-    public &lt;T&gt; void registerDefaultsHandler(final Class&lt;T&gt; paramsClass,
-            final DefaultParametersHandler&lt;? super T&gt; handler)
+    public &lt;T&gt; void registerDefaultsHandler(Class&lt;T&gt; paramsClass,
+            DefaultParametersHandler&lt;? super T&gt; handler)
     {
-<span class="fc" id="L141">        getDefaultParametersManager().registerDefaultsHandler(paramsClass, handler);</span>
-<span class="fc" id="L142">    }</span>
+<span class="fc" id="L142">        getDefaultParametersManager().registerDefaultsHandler(paramsClass, handler);</span>
+<span class="fc" id="L143">    }</span>
 
     /**
      * Registers the specified {@code DefaultParametersHandler} object for the
@@ -156,12 +157,12 @@ public final class Parameters
      *        objects for which this handler should be applied
      * @throws IllegalArgumentException if a required parameter is missing
      */
-    public &lt;T&gt; void registerDefaultsHandler(final Class&lt;T&gt; paramsClass,
-            final DefaultParametersHandler&lt;? super T&gt; handler, final Class&lt;?&gt; startClass)
+    public &lt;T&gt; void registerDefaultsHandler(Class&lt;T&gt; paramsClass,
+            DefaultParametersHandler&lt;? super T&gt; handler, Class&lt;?&gt; startClass)
     {
-<span class="fc" id="L162">        getDefaultParametersManager().registerDefaultsHandler(paramsClass,</span>
+<span class="fc" id="L163">        getDefaultParametersManager().registerDefaultsHandler(paramsClass,</span>
                 handler, startClass);
-<span class="fc" id="L164">    }</span>
+<span class="fc" id="L165">    }</span>
 
     /**
      * Creates a new instance of a parameters object for basic configuration
@@ -171,7 +172,7 @@ public final class Parameters
      */
     public BasicBuilderParameters basic()
     {
-<span class="fc" id="L174">        return new BasicBuilderParameters();</span>
+<span class="fc" id="L175">        return new BasicBuilderParameters();</span>
     }
 
     /**
@@ -182,7 +183,7 @@ public final class Parameters
      */
     public FileBasedBuilderParameters fileBased()
     {
-<span class="fc" id="L185">        return createParametersProxy(new FileBasedBuilderParametersImpl(),</span>
+<span class="fc" id="L186">        return createParametersProxy(new FileBasedBuilderParametersImpl(),</span>
                 FileBasedBuilderParameters.class);
     }
 
@@ -194,7 +195,7 @@ public final class Parameters
      */
     public CombinedBuilderParameters combined()
     {
-<span class="fc" id="L197">        return createParametersProxy(new CombinedBuilderParametersImpl(),</span>
+<span class="fc" id="L198">        return createParametersProxy(new CombinedBuilderParametersImpl(),</span>
                 CombinedBuilderParameters.class);
     }
 
@@ -205,7 +206,7 @@ public final class Parameters
      */
     public JndiBuilderParameters jndi()
     {
-<span class="fc" id="L208">        return createParametersProxy(new JndiBuilderParametersImpl(),</span>
+<span class="fc" id="L209">        return createParametersProxy(new JndiBuilderParametersImpl(),</span>
                 JndiBuilderParameters.class);
     }
 
@@ -217,7 +218,7 @@ public final class Parameters
      */
     public HierarchicalBuilderParameters hierarchical()
     {
-<span class="fc" id="L220">        return createParametersProxy(new HierarchicalBuilderParametersImpl(),</span>
+<span class="fc" id="L221">        return createParametersProxy(new HierarchicalBuilderParametersImpl(),</span>
                 HierarchicalBuilderParameters.class,
                 FileBasedBuilderParameters.class);
     }
@@ -229,7 +230,7 @@ public final class Parameters
      */
     public XMLBuilderParameters xml()
     {
-<span class="fc" id="L232">        return createParametersProxy(new XMLBuilderParametersImpl(),</span>
+<span class="fc" id="L233">        return createParametersProxy(new XMLBuilderParametersImpl(),</span>
                 XMLBuilderParameters.class, FileBasedBuilderParameters.class,
                 HierarchicalBuilderParameters.class);
     }
@@ -242,7 +243,7 @@ public final class Parameters
      */
     public PropertiesBuilderParameters properties()
     {
-<span class="fc" id="L245">        return createParametersProxy(new PropertiesBuilderParametersImpl(),</span>
+<span class="fc" id="L246">        return createParametersProxy(new PropertiesBuilderParametersImpl(),</span>
                 PropertiesBuilderParameters.class,
                 FileBasedBuilderParameters.class);
     }
@@ -255,7 +256,7 @@ public final class Parameters
      */
     public MultiFileBuilderParameters multiFile()
     {
-<span class="fc" id="L258">        return createParametersProxy(new MultiFileBuilderParametersImpl(),</span>
+<span class="fc" id="L259">        return createParametersProxy(new MultiFileBuilderParametersImpl(),</span>
                 MultiFileBuilderParameters.class);
     }
 
@@ -267,7 +268,7 @@ public final class Parameters
      */
     public DatabaseBuilderParameters database()
     {
-<span class="fc" id="L270">        return createParametersProxy(new DatabaseBuilderParametersImpl(),</span>
+<span class="fc" id="L271">        return createParametersProxy(new DatabaseBuilderParametersImpl(),</span>
                 DatabaseBuilderParameters.class);
     }
 
@@ -278,7 +279,7 @@ public final class Parameters
      */
     public INIBuilderParameters ini()
     {
-<span class="fc" id="L281">        return createParametersProxy(new INIBuilderParametersImpl(),</span>
+<span class="fc" id="L282">        return createParametersProxy(new INIBuilderParametersImpl(),</span>
                 INIBuilderParameters.class, FileBasedBuilderParameters.class,
                 HierarchicalBuilderParameters.class);
     }
@@ -296,18 +297,18 @@ public final class Parameters
      *        implemented
      * @return the proxy object
      */
-    private &lt;T&gt; T createParametersProxy(final Object target, final Class&lt;T&gt; ifcClass,
-            final Class&lt;?&gt;... superIfcs)
+    private &lt;T&gt; T createParametersProxy(Object target, Class&lt;T&gt; ifcClass,
+            Class&lt;?&gt;... superIfcs)
     {
-<span class="fc" id="L302">        final Class&lt;?&gt;[] ifcClasses = new Class&lt;?&gt;[1 + superIfcs.length];</span>
-<span class="fc" id="L303">        ifcClasses[0] = ifcClass;</span>
-<span class="fc" id="L304">        System.arraycopy(superIfcs, 0, ifcClasses, 1, superIfcs.length);</span>
-<span class="fc" id="L305">        final Object obj =</span>
-<span class="fc" id="L306">                Proxy.newProxyInstance(Parameters.class.getClassLoader(),</span>
+<span class="fc" id="L303">        Class&lt;?&gt;[] ifcClasses = new Class&lt;?&gt;[1 + superIfcs.length];</span>
+<span class="fc" id="L304">        ifcClasses[0] = ifcClass;</span>
+<span class="fc" id="L305">        System.arraycopy(superIfcs, 0, ifcClasses, 1, superIfcs.length);</span>
+<span class="fc" id="L306">        Object obj =</span>
+<span class="fc" id="L307">                Proxy.newProxyInstance(Parameters.class.getClassLoader(),</span>
                         ifcClasses, new ParametersIfcInvocationHandler(target));
-<span class="fc" id="L308">        getDefaultParametersManager().initializeParameters(</span>
+<span class="fc" id="L309">        getDefaultParametersManager().initializeParameters(</span>
                 (BuilderParameters) obj);
-<span class="fc" id="L310">        return ifcClass.cast(obj);</span>
+<span class="fc" id="L311">        return ifcClass.cast(obj);</span>
     }
 
     /**
@@ -332,21 +333,21 @@ public final class Parameters
          *
          * @param targetObj the target object for reflection calls
          */
-        public ParametersIfcInvocationHandler(final Object targetObj)
-<span class="fc" id="L336">        {</span>
-<span class="fc" id="L337">            target = targetObj;</span>
-<span class="fc" id="L338">        }</span>
+        public ParametersIfcInvocationHandler(Object targetObj)
+<span class="fc" id="L337">        {</span>
+<span class="fc" id="L338">            target = targetObj;</span>
+<span class="fc" id="L339">        }</span>
 
         /**
          * {@inheritDoc} This implementation delegates method invocations to the
          * target object and handles the return value correctly.
          */
         @Override
-        public Object invoke(final Object proxy, final Method method, final Object[] args)
+        public Object invoke(Object proxy, Method method, Object[] args)
                 throws Throwable
         {
-<span class="fc" id="L348">            final Object result = method.invoke(target, args);</span>
-<span class="fc bfc" id="L349" title="All 2 branches covered.">            return isFluentResult(method) ? proxy : result;</span>
+<span class="fc" id="L349">            Object result = method.invoke(target, args);</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">            return isFluentResult(method) ? proxy : result;</span>
         }
 
         /**
@@ -357,11 +358,11 @@ public final class Parameters
          * @return a flag whether the method's result should be handled as a
          *         fluent result value
          */
-        private static boolean isFluentResult(final Method method)
+        private static boolean isFluentResult(Method method)
         {
-<span class="fc" id="L362">            final Class&lt;?&gt; declaringClass = method.getDeclaringClass();</span>
-<span class="fc bfc" id="L363" title="All 2 branches covered.">            return declaringClass.isInterface()</span>
-<span class="fc bfc" id="L364" title="All 2 branches covered.">                    &amp;&amp; !declaringClass.equals(BuilderParameters.class);</span>
+<span class="fc" id="L363">            Class&lt;?&gt; declaringClass = method.getDeclaringClass();</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">            return declaringClass.isInterface()</span>
+<span class="fc bfc" id="L365" title="All 2 branches covered.">                    &amp;&amp; !declaringClass.equals(BuilderParameters.class);</span>
         }
     }
 }

@@ -50,6 +50,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Implementation note: This class is thread-safe.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class EventListenerList
@@ -61,10 +62,10 @@ public class EventListenerList
      * Creates a new instance of {@code EventListenerList}.
      */
     public EventListenerList()
-<span class="fc" id="L64">    {</span>
-<span class="fc" id="L65">        listeners =</span>
+<span class="fc" id="L65">    {</span>
+<span class="fc" id="L66">        listeners =</span>
                 new CopyOnWriteArrayList&lt;&gt;();
-<span class="fc" id="L67">    }</span>
+<span class="fc" id="L68">    }</span>
 
     /**
      * Adds an event listener for the specified event type. This listener is
@@ -75,11 +76,11 @@ public class EventListenerList
      * @param &lt;T&gt; the type of events processed by this listener
      * @throws IllegalArgumentException if a required parameter is &lt;b&gt;null&lt;/b&gt;
      */
-    public &lt;T extends Event&gt; void addEventListener(final EventType&lt;T&gt; type,
-            final EventListener&lt;? super T&gt; listener)
+    public &lt;T extends Event&gt; void addEventListener(EventType&lt;T&gt; type,
+            EventListener&lt;? super T&gt; listener)
     {
-<span class="fc" id="L81">        listeners.add(new EventListenerRegistrationData&lt;&gt;(type, listener));</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L82">        listeners.add(new EventListenerRegistrationData&lt;&gt;(type, listener));</span>
+<span class="fc" id="L83">    }</span>
 
     /**
      * Adds the specified listener registration data object to the internal list
@@ -92,15 +93,15 @@ public class EventListenerList
      *         &lt;b&gt;null&lt;/b&gt;
      */
     public &lt;T extends Event&gt; void addEventListener(
-            final EventListenerRegistrationData&lt;T&gt; regData)
+            EventListenerRegistrationData&lt;T&gt; regData)
     {
-<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (regData == null)</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (regData == null)</span>
         {
-<span class="fc" id="L99">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L100">            throw new IllegalArgumentException(</span>
                     &quot;EventListenerRegistrationData must not be null!&quot;);
         }
-<span class="fc" id="L102">        listeners.add(regData);</span>
-<span class="fc" id="L103">    }</span>
+<span class="fc" id="L103">        listeners.add(regData);</span>
+<span class="fc" id="L104">    }</span>
 
     /**
      * Removes the event listener registration for the given event type and
@@ -116,10 +117,10 @@ public class EventListenerList
      * @return a flag whether a listener registration was removed
      */
     public &lt;T extends Event&gt; boolean removeEventListener(
-            final EventType&lt;T&gt; eventType, final EventListener&lt;? super T&gt; listener)
+            EventType&lt;T&gt; eventType, EventListener&lt;? super T&gt; listener)
     {
-<span class="fc bfc" id="L121" title="All 4 branches covered.">        return !(listener == null || eventType == null)</span>
-<span class="fc bfc" id="L122" title="All 2 branches covered.">                &amp;&amp; removeEventListener(new EventListenerRegistrationData&lt;&gt;(</span>
+<span class="fc bfc" id="L122" title="All 4 branches covered.">        return !(listener == null || eventType == null)</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">                &amp;&amp; removeEventListener(new EventListenerRegistrationData&lt;&gt;(</span>
                         eventType, listener));
     }
 
@@ -134,9 +135,9 @@ public class EventListenerList
      * @see #removeEventListener(EventType, EventListener)
      */
     public &lt;T extends Event&gt; boolean removeEventListener(
-            final EventListenerRegistrationData&lt;T&gt; regData)
+            EventListenerRegistrationData&lt;T&gt; regData)
     {
-<span class="fc" id="L139">        return listeners.remove(regData);</span>
+<span class="fc" id="L140">        return listeners.remove(regData);</span>
     }
 
     /**
@@ -145,21 +146,21 @@ public class EventListenerList
      * @param event the event to be fired (must not be &lt;b&gt;null&lt;/b&gt;)
      * @throws IllegalArgumentException if the event is &lt;b&gt;null&lt;/b&gt;
      */
-    public void fire(final Event event)
+    public void fire(Event event)
     {
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (event == null)</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (event == null)</span>
         {
-<span class="fc" id="L152">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L153">            throw new IllegalArgumentException(</span>
                     &quot;Event to be fired must not be null!&quot;);
         }
 
-<span class="fc" id="L156">        for (final EventListenerIterator&lt;? extends Event&gt; iterator =</span>
-<span class="fc" id="L157">                getEventListenerIterator(event.getEventType()); iterator</span>
-<span class="fc bfc" id="L158" title="All 2 branches covered.">                .hasNext();)</span>
+<span class="fc" id="L157">        for (EventListenerIterator&lt;? extends Event&gt; iterator =</span>
+<span class="fc" id="L158">                getEventListenerIterator(event.getEventType()); iterator</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">                .hasNext();)</span>
         {
-<span class="fc" id="L160">            iterator.invokeNextListenerUnchecked(event);</span>
+<span class="fc" id="L161">            iterator.invokeNextListenerUnchecked(event);</span>
         }
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L163">    }</span>
 
     /**
      * Returns an {@code Iterable} allowing access to all event listeners stored
@@ -172,7 +173,14 @@ public class EventListenerList
     public &lt;T extends Event&gt; Iterable&lt;EventListener&lt;? super T&gt;&gt; getEventListeners(
             final EventType&lt;T&gt; eventType)
     {
-<span class="fc" id="L175">        return () -&gt; getEventListenerIterator(eventType);</span>
+<span class="fc" id="L176">        return new Iterable&lt;EventListener&lt;? super T&gt;&gt;()</span>
+<span class="fc" id="L177">        {</span>
+            @Override
+            public Iterator&lt;EventListener&lt;? super T&gt;&gt; iterator()
+            {
+<span class="fc" id="L181">                return getEventListenerIterator(eventType);</span>
+            }
+        };
     }
 
     /**
@@ -184,9 +192,9 @@ public class EventListenerList
      * @return an {@code Iterator} with the selected event listeners
      */
     public &lt;T extends Event&gt; EventListenerIterator&lt;T&gt; getEventListenerIterator(
-            final EventType&lt;T&gt; eventType)
+            EventType&lt;T&gt; eventType)
     {
-<span class="fc" id="L189">        return new EventListenerIterator&lt;&gt;(listeners.iterator(), eventType);</span>
+<span class="fc" id="L197">        return new EventListenerIterator&lt;&gt;(listeners.iterator(), eventType);</span>
     }
 
     /**
@@ -197,7 +205,7 @@ public class EventListenerList
      */
     public List&lt;EventListenerRegistrationData&lt;?&gt;&gt; getRegistrations()
     {
-<span class="fc" id="L200">        return Collections.unmodifiableList(listeners);</span>
+<span class="fc" id="L208">        return Collections.unmodifiableList(listeners);</span>
     }
 
     /**
@@ -214,33 +222,32 @@ public class EventListenerList
      * @return a list with the matching event listener registration objects
      */
     public &lt;T extends Event&gt; List&lt;EventListenerRegistrationData&lt;? extends T&gt;&gt; getRegistrationsForSuperType(
-            final EventType&lt;T&gt; eventType)
+            EventType&lt;T&gt; eventType)
     {
-<span class="fc" id="L219">        final Map&lt;EventType&lt;?&gt;, Set&lt;EventType&lt;?&gt;&gt;&gt; superTypes =</span>
+<span class="fc" id="L227">        Map&lt;EventType&lt;?&gt;, Set&lt;EventType&lt;?&gt;&gt;&gt; superTypes =</span>
                 new HashMap&lt;&gt;();
-<span class="fc" id="L221">        final List&lt;EventListenerRegistrationData&lt;? extends T&gt;&gt; results =</span>
+<span class="fc" id="L229">        List&lt;EventListenerRegistrationData&lt;? extends T&gt;&gt; results =</span>
                 new LinkedList&lt;&gt;();
 
-<span class="fc bfc" id="L224" title="All 2 branches covered.">        for (final EventListenerRegistrationData&lt;?&gt; reg : listeners)</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        for (EventListenerRegistrationData&lt;?&gt; reg : listeners)</span>
         {
-<span class="fc" id="L226">            Set&lt;EventType&lt;?&gt;&gt; base = superTypes.get(reg.getEventType());</span>
-<span class="pc bpc" id="L227" title="1 of 2 branches missed.">            if (base == null)</span>
+<span class="fc" id="L234">            Set&lt;EventType&lt;?&gt;&gt; base = superTypes.get(reg.getEventType());</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">            if (base == null)</span>
             {
-<span class="fc" id="L229">                base = EventType.fetchSuperEventTypes(reg.getEventType());</span>
-<span class="fc" id="L230">                superTypes.put(reg.getEventType(), base);</span>
+<span class="fc" id="L237">                base = EventType.fetchSuperEventTypes(reg.getEventType());</span>
+<span class="fc" id="L238">                superTypes.put(reg.getEventType(), base);</span>
             }
-<span class="fc bfc" id="L232" title="All 2 branches covered.">            if (base.contains(eventType))</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">            if (base.contains(eventType))</span>
             {
                 @SuppressWarnings(&quot;unchecked&quot;)
-                final
                 // This is safe because we just did a check
-<span class="fc" id="L237">                EventListenerRegistrationData&lt;? extends T&gt; result =</span>
+<span class="fc" id="L244">                EventListenerRegistrationData&lt;? extends T&gt; result =</span>
                         (EventListenerRegistrationData&lt;? extends T&gt;) reg;
-<span class="fc" id="L239">                results.add(result);</span>
+<span class="fc" id="L246">                results.add(result);</span>
             }
-<span class="fc" id="L241">        }</span>
+<span class="fc" id="L248">        }</span>
 
-<span class="fc" id="L243">        return results;</span>
+<span class="fc" id="L250">        return results;</span>
     }
 
     /**
@@ -248,8 +255,8 @@ public class EventListenerList
      */
     public void clear()
     {
-<span class="fc" id="L251">        listeners.clear();</span>
-<span class="fc" id="L252">    }</span>
+<span class="fc" id="L258">        listeners.clear();</span>
+<span class="fc" id="L259">    }</span>
 
     /**
      * Adds all event listener registrations stored in the specified
@@ -258,19 +265,19 @@ public class EventListenerList
      * @param c the list to be copied (must not be &lt;b&gt;null&lt;/b&gt;)
      * @throws IllegalArgumentException if the list to be copied is &lt;b&gt;null&lt;/b&gt;
      */
-    public void addAll(final EventListenerList c)
+    public void addAll(EventListenerList c)
     {
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (c == null)</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        if (c == null)</span>
         {
-<span class="fc" id="L265">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L272">            throw new IllegalArgumentException(</span>
                     &quot;List to be copied must not be null!&quot;);
         }
 
-<span class="fc bfc" id="L269" title="All 2 branches covered.">        for (final EventListenerRegistrationData&lt;?&gt; regData : c.getRegistrations())</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">        for (EventListenerRegistrationData&lt;?&gt; regData : c.getRegistrations())</span>
         {
-<span class="fc" id="L271">            addEventListener(regData);</span>
-<span class="fc" id="L272">        }</span>
-<span class="fc" id="L273">    }</span>
+<span class="fc" id="L278">            addEventListener(regData);</span>
+<span class="fc" id="L279">        }</span>
+<span class="fc" id="L280">    }</span>
 
     /**
      * Helper method for calling an event listener with an event. We have to
@@ -283,13 +290,12 @@ public class EventListenerList
      * @param event the event to be fired
      */
     @SuppressWarnings(&quot;unchecked&quot;)
-    private static void callListener(final EventListener&lt;?&gt; listener, final Event event)
+    private static void callListener(EventListener&lt;?&gt; listener, Event event)
     {
         @SuppressWarnings(&quot;rawtypes&quot;)
-        final
-<span class="fc" id="L290">        EventListener rowListener = listener;</span>
-<span class="fc" id="L291">        rowListener.onEvent(event);</span>
-<span class="fc" id="L292">    }</span>
+<span class="fc" id="L296">        EventListener rowListener = listener;</span>
+<span class="fc" id="L297">        rowListener.onEvent(event);</span>
+<span class="fc" id="L298">    }</span>
 
     /**
      * A special {@code Iterator} implementation used by the
@@ -315,31 +321,31 @@ public class EventListenerList
         private EventListener&lt;? super T&gt; nextElement;
 
         private EventListenerIterator(
-                final Iterator&lt;EventListenerRegistrationData&lt;?&gt;&gt; it, final EventType&lt;T&gt; base)
-<span class="fc" id="L319">        {</span>
-<span class="fc" id="L320">            underlyingIterator = it;</span>
-<span class="fc" id="L321">            baseEventType = base;</span>
-<span class="fc" id="L322">            acceptedTypes = EventType.fetchSuperEventTypes(base);</span>
-<span class="fc" id="L323">            initNextElement();</span>
-<span class="fc" id="L324">        }</span>
+                Iterator&lt;EventListenerRegistrationData&lt;?&gt;&gt; it, EventType&lt;T&gt; base)
+<span class="fc" id="L325">        {</span>
+<span class="fc" id="L326">            underlyingIterator = it;</span>
+<span class="fc" id="L327">            baseEventType = base;</span>
+<span class="fc" id="L328">            acceptedTypes = EventType.fetchSuperEventTypes(base);</span>
+<span class="fc" id="L329">            initNextElement();</span>
+<span class="fc" id="L330">        }</span>
 
         @Override
         public boolean hasNext()
         {
-<span class="fc bfc" id="L329" title="All 2 branches covered.">            return nextElement != null;</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">            return nextElement != null;</span>
         }
 
         @Override
         public EventListener&lt;? super T&gt; next()
         {
-<span class="fc bfc" id="L335" title="All 2 branches covered.">            if (nextElement == null)</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">            if (nextElement == null)</span>
             {
-<span class="fc" id="L337">                throw new NoSuchElementException(&quot;No more event listeners!&quot;);</span>
+<span class="fc" id="L343">                throw new NoSuchElementException(&quot;No more event listeners!&quot;);</span>
             }
 
-<span class="fc" id="L340">            final EventListener&lt;? super T&gt; result = nextElement;</span>
-<span class="fc" id="L341">            initNextElement();</span>
-<span class="fc" id="L342">            return result;</span>
+<span class="fc" id="L346">            EventListener&lt;? super T&gt; result = nextElement;</span>
+<span class="fc" id="L347">            initNextElement();</span>
+<span class="fc" id="L348">            return result;</span>
         }
 
         /**
@@ -349,11 +355,11 @@ public class EventListenerList
          * @param event the event object
          * @throws NoSuchElementException if iteration is at its end
          */
-        public void invokeNext(final Event event)
+        public void invokeNext(Event event)
         {
-<span class="fc" id="L354">            validateEvent(event);</span>
-<span class="fc" id="L355">            invokeNextListenerUnchecked(event);</span>
-<span class="fc" id="L356">        }</span>
+<span class="fc" id="L360">            validateEvent(event);</span>
+<span class="fc" id="L361">            invokeNextListenerUnchecked(event);</span>
+<span class="fc" id="L362">        }</span>
 
         /**
          * {@inheritDoc} This implementation always throws an exception.
@@ -362,7 +368,7 @@ public class EventListenerList
         @Override
         public void remove()
         {
-<span class="fc" id="L365">            throw new UnsupportedOperationException(</span>
+<span class="fc" id="L371">            throw new UnsupportedOperationException(</span>
                     &quot;Removing elements is not supported!&quot;);
         }
 
@@ -371,17 +377,17 @@ public class EventListenerList
          */
         private void initNextElement()
         {
-<span class="fc" id="L374">            nextElement = null;</span>
-<span class="fc bfc" id="L375" title="All 4 branches covered.">            while (underlyingIterator.hasNext() &amp;&amp; nextElement == null)</span>
+<span class="fc" id="L380">            nextElement = null;</span>
+<span class="fc bfc" id="L381" title="All 4 branches covered.">            while (underlyingIterator.hasNext() &amp;&amp; nextElement == null)</span>
             {
-<span class="fc" id="L377">                final EventListenerRegistrationData&lt;?&gt; regData =</span>
-<span class="fc" id="L378">                        underlyingIterator.next();</span>
-<span class="fc bfc" id="L379" title="All 2 branches covered.">                if (acceptedTypes.contains(regData.getEventType()))</span>
+<span class="fc" id="L383">                EventListenerRegistrationData&lt;?&gt; regData =</span>
+<span class="fc" id="L384">                        underlyingIterator.next();</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">                if (acceptedTypes.contains(regData.getEventType()))</span>
                 {
-<span class="fc" id="L381">                    nextElement = castListener(regData);</span>
+<span class="fc" id="L387">                    nextElement = castListener(regData);</span>
                 }
-<span class="fc" id="L383">            }</span>
-<span class="fc" id="L384">        }</span>
+<span class="fc" id="L389">            }</span>
+<span class="fc" id="L390">        }</span>
 
         /**
          * Checks whether the specified event can be passed to an event listener
@@ -391,16 +397,16 @@ public class EventListenerList
          * @param event the event object
          * @throws IllegalArgumentException if the event is invalid
          */
-        private void validateEvent(final Event event)
+        private void validateEvent(Event event)
         {
-<span class="fc bfc" id="L396" title="All 2 branches covered.">            if (event == null</span>
-<span class="fc bfc" id="L397" title="All 2 branches covered.">                    || !EventType.fetchSuperEventTypes(event.getEventType()).contains(</span>
+<span class="fc bfc" id="L402" title="All 2 branches covered.">            if (event == null</span>
+<span class="fc bfc" id="L403" title="All 2 branches covered.">                    || !EventType.fetchSuperEventTypes(event.getEventType()).contains(</span>
                     baseEventType))
             {
-<span class="fc" id="L400">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L406">                throw new IllegalArgumentException(</span>
                         &quot;Event incompatible with listener iteration: &quot; + event);
             }
-<span class="fc" id="L403">        }</span>
+<span class="fc" id="L409">        }</span>
 
         /**
          * Invokes the next event listener in the iteration without doing a
@@ -409,11 +415,11 @@ public class EventListenerList
          *
          * @param event the event object
          */
-        private void invokeNextListenerUnchecked(final Event event)
+        private void invokeNextListenerUnchecked(Event event)
         {
-<span class="fc" id="L414">            final EventListener&lt;? super T&gt; listener = next();</span>
-<span class="fc" id="L415">            callListener(listener, event);</span>
-<span class="fc" id="L416">        }</span>
+<span class="fc" id="L420">            EventListener&lt;? super T&gt; listener = next();</span>
+<span class="fc" id="L421">            callListener(listener, event);</span>
+<span class="fc" id="L422">        }</span>
 
         /**
          * Extracts the listener from the given data object and performs a cast
@@ -425,12 +431,11 @@ public class EventListenerList
          */
         @SuppressWarnings(&quot;unchecked&quot;)
         private EventListener&lt;? super T&gt; castListener(
-                final EventListenerRegistrationData&lt;?&gt; regData)
+                EventListenerRegistrationData&lt;?&gt; regData)
         {
             @SuppressWarnings(&quot;rawtypes&quot;)
-            final
-<span class="fc" id="L432">            EventListener listener = regData.getListener();</span>
-<span class="fc" id="L433">            return listener;</span>
+<span class="fc" id="L437">            EventListener listener = regData.getListener();</span>
+<span class="fc" id="L438">            return listener;</span>
         }
     }
 }

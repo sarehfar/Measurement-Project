@@ -49,11 +49,12 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
  * &lt;/p&gt;
  *
  * @since 1.3
+ * @version $Id$
  */
-<span class="pc bpc" id="L53" title="1 of 2 branches missed.">public class DefaultBeanFactory implements BeanFactory</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">public class DefaultBeanFactory implements BeanFactory</span>
 {
     /** Stores the default instance of this class. */
-<span class="fc" id="L56">    public static final DefaultBeanFactory INSTANCE = new DefaultBeanFactory();</span>
+<span class="fc" id="L57">    public static final DefaultBeanFactory INSTANCE = new DefaultBeanFactory();</span>
 
     /** A format string for generating error messages for constructor matching. */
     private static final String FMT_CTOR_ERROR =
@@ -68,8 +69,8 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      */
     public DefaultBeanFactory()
     {
-<span class="fc" id="L71">        this(null);</span>
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L72">        this(null);</span>
+<span class="fc" id="L73">    }</span>
 
     /**
      * Creates a new instance of {@code DefaultBeanFactory} using the specified
@@ -79,12 +80,12 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      *        then a default handler is used
      * @since 2.0
      */
-    public DefaultBeanFactory(final ConversionHandler convHandler)
-<span class="fc" id="L83">    {</span>
-<span class="fc" id="L84">        conversionHandler =</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">                convHandler != null ? convHandler</span>
-<span class="fc" id="L86">                        : DefaultConversionHandler.INSTANCE;</span>
-<span class="fc" id="L87">    }</span>
+    public DefaultBeanFactory(ConversionHandler convHandler)
+<span class="fc" id="L84">    {</span>
+<span class="fc" id="L85">        conversionHandler =</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                (convHandler != null) ? convHandler</span>
+<span class="fc" id="L87">                        : DefaultConversionHandler.INSTANCE;</span>
+<span class="fc" id="L88">    }</span>
 
     /**
      * Returns the {@code ConversionHandler} used by this object.
@@ -94,7 +95,7 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      */
     public ConversionHandler getConversionHandler()
     {
-<span class="fc" id="L97">        return conversionHandler;</span>
+<span class="fc" id="L98">        return conversionHandler;</span>
     }
 
     /**
@@ -109,11 +110,11 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @throws Exception if an error occurs
      */
     @Override
-    public Object createBean(final BeanCreationContext bcc) throws Exception
+    public Object createBean(BeanCreationContext bcc) throws Exception
     {
-<span class="fc" id="L114">        final Object result = createBeanInstance(bcc);</span>
-<span class="fc" id="L115">        initBeanInstance(result, bcc);</span>
-<span class="fc" id="L116">        return result;</span>
+<span class="fc" id="L115">        Object result = createBeanInstance(bcc);</span>
+<span class="fc" id="L116">        initBeanInstance(result, bcc);</span>
+<span class="fc" id="L117">        return result;</span>
     }
 
     /**
@@ -125,7 +126,7 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
     @Override
     public Class&lt;?&gt; getDefaultBeanClass()
     {
-<span class="fc" id="L128">        return null;</span>
+<span class="fc" id="L129">        return null;</span>
     }
 
     /**
@@ -137,14 +138,14 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @return the new bean instance
      * @throws Exception if an error occurs
      */
-    protected Object createBeanInstance(final BeanCreationContext bcc)
+    protected Object createBeanInstance(BeanCreationContext bcc)
             throws Exception
     {
-<span class="fc" id="L143">        final Constructor&lt;?&gt; ctor =</span>
-<span class="fc" id="L144">                findMatchingConstructor(bcc.getBeanClass(),</span>
-<span class="fc" id="L145">                        bcc.getBeanDeclaration());</span>
-<span class="fc" id="L146">        final Object[] args = fetchConstructorArgs(ctor, bcc);</span>
-<span class="fc" id="L147">        return ctor.newInstance(args);</span>
+<span class="fc" id="L144">        Constructor&lt;?&gt; ctor =</span>
+<span class="fc" id="L145">                findMatchingConstructor(bcc.getBeanClass(),</span>
+<span class="fc" id="L146">                        bcc.getBeanDeclaration());</span>
+<span class="fc" id="L147">        Object[] args = fetchConstructorArgs(ctor, bcc);</span>
+<span class="fc" id="L148">        return ctor.newInstance(args);</span>
     }
 
     /**
@@ -156,10 +157,10 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @param bcc the context object defining the bean to be created
      * @throws Exception if an error occurs
      */
-    protected void initBeanInstance(final Object bean, final BeanCreationContext bcc) throws Exception
+    protected void initBeanInstance(Object bean, BeanCreationContext bcc) throws Exception
     {
-<span class="fc" id="L161">        bcc.initBean(bean, bcc.getBeanDeclaration());</span>
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L162">        bcc.initBean(bean, bcc.getBeanDeclaration());</span>
+<span class="fc" id="L163">    }</span>
 
     /**
      * Evaluates constructor arguments in the specified {@code BeanDeclaration}
@@ -177,12 +178,12 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      *         &lt;b&gt;null&lt;/b&gt;
      */
     protected static &lt;T&gt; Constructor&lt;T&gt; findMatchingConstructor(
-            final Class&lt;T&gt; beanClass, final BeanDeclaration data)
+            Class&lt;T&gt; beanClass, BeanDeclaration data)
     {
-<span class="fc" id="L182">        final List&lt;Constructor&lt;T&gt;&gt; matchingConstructors =</span>
-<span class="fc" id="L183">                findMatchingConstructors(beanClass, data);</span>
-<span class="fc" id="L184">        checkSingleMatchingConstructor(beanClass, data, matchingConstructors);</span>
-<span class="fc" id="L185">        return matchingConstructors.get(0);</span>
+<span class="fc" id="L183">        List&lt;Constructor&lt;T&gt;&gt; matchingConstructors =</span>
+<span class="fc" id="L184">                findMatchingConstructors(beanClass, data);</span>
+<span class="fc" id="L185">        checkSingleMatchingConstructor(beanClass, data, matchingConstructors);</span>
+<span class="fc" id="L186">        return matchingConstructors.get(0);</span>
     }
 
     /**
@@ -194,25 +195,25 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @param bcc the context object defining the bean to be created
      * @return an array with constructor arguments
      */
-    private Object[] fetchConstructorArgs(final Constructor&lt;?&gt; ctor,
-            final BeanCreationContext bcc)
+    private Object[] fetchConstructorArgs(Constructor&lt;?&gt; ctor,
+            BeanCreationContext bcc)
     {
-<span class="fc" id="L200">        final Class&lt;?&gt;[] types = ctor.getParameterTypes();</span>
-<span class="pc bpc" id="L201" title="2 of 4 branches missed.">        assert types.length == nullSafeConstructorArgs(bcc.getBeanDeclaration()).size()</span>
+<span class="fc" id="L201">        Class&lt;?&gt;[] types = ctor.getParameterTypes();</span>
+<span class="pc bpc" id="L202" title="2 of 4 branches missed.">        assert types.length == nullSafeConstructorArgs(bcc.getBeanDeclaration()).size()</span>
                 : &quot;Wrong number of constructor arguments!&quot;;
-<span class="fc" id="L203">        final Object[] args = new Object[types.length];</span>
-<span class="fc" id="L204">        int idx = 0;</span>
+<span class="fc" id="L204">        Object[] args = new Object[types.length];</span>
+<span class="fc" id="L205">        int idx = 0;</span>
 
-<span class="fc bfc" id="L206" title="All 2 branches covered.">        for (final ConstructorArg arg : nullSafeConstructorArgs(bcc.getBeanDeclaration()))</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        for (ConstructorArg arg : nullSafeConstructorArgs(bcc.getBeanDeclaration()))</span>
         {
-            final Object val =
-<span class="fc bfc" id="L209" title="All 2 branches covered.">                    arg.isNestedBeanDeclaration() ? bcc.createBean(arg</span>
-<span class="fc" id="L210">                            .getBeanDeclaration()) : arg.getValue();</span>
-<span class="fc" id="L211">            args[idx] = getConversionHandler().to(val, types[idx], null);</span>
-<span class="fc" id="L212">            idx++;</span>
-<span class="fc" id="L213">        }</span>
+            Object val =
+<span class="fc bfc" id="L210" title="All 2 branches covered.">                    arg.isNestedBeanDeclaration() ? bcc.createBean(arg</span>
+<span class="fc" id="L211">                            .getBeanDeclaration()) : arg.getValue();</span>
+<span class="fc" id="L212">            args[idx] = getConversionHandler().to(val, types[idx], null);</span>
+<span class="fc" id="L213">            idx++;</span>
+<span class="fc" id="L214">        }</span>
 
-<span class="fc" id="L215">        return args;</span>
+<span class="fc" id="L216">        return args;</span>
     }
 
     /**
@@ -223,14 +224,14 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @return the collection with constructor arguments (never &lt;b&gt;null&lt;/b&gt;)
      */
     private static Collection&lt;ConstructorArg&gt; nullSafeConstructorArgs(
-            final BeanDeclaration data)
+            BeanDeclaration data)
     {
-<span class="fc" id="L228">        Collection&lt;ConstructorArg&gt; args = data.getConstructorArgs();</span>
-<span class="fc bfc" id="L229" title="All 2 branches covered.">        if (args == null)</span>
+<span class="fc" id="L229">        Collection&lt;ConstructorArg&gt; args = data.getConstructorArgs();</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (args == null)</span>
         {
-<span class="fc" id="L231">            args = Collections.emptySet();</span>
+<span class="fc" id="L232">            args = Collections.emptySet();</span>
         }
-<span class="fc" id="L233">        return args;</span>
+<span class="fc" id="L234">        return args;</span>
     }
 
     /**
@@ -242,18 +243,17 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @return a list with all matching constructors
      */
     private static &lt;T&gt; List&lt;Constructor&lt;T&gt;&gt; findMatchingConstructors(
-            final Class&lt;T&gt; beanClass, final BeanDeclaration data)
+            Class&lt;T&gt; beanClass, BeanDeclaration data)
     {
-<span class="fc" id="L247">        final List&lt;Constructor&lt;T&gt;&gt; result = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L248">        final Collection&lt;ConstructorArg&gt; args = getConstructorArgs(data);</span>
-<span class="fc bfc" id="L249" title="All 2 branches covered.">        for (final Constructor&lt;?&gt; ctor : beanClass.getConstructors())</span>
+<span class="fc" id="L248">        List&lt;Constructor&lt;T&gt;&gt; result = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L249">        Collection&lt;ConstructorArg&gt; args = getConstructorArgs(data);</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        for (Constructor&lt;?&gt; ctor : beanClass.getConstructors())</span>
         {
-<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (matchesConstructor(ctor, args))</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">            if (matchesConstructor(ctor, args))</span>
             {
                 // cast should be okay according to the Javadocs of
                 // getConstructors()
                 @SuppressWarnings(&quot;unchecked&quot;)
-                final
 <span class="fc" id="L257">                Constructor&lt;T&gt; match = (Constructor&lt;T&gt;) ctor;</span>
 <span class="fc" id="L258">                result.add(match);</span>
             }
@@ -270,17 +270,17 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @return a flag whether this constructor is compatible with the given
      *         arguments
      */
-    private static boolean matchesConstructor(final Constructor&lt;?&gt; ctor,
-            final Collection&lt;ConstructorArg&gt; args)
+    private static boolean matchesConstructor(Constructor&lt;?&gt; ctor,
+            Collection&lt;ConstructorArg&gt; args)
     {
-<span class="fc" id="L276">        final Class&lt;?&gt;[] types = ctor.getParameterTypes();</span>
+<span class="fc" id="L276">        Class&lt;?&gt;[] types = ctor.getParameterTypes();</span>
 <span class="fc bfc" id="L277" title="All 2 branches covered.">        if (types.length != args.size())</span>
         {
 <span class="fc" id="L279">            return false;</span>
         }
 
 <span class="fc" id="L282">        int idx = 0;</span>
-<span class="fc bfc" id="L283" title="All 2 branches covered.">        for (final ConstructorArg arg : args)</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">        for (ConstructorArg arg : args)</span>
         {
 <span class="fc bfc" id="L285" title="All 2 branches covered.">            if (!arg.matches(types[idx++]))</span>
             {
@@ -299,7 +299,7 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @return the collection with constructor arguments (never &lt;b&gt;null&lt;/b&gt;)
      */
     private static Collection&lt;ConstructorArg&gt; getConstructorArgs(
-            final BeanDeclaration data)
+            BeanDeclaration data)
     {
 <span class="fc" id="L304">        Collection&lt;ConstructorArg&gt; args = data.getConstructorArgs();</span>
 <span class="fc bfc" id="L305" title="All 2 branches covered.">        if (args == null)</span>
@@ -319,8 +319,8 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @param matchingConstructors the list with matching constructors
      * @throws ConfigurationRuntimeException if there is not exactly one match
      */
-    private static &lt;T&gt; void checkSingleMatchingConstructor(final Class&lt;T&gt; beanClass,
-            final BeanDeclaration data, final List&lt;Constructor&lt;T&gt;&gt; matchingConstructors)
+    private static &lt;T&gt; void checkSingleMatchingConstructor(Class&lt;T&gt; beanClass,
+            BeanDeclaration data, List&lt;Constructor&lt;T&gt;&gt; matchingConstructors)
     {
 <span class="fc bfc" id="L325" title="All 2 branches covered.">        if (matchingConstructors.isEmpty())</span>
         {
@@ -344,7 +344,7 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
      * @return the exception with the error message
      */
     private static ConfigurationRuntimeException constructorMatchingException(
-            final Class&lt;?&gt; beanClass, final BeanDeclaration data, final String msg)
+            Class&lt;?&gt; beanClass, BeanDeclaration data, String msg)
     {
 <span class="fc" id="L349">        return new ConfigurationRuntimeException(FMT_CTOR_ERROR,</span>
 <span class="fc" id="L350">                msg, beanClass.getName(), getConstructorArgs(data).toString());</span>

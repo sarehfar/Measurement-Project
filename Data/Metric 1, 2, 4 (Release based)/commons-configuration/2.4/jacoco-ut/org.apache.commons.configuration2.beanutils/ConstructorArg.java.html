@@ -16,8 +16,6 @@
  */
 package org.apache.commons.configuration2.beanutils;
 
-import java.util.Objects;
-
 /**
  * &lt;p&gt;
  * A class representing an argument for a constructor invocation to be used by a
@@ -35,6 +33,7 @@ import java.util.Objects;
  * be explicitly provided.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public final class ConstructorArg
@@ -56,11 +55,11 @@ public final class ConstructorArg
      * @param type the type name
      */
     private ConstructorArg(final BeanDeclaration decl, final Object val, final String type)
-<span class="fc" id="L59">    {</span>
-<span class="fc" id="L60">        beanDeclaration = decl;</span>
-<span class="fc" id="L61">        value = val;</span>
-<span class="fc" id="L62">        typeName = type;</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L58">    {</span>
+<span class="fc" id="L59">        beanDeclaration = decl;</span>
+<span class="fc" id="L60">        value = val;</span>
+<span class="fc" id="L61">        typeName = type;</span>
+<span class="fc" id="L62">    }</span>
 
     /**
      * Creates a new instance of {@code ConstructorArg} for the specified
@@ -74,7 +73,7 @@ public final class ConstructorArg
      */
     public static ConstructorArg forBeanDeclaration(final BeanDeclaration decl)
     {
-<span class="fc" id="L77">        return forBeanDeclaration(decl, null);</span>
+<span class="fc" id="L76">        return forBeanDeclaration(decl, null);</span>
     }
 
     /**
@@ -83,17 +82,20 @@ public final class ConstructorArg
      * is used to match this argument against the parameter type of a
      * constructor or the bean class.
      *
-     * @param beanDeclaration the {@code BeanDeclaration}
+     * @param decl the {@code BeanDeclaration}
      * @param typeName the name of the data type of this argument
      * @return the newly created instance of this class
      * @throws NullPointerException if the {@code BeanDeclaration} is
      *         &lt;b&gt;null&lt;/b&gt;
      */
-    public static ConstructorArg forBeanDeclaration(final BeanDeclaration beanDeclaration,
+    public static ConstructorArg forBeanDeclaration(final BeanDeclaration decl,
             final String typeName)
     {
-<span class="fc" id="L95">        Objects.requireNonNull(beanDeclaration, &quot;beanDeclaration&quot;);</span>
-<span class="fc" id="L96">        return new ConstructorArg(beanDeclaration, null, typeName);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (decl == null)</span>
+        {
+<span class="fc" id="L96">            throw new NullPointerException(&quot;BeanDeclaration must not be null!&quot;);</span>
+        }
+<span class="fc" id="L98">        return new ConstructorArg(decl, null, typeName);</span>
     }
 
     /**
@@ -105,7 +107,7 @@ public final class ConstructorArg
      */
     public static ConstructorArg forValue(final Object value)
     {
-<span class="fc" id="L108">        return forValue(value, null);</span>
+<span class="fc" id="L110">        return forValue(value, null);</span>
     }
 
     /**
@@ -120,7 +122,7 @@ public final class ConstructorArg
      */
     public static ConstructorArg forValue(final Object value, final String typeName)
     {
-<span class="fc" id="L123">        return new ConstructorArg(null, value, typeName);</span>
+<span class="fc" id="L125">        return new ConstructorArg(null, value, typeName);</span>
     }
 
     /**
@@ -133,7 +135,7 @@ public final class ConstructorArg
      */
     public BeanDeclaration getBeanDeclaration()
     {
-<span class="fc" id="L136">        return beanDeclaration;</span>
+<span class="fc" id="L138">        return beanDeclaration;</span>
     }
 
     /**
@@ -148,7 +150,7 @@ public final class ConstructorArg
      */
     public boolean isNestedBeanDeclaration()
     {
-<span class="fc bfc" id="L151" title="All 2 branches covered.">        return getBeanDeclaration() != null;</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        return getBeanDeclaration() != null;</span>
     }
 
     /**
@@ -161,7 +163,7 @@ public final class ConstructorArg
      */
     public Object getValue()
     {
-<span class="fc" id="L164">        return value;</span>
+<span class="fc" id="L166">        return value;</span>
     }
 
     /**
@@ -176,7 +178,7 @@ public final class ConstructorArg
      */
     public String getTypeName()
     {
-<span class="fc" id="L179">        return typeName;</span>
+<span class="fc" id="L181">        return typeName;</span>
     }
 
     /**
@@ -196,12 +198,12 @@ public final class ConstructorArg
      */
     public boolean matches(final Class&lt;?&gt; argCls)
     {
-<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (argCls == null)</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (argCls == null)</span>
         {
-<span class="fc" id="L201">            return false;</span>
+<span class="fc" id="L203">            return false;</span>
         }
 
-<span class="fc bfc" id="L204" title="All 4 branches covered.">        return getTypeName() == null || getTypeName().equals(argCls.getName());</span>
+<span class="fc bfc" id="L206" title="All 4 branches covered.">        return getTypeName() == null || getTypeName().equals(argCls.getName());</span>
     }
 
     /**
@@ -213,17 +215,17 @@ public final class ConstructorArg
     @Override
     public String toString()
     {
-<span class="fc" id="L216">        final StringBuilder buf = new StringBuilder();</span>
-<span class="fc" id="L217">        buf.append(getClass().getSimpleName());</span>
-<span class="fc" id="L218">        buf.append(&quot; [ value = &quot;);</span>
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        buf.append(isNestedBeanDeclaration() ? getBeanDeclaration()</span>
-<span class="fc" id="L220">                : getValue());</span>
-<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (getTypeName() != null)</span>
+<span class="fc" id="L218">        final StringBuilder buf = new StringBuilder();</span>
+<span class="fc" id="L219">        buf.append(getClass().getSimpleName());</span>
+<span class="fc" id="L220">        buf.append(&quot; [ value = &quot;);</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">        buf.append(isNestedBeanDeclaration() ? getBeanDeclaration()</span>
+<span class="fc" id="L222">                : getValue());</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        if (getTypeName() != null)</span>
         {
-<span class="fc" id="L223">            buf.append(&quot; (&quot;).append(getTypeName()).append(')');</span>
+<span class="fc" id="L225">            buf.append(&quot; (&quot;).append(getTypeName()).append(')');</span>
         }
-<span class="fc" id="L225">        buf.append(&quot; ]&quot;);</span>
-<span class="fc" id="L226">        return buf.toString();</span>
+<span class="fc" id="L227">        buf.append(&quot; ]&quot;);</span>
+<span class="fc" id="L228">        return buf.toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

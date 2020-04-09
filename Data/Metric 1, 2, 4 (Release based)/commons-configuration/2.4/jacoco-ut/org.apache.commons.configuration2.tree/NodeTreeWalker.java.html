@@ -38,12 +38,13 @@ import java.util.List;
  * instances can be created.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
-<span class="fc" id="L43">public class NodeTreeWalker</span>
+<span class="fc" id="L44">public class NodeTreeWalker</span>
 {
     /** The default instance of this class. */
-<span class="fc" id="L46">    public static final NodeTreeWalker INSTANCE = new NodeTreeWalker();</span>
+<span class="fc" id="L47">    public static final NodeTreeWalker INSTANCE = new NodeTreeWalker();</span>
 
     /**
      * Visits all nodes in the hierarchy represented by the given root node in
@@ -65,11 +66,11 @@ import java.util.List;
     public &lt;T&gt; void walkDFS(final T root, final ConfigurationNodeVisitor&lt;T&gt; visitor,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (checkParameters(root, visitor, handler))</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (checkParameters(root, visitor, handler))</span>
         {
-<span class="fc" id="L70">            dfs(root, visitor, handler);</span>
+<span class="fc" id="L71">            dfs(root, visitor, handler);</span>
         }
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L73">    }</span>
 
     /**
      * Visits all nodes in the hierarchy represented by the given root node in
@@ -93,11 +94,11 @@ import java.util.List;
     public &lt;T&gt; void walkBFS(final T root, final ConfigurationNodeVisitor&lt;T&gt; visitor,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (checkParameters(root, visitor, handler))</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (checkParameters(root, visitor, handler))</span>
         {
-<span class="fc" id="L98">            bfs(root, visitor, handler);</span>
+<span class="fc" id="L99">            bfs(root, visitor, handler);</span>
         }
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L101">    }</span>
 
     /**
      * Recursive helper method for performing a DFS traversal.
@@ -110,19 +111,19 @@ import java.util.List;
     private static &lt;T&gt; void dfs(final T node, final ConfigurationNodeVisitor&lt;T&gt; visitor,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (!visitor.terminate())</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (!visitor.terminate())</span>
         {
-<span class="fc" id="L115">            visitor.visitBeforeChildren(node, handler);</span>
-<span class="fc bfc" id="L116" title="All 2 branches covered.">            for (final T c : handler.getChildren(node))</span>
+<span class="fc" id="L116">            visitor.visitBeforeChildren(node, handler);</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            for (final T c : handler.getChildren(node))</span>
             {
-<span class="fc" id="L118">                dfs(c, visitor, handler);</span>
-<span class="fc" id="L119">            }</span>
-<span class="fc bfc" id="L120" title="All 2 branches covered.">            if (!visitor.terminate())</span>
+<span class="fc" id="L119">                dfs(c, visitor, handler);</span>
+<span class="fc" id="L120">            }</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            if (!visitor.terminate())</span>
             {
-<span class="fc" id="L122">                visitor.visitAfterChildren(node, handler);</span>
+<span class="fc" id="L123">                visitor.visitAfterChildren(node, handler);</span>
             }
         }
-<span class="fc" id="L125">    }</span>
+<span class="fc" id="L126">    }</span>
 
     /**
      * Helper method for performing a BFS traversal. Implementation node: This
@@ -139,21 +140,21 @@ import java.util.List;
     private static &lt;T&gt; void bfs(final T root, final ConfigurationNodeVisitor&lt;T&gt; visitor,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L142">        final List&lt;T&gt; pendingNodes = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L143">        pendingNodes.add(root);</span>
-<span class="fc" id="L144">        boolean cancel = false;</span>
+<span class="fc" id="L143">        final List&lt;T&gt; pendingNodes = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L144">        pendingNodes.add(root);</span>
+<span class="fc" id="L145">        boolean cancel = false;</span>
 
-<span class="fc bfc" id="L146" title="All 4 branches covered.">        while (!pendingNodes.isEmpty() &amp;&amp; !cancel)</span>
+<span class="fc bfc" id="L147" title="All 4 branches covered.">        while (!pendingNodes.isEmpty() &amp;&amp; !cancel)</span>
         {
-<span class="fc" id="L148">            final T node = pendingNodes.remove(0);</span>
-<span class="fc" id="L149">            visitor.visitBeforeChildren(node, handler);</span>
-<span class="fc" id="L150">            cancel = visitor.terminate();</span>
-<span class="fc bfc" id="L151" title="All 2 branches covered.">            for (final T c : handler.getChildren(node))</span>
+<span class="fc" id="L149">            final T node = pendingNodes.remove(0);</span>
+<span class="fc" id="L150">            visitor.visitBeforeChildren(node, handler);</span>
+<span class="fc" id="L151">            cancel = visitor.terminate();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            for (final T c : handler.getChildren(node))</span>
             {
-<span class="fc" id="L153">                pendingNodes.add(c);</span>
-<span class="fc" id="L154">            }</span>
-<span class="fc" id="L155">        }</span>
-<span class="fc" id="L156">    }</span>
+<span class="fc" id="L154">                pendingNodes.add(c);</span>
+<span class="fc" id="L155">            }</span>
+<span class="fc" id="L156">        }</span>
+<span class="fc" id="L157">    }</span>
 
     /**
      * Helper method for checking the parameters for the walk() methods. If
@@ -171,15 +172,15 @@ import java.util.List;
     private static &lt;T&gt; boolean checkParameters(final T root,
             final ConfigurationNodeVisitor&lt;T&gt; visitor, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (visitor == null)</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (visitor == null)</span>
         {
-<span class="fc" id="L176">            throw new IllegalArgumentException(&quot;Visitor must not be null!&quot;);</span>
+<span class="fc" id="L177">            throw new IllegalArgumentException(&quot;Visitor must not be null!&quot;);</span>
         }
-<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (handler == null)</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (handler == null)</span>
         {
-<span class="fc" id="L180">            throw new IllegalArgumentException(&quot;NodeHandler must not be null!&quot;);</span>
+<span class="fc" id="L181">            throw new IllegalArgumentException(&quot;NodeHandler must not be null!&quot;);</span>
         }
-<span class="fc bfc" id="L182" title="All 2 branches covered.">        return root != null;</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        return root != null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

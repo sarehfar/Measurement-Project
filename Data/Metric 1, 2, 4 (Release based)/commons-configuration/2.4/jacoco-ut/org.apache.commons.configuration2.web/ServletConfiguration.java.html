@@ -29,6 +29,8 @@ import javax.servlet.ServletConfig;
  * is read only, adding or removing a property will throw an
  * UnsupportedOperationException.
  *
+ * @author &lt;a href=&quot;mailto:ebourg@apache.org&quot;&gt;Emmanuel Bourg&lt;/a&gt;
+ * @version $Id$
  * @since 1.1
  */
 public class ServletConfiguration extends BaseWebConfiguration
@@ -44,8 +46,8 @@ public class ServletConfiguration extends BaseWebConfiguration
      */
     public ServletConfiguration(final Servlet servlet)
     {
-<span class="fc" id="L47">        this(servlet.getServletConfig());</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L49">        this(servlet.getServletConfig());</span>
+<span class="fc" id="L50">    }</span>
 
     /**
      * Create a ServletConfiguration using the servlet initialization parameters.
@@ -53,14 +55,14 @@ public class ServletConfiguration extends BaseWebConfiguration
      * @param config the servlet configuration
      */
     public ServletConfiguration(final ServletConfig config)
-<span class="fc" id="L56">    {</span>
-<span class="fc" id="L57">        this.config = config;</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L58">    {</span>
+<span class="fc" id="L59">        this.config = config;</span>
+<span class="fc" id="L60">    }</span>
 
     @Override
     protected Object getPropertyInternal(final String key)
     {
-<span class="fc" id="L63">        return handleDelimiters(config.getInitParameter(key));</span>
+<span class="fc" id="L65">        return handleDelimiters(config.getInitParameter(key));</span>
     }
 
     @Override
@@ -68,8 +70,8 @@ public class ServletConfiguration extends BaseWebConfiguration
     {
         // According to the documentation of getInitParameterNames() the
         // enumeration is of type String.
-<span class="fc" id="L71">        final Enumeration&lt;String&gt; en = config.getInitParameterNames();</span>
-<span class="fc" id="L72">        return Collections.list(en).iterator();</span>
+<span class="fc" id="L73">        final Enumeration&lt;String&gt; en = config.getInitParameterNames();</span>
+<span class="fc" id="L74">        return Collections.list(en).iterator();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

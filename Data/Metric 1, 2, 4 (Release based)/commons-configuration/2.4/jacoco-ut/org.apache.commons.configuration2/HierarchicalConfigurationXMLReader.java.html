@@ -41,6 +41,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * ignore their argument.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @param &lt;T&gt; the type of the nodes supported by this reader
  */
 public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
@@ -54,8 +55,8 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
      */
     public HierarchicalConfigurationXMLReader()
     {
-<span class="fc" id="L57">        super();</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L58">        super();</span>
+<span class="fc" id="L59">    }</span>
 
     /**
      * Creates a new instance of {@code HierarchicalConfigurationXMLReader} and
@@ -66,9 +67,9 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
     public HierarchicalConfigurationXMLReader(
             final HierarchicalConfiguration&lt;T&gt; config)
     {
-<span class="fc" id="L69">        this();</span>
-<span class="fc" id="L70">        setConfiguration(config);</span>
-<span class="fc" id="L71">    }</span>
+<span class="fc" id="L70">        this();</span>
+<span class="fc" id="L71">        setConfiguration(config);</span>
+<span class="fc" id="L72">    }</span>
 
     /**
      * Returns the configuration object to be parsed.
@@ -77,7 +78,7 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
      */
     public HierarchicalConfiguration&lt;T&gt; getConfiguration()
     {
-<span class="fc" id="L80">        return configuration;</span>
+<span class="fc" id="L81">        return configuration;</span>
     }
 
     /**
@@ -87,8 +88,8 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
      */
     public void setConfiguration(final HierarchicalConfiguration&lt;T&gt; config)
     {
-<span class="fc" id="L90">        configuration = config;</span>
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L91">        configuration = config;</span>
+<span class="fc" id="L92">    }</span>
 
     /**
      * Returns the configuration object to be processed.
@@ -98,7 +99,7 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
     @Override
     public Configuration getParsedConfiguration()
     {
-<span class="fc" id="L101">        return getConfiguration();</span>
+<span class="fc" id="L102">        return getConfiguration();</span>
     }
 
     /**
@@ -107,17 +108,17 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
     @Override
     protected void processKeys()
     {
-<span class="fc" id="L110">        final NodeHandler&lt;T&gt; nodeHandler =</span>
-<span class="fc" id="L111">                getConfiguration().getNodeModel().getNodeHandler();</span>
-<span class="fc" id="L112">        NodeTreeWalker.INSTANCE.walkDFS(nodeHandler.getRootNode(),</span>
+<span class="fc" id="L111">        final NodeHandler&lt;T&gt; nodeHandler =</span>
+<span class="fc" id="L112">                getConfiguration().getNodeModel().getNodeHandler();</span>
+<span class="fc" id="L113">        NodeTreeWalker.INSTANCE.walkDFS(nodeHandler.getRootNode(),</span>
                 new SAXVisitor(), nodeHandler);
-<span class="fc" id="L114">    }</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * A specialized visitor class for generating SAX events for a hierarchical
      * node structure.
      */
-<span class="fc" id="L120">    private class SAXVisitor extends ConfigurationNodeVisitorAdapter&lt;T&gt;</span>
+<span class="fc" id="L121">    private class SAXVisitor extends ConfigurationNodeVisitorAdapter&lt;T&gt;</span>
     {
         /** Constant for the attribute type. */
         private static final String ATTR_TYPE = &quot;CDATA&quot;;
@@ -131,8 +132,8 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
         @Override
         public void visitAfterChildren(final T node, final NodeHandler&lt;T&gt; handler)
         {
-<span class="fc" id="L134">            fireElementEnd(nodeName(node, handler));</span>
-<span class="fc" id="L135">        }</span>
+<span class="fc" id="L135">            fireElementEnd(nodeName(node, handler));</span>
+<span class="fc" id="L136">        }</span>
 
         /**
          * Visits the specified node.
@@ -143,15 +144,15 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
         @Override
         public void visitBeforeChildren(final T node, final NodeHandler&lt;T&gt; handler)
         {
-<span class="fc" id="L146">            fireElementStart(nodeName(node, handler),</span>
-<span class="fc" id="L147">                    fetchAttributes(node, handler));</span>
+<span class="fc" id="L147">            fireElementStart(nodeName(node, handler),</span>
+<span class="fc" id="L148">                    fetchAttributes(node, handler));</span>
 
-<span class="fc" id="L149">            final Object value = handler.getValue(node);</span>
-<span class="fc bfc" id="L150" title="All 2 branches covered.">            if (value != null)</span>
+<span class="fc" id="L150">            final Object value = handler.getValue(node);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            if (value != null)</span>
             {
-<span class="fc" id="L152">                fireCharacters(value.toString());</span>
+<span class="fc" id="L153">                fireCharacters(value.toString());</span>
             }
-<span class="fc" id="L154">        }</span>
+<span class="fc" id="L155">        }</span>
 
         /**
          * Checks if iteration should be terminated. This implementation stops
@@ -162,7 +163,7 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
         @Override
         public boolean terminate()
         {
-<span class="pc bpc" id="L165" title="1 of 2 branches missed.">            return getException() != null;</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">            return getException() != null;</span>
         }
 
         /**
@@ -174,19 +175,19 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
          */
         protected Attributes fetchAttributes(final T node, final NodeHandler&lt;T&gt; handler)
         {
-<span class="fc" id="L177">            final AttributesImpl attrs = new AttributesImpl();</span>
+<span class="fc" id="L178">            final AttributesImpl attrs = new AttributesImpl();</span>
 
-<span class="fc bfc" id="L179" title="All 2 branches covered.">            for (final String attr : handler.getAttributes(node))</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">            for (final String attr : handler.getAttributes(node))</span>
             {
-<span class="fc" id="L181">                final Object value = handler.getAttributeValue(node, attr);</span>
-<span class="pc bpc" id="L182" title="1 of 2 branches missed.">                if (value != null)</span>
+<span class="fc" id="L182">                final Object value = handler.getAttributeValue(node, attr);</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                if (value != null)</span>
                 {
-<span class="fc" id="L184">                    attrs.addAttribute(NS_URI, attr, attr, ATTR_TYPE,</span>
-<span class="fc" id="L185">                            value.toString());</span>
+<span class="fc" id="L185">                    attrs.addAttribute(NS_URI, attr, attr, ATTR_TYPE,</span>
+<span class="fc" id="L186">                            value.toString());</span>
                 }
-<span class="fc" id="L187">            }</span>
+<span class="fc" id="L188">            }</span>
 
-<span class="fc" id="L189">            return attrs;</span>
+<span class="fc" id="L190">            return attrs;</span>
         }
 
         /**
@@ -200,8 +201,8 @@ public class HierarchicalConfigurationXMLReader&lt;T&gt; extends
          */
         private String nodeName(final T node, final NodeHandler&lt;T&gt; handler)
         {
-<span class="fc" id="L203">            final String nodeName = handler.nodeName(node);</span>
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">            return nodeName == null ? getRootName() : nodeName;</span>
+<span class="fc" id="L204">            final String nodeName = handler.nodeName(node);</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">            return (nodeName == null) ? getRootName() : nodeName;</span>
         }
     }
 }

@@ -46,6 +46,9 @@ import org.apache.commons.lang3.StringUtils;
  * &lt;/p&gt;
  *
  * @since 1.3
+ * @author &lt;a
+ * href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons
+ * Configuration team&lt;/a&gt;
  */
 public class DefaultConfigurationKey
 {
@@ -67,8 +70,8 @@ public class DefaultConfigurationKey
      */
     public DefaultConfigurationKey(final DefaultExpressionEngine engine)
     {
-<span class="fc" id="L70">        this(engine, null);</span>
-<span class="fc" id="L71">    }</span>
+<span class="fc" id="L73">        this(engine, null);</span>
+<span class="fc" id="L74">    }</span>
 
     /**
      * Creates a new instance of {@code DefaultConfigurationKey} and sets the
@@ -79,22 +82,22 @@ public class DefaultConfigurationKey
      * @throws IllegalArgumentException if the expression engine is &lt;b&gt;null&lt;/b&gt;
      */
     public DefaultConfigurationKey(final DefaultExpressionEngine engine, final String key)
-<span class="fc" id="L82">    {</span>
-<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (engine == null)</span>
+<span class="fc" id="L85">    {</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (engine == null)</span>
         {
-<span class="fc" id="L85">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L88">            throw new IllegalArgumentException(</span>
                     &quot;Expression engine must not be null!&quot;);
         }
-<span class="fc" id="L88">        expressionEngine = engine;</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (key != null)</span>
+<span class="fc" id="L91">        expressionEngine = engine;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (key != null)</span>
         {
-<span class="fc" id="L91">            keyBuffer = new StringBuilder(trim(key));</span>
+<span class="fc" id="L94">            keyBuffer = new StringBuilder(trim(key));</span>
         }
         else
         {
-<span class="fc" id="L95">            keyBuffer = new StringBuilder(INITIAL_SIZE);</span>
+<span class="fc" id="L98">            keyBuffer = new StringBuilder(INITIAL_SIZE);</span>
         }
-<span class="fc" id="L97">    }</span>
+<span class="fc" id="L100">    }</span>
 
     /**
      * Returns the associated default expression engine.
@@ -103,7 +106,7 @@ public class DefaultConfigurationKey
      */
     public DefaultExpressionEngine getExpressionEngine()
     {
-<span class="fc" id="L106">        return expressionEngine;</span>
+<span class="fc" id="L109">        return expressionEngine;</span>
     }
 
     /**
@@ -119,24 +122,24 @@ public class DefaultConfigurationKey
     public DefaultConfigurationKey append(final String property, final boolean escape)
     {
         String key;
-<span class="fc bfc" id="L122" title="All 4 branches covered.">        if (escape &amp;&amp; property != null)</span>
+<span class="fc bfc" id="L125" title="All 4 branches covered.">        if (escape &amp;&amp; property != null)</span>
         {
-<span class="fc" id="L124">            key = escapeDelimiters(property);</span>
+<span class="fc" id="L127">            key = escapeDelimiters(property);</span>
         }
         else
         {
-<span class="fc" id="L128">            key = property;</span>
+<span class="fc" id="L131">            key = property;</span>
         }
-<span class="fc" id="L130">        key = trim(key);</span>
+<span class="fc" id="L133">        key = trim(key);</span>
 
-<span class="fc bfc" id="L132" title="All 4 branches covered.">        if (keyBuffer.length() &gt; 0 &amp;&amp; !isAttributeKey(property)</span>
-<span class="fc bfc" id="L133" title="All 2 branches covered.">                &amp;&amp; key.length() &gt; 0)</span>
+<span class="fc bfc" id="L135" title="All 4 branches covered.">        if (keyBuffer.length() &gt; 0 &amp;&amp; !isAttributeKey(property)</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                &amp;&amp; key.length() &gt; 0)</span>
         {
-<span class="fc" id="L135">            keyBuffer.append(getSymbols().getPropertyDelimiter());</span>
+<span class="fc" id="L138">            keyBuffer.append(getSymbols().getPropertyDelimiter());</span>
         }
 
-<span class="fc" id="L138">        keyBuffer.append(key);</span>
-<span class="fc" id="L139">        return this;</span>
+<span class="fc" id="L141">        keyBuffer.append(key);</span>
+<span class="fc" id="L142">        return this;</span>
     }
 
     /**
@@ -149,7 +152,7 @@ public class DefaultConfigurationKey
      */
     public DefaultConfigurationKey append(final String property)
     {
-<span class="fc" id="L152">        return append(property, false);</span>
+<span class="fc" id="L155">        return append(property, false);</span>
     }
 
     /**
@@ -160,10 +163,10 @@ public class DefaultConfigurationKey
      */
     public DefaultConfigurationKey appendIndex(final int index)
     {
-<span class="fc" id="L163">        keyBuffer.append(getSymbols().getIndexStart());</span>
-<span class="fc" id="L164">        keyBuffer.append(index);</span>
-<span class="fc" id="L165">        keyBuffer.append(getSymbols().getIndexEnd());</span>
-<span class="fc" id="L166">        return this;</span>
+<span class="fc" id="L166">        keyBuffer.append(getSymbols().getIndexStart());</span>
+<span class="fc" id="L167">        keyBuffer.append(index);</span>
+<span class="fc" id="L168">        keyBuffer.append(getSymbols().getIndexEnd());</span>
+<span class="fc" id="L169">        return this;</span>
     }
 
     /**
@@ -174,8 +177,8 @@ public class DefaultConfigurationKey
      */
     public DefaultConfigurationKey appendAttribute(final String attr)
     {
-<span class="fc" id="L177">        keyBuffer.append(constructAttributeKey(attr));</span>
-<span class="fc" id="L178">        return this;</span>
+<span class="fc" id="L180">        keyBuffer.append(constructAttributeKey(attr));</span>
+<span class="fc" id="L181">        return this;</span>
     }
 
     /**
@@ -185,7 +188,7 @@ public class DefaultConfigurationKey
      */
     public int length()
     {
-<span class="fc" id="L188">        return keyBuffer.length();</span>
+<span class="fc" id="L191">        return keyBuffer.length();</span>
     }
 
     /**
@@ -198,8 +201,8 @@ public class DefaultConfigurationKey
      */
     public void setLength(final int len)
     {
-<span class="fc" id="L201">        keyBuffer.setLength(len);</span>
-<span class="fc" id="L202">    }</span>
+<span class="fc" id="L204">        keyBuffer.setLength(len);</span>
+<span class="fc" id="L205">    }</span>
     /**
      * Returns a configuration key object that is initialized with the part
      * of the key that is common to this key and the passed in key.
@@ -209,32 +212,32 @@ public class DefaultConfigurationKey
      */
     public DefaultConfigurationKey commonKey(final DefaultConfigurationKey other)
     {
-<span class="fc bfc" id="L212" title="All 2 branches covered.">        if (other == null)</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        if (other == null)</span>
         {
-<span class="fc" id="L214">            throw new IllegalArgumentException(&quot;Other key must no be null!&quot;);</span>
+<span class="fc" id="L217">            throw new IllegalArgumentException(&quot;Other key must no be null!&quot;);</span>
         }
 
-<span class="fc" id="L217">        final DefaultConfigurationKey result = new DefaultConfigurationKey(getExpressionEngine());</span>
-<span class="fc" id="L218">        final KeyIterator it1 = iterator();</span>
-<span class="fc" id="L219">        final KeyIterator it2 = other.iterator();</span>
+<span class="fc" id="L220">        final DefaultConfigurationKey result = new DefaultConfigurationKey(getExpressionEngine());</span>
+<span class="fc" id="L221">        final KeyIterator it1 = iterator();</span>
+<span class="fc" id="L222">        final KeyIterator it2 = other.iterator();</span>
 
-<span class="fc bfc" id="L221" title="All 6 branches covered.">        while (it1.hasNext() &amp;&amp; it2.hasNext() &amp;&amp; partsEqual(it1, it2))</span>
+<span class="fc bfc" id="L224" title="All 6 branches covered.">        while (it1.hasNext() &amp;&amp; it2.hasNext() &amp;&amp; partsEqual(it1, it2))</span>
         {
-<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (it1.isAttribute())</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">            if (it1.isAttribute())</span>
             {
-<span class="fc" id="L225">                result.appendAttribute(it1.currentKey());</span>
+<span class="fc" id="L228">                result.appendAttribute(it1.currentKey());</span>
             }
             else
             {
-<span class="fc" id="L229">                result.append(it1.currentKey());</span>
-<span class="fc bfc" id="L230" title="All 2 branches covered.">                if (it1.hasIndex)</span>
+<span class="fc" id="L232">                result.append(it1.currentKey());</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                if (it1.hasIndex)</span>
                 {
-<span class="fc" id="L232">                    result.appendIndex(it1.getIndex());</span>
+<span class="fc" id="L235">                    result.appendIndex(it1.getIndex());</span>
                 }
             }
         }
 
-<span class="fc" id="L237">        return result;</span>
+<span class="fc" id="L240">        return result;</span>
     }
 
     /**
@@ -249,28 +252,28 @@ public class DefaultConfigurationKey
      */
     public DefaultConfigurationKey differenceKey(final DefaultConfigurationKey other)
     {
-<span class="fc" id="L252">        final DefaultConfigurationKey common = commonKey(other);</span>
-<span class="fc" id="L253">        final DefaultConfigurationKey result = new DefaultConfigurationKey(getExpressionEngine());</span>
+<span class="fc" id="L255">        final DefaultConfigurationKey common = commonKey(other);</span>
+<span class="fc" id="L256">        final DefaultConfigurationKey result = new DefaultConfigurationKey(getExpressionEngine());</span>
 
-<span class="fc bfc" id="L255" title="All 2 branches covered.">        if (common.length() &lt; other.length())</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">        if (common.length() &lt; other.length())</span>
         {
-<span class="fc" id="L257">            final String k = other.toString().substring(common.length());</span>
+<span class="fc" id="L260">            final String k = other.toString().substring(common.length());</span>
             // skip trailing delimiters
-<span class="fc" id="L259">            int i = 0;</span>
-<span class="pc bpc" id="L260" title="1 of 2 branches missed.">            while (i &lt; k.length()</span>
-<span class="fc bfc" id="L261" title="All 2 branches covered.">                    &amp;&amp; String.valueOf(k.charAt(i)).equals(</span>
-<span class="fc" id="L262">                            getSymbols().getPropertyDelimiter()))</span>
+<span class="fc" id="L262">            int i = 0;</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">            while (i &lt; k.length()</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                    &amp;&amp; String.valueOf(k.charAt(i)).equals(</span>
+<span class="fc" id="L265">                            getSymbols().getPropertyDelimiter()))</span>
             {
-<span class="fc" id="L264">                i++;</span>
+<span class="fc" id="L267">                i++;</span>
             }
 
-<span class="pc bpc" id="L267" title="1 of 2 branches missed.">            if (i &lt; k.length())</span>
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">            if (i &lt; k.length())</span>
             {
-<span class="fc" id="L269">                result.append(k.substring(i));</span>
+<span class="fc" id="L272">                result.append(k.substring(i));</span>
             }
         }
 
-<span class="fc" id="L273">        return result;</span>
+<span class="fc" id="L276">        return result;</span>
     }
 
     /**
@@ -285,17 +288,17 @@ public class DefaultConfigurationKey
     @Override
     public boolean equals(final Object obj)
     {
-<span class="fc bfc" id="L288" title="All 2 branches covered.">        if (this == obj)</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        if (this == obj)</span>
         {
-<span class="fc" id="L290">            return true;</span>
+<span class="fc" id="L293">            return true;</span>
         }
-<span class="fc bfc" id="L292" title="All 2 branches covered.">        if (!(obj instanceof DefaultConfigurationKey))</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        if (!(obj instanceof DefaultConfigurationKey))</span>
         {
-<span class="fc" id="L294">            return false;</span>
+<span class="fc" id="L297">            return false;</span>
         }
 
-<span class="fc" id="L297">        final DefaultConfigurationKey c = (DefaultConfigurationKey) obj;</span>
-<span class="fc" id="L298">        return keyBuffer.toString().equals(c.toString());</span>
+<span class="fc" id="L300">        final DefaultConfigurationKey c = (DefaultConfigurationKey) obj;</span>
+<span class="fc" id="L301">        return keyBuffer.toString().equals(c.toString());</span>
     }
 
     /**
@@ -306,7 +309,7 @@ public class DefaultConfigurationKey
     @Override
     public int hashCode()
     {
-<span class="fc" id="L309">        return String.valueOf(keyBuffer).hashCode();</span>
+<span class="fc" id="L312">        return String.valueOf(keyBuffer).hashCode();</span>
     }
 
     /**
@@ -318,7 +321,7 @@ public class DefaultConfigurationKey
     @Override
     public String toString()
     {
-<span class="fc" id="L321">        return keyBuffer.toString();</span>
+<span class="fc" id="L324">        return keyBuffer.toString();</span>
     }
 
     /**
@@ -330,14 +333,14 @@ public class DefaultConfigurationKey
      */
     public boolean isAttributeKey(final String key)
     {
-<span class="fc bfc" id="L333" title="All 2 branches covered.">        if (key == null)</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (key == null)</span>
         {
-<span class="fc" id="L335">            return false;</span>
+<span class="fc" id="L338">            return false;</span>
         }
 
-<span class="fc bfc" id="L338" title="All 2 branches covered.">        return key.startsWith(getSymbols().getAttributeStart())</span>
-<span class="fc bfc" id="L339" title="All 2 branches covered.">                &amp;&amp; (getSymbols().getAttributeEnd() == null || key</span>
-<span class="pc bpc" id="L340" title="1 of 2 branches missed.">                        .endsWith(getSymbols().getAttributeEnd()));</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">        return key.startsWith(getSymbols().getAttributeStart())</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">                &amp;&amp; (getSymbols().getAttributeEnd() == null || key</span>
+<span class="pc bpc" id="L343" title="1 of 2 branches missed.">                        .endsWith(getSymbols().getAttributeEnd()));</span>
     }
 
     /**
@@ -350,21 +353,21 @@ public class DefaultConfigurationKey
      */
     public String constructAttributeKey(final String key)
     {
-<span class="fc bfc" id="L353" title="All 2 branches covered.">        if (key == null)</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">        if (key == null)</span>
         {
-<span class="fc" id="L355">            return StringUtils.EMPTY;</span>
+<span class="fc" id="L358">            return StringUtils.EMPTY;</span>
         }
-<span class="fc bfc" id="L357" title="All 2 branches covered.">        if (isAttributeKey(key))</span>
+<span class="fc bfc" id="L360" title="All 2 branches covered.">        if (isAttributeKey(key))</span>
         {
-<span class="fc" id="L359">            return key;</span>
+<span class="fc" id="L362">            return key;</span>
         }
-<span class="fc" id="L361">        final StringBuilder buf = new StringBuilder();</span>
-<span class="fc" id="L362">        buf.append(getSymbols().getAttributeStart()).append(key);</span>
-<span class="fc bfc" id="L363" title="All 2 branches covered.">        if (getSymbols().getAttributeEnd() != null)</span>
+<span class="fc" id="L364">        final StringBuilder buf = new StringBuilder();</span>
+<span class="fc" id="L365">        buf.append(getSymbols().getAttributeStart()).append(key);</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">        if (getSymbols().getAttributeEnd() != null)</span>
         {
-<span class="fc" id="L365">            buf.append(getSymbols().getAttributeEnd());</span>
+<span class="fc" id="L368">            buf.append(getSymbols().getAttributeEnd());</span>
         }
-<span class="fc" id="L367">        return buf.toString();</span>
+<span class="fc" id="L370">        return buf.toString();</span>
     }
 
     /**
@@ -376,7 +379,7 @@ public class DefaultConfigurationKey
      */
     public String attributeName(final String key)
     {
-<span class="fc bfc" id="L379" title="All 2 branches covered.">        return isAttributeKey(key) ? removeAttributeMarkers(key) : key;</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">        return isAttributeKey(key) ? removeAttributeMarkers(key) : key;</span>
     }
 
     /**
@@ -387,17 +390,17 @@ public class DefaultConfigurationKey
      */
     public String trimLeft(final String key)
     {
-<span class="fc bfc" id="L390" title="All 2 branches covered.">        if (key == null)</span>
+<span class="fc bfc" id="L393" title="All 2 branches covered.">        if (key == null)</span>
         {
-<span class="fc" id="L392">            return StringUtils.EMPTY;</span>
+<span class="fc" id="L395">            return StringUtils.EMPTY;</span>
         }
-<span class="fc" id="L394">        String result = key;</span>
-<span class="fc bfc" id="L395" title="All 2 branches covered.">        while (hasLeadingDelimiter(result))</span>
+<span class="fc" id="L397">        String result = key;</span>
+<span class="fc bfc" id="L398" title="All 2 branches covered.">        while (hasLeadingDelimiter(result))</span>
         {
-<span class="fc" id="L397">            result = result.substring(getSymbols()</span>
-<span class="fc" id="L398">                    .getPropertyDelimiter().length());</span>
+<span class="fc" id="L400">            result = result.substring(getSymbols()</span>
+<span class="fc" id="L401">                    .getPropertyDelimiter().length());</span>
         }
-<span class="fc" id="L400">        return result;</span>
+<span class="fc" id="L403">        return result;</span>
     }
 
     /**
@@ -408,19 +411,19 @@ public class DefaultConfigurationKey
      */
     public String trimRight(final String key)
     {
-<span class="pc bpc" id="L411" title="1 of 2 branches missed.">        if (key == null)</span>
+<span class="pc bpc" id="L414" title="1 of 2 branches missed.">        if (key == null)</span>
         {
-<span class="nc" id="L413">            return StringUtils.EMPTY;</span>
+<span class="nc" id="L416">            return StringUtils.EMPTY;</span>
         }
-<span class="fc" id="L415">        String result = key;</span>
-<span class="fc bfc" id="L416" title="All 2 branches covered.">        while (hasTrailingDelimiter(result))</span>
+<span class="fc" id="L418">        String result = key;</span>
+<span class="fc bfc" id="L419" title="All 2 branches covered.">        while (hasTrailingDelimiter(result))</span>
         {
-<span class="fc" id="L418">            result = result</span>
-<span class="fc" id="L419">                    .substring(0, result.length()</span>
-<span class="fc" id="L420">                            - getSymbols().getPropertyDelimiter()</span>
-<span class="fc" id="L421">                                    .length());</span>
+<span class="fc" id="L421">            result = result</span>
+<span class="fc" id="L422">                    .substring(0, result.length()</span>
+<span class="fc" id="L423">                            - getSymbols().getPropertyDelimiter()</span>
+<span class="fc" id="L424">                                    .length());</span>
         }
-<span class="fc" id="L423">        return result;</span>
+<span class="fc" id="L426">        return result;</span>
     }
 
     /**
@@ -431,7 +434,7 @@ public class DefaultConfigurationKey
      */
     public String trim(final String key)
     {
-<span class="fc" id="L434">        return trimRight(trimLeft(key));</span>
+<span class="fc" id="L437">        return trimRight(trimLeft(key));</span>
     }
 
     /**
@@ -442,7 +445,7 @@ public class DefaultConfigurationKey
      */
     public KeyIterator iterator()
     {
-<span class="fc" id="L445">        return new KeyIterator();</span>
+<span class="fc" id="L448">        return new KeyIterator();</span>
     }
 
     /**
@@ -454,9 +457,9 @@ public class DefaultConfigurationKey
      */
     private boolean hasTrailingDelimiter(final String key)
     {
-<span class="fc bfc" id="L457" title="All 2 branches covered.">        return key.endsWith(getSymbols().getPropertyDelimiter())</span>
-<span class="fc bfc" id="L458" title="All 2 branches covered.">                &amp;&amp; (getSymbols().getEscapedDelimiter() == null || !key</span>
-<span class="fc bfc" id="L459" title="All 2 branches covered.">                        .endsWith(getSymbols().getEscapedDelimiter()));</span>
+<span class="fc bfc" id="L460" title="All 2 branches covered.">        return key.endsWith(getSymbols().getPropertyDelimiter())</span>
+<span class="fc bfc" id="L461" title="All 2 branches covered.">                &amp;&amp; (getSymbols().getEscapedDelimiter() == null || !key</span>
+<span class="fc bfc" id="L462" title="All 2 branches covered.">                        .endsWith(getSymbols().getEscapedDelimiter()));</span>
     }
 
     /**
@@ -468,9 +471,9 @@ public class DefaultConfigurationKey
      */
     private boolean hasLeadingDelimiter(final String key)
     {
-<span class="fc bfc" id="L471" title="All 2 branches covered.">        return key.startsWith(getSymbols().getPropertyDelimiter())</span>
-<span class="fc bfc" id="L472" title="All 2 branches covered.">                &amp;&amp; (getSymbols().getEscapedDelimiter() == null || !key</span>
-<span class="fc bfc" id="L473" title="All 2 branches covered.">                        .startsWith(getSymbols().getEscapedDelimiter()));</span>
+<span class="fc bfc" id="L474" title="All 2 branches covered.">        return key.startsWith(getSymbols().getPropertyDelimiter())</span>
+<span class="fc bfc" id="L475" title="All 2 branches covered.">                &amp;&amp; (getSymbols().getEscapedDelimiter() == null || !key</span>
+<span class="fc bfc" id="L476" title="All 2 branches covered.">                        .startsWith(getSymbols().getEscapedDelimiter()));</span>
     }
 
     /**
@@ -481,13 +484,13 @@ public class DefaultConfigurationKey
      */
     private String removeAttributeMarkers(final String key)
     {
-<span class="fc" id="L484">        return key</span>
-<span class="fc" id="L485">                .substring(</span>
-<span class="fc" id="L486">                        getSymbols().getAttributeStart().length(),</span>
-<span class="fc" id="L487">                        key.length()</span>
-<span class="fc bfc" id="L488" title="All 2 branches covered.">                                - ((getSymbols().getAttributeEnd() != null) ? getSymbols()</span>
-<span class="fc" id="L489">                                        .getAttributeEnd().length()</span>
-<span class="fc" id="L490">                                        : 0));</span>
+<span class="fc" id="L487">        return key</span>
+<span class="fc" id="L488">                .substring(</span>
+<span class="fc" id="L489">                        getSymbols().getAttributeStart().length(),</span>
+<span class="fc" id="L490">                        key.length()</span>
+<span class="fc bfc" id="L491" title="All 2 branches covered.">                                - ((getSymbols().getAttributeEnd() != null) ? getSymbols()</span>
+<span class="fc" id="L492">                                        .getAttributeEnd().length()</span>
+<span class="fc" id="L493">                                        : 0));</span>
     }
 
     /**
@@ -498,10 +501,10 @@ public class DefaultConfigurationKey
      */
     private String unescapeDelimiters(final String key)
     {
-<span class="fc bfc" id="L501" title="All 2 branches covered.">        return getSymbols().getEscapedDelimiter() == null ? key</span>
-<span class="fc" id="L502">                : StringUtils.replace(key, getSymbols()</span>
-<span class="fc" id="L503">                        .getEscapedDelimiter(), getSymbols()</span>
-<span class="fc" id="L504">                        .getPropertyDelimiter());</span>
+<span class="fc bfc" id="L504" title="All 2 branches covered.">        return (getSymbols().getEscapedDelimiter() == null) ? key</span>
+<span class="fc" id="L505">                : StringUtils.replace(key, getSymbols()</span>
+<span class="fc" id="L506">                        .getEscapedDelimiter(), getSymbols()</span>
+<span class="fc" id="L507">                        .getPropertyDelimiter());</span>
     }
 
     /**
@@ -511,7 +514,7 @@ public class DefaultConfigurationKey
      */
     private DefaultExpressionEngineSymbols getSymbols()
     {
-<span class="fc" id="L514">        return getExpressionEngine().getSymbols();</span>
+<span class="fc" id="L517">        return getExpressionEngine().getSymbols();</span>
     }
 
     /**
@@ -522,11 +525,11 @@ public class DefaultConfigurationKey
      */
     private String escapeDelimiters(final String key)
     {
-<span class="fc bfc" id="L525" title="All 2 branches covered.">        return (getSymbols().getEscapedDelimiter() == null || key</span>
-<span class="fc bfc" id="L526" title="All 2 branches covered.">                .indexOf(getSymbols().getPropertyDelimiter()) &lt; 0) ? key</span>
-<span class="fc" id="L527">                : StringUtils.replace(key, getSymbols()</span>
-<span class="fc" id="L528">                        .getPropertyDelimiter(), getSymbols()</span>
-<span class="fc" id="L529">                        .getEscapedDelimiter());</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">        return (getSymbols().getEscapedDelimiter() == null || key</span>
+<span class="fc bfc" id="L529" title="All 2 branches covered.">                .indexOf(getSymbols().getPropertyDelimiter()) &lt; 0) ? key</span>
+<span class="fc" id="L530">                : StringUtils.replace(key, getSymbols()</span>
+<span class="fc" id="L531">                        .getPropertyDelimiter(), getSymbols()</span>
+<span class="fc" id="L532">                        .getEscapedDelimiter());</span>
     }
 
     /**
@@ -538,9 +541,9 @@ public class DefaultConfigurationKey
      */
     private static boolean partsEqual(final KeyIterator it1, final KeyIterator it2)
     {
-<span class="fc bfc" id="L541" title="All 2 branches covered.">        return it1.nextKey().equals(it2.nextKey())</span>
-<span class="fc bfc" id="L542" title="All 2 branches covered.">                &amp;&amp; it1.getIndex() == it2.getIndex()</span>
-<span class="pc bpc" id="L543" title="1 of 2 branches missed.">                &amp;&amp; it1.isAttribute() == it2.isAttribute();</span>
+<span class="fc bfc" id="L544" title="All 2 branches covered.">        return it1.nextKey().equals(it2.nextKey())</span>
+<span class="fc bfc" id="L545" title="All 2 branches covered.">                &amp;&amp; it1.getIndex() == it2.getIndex()</span>
+<span class="pc bpc" id="L546" title="1 of 2 branches missed.">                &amp;&amp; it1.isAttribute() == it2.isAttribute();</span>
     }
 
     /**
@@ -548,7 +551,7 @@ public class DefaultConfigurationKey
      * class implements the normal iterator interface. In addition it provides
      * some specific methods for configuration keys.
      */
-<span class="fc" id="L551">    public class KeyIterator implements Iterator&lt;Object&gt;, Cloneable</span>
+<span class="fc" id="L554">    public class KeyIterator implements Iterator&lt;Object&gt;, Cloneable</span>
     {
         /** Stores the current key name. */
         private String current;
@@ -576,7 +579,7 @@ public class DefaultConfigurationKey
          */
         public String nextKey()
         {
-<span class="fc" id="L579">            return nextKey(false);</span>
+<span class="fc" id="L582">            return nextKey(false);</span>
         }
 
         /**
@@ -591,20 +594,20 @@ public class DefaultConfigurationKey
          */
         public String nextKey(final boolean decorated)
         {
-<span class="fc bfc" id="L594" title="All 2 branches covered.">            if (!hasNext())</span>
+<span class="fc bfc" id="L597" title="All 2 branches covered.">            if (!hasNext())</span>
             {
-<span class="fc" id="L596">                throw new NoSuchElementException(&quot;No more key parts!&quot;);</span>
+<span class="fc" id="L599">                throw new NoSuchElementException(&quot;No more key parts!&quot;);</span>
             }
 
-<span class="fc" id="L599">            hasIndex = false;</span>
-<span class="fc" id="L600">            indexValue = -1;</span>
-<span class="fc" id="L601">            final String key = findNextIndices();</span>
+<span class="fc" id="L602">            hasIndex = false;</span>
+<span class="fc" id="L603">            indexValue = -1;</span>
+<span class="fc" id="L604">            final String key = findNextIndices();</span>
 
-<span class="fc" id="L603">            current = key;</span>
-<span class="fc" id="L604">            hasIndex = checkIndex(key);</span>
-<span class="fc" id="L605">            attribute = checkAttribute(current);</span>
+<span class="fc" id="L606">            current = key;</span>
+<span class="fc" id="L607">            hasIndex = checkIndex(key);</span>
+<span class="fc" id="L608">            attribute = checkAttribute(current);</span>
 
-<span class="fc" id="L607">            return currentKey(decorated);</span>
+<span class="fc" id="L610">            return currentKey(decorated);</span>
         }
 
         /**
@@ -615,7 +618,7 @@ public class DefaultConfigurationKey
         @Override
         public boolean hasNext()
         {
-<span class="fc bfc" id="L618" title="All 2 branches covered.">            return endIndex &lt; keyBuffer.length();</span>
+<span class="fc bfc" id="L621" title="All 2 branches covered.">            return endIndex &lt; keyBuffer.length();</span>
         }
 
         /**
@@ -626,7 +629,7 @@ public class DefaultConfigurationKey
         @Override
         public Object next()
         {
-<span class="fc" id="L629">            return nextKey();</span>
+<span class="fc" id="L632">            return nextKey();</span>
         }
 
         /**
@@ -636,7 +639,7 @@ public class DefaultConfigurationKey
         @Override
         public void remove()
         {
-<span class="fc" id="L639">            throw new UnsupportedOperationException(&quot;Remove not supported!&quot;);</span>
+<span class="fc" id="L642">            throw new UnsupportedOperationException(&quot;Remove not supported!&quot;);</span>
         }
 
         /**
@@ -648,7 +651,7 @@ public class DefaultConfigurationKey
          */
         public String currentKey()
         {
-<span class="fc" id="L651">            return currentKey(false);</span>
+<span class="fc" id="L654">            return currentKey(false);</span>
         }
 
         /**
@@ -663,8 +666,8 @@ public class DefaultConfigurationKey
          */
         public String currentKey(final boolean decorated)
         {
-<span class="fc bfc" id="L666" title="All 4 branches covered.">            return decorated &amp;&amp; !isPropertyKey() ? constructAttributeKey(current)</span>
-<span class="fc" id="L667">                    : current;</span>
+<span class="fc bfc" id="L669" title="All 4 branches covered.">            return (decorated &amp;&amp; !isPropertyKey()) ? constructAttributeKey(current)</span>
+<span class="fc" id="L670">                    : current;</span>
         }
 
         /**
@@ -677,7 +680,7 @@ public class DefaultConfigurationKey
         {
             // if attribute emulation mode is active, the last part of a key is
             // always an attribute key, too
-<span class="fc bfc" id="L680" title="All 6 branches covered.">            return attribute || (isAttributeEmulatingMode() &amp;&amp; !hasNext());</span>
+<span class="fc bfc" id="L683" title="All 6 branches covered.">            return attribute || (isAttributeEmulatingMode() &amp;&amp; !hasNext());</span>
         }
 
         /**
@@ -692,7 +695,7 @@ public class DefaultConfigurationKey
          */
         public boolean isPropertyKey()
         {
-<span class="fc bfc" id="L695" title="All 2 branches covered.">            return !attribute;</span>
+<span class="fc bfc" id="L698" title="All 2 branches covered.">            return !attribute;</span>
         }
 
         /**
@@ -704,7 +707,7 @@ public class DefaultConfigurationKey
          */
         public int getIndex()
         {
-<span class="fc" id="L707">            return indexValue;</span>
+<span class="fc" id="L710">            return indexValue;</span>
         }
 
         /**
@@ -715,7 +718,7 @@ public class DefaultConfigurationKey
          */
         public boolean hasIndex()
         {
-<span class="fc" id="L718">            return hasIndex;</span>
+<span class="fc" id="L721">            return hasIndex;</span>
         }
 
         /**
@@ -728,12 +731,12 @@ public class DefaultConfigurationKey
         {
             try
             {
-<span class="fc" id="L731">                return super.clone();</span>
+<span class="fc" id="L734">                return super.clone();</span>
             }
-<span class="nc" id="L733">            catch (final CloneNotSupportedException cex)</span>
+<span class="nc" id="L736">            catch (final CloneNotSupportedException cex)</span>
             {
                 // should not happen
-<span class="nc" id="L736">                return null;</span>
+<span class="nc" id="L739">                return null;</span>
             }
         }
 
@@ -744,23 +747,23 @@ public class DefaultConfigurationKey
          */
         private String findNextIndices()
         {
-<span class="fc" id="L747">            startIndex = endIndex;</span>
+<span class="fc" id="L750">            startIndex = endIndex;</span>
             // skip empty names
-<span class="pc bpc" id="L749" title="1 of 2 branches missed.">            while (startIndex &lt; length()</span>
-<span class="fc bfc" id="L750" title="All 2 branches covered.">                    &amp;&amp; hasLeadingDelimiter(keyBuffer.substring(startIndex)))</span>
+<span class="pc bpc" id="L752" title="1 of 2 branches missed.">            while (startIndex &lt; length()</span>
+<span class="fc bfc" id="L753" title="All 2 branches covered.">                    &amp;&amp; hasLeadingDelimiter(keyBuffer.substring(startIndex)))</span>
             {
-<span class="fc" id="L752">                startIndex += getSymbols().getPropertyDelimiter()</span>
-<span class="fc" id="L753">                        .length();</span>
+<span class="fc" id="L755">                startIndex += getSymbols().getPropertyDelimiter()</span>
+<span class="fc" id="L756">                        .length();</span>
             }
 
             // Key ends with a delimiter?
-<span class="pc bpc" id="L757" title="1 of 2 branches missed.">            if (startIndex &gt;= length())</span>
+<span class="pc bpc" id="L760" title="1 of 2 branches missed.">            if (startIndex &gt;= length())</span>
             {
-<span class="nc" id="L759">                endIndex = length();</span>
-<span class="nc" id="L760">                startIndex = endIndex - 1;</span>
-<span class="nc" id="L761">                return keyBuffer.substring(startIndex, endIndex);</span>
+<span class="nc" id="L762">                endIndex = length();</span>
+<span class="nc" id="L763">                startIndex = endIndex - 1;</span>
+<span class="nc" id="L764">                return keyBuffer.substring(startIndex, endIndex);</span>
             }
-<span class="fc" id="L763">            return nextKeyPart();</span>
+<span class="fc" id="L766">            return nextKeyPart();</span>
         }
 
         /**
@@ -771,22 +774,22 @@ public class DefaultConfigurationKey
          */
         private String nextKeyPart()
         {
-<span class="fc" id="L774">            int attrIdx = keyBuffer.toString().indexOf(</span>
-<span class="fc" id="L775">                    getSymbols().getAttributeStart(), startIndex);</span>
-<span class="fc bfc" id="L776" title="All 4 branches covered.">            if (attrIdx &lt; 0 || attrIdx == startIndex)</span>
+<span class="fc" id="L777">            int attrIdx = keyBuffer.toString().indexOf(</span>
+<span class="fc" id="L778">                    getSymbols().getAttributeStart(), startIndex);</span>
+<span class="fc bfc" id="L779" title="All 4 branches covered.">            if (attrIdx &lt; 0 || attrIdx == startIndex)</span>
             {
-<span class="fc" id="L778">                attrIdx = length();</span>
+<span class="fc" id="L781">                attrIdx = length();</span>
             }
 
-<span class="fc" id="L781">            int delIdx = nextDelimiterPos(keyBuffer.toString(), startIndex,</span>
+<span class="fc" id="L784">            int delIdx = nextDelimiterPos(keyBuffer.toString(), startIndex,</span>
                     attrIdx);
-<span class="fc bfc" id="L783" title="All 2 branches covered.">            if (delIdx &lt; 0)</span>
+<span class="fc bfc" id="L786" title="All 2 branches covered.">            if (delIdx &lt; 0)</span>
             {
-<span class="fc" id="L785">                delIdx = attrIdx;</span>
+<span class="fc" id="L788">                delIdx = attrIdx;</span>
             }
 
-<span class="fc" id="L788">            endIndex = Math.min(attrIdx, delIdx);</span>
-<span class="fc" id="L789">            return unescapeDelimiters(keyBuffer.substring(startIndex, endIndex));</span>
+<span class="fc" id="L791">            endIndex = Math.min(attrIdx, delIdx);</span>
+<span class="fc" id="L792">            return unescapeDelimiters(keyBuffer.substring(startIndex, endIndex));</span>
         }
 
         /**
@@ -799,30 +802,30 @@ public class DefaultConfigurationKey
          */
         private int nextDelimiterPos(final String key, final int pos, final int endPos)
         {
-<span class="fc" id="L802">            int delimiterPos = pos;</span>
-<span class="fc" id="L803">            boolean found = false;</span>
+<span class="fc" id="L805">            int delimiterPos = pos;</span>
+<span class="fc" id="L806">            boolean found = false;</span>
 
             do
             {
-<span class="fc" id="L807">                delimiterPos = key.indexOf(getSymbols()</span>
-<span class="fc" id="L808">                        .getPropertyDelimiter(), delimiterPos);</span>
-<span class="fc bfc" id="L809" title="All 4 branches covered.">                if (delimiterPos &lt; 0 || delimiterPos &gt;= endPos)</span>
+<span class="fc" id="L810">                delimiterPos = key.indexOf(getSymbols()</span>
+<span class="fc" id="L811">                        .getPropertyDelimiter(), delimiterPos);</span>
+<span class="fc bfc" id="L812" title="All 4 branches covered.">                if (delimiterPos &lt; 0 || delimiterPos &gt;= endPos)</span>
                 {
-<span class="fc" id="L811">                    return -1;</span>
+<span class="fc" id="L814">                    return -1;</span>
                 }
-<span class="fc" id="L813">                final int escapePos = escapedPosition(key, delimiterPos);</span>
-<span class="fc bfc" id="L814" title="All 2 branches covered.">                if (escapePos &lt; 0)</span>
+<span class="fc" id="L816">                final int escapePos = escapedPosition(key, delimiterPos);</span>
+<span class="fc bfc" id="L817" title="All 2 branches covered.">                if (escapePos &lt; 0)</span>
                 {
-<span class="fc" id="L816">                    found = true;</span>
+<span class="fc" id="L819">                    found = true;</span>
                 }
                 else
                 {
-<span class="fc" id="L820">                    delimiterPos = escapePos;</span>
+<span class="fc" id="L823">                    delimiterPos = escapePos;</span>
                 }
             }
-<span class="fc bfc" id="L823" title="All 2 branches covered.">            while (!found);</span>
+<span class="fc bfc" id="L826" title="All 2 branches covered.">            while (!found);</span>
 
-<span class="fc" id="L825">            return delimiterPos;</span>
+<span class="fc" id="L828">            return delimiterPos;</span>
         }
 
         /**
@@ -836,28 +839,28 @@ public class DefaultConfigurationKey
          */
         private int escapedPosition(final String key, final int pos)
         {
-<span class="fc bfc" id="L839" title="All 2 branches covered.">            if (getSymbols().getEscapedDelimiter() == null)</span>
+<span class="fc bfc" id="L842" title="All 2 branches covered.">            if (getSymbols().getEscapedDelimiter() == null)</span>
             {
                 // nothing to escape
-<span class="fc" id="L842">                return -1;</span>
+<span class="fc" id="L845">                return -1;</span>
             }
-<span class="fc" id="L844">            final int escapeOffset = escapeOffset();</span>
-<span class="pc bpc" id="L845" title="1 of 4 branches missed.">            if (escapeOffset &lt; 0 || escapeOffset &gt; pos)</span>
+<span class="fc" id="L847">            final int escapeOffset = escapeOffset();</span>
+<span class="pc bpc" id="L848" title="1 of 4 branches missed.">            if (escapeOffset &lt; 0 || escapeOffset &gt; pos)</span>
             {
                 // No escaping possible at this position
-<span class="fc" id="L848">                return -1;</span>
+<span class="fc" id="L851">                return -1;</span>
             }
 
-<span class="fc" id="L851">            final int escapePos = key.indexOf(getSymbols()</span>
-<span class="fc" id="L852">                    .getEscapedDelimiter(), pos - escapeOffset);</span>
-<span class="fc bfc" id="L853" title="All 4 branches covered.">            if (escapePos &lt;= pos &amp;&amp; escapePos &gt;= 0)</span>
+<span class="fc" id="L854">            final int escapePos = key.indexOf(getSymbols()</span>
+<span class="fc" id="L855">                    .getEscapedDelimiter(), pos - escapeOffset);</span>
+<span class="fc bfc" id="L856" title="All 4 branches covered.">            if (escapePos &lt;= pos &amp;&amp; escapePos &gt;= 0)</span>
             {
                 // The found delimiter is escaped. Next valid search position
                 // is behind the escaped delimiter.
-<span class="fc" id="L857">                return escapePos</span>
-<span class="fc" id="L858">                        + getSymbols().getEscapedDelimiter().length();</span>
+<span class="fc" id="L860">                return escapePos</span>
+<span class="fc" id="L861">                        + getSymbols().getEscapedDelimiter().length();</span>
             }
-<span class="fc" id="L860">            return -1;</span>
+<span class="fc" id="L863">            return -1;</span>
         }
 
         /**
@@ -879,8 +882,8 @@ public class DefaultConfigurationKey
          */
         private int escapeOffset()
         {
-<span class="fc" id="L882">            return getSymbols().getEscapedDelimiter().indexOf(</span>
-<span class="fc" id="L883">                    getSymbols().getPropertyDelimiter());</span>
+<span class="fc" id="L885">            return getSymbols().getEscapedDelimiter().indexOf(</span>
+<span class="fc" id="L886">                    getSymbols().getPropertyDelimiter());</span>
         }
 
         /**
@@ -892,12 +895,12 @@ public class DefaultConfigurationKey
          */
         private boolean checkAttribute(final String key)
         {
-<span class="fc bfc" id="L895" title="All 2 branches covered.">            if (isAttributeKey(key))</span>
+<span class="fc bfc" id="L898" title="All 2 branches covered.">            if (isAttributeKey(key))</span>
             {
-<span class="fc" id="L897">                current = removeAttributeMarkers(key);</span>
-<span class="fc" id="L898">                return true;</span>
+<span class="fc" id="L900">                current = removeAttributeMarkers(key);</span>
+<span class="fc" id="L901">                return true;</span>
             }
-<span class="fc" id="L900">            return false;</span>
+<span class="fc" id="L903">            return false;</span>
         }
 
         /**
@@ -909,30 +912,30 @@ public class DefaultConfigurationKey
          */
         private boolean checkIndex(final String key)
         {
-<span class="fc" id="L912">            boolean result = false;</span>
+<span class="fc" id="L915">            boolean result = false;</span>
 
             try
             {
-<span class="fc" id="L916">                final int idx = key.lastIndexOf(getSymbols().getIndexStart());</span>
-<span class="fc bfc" id="L917" title="All 2 branches covered.">                if (idx &gt; 0)</span>
+<span class="fc" id="L919">                final int idx = key.lastIndexOf(getSymbols().getIndexStart());</span>
+<span class="fc bfc" id="L920" title="All 2 branches covered.">                if (idx &gt; 0)</span>
                 {
-<span class="fc" id="L919">                    final int endidx = key.indexOf(getSymbols().getIndexEnd(),</span>
+<span class="fc" id="L922">                    final int endidx = key.indexOf(getSymbols().getIndexEnd(),</span>
                             idx);
 
-<span class="fc bfc" id="L922" title="All 2 branches covered.">                    if (endidx &gt; idx + 1)</span>
+<span class="fc bfc" id="L925" title="All 2 branches covered.">                    if (endidx &gt; idx + 1)</span>
                     {
-<span class="fc" id="L924">                        indexValue = Integer.parseInt(key.substring(idx + 1, endidx));</span>
-<span class="fc" id="L925">                        current = key.substring(0, idx);</span>
-<span class="fc" id="L926">                        result = true;</span>
+<span class="fc" id="L927">                        indexValue = Integer.parseInt(key.substring(idx + 1, endidx));</span>
+<span class="fc" id="L928">                        current = key.substring(0, idx);</span>
+<span class="fc" id="L929">                        result = true;</span>
                     }
                 }
             }
-<span class="fc" id="L930">            catch (final NumberFormatException nfe)</span>
+<span class="fc" id="L933">            catch (final NumberFormatException nfe)</span>
             {
-<span class="fc" id="L932">                result = false;</span>
-<span class="fc" id="L933">            }</span>
+<span class="fc" id="L935">                result = false;</span>
+<span class="fc" id="L936">            }</span>
 
-<span class="fc" id="L935">            return result;</span>
+<span class="fc" id="L938">            return result;</span>
         }
 
         /**
@@ -949,10 +952,10 @@ public class DefaultConfigurationKey
          */
         private boolean isAttributeEmulatingMode()
         {
-<span class="fc bfc" id="L952" title="All 2 branches covered.">            return getSymbols().getAttributeEnd() == null</span>
-<span class="fc bfc" id="L953" title="All 2 branches covered.">                    &amp;&amp; StringUtils.equals(getSymbols()</span>
-<span class="fc" id="L954">                            .getPropertyDelimiter(), getSymbols()</span>
-<span class="fc" id="L955">                            .getAttributeStart());</span>
+<span class="fc bfc" id="L955" title="All 2 branches covered.">            return getSymbols().getAttributeEnd() == null</span>
+<span class="fc bfc" id="L956" title="All 2 branches covered.">                    &amp;&amp; StringUtils.equals(getSymbols()</span>
+<span class="fc" id="L957">                            .getPropertyDelimiter(), getSymbols()</span>
+<span class="fc" id="L958">                            .getAttributeStart());</span>
         }
     }
 }

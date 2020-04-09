@@ -27,11 +27,14 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 /**
  * Abstract layer to allow various types of file systems.
  * @since 1.7
+ * @author &lt;a
+ * href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons Configuration team&lt;/a&gt;
+ * @version $Id$
  */
-<span class="fc" id="L31">public abstract class FileSystem</span>
+<span class="fc" id="L34">public abstract class FileSystem</span>
 {
     /** Constant for the default logger. */
-<span class="fc" id="L34">    private static final ConfigurationLogger DEFAULT_LOG = ConfigurationLogger.newDummyLogger();</span>
+<span class="fc" id="L37">    private static final ConfigurationLogger DEFAULT_LOG = ConfigurationLogger.newDummyLogger();</span>
 
     /** The Logger */
     private volatile ConfigurationLogger log;
@@ -46,8 +49,8 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
      */
     public ConfigurationLogger getLogger()
     {
-<span class="fc" id="L49">        final ConfigurationLogger result = log;</span>
-<span class="fc bfc" id="L50" title="All 2 branches covered.">        return result != null ? result : DEFAULT_LOG;</span>
+<span class="fc" id="L52">        final ConfigurationLogger result = log;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        return (result != null) ? result : DEFAULT_LOG;</span>
     }
 
     /**
@@ -62,8 +65,8 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
      */
     public void setLogger(final ConfigurationLogger log)
     {
-<span class="fc" id="L65">        this.log = log;</span>
-<span class="fc" id="L66">    }</span>
+<span class="fc" id="L68">        this.log = log;</span>
+<span class="fc" id="L69">    }</span>
 
     /**
      * Set the FileOptionsProvider
@@ -71,12 +74,12 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
      */
     public void setFileOptionsProvider(final FileOptionsProvider provider)
     {
-<span class="nc" id="L74">        this.optionsProvider = provider;</span>
-<span class="nc" id="L75">    }</span>
+<span class="nc" id="L77">        this.optionsProvider = provider;</span>
+<span class="nc" id="L78">    }</span>
 
     public FileOptionsProvider getFileOptionsProvider()
     {
-<span class="fc" id="L79">        return this.optionsProvider;</span>
+<span class="fc" id="L82">        return this.optionsProvider;</span>
     }
 
     public abstract InputStream getInputStream(URL url) throws ConfigurationException;

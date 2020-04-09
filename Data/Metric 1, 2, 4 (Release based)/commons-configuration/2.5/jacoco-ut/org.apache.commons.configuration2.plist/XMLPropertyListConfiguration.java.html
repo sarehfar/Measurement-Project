@@ -124,6 +124,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * @since 1.2
  *
+ * @author Emmanuel Bourg
  */
 public class XMLPropertyListConfiguration extends BaseHierarchicalConfiguration
     implements FileBasedConfiguration, FileLocatorAware
@@ -143,8 +144,8 @@ public class XMLPropertyListConfiguration extends BaseHierarchicalConfiguration
      * then saving().
      */
     public XMLPropertyListConfiguration()
-<span class="fc" id="L146">    {</span>
-<span class="fc" id="L147">    }</span>
+<span class="fc" id="L147">    {</span>
+<span class="fc" id="L148">    }</span>
 
     /**
      * Creates a new instance of {@code XMLPropertyListConfiguration} and
@@ -155,8 +156,8 @@ public class XMLPropertyListConfiguration extends BaseHierarchicalConfiguration
      */
     public XMLPropertyListConfiguration(final HierarchicalConfiguration&lt;ImmutableNode&gt; configuration)
     {
-<span class="fc" id="L158">        super(configuration);</span>
-<span class="fc" id="L159">    }</span>
+<span class="fc" id="L159">        super(configuration);</span>
+<span class="fc" id="L160">    }</span>
 
     /**
      * Creates a new instance of {@code XMLPropertyConfiguration} with the given
@@ -166,56 +167,48 @@ public class XMLPropertyListConfiguration extends BaseHierarchicalConfiguration
      */
     XMLPropertyListConfiguration(final ImmutableNode root)
     {
-<span class="fc" id="L169">        super(new InMemoryNodeModel(root));</span>
-<span class="fc" id="L170">    }</span>
-
-    private void setPropertyDirect(final String key, final Object value) {
-<span class="fc" id="L173">        setDetailEvents(false);</span>
-        try
-        {
-<span class="fc" id="L176">            clearProperty(key);</span>
-<span class="fc" id="L177">            addPropertyDirect(key, value);</span>
-        }
-        finally
-        {
-<span class="fc" id="L181">            setDetailEvents(true);</span>
-        }
-<span class="fc" id="L183">    }</span>
+<span class="fc" id="L170">        super(new InMemoryNodeModel(root));</span>
+<span class="fc" id="L171">    }</span>
 
     @Override
     protected void setPropertyInternal(final String key, final Object value)
     {
         // special case for byte arrays, they must be stored as is in the configuration
-<span class="fc bfc" id="L189" title="All 4 branches covered.">        if (value instanceof byte[] || value instanceof List)</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (value instanceof byte[])</span>
         {
-<span class="fc" id="L191">            setPropertyDirect(key, value);</span>
-        }
-<span class="fc bfc" id="L193" title="All 2 branches covered.">        else if (value instanceof Object[])</span>
-        {
-<span class="fc" id="L195">            setPropertyDirect(key, Arrays.asList((Object[]) value));</span>
+<span class="fc" id="L179">            setDetailEvents(false);</span>
+            try
+            {
+<span class="fc" id="L182">                clearProperty(key);</span>
+<span class="fc" id="L183">                addPropertyDirect(key, value);</span>
+            }
+            finally
+            {
+<span class="fc" id="L187">                setDetailEvents(true);</span>
+            }
         }
         else
         {
-<span class="fc" id="L199">            super.setPropertyInternal(key, value);</span>
+<span class="fc" id="L192">            super.setPropertyInternal(key, value);</span>
         }
-<span class="fc" id="L201">    }</span>
+<span class="fc" id="L194">    }</span>
 
     @Override
     protected void addPropertyInternal(final String key, final Object value)
     {
-<span class="fc bfc" id="L206" title="All 4 branches covered.">        if (value instanceof byte[] || value instanceof List)</span>
+<span class="fc bfc" id="L199" title="All 4 branches covered.">        if (value instanceof byte[] || value instanceof List)</span>
         {
-<span class="fc" id="L208">            addPropertyDirect(key, value);</span>
+<span class="fc" id="L201">            addPropertyDirect(key, value);</span>
         }
-<span class="fc bfc" id="L210" title="All 2 branches covered.">        else if (value instanceof Object[])</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        else if (value instanceof Object[])</span>
         {
-<span class="fc" id="L212">            addPropertyDirect(key, Arrays.asList((Object[]) value));</span>
+<span class="fc" id="L205">            addPropertyDirect(key, Arrays.asList((Object[]) value));</span>
         }
         else
         {
-<span class="fc" id="L216">            super.addPropertyInternal(key, value);</span>
+<span class="fc" id="L209">            super.addPropertyInternal(key, value);</span>
         }
-<span class="fc" id="L218">    }</span>
+<span class="fc" id="L211">    }</span>
 
     /**
      * Stores the current file locator. This method is called before I/O
@@ -226,15 +219,22 @@ public class XMLPropertyListConfiguration extends BaseHierarchicalConfiguration
     @Override
     public void initFileLocator(final FileLocator locator)
     {
-<span class="fc" id="L229">        this.locator = locator;</span>
-<span class="fc" id="L230">    }</span>
+<span class="fc" id="L222">        this.locator = locator;</span>
+<span class="fc" id="L223">    }</span>
 
     @Override
     public void read(final Reader in) throws ConfigurationException
     {
         // set up the DTD validation
-<span class="fc" id="L236">        final EntityResolver resolver = (publicId, systemId) -&gt; new InputSource(getClass().getClassLoader()</span>
-<span class="fc" id="L237">                .getResourceAsStream(&quot;PropertyList-1.0.dtd&quot;));</span>
+<span class="fc" id="L229">        final EntityResolver resolver = new EntityResolver()</span>
+<span class="fc" id="L230">        {</span>
+            @Override
+            public InputSource resolveEntity(final String publicId, final String systemId)
+            {
+<span class="fc" id="L234">                return new InputSource(getClass().getClassLoader()</span>
+<span class="fc" id="L235">                        .getResourceAsStream(&quot;PropertyList-1.0.dtd&quot;));</span>
+            }
+        };
 
         // parse the file
 <span class="fc" id="L240">        final XMLPropertyListHandler handler = new XMLPropertyListHandler();</span>

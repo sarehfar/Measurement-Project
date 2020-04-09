@@ -114,6 +114,7 @@ import org.apache.commons.logging.LogFactory;
  * This class is thread-safe.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class FileHandler
@@ -130,28 +131,28 @@ public class FileHandler
      * {@code SynchronizerSupport} interface. All methods are just empty dummy
      * implementations.
      */
-<span class="fc" id="L133">    private static final SynchronizerSupport DUMMY_SYNC_SUPPORT =</span>
+<span class="fc" id="L134">    private static final SynchronizerSupport DUMMY_SYNC_SUPPORT =</span>
             new SynchronizerSupport()
-<span class="fc" id="L135">            {</span>
+<span class="fc" id="L136">            {</span>
                 @Override
-                public void unlock(final LockMode mode)
+                public void unlock(LockMode mode)
                 {
-<span class="fc" id="L139">                }</span>
+<span class="fc" id="L140">                }</span>
 
                 @Override
-                public void setSynchronizer(final Synchronizer sync)
+                public void setSynchronizer(Synchronizer sync)
                 {
-<span class="nc" id="L144">                }</span>
+<span class="nc" id="L145">                }</span>
 
                 @Override
-                public void lock(final LockMode mode)
+                public void lock(LockMode mode)
                 {
-<span class="fc" id="L149">                }</span>
+<span class="fc" id="L150">                }</span>
 
                 @Override
                 public Synchronizer getSynchronizer()
                 {
-<span class="nc" id="L154">                    return NoOpSynchronizer.INSTANCE;</span>
+<span class="nc" id="L155">                    return NoOpSynchronizer.INSTANCE;</span>
                 }
             };
 
@@ -162,7 +163,7 @@ public class FileHandler
     private final AtomicReference&lt;FileLocator&gt; fileLocator;
 
     /** A collection with the registered listeners. */
-<span class="fc" id="L165">    private final List&lt;FileHandlerListener&gt; listeners =</span>
+<span class="fc" id="L166">    private final List&lt;FileHandlerListener&gt; listeners =</span>
             new CopyOnWriteArrayList&lt;&gt;();
 
     /**
@@ -173,8 +174,8 @@ public class FileHandler
      */
     public FileHandler()
     {
-<span class="fc" id="L176">        this(null);</span>
-<span class="fc" id="L177">    }</span>
+<span class="fc" id="L177">        this(null);</span>
+<span class="fc" id="L178">    }</span>
 
     /**
      * Creates a new instance of {@code FileHandler} and sets the managed
@@ -182,10 +183,10 @@ public class FileHandler
      *
      * @param obj the file-based object to manage
      */
-    public FileHandler(final FileBased obj)
+    public FileHandler(FileBased obj)
     {
-<span class="fc" id="L187">        this(obj, emptyFileLocator());</span>
-<span class="fc" id="L188">    }</span>
+<span class="fc" id="L188">        this(obj, emptyFileLocator());</span>
+<span class="fc" id="L189">    }</span>
 
     /**
      * Creates a new instance of {@code FileHandler} which is associated with
@@ -200,10 +201,10 @@ public class FileHandler
      * @throws IllegalArgumentException if the {@code FileHandler} is
      *         &lt;b&gt;null&lt;/b&gt;
      */
-    public FileHandler(final FileBased obj, final FileHandler c)
+    public FileHandler(FileBased obj, FileHandler c)
     {
-<span class="fc" id="L205">        this(obj, checkSourceHandler(c).getFileLocator());</span>
-<span class="fc" id="L206">    }</span>
+<span class="fc" id="L206">        this(obj, checkSourceHandler(c).getFileLocator());</span>
+<span class="fc" id="L207">    }</span>
 
     /**
      * Creates a new instance of {@code FileHandler} based on the given
@@ -212,11 +213,11 @@ public class FileHandler
      * @param obj the {@code FileBased} object to manage
      * @param locator the {@code FileLocator}
      */
-    private FileHandler(final FileBased obj, final FileLocator locator)
-<span class="fc" id="L216">    {</span>
-<span class="fc" id="L217">        content = obj;</span>
-<span class="fc" id="L218">        fileLocator = new AtomicReference&lt;&gt;(locator);</span>
-<span class="fc" id="L219">    }</span>
+    private FileHandler(FileBased obj, FileLocator locator)
+<span class="fc" id="L217">    {</span>
+<span class="fc" id="L218">        content = obj;</span>
+<span class="fc" id="L219">        fileLocator = new AtomicReference&lt;&gt;(locator);</span>
+<span class="fc" id="L220">    }</span>
 
     /**
      * Creates a new {@code FileHandler} instance from properties stored in a
@@ -227,9 +228,9 @@ public class FileHandler
      * @return the newly created {@code FileHandler}
      * @see FileLocatorUtils#fromMap(Map)
      */
-    public static FileHandler fromMap(final Map&lt;String, ?&gt; map)
+    public static FileHandler fromMap(Map&lt;String, ?&gt; map)
     {
-<span class="fc" id="L232">        return new FileHandler(null, FileLocatorUtils.fromMap(map));</span>
+<span class="fc" id="L233">        return new FileHandler(null, FileLocatorUtils.fromMap(map));</span>
     }
 
     /**
@@ -240,7 +241,7 @@ public class FileHandler
      */
     public final FileBased getContent()
     {
-<span class="fc" id="L243">        return content;</span>
+<span class="fc" id="L244">        return content;</span>
     }
 
     /**
@@ -250,24 +251,24 @@ public class FileHandler
      * @param l the listener to be added (must not be &lt;b&gt;null&lt;/b&gt;)
      * @throws IllegalArgumentException if the listener is &lt;b&gt;null&lt;/b&gt;
      */
-    public void addFileHandlerListener(final FileHandlerListener l)
+    public void addFileHandlerListener(FileHandlerListener l)
     {
-<span class="fc bfc" id="L255" title="All 2 branches covered.">        if (l == null)</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if (l == null)</span>
         {
-<span class="fc" id="L257">            throw new IllegalArgumentException(&quot;Listener must not be null!&quot;);</span>
+<span class="fc" id="L258">            throw new IllegalArgumentException(&quot;Listener must not be null!&quot;);</span>
         }
-<span class="fc" id="L259">        listeners.add(l);</span>
-<span class="fc" id="L260">    }</span>
+<span class="fc" id="L260">        listeners.add(l);</span>
+<span class="fc" id="L261">    }</span>
 
     /**
      * Removes the specified listener from this object.
      *
      * @param l the listener to be removed
      */
-    public void removeFileHandlerListener(final FileHandlerListener l)
+    public void removeFileHandlerListener(FileHandlerListener l)
     {
-<span class="fc" id="L269">        listeners.remove(l);</span>
-<span class="fc" id="L270">    }</span>
+<span class="fc" id="L270">        listeners.remove(l);</span>
+<span class="fc" id="L271">    }</span>
 
     /**
      * Return the name of the file. If only a URL is defined, the file name
@@ -277,18 +278,18 @@ public class FileHandler
      */
     public String getFileName()
     {
-<span class="fc" id="L280">        final FileLocator locator = getFileLocator();</span>
-<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (locator.getFileName() != null)</span>
+<span class="fc" id="L281">        FileLocator locator = getFileLocator();</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        if (locator.getFileName() != null)</span>
         {
-<span class="fc" id="L283">            return locator.getFileName();</span>
+<span class="fc" id="L284">            return locator.getFileName();</span>
         }
 
-<span class="fc bfc" id="L286" title="All 2 branches covered.">        if (locator.getSourceURL() != null)</span>
+<span class="fc bfc" id="L287" title="All 2 branches covered.">        if (locator.getSourceURL() != null)</span>
         {
-<span class="fc" id="L288">            return FileLocatorUtils.getFileName(locator.getSourceURL());</span>
+<span class="fc" id="L289">            return FileLocatorUtils.getFileName(locator.getSourceURL());</span>
         }
 
-<span class="fc" id="L291">        return null;</span>
+<span class="fc" id="L292">        return null;</span>
     }
 
     /**
@@ -300,20 +301,20 @@ public class FileHandler
      *
      * @param fileName the name of the file
      */
-    public void setFileName(final String fileName)
+    public void setFileName(String fileName)
     {
-<span class="fc" id="L305">        final String name = normalizeFileURL(fileName);</span>
-<span class="fc" id="L306">        new Updater()</span>
-<span class="fc" id="L307">        {</span>
+<span class="fc" id="L306">        final String name = normalizeFileURL(fileName);</span>
+<span class="fc" id="L307">        new Updater()</span>
+<span class="fc" id="L308">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L311">                builder.fileName(name);</span>
-<span class="fc" id="L312">                builder.sourceURL(null);</span>
-<span class="fc" id="L313">            }</span>
+<span class="fc" id="L312">                builder.fileName(name);</span>
+<span class="fc" id="L313">                builder.sourceURL(null);</span>
+<span class="fc" id="L314">            }</span>
         }
-<span class="fc" id="L315">        .update();</span>
-<span class="fc" id="L316">    }</span>
+<span class="fc" id="L316">        .update();</span>
+<span class="fc" id="L317">    }</span>
 
     /**
      * Return the base path. If no base path is defined, but a URL, the base
@@ -323,18 +324,18 @@ public class FileHandler
      */
     public String getBasePath()
     {
-<span class="fc" id="L326">        final FileLocator locator = getFileLocator();</span>
-<span class="fc bfc" id="L327" title="All 2 branches covered.">        if (locator.getBasePath() != null)</span>
+<span class="fc" id="L327">        FileLocator locator = getFileLocator();</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">        if (locator.getBasePath() != null)</span>
         {
-<span class="fc" id="L329">            return locator.getBasePath();</span>
+<span class="fc" id="L330">            return locator.getBasePath();</span>
         }
 
-<span class="fc bfc" id="L332" title="All 2 branches covered.">        if (locator.getSourceURL() != null)</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">        if (locator.getSourceURL() != null)</span>
         {
-<span class="fc" id="L334">            return FileLocatorUtils.getBasePath(locator.getSourceURL());</span>
+<span class="fc" id="L335">            return FileLocatorUtils.getBasePath(locator.getSourceURL());</span>
         }
 
-<span class="fc" id="L337">        return null;</span>
+<span class="fc" id="L338">        return null;</span>
     }
 
     /**
@@ -353,20 +354,20 @@ public class FileHandler
      *
      * @param basePath the base path.
      */
-    public void setBasePath(final String basePath)
+    public void setBasePath(String basePath)
     {
-<span class="fc" id="L358">        final String path = normalizeFileURL(basePath);</span>
-<span class="fc" id="L359">        new Updater()</span>
-<span class="fc" id="L360">        {</span>
+<span class="fc" id="L359">        final String path = normalizeFileURL(basePath);</span>
+<span class="fc" id="L360">        new Updater()</span>
+<span class="fc" id="L361">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L364">                builder.basePath(path);</span>
-<span class="fc" id="L365">                builder.sourceURL(null);</span>
-<span class="fc" id="L366">            }</span>
+<span class="fc" id="L365">                builder.basePath(path);</span>
+<span class="fc" id="L366">                builder.sourceURL(null);</span>
+<span class="fc" id="L367">            }</span>
         }
-<span class="fc" id="L368">        .update();</span>
-<span class="fc" id="L369">    }</span>
+<span class="fc" id="L369">        .update();</span>
+<span class="fc" id="L370">    }</span>
 
     /**
      * Returns the location of the associated file as a {@code File} object. If
@@ -378,7 +379,7 @@ public class FileHandler
      */
     public File getFile()
     {
-<span class="fc" id="L381">        return createFile(getFileLocator());</span>
+<span class="fc" id="L382">        return createFile(getFileLocator());</span>
     }
 
     /**
@@ -389,22 +390,22 @@ public class FileHandler
      *
      * @param file the location of the associated file
      */
-    public void setFile(final File file)
+    public void setFile(File file)
     {
-<span class="fc" id="L394">        final String fileName = file.getName();</span>
+<span class="fc" id="L395">        final String fileName = file.getName();</span>
         final String basePath =
-<span class="fc bfc" id="L396" title="All 2 branches covered.">                file.getParentFile() != null ? file.getParentFile()</span>
-<span class="fc" id="L397">                        .getAbsolutePath() : null;</span>
-<span class="fc" id="L398">        new Updater()</span>
-<span class="fc" id="L399">        {</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">                (file.getParentFile() != null) ? file.getParentFile()</span>
+<span class="fc" id="L398">                        .getAbsolutePath() : null;</span>
+<span class="fc" id="L399">        new Updater()</span>
+<span class="fc" id="L400">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L403">                builder.fileName(fileName).basePath(basePath).sourceURL(null);</span>
-<span class="fc" id="L404">            }</span>
+<span class="fc" id="L404">                builder.fileName(fileName).basePath(basePath).sourceURL(null);</span>
+<span class="fc" id="L405">            }</span>
         }
-<span class="fc" id="L406">        .update();</span>
-<span class="fc" id="L407">    }</span>
+<span class="fc" id="L407">        .update();</span>
+<span class="fc" id="L408">    }</span>
 
     /**
      * Returns the full path to the associated file. The return value is a valid
@@ -416,10 +417,10 @@ public class FileHandler
      */
     public String getPath()
     {
-<span class="fc" id="L419">        final FileLocator locator = getFileLocator();</span>
-<span class="fc" id="L420">        final File file = createFile(locator);</span>
-<span class="fc" id="L421">        return FileLocatorUtils.obtainFileSystem(locator).getPath(file,</span>
-<span class="fc" id="L422">                locator.getSourceURL(), locator.getBasePath(), locator.getFileName());</span>
+<span class="fc" id="L420">        FileLocator locator = getFileLocator();</span>
+<span class="fc" id="L421">        File file = createFile(locator);</span>
+<span class="fc" id="L422">        return FileLocatorUtils.obtainFileSystem(locator).getPath(file,</span>
+<span class="fc" id="L423">                locator.getSourceURL(), locator.getBasePath(), locator.getFileName());</span>
     }
 
     /**
@@ -432,10 +433,10 @@ public class FileHandler
      *
      * @param path the full path name of the associated file
      */
-    public void setPath(final String path)
+    public void setPath(String path)
     {
-<span class="fc" id="L437">        setFile(new File(path));</span>
-<span class="fc" id="L438">    }</span>
+<span class="fc" id="L438">        setFile(new File(path));</span>
+<span class="fc" id="L439">    }</span>
 
     /**
      * Returns the location of the associated file as a URL. If a URL is set,
@@ -447,9 +448,9 @@ public class FileHandler
      */
     public URL getURL()
     {
-<span class="fc" id="L450">        final FileLocator locator = getFileLocator();</span>
-<span class="fc bfc" id="L451" title="All 2 branches covered.">        return locator.getSourceURL() != null ? locator.getSourceURL()</span>
-<span class="fc" id="L452">                : FileLocatorUtils.locate(locator);</span>
+<span class="fc" id="L451">        FileLocator locator = getFileLocator();</span>
+<span class="fc bfc" id="L452" title="All 2 branches covered.">        return (locator.getSourceURL() != null) ? locator.getSourceURL()</span>
+<span class="fc" id="L453">                : FileLocatorUtils.locate(locator);</span>
     }
 
     /**
@@ -463,17 +464,17 @@ public class FileHandler
      */
     public void setURL(final URL url)
     {
-<span class="fc" id="L466">        new Updater()</span>
-<span class="fc" id="L467">        {</span>
+<span class="fc" id="L467">        new Updater()</span>
+<span class="fc" id="L468">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L471">                builder.sourceURL(url);</span>
-<span class="fc" id="L472">                builder.basePath(null).fileName(null);</span>
-<span class="fc" id="L473">            }</span>
+<span class="fc" id="L472">                builder.sourceURL(url);</span>
+<span class="fc" id="L473">                builder.basePath(null).fileName(null);</span>
+<span class="fc" id="L474">            }</span>
         }
-<span class="fc" id="L475">        .update();</span>
-<span class="fc" id="L476">    }</span>
+<span class="fc" id="L476">        .update();</span>
+<span class="fc" id="L477">    }</span>
 
     /**
      * Returns a {@code FileLocator} object with the specification of the file
@@ -487,7 +488,7 @@ public class FileHandler
      */
     public FileLocator getFileLocator()
     {
-<span class="fc" id="L490">        return fileLocator.get();</span>
+<span class="fc" id="L491">        return fileLocator.get();</span>
     }
 
     /**
@@ -499,16 +500,16 @@ public class FileHandler
      * @throws IllegalArgumentException if the {@code FileLocator} is
      *         &lt;b&gt;null&lt;/b&gt;
      */
-    public void setFileLocator(final FileLocator locator)
+    public void setFileLocator(FileLocator locator)
     {
-<span class="fc bfc" id="L504" title="All 2 branches covered.">        if (locator == null)</span>
+<span class="fc bfc" id="L505" title="All 2 branches covered.">        if (locator == null)</span>
         {
-<span class="fc" id="L506">            throw new IllegalArgumentException(&quot;FileLocator must not be null!&quot;);</span>
+<span class="fc" id="L507">            throw new IllegalArgumentException(&quot;FileLocator must not be null!&quot;);</span>
         }
 
-<span class="fc" id="L509">        fileLocator.set(locator);</span>
-<span class="fc" id="L510">        fireLocationChangedEvent();</span>
-<span class="fc" id="L511">    }</span>
+<span class="fc" id="L510">        fileLocator.set(locator);</span>
+<span class="fc" id="L511">        fireLocationChangedEvent();</span>
+<span class="fc" id="L512">    }</span>
 
     /**
      * Tests whether a location is defined for this {@code FileHandler}.
@@ -517,7 +518,7 @@ public class FileHandler
      */
     public boolean isLocationDefined()
     {
-<span class="fc" id="L520">        return FileLocatorUtils.isLocationDefined(getFileLocator());</span>
+<span class="fc" id="L521">        return FileLocatorUtils.isLocationDefined(getFileLocator());</span>
     }
 
     /**
@@ -526,16 +527,16 @@ public class FileHandler
      */
     public void clearLocation()
     {
-<span class="fc" id="L529">        new Updater()</span>
-<span class="fc" id="L530">        {</span>
+<span class="fc" id="L530">        new Updater()</span>
+<span class="fc" id="L531">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L534">                builder.basePath(null).fileName(null).sourceURL(null);</span>
-<span class="fc" id="L535">            }</span>
+<span class="fc" id="L535">                builder.basePath(null).fileName(null).sourceURL(null);</span>
+<span class="fc" id="L536">            }</span>
         }
-<span class="fc" id="L537">        .update();</span>
-<span class="fc" id="L538">    }</span>
+<span class="fc" id="L538">        .update();</span>
+<span class="fc" id="L539">    }</span>
 
     /**
      * Returns the encoding of the associated file. Result can be &lt;b&gt;null&lt;/b&gt; if
@@ -545,7 +546,7 @@ public class FileHandler
      */
     public String getEncoding()
     {
-<span class="fc" id="L548">        return getFileLocator().getEncoding();</span>
+<span class="fc" id="L549">        return getFileLocator().getEncoding();</span>
     }
 
     /**
@@ -557,16 +558,16 @@ public class FileHandler
      */
     public void setEncoding(final String encoding)
     {
-<span class="fc" id="L560">        new Updater()</span>
-<span class="fc" id="L561">        {</span>
+<span class="fc" id="L561">        new Updater()</span>
+<span class="fc" id="L562">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L565">                builder.encoding(encoding);</span>
-<span class="fc" id="L566">            }</span>
+<span class="fc" id="L566">                builder.encoding(encoding);</span>
+<span class="fc" id="L567">            }</span>
         }
-<span class="fc" id="L568">        .update();</span>
-<span class="fc" id="L569">    }</span>
+<span class="fc" id="L569">        .update();</span>
+<span class="fc" id="L570">    }</span>
 
     /**
      * Returns the {@code FileSystem} to be used by this object when locating
@@ -577,7 +578,7 @@ public class FileHandler
      */
     public FileSystem getFileSystem()
     {
-<span class="fc" id="L580">        return FileLocatorUtils.obtainFileSystem(getFileLocator());</span>
+<span class="fc" id="L581">        return FileLocatorUtils.obtainFileSystem(getFileLocator());</span>
     }
 
     /**
@@ -589,16 +590,16 @@ public class FileHandler
      */
     public void setFileSystem(final FileSystem fileSystem)
     {
-<span class="fc" id="L592">        new Updater()</span>
-<span class="fc" id="L593">        {</span>
+<span class="fc" id="L593">        new Updater()</span>
+<span class="fc" id="L594">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L597">                builder.fileSystem(fileSystem);</span>
-<span class="fc" id="L598">            }</span>
+<span class="fc" id="L598">                builder.fileSystem(fileSystem);</span>
+<span class="fc" id="L599">            }</span>
         }
-<span class="fc" id="L600">        .update();</span>
-<span class="fc" id="L601">    }</span>
+<span class="fc" id="L601">        .update();</span>
+<span class="fc" id="L602">    }</span>
 
     /**
      * Resets the {@code FileSystem} used by this object. It is set to the
@@ -606,8 +607,8 @@ public class FileHandler
      */
     public void resetFileSystem()
     {
-<span class="fc" id="L609">        setFileSystem(null);</span>
-<span class="fc" id="L610">    }</span>
+<span class="fc" id="L610">        setFileSystem(null);</span>
+<span class="fc" id="L611">    }</span>
 
     /**
      * Returns the {@code FileLocationStrategy} to be applied when accessing the
@@ -619,7 +620,7 @@ public class FileHandler
      */
     public FileLocationStrategy getLocationStrategy()
     {
-<span class="fc" id="L622">        return FileLocatorUtils.obtainLocationStrategy(getFileLocator());</span>
+<span class="fc" id="L623">        return FileLocatorUtils.obtainLocationStrategy(getFileLocator());</span>
     }
 
     /**
@@ -633,17 +634,17 @@ public class FileHandler
      */
     public void setLocationStrategy(final FileLocationStrategy strategy)
     {
-<span class="fc" id="L636">        new Updater()</span>
-<span class="fc" id="L637">        {</span>
+<span class="fc" id="L637">        new Updater()</span>
+<span class="fc" id="L638">        {</span>
             @Override
-            protected void updateBuilder(final FileLocatorBuilder builder)
+            protected void updateBuilder(FileLocatorBuilder builder)
             {
-<span class="fc" id="L641">                builder.locationStrategy(strategy);</span>
-<span class="fc" id="L642">            }</span>
+<span class="fc" id="L642">                builder.locationStrategy(strategy);</span>
+<span class="fc" id="L643">            }</span>
 
         }
-<span class="fc" id="L645">        .update();</span>
-<span class="fc" id="L646">    }</span>
+<span class="fc" id="L646">        .update();</span>
+<span class="fc" id="L647">    }</span>
 
     /**
      * Locates the referenced file if necessary and ensures that the associated
@@ -670,24 +671,24 @@ public class FileHandler
 
         do
         {
-<span class="fc" id="L673">            final FileLocator locator = getFileLocator();</span>
-<span class="fc" id="L674">            FileLocator fullLocator =</span>
-<span class="fc" id="L675">                    FileLocatorUtils.fullyInitializedLocator(locator);</span>
-<span class="fc bfc" id="L676" title="All 2 branches covered.">            if (fullLocator == null)</span>
+<span class="fc" id="L674">            FileLocator locator = getFileLocator();</span>
+<span class="fc" id="L675">            FileLocator fullLocator =</span>
+<span class="fc" id="L676">                    FileLocatorUtils.fullyInitializedLocator(locator);</span>
+<span class="fc bfc" id="L677" title="All 2 branches covered.">            if (fullLocator == null)</span>
             {
-<span class="fc" id="L678">                result = false;</span>
-<span class="fc" id="L679">                fullLocator = locator;</span>
+<span class="fc" id="L679">                result = false;</span>
+<span class="fc" id="L680">                fullLocator = locator;</span>
             }
             else
             {
-<span class="fc bfc" id="L683" title="All 2 branches covered.">                result =</span>
+<span class="fc bfc" id="L684" title="All 2 branches covered.">                result =</span>
                         fullLocator != locator
-<span class="pc bpc" id="L685" title="1 of 2 branches missed.">                                || FileLocatorUtils.isFullyInitialized(locator);</span>
+<span class="pc bpc" id="L686" title="1 of 2 branches missed.">                                || FileLocatorUtils.isFullyInitialized(locator);</span>
             }
-<span class="fc" id="L687">            done = fileLocator.compareAndSet(locator, fullLocator);</span>
-<span class="pc bpc" id="L688" title="1 of 2 branches missed.">        } while (!done);</span>
+<span class="fc" id="L688">            done = fileLocator.compareAndSet(locator, fullLocator);</span>
+<span class="pc bpc" id="L689" title="1 of 2 branches missed.">        } while (!done);</span>
 
-<span class="fc" id="L690">        return result;</span>
+<span class="fc" id="L691">        return result;</span>
     }
 
     /**
@@ -698,8 +699,8 @@ public class FileHandler
      */
     public void load() throws ConfigurationException
     {
-<span class="fc" id="L701">        load(checkContentAndGetLocator());</span>
-<span class="fc" id="L702">    }</span>
+<span class="fc" id="L702">        load(checkContentAndGetLocator());</span>
+<span class="fc" id="L703">    }</span>
 
     /**
      * Loads the associated file from the given file name. The file name is
@@ -710,10 +711,10 @@ public class FileHandler
      * @param fileName the name of the file to be loaded
      * @throws ConfigurationException if an error occurs
      */
-    public void load(final String fileName) throws ConfigurationException
+    public void load(String fileName) throws ConfigurationException
     {
-<span class="fc" id="L715">        load(fileName, checkContentAndGetLocator());</span>
-<span class="fc" id="L716">    }</span>
+<span class="fc" id="L716">        load(fileName, checkContentAndGetLocator());</span>
+<span class="fc" id="L717">    }</span>
 
     /**
      * Loads the associated file from the specified {@code File}.
@@ -721,21 +722,21 @@ public class FileHandler
      * @param file the file to load
      * @throws ConfigurationException if an error occurs
      */
-    public void load(final File file) throws ConfigurationException
+    public void load(File file) throws ConfigurationException
     {
         URL url;
         try
         {
-<span class="fc" id="L729">            url = FileLocatorUtils.toURL(file);</span>
+<span class="fc" id="L730">            url = FileLocatorUtils.toURL(file);</span>
         }
-<span class="nc" id="L731">        catch (final MalformedURLException e1)</span>
+<span class="nc" id="L732">        catch (MalformedURLException e1)</span>
         {
-<span class="nc" id="L733">            throw new ConfigurationException(&quot;Cannot create URL from file &quot;</span>
+<span class="nc" id="L734">            throw new ConfigurationException(&quot;Cannot create URL from file &quot;</span>
                     + file);
-<span class="fc" id="L735">        }</span>
+<span class="fc" id="L736">        }</span>
 
-<span class="fc" id="L737">        load(url);</span>
-<span class="fc" id="L738">    }</span>
+<span class="fc" id="L738">        load(url);</span>
+<span class="fc" id="L739">    }</span>
 
     /**
      * Loads the associated file from the specified URL. The location stored in
@@ -744,10 +745,10 @@ public class FileHandler
      * @param url the URL of the file to be loaded
      * @throws ConfigurationException if an error occurs
      */
-    public void load(final URL url) throws ConfigurationException
+    public void load(URL url) throws ConfigurationException
     {
-<span class="fc" id="L749">        load(url, checkContentAndGetLocator());</span>
-<span class="fc" id="L750">    }</span>
+<span class="fc" id="L750">        load(url, checkContentAndGetLocator());</span>
+<span class="fc" id="L751">    }</span>
 
     /**
      * Loads the associated file from the specified stream, using the encoding
@@ -757,10 +758,10 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the load
      *         operation
      */
-    public void load(final InputStream in) throws ConfigurationException
+    public void load(InputStream in) throws ConfigurationException
     {
-<span class="fc" id="L762">        load(in, checkContentAndGetLocator());</span>
-<span class="fc" id="L763">    }</span>
+<span class="fc" id="L763">        load(in, checkContentAndGetLocator());</span>
+<span class="fc" id="L764">    }</span>
 
     /**
      * Loads the associated file from the specified stream, using the specified
@@ -772,11 +773,11 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the load
      *         operation
      */
-    public void load(final InputStream in, final String encoding)
+    public void load(InputStream in, String encoding)
             throws ConfigurationException
     {
-<span class="fc" id="L778">        loadFromStream(in, encoding, null);</span>
-<span class="fc" id="L779">    }</span>
+<span class="fc" id="L779">        loadFromStream(in, encoding, null);</span>
+<span class="fc" id="L780">    }</span>
 
     /**
      * Loads the associated file from the specified reader.
@@ -785,12 +786,12 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the load
      *         operation
      */
-    public void load(final Reader in) throws ConfigurationException
+    public void load(Reader in) throws ConfigurationException
     {
-<span class="fc" id="L790">        checkContent();</span>
-<span class="fc" id="L791">        injectNullFileLocator();</span>
-<span class="fc" id="L792">        loadFromReader(in);</span>
-<span class="fc" id="L793">    }</span>
+<span class="fc" id="L791">        checkContent();</span>
+<span class="fc" id="L792">        injectNullFileLocator();</span>
+<span class="fc" id="L793">        loadFromReader(in);</span>
+<span class="fc" id="L794">    }</span>
 
     /**
      * Saves the associated file to the current location set for this object.
@@ -801,8 +802,8 @@ public class FileHandler
      */
     public void save() throws ConfigurationException
     {
-<span class="fc" id="L804">        save(checkContentAndGetLocator());</span>
-<span class="fc" id="L805">    }</span>
+<span class="fc" id="L805">        save(checkContentAndGetLocator());</span>
+<span class="fc" id="L806">    }</span>
 
     /**
      * Saves the associated file to the specified file name. This does not
@@ -813,10 +814,10 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    public void save(final String fileName) throws ConfigurationException
+    public void save(String fileName) throws ConfigurationException
     {
-<span class="fc" id="L818">        save(fileName, checkContentAndGetLocator());</span>
-<span class="fc" id="L819">    }</span>
+<span class="fc" id="L819">        save(fileName, checkContentAndGetLocator());</span>
+<span class="fc" id="L820">    }</span>
 
     /**
      * Saves the associated file to the specified URL. This does not change the
@@ -826,10 +827,10 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    public void save(final URL url) throws ConfigurationException
+    public void save(URL url) throws ConfigurationException
     {
-<span class="fc" id="L831">        save(url, checkContentAndGetLocator());</span>
-<span class="fc" id="L832">    }</span>
+<span class="fc" id="L832">        save(url, checkContentAndGetLocator());</span>
+<span class="fc" id="L833">    }</span>
 
     /**
      * Saves the associated file to the specified {@code File}. The file is
@@ -840,10 +841,10 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    public void save(final File file) throws ConfigurationException
+    public void save(File file) throws ConfigurationException
     {
-<span class="fc" id="L845">        save(file, checkContentAndGetLocator());</span>
-<span class="fc" id="L846">    }</span>
+<span class="fc" id="L846">        save(file, checkContentAndGetLocator());</span>
+<span class="fc" id="L847">    }</span>
 
     /**
      * Saves the associated file to the specified stream using the encoding
@@ -853,10 +854,10 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    public void save(final OutputStream out) throws ConfigurationException
+    public void save(OutputStream out) throws ConfigurationException
     {
-<span class="fc" id="L858">        save(out, checkContentAndGetLocator());</span>
-<span class="fc" id="L859">    }</span>
+<span class="fc" id="L859">        save(out, checkContentAndGetLocator());</span>
+<span class="fc" id="L860">    }</span>
 
     /**
      * Saves the associated file to the specified stream using the specified
@@ -868,11 +869,11 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    public void save(final OutputStream out, final String encoding)
+    public void save(OutputStream out, String encoding)
             throws ConfigurationException
     {
-<span class="fc" id="L874">        saveToStream(out, encoding, null);</span>
-<span class="fc" id="L875">    }</span>
+<span class="fc" id="L875">        saveToStream(out, encoding, null);</span>
+<span class="fc" id="L876">    }</span>
 
     /**
      * Saves the associated file to the given {@code Writer}.
@@ -881,12 +882,12 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    public void save(final Writer out) throws ConfigurationException
+    public void save(Writer out) throws ConfigurationException
     {
-<span class="fc" id="L886">        checkContent();</span>
-<span class="fc" id="L887">        injectNullFileLocator();</span>
-<span class="fc" id="L888">        saveToWriter(out);</span>
-<span class="fc" id="L889">    }</span>
+<span class="fc" id="L887">        checkContent();</span>
+<span class="fc" id="L888">        injectNullFileLocator();</span>
+<span class="fc" id="L889">        saveToWriter(out);</span>
+<span class="fc" id="L890">    }</span>
 
     /**
      * Prepares a builder for a {@code FileLocator} which does not have a
@@ -897,8 +898,8 @@ public class FileHandler
      */
     private FileLocatorBuilder prepareNullLocatorBuilder()
     {
-<span class="fc" id="L900">        return FileLocatorUtils.fileLocator(getFileLocator()).sourceURL(null)</span>
-<span class="fc" id="L901">                .basePath(null).fileName(null);</span>
+<span class="fc" id="L901">        return FileLocatorUtils.fileLocator(getFileLocator()).sourceURL(null)</span>
+<span class="fc" id="L902">                .basePath(null).fileName(null);</span>
     }
 
     /**
@@ -911,12 +912,12 @@ public class FileHandler
      */
     private void injectNullFileLocator()
     {
-<span class="fc bfc" id="L914" title="All 2 branches covered.">        if (getContent() instanceof FileLocatorAware)</span>
+<span class="fc bfc" id="L915" title="All 2 branches covered.">        if (getContent() instanceof FileLocatorAware)</span>
         {
-<span class="fc" id="L916">            final FileLocator locator = prepareNullLocatorBuilder().create();</span>
-<span class="fc" id="L917">            ((FileLocatorAware) getContent()).initFileLocator(locator);</span>
+<span class="fc" id="L917">            FileLocator locator = prepareNullLocatorBuilder().create();</span>
+<span class="fc" id="L918">            ((FileLocatorAware) getContent()).initFileLocator(locator);</span>
         }
-<span class="fc" id="L919">    }</span>
+<span class="fc" id="L920">    }</span>
 
     /**
      * Injects a {@code FileLocator} pointing to the specified URL if the
@@ -925,22 +926,22 @@ public class FileHandler
      *
      * @param url the URL for the locator
      */
-    private void injectFileLocator(final URL url)
+    private void injectFileLocator(URL url)
     {
-<span class="fc bfc" id="L930" title="All 2 branches covered.">        if (url == null)</span>
+<span class="fc bfc" id="L931" title="All 2 branches covered.">        if (url == null)</span>
         {
-<span class="fc" id="L932">            injectNullFileLocator();</span>
+<span class="fc" id="L933">            injectNullFileLocator();</span>
         }
         else
         {
-<span class="fc bfc" id="L936" title="All 2 branches covered.">            if (getContent() instanceof FileLocatorAware)</span>
+<span class="fc bfc" id="L937" title="All 2 branches covered.">            if (getContent() instanceof FileLocatorAware)</span>
             {
-<span class="fc" id="L938">                final FileLocator locator =</span>
-<span class="fc" id="L939">                        prepareNullLocatorBuilder().sourceURL(url).create();</span>
-<span class="fc" id="L940">                ((FileLocatorAware) getContent()).initFileLocator(locator);</span>
+<span class="fc" id="L939">                FileLocator locator =</span>
+<span class="fc" id="L940">                        prepareNullLocatorBuilder().sourceURL(url).create();</span>
+<span class="fc" id="L941">                ((FileLocatorAware) getContent()).initFileLocator(locator);</span>
             }
         }
-<span class="fc" id="L943">    }</span>
+<span class="fc" id="L944">    }</span>
 
     /**
      * Obtains a {@code SynchronizerSupport} for the current content. If the
@@ -952,11 +953,11 @@ public class FileHandler
      */
     private SynchronizerSupport fetchSynchronizerSupport()
     {
-<span class="fc bfc" id="L955" title="All 2 branches covered.">        if (getContent() instanceof SynchronizerSupport)</span>
+<span class="fc bfc" id="L956" title="All 2 branches covered.">        if (getContent() instanceof SynchronizerSupport)</span>
         {
-<span class="fc" id="L957">            return (SynchronizerSupport) getContent();</span>
+<span class="fc" id="L958">            return (SynchronizerSupport) getContent();</span>
         }
-<span class="fc" id="L959">        return DUMMY_SYNC_SUPPORT;</span>
+<span class="fc" id="L960">        return DUMMY_SYNC_SUPPORT;</span>
     }
 
     /**
@@ -966,11 +967,11 @@ public class FileHandler
      * @param locator the current {@code FileLocator}
      * @throws ConfigurationException if an error occurs
      */
-    private void load(final FileLocator locator) throws ConfigurationException
+    private void load(FileLocator locator) throws ConfigurationException
     {
-<span class="fc" id="L971">        final URL url = FileLocatorUtils.locateOrThrow(locator);</span>
-<span class="fc" id="L972">        load(url, locator);</span>
-<span class="fc" id="L973">    }</span>
+<span class="fc" id="L972">        URL url = FileLocatorUtils.locateOrThrow(locator);</span>
+<span class="fc" id="L973">        load(url, locator);</span>
+<span class="fc" id="L974">    }</span>
 
     /**
      * Internal helper method for loading a file from the given URL.
@@ -979,29 +980,29 @@ public class FileHandler
      * @param locator the current {@code FileLocator}
      * @throws ConfigurationException if an error occurs
      */
-    private void load(final URL url, final FileLocator locator) throws ConfigurationException
+    private void load(URL url, FileLocator locator) throws ConfigurationException
     {
-<span class="fc" id="L984">        InputStream in = null;</span>
+<span class="fc" id="L985">        InputStream in = null;</span>
 
         try
         {
-<span class="fc" id="L988">            in = FileLocatorUtils.obtainFileSystem(locator).getInputStream(url);</span>
-<span class="fc" id="L989">            loadFromStream(in, locator.getEncoding(), url);</span>
+<span class="fc" id="L989">            in = FileLocatorUtils.obtainFileSystem(locator).getInputStream(url);</span>
+<span class="fc" id="L990">            loadFromStream(in, locator.getEncoding(), url);</span>
         }
-<span class="fc" id="L991">        catch (final ConfigurationException e)</span>
+<span class="fc" id="L992">        catch (ConfigurationException e)</span>
         {
-<span class="fc" id="L993">            throw e;</span>
+<span class="fc" id="L994">            throw e;</span>
         }
-<span class="nc" id="L995">        catch (final Exception e)</span>
+<span class="nc" id="L996">        catch (Exception e)</span>
         {
-<span class="nc" id="L997">            throw new ConfigurationException(</span>
+<span class="nc" id="L998">            throw new ConfigurationException(</span>
                     &quot;Unable to load the configuration from the URL &quot; + url, e);
         }
         finally
         {
-<span class="fc" id="L1002">            closeSilent(in);</span>
+<span class="fc" id="L1003">            closeSilent(in);</span>
         }
-<span class="fc" id="L1004">    }</span>
+<span class="fc" id="L1005">    }</span>
 
     /**
      * Internal helper method for loading a file from a file name.
@@ -1010,13 +1011,13 @@ public class FileHandler
      * @param locator the current {@code FileLocator}
      * @throws ConfigurationException if an error occurs
      */
-    private void load(final String fileName, final FileLocator locator)
+    private void load(String fileName, FileLocator locator)
             throws ConfigurationException
     {
-<span class="fc" id="L1016">        final FileLocator locFileName = createLocatorWithFileName(fileName, locator);</span>
-<span class="fc" id="L1017">        final URL url = FileLocatorUtils.locateOrThrow(locFileName);</span>
-<span class="fc" id="L1018">        load(url, locator);</span>
-<span class="fc" id="L1019">    }</span>
+<span class="fc" id="L1017">        FileLocator locFileName = createLocatorWithFileName(fileName, locator);</span>
+<span class="fc" id="L1018">        URL url = FileLocatorUtils.locateOrThrow(locFileName);</span>
+<span class="fc" id="L1019">        load(url, locator);</span>
+<span class="fc" id="L1020">    }</span>
 
     /**
      * Internal helper method for loading a file from the given input stream.
@@ -1025,11 +1026,11 @@ public class FileHandler
      * @param locator the current {@code FileLocator}
      * @throws ConfigurationException if an error occurs
      */
-    private void load(final InputStream in, final FileLocator locator)
+    private void load(InputStream in, FileLocator locator)
             throws ConfigurationException
     {
-<span class="fc" id="L1031">        load(in, locator.getEncoding());</span>
-<span class="fc" id="L1032">    }</span>
+<span class="fc" id="L1032">        load(in, locator.getEncoding());</span>
+<span class="fc" id="L1033">    }</span>
 
     /**
      * Internal helper method for loading a file from an input stream.
@@ -1039,30 +1040,30 @@ public class FileHandler
      * @param url the URL of the file to be loaded (if known)
      * @throws ConfigurationException if an error occurs
      */
-    private void loadFromStream(final InputStream in, final String encoding, final URL url)
+    private void loadFromStream(InputStream in, String encoding, URL url)
             throws ConfigurationException
     {
-<span class="fc" id="L1045">        checkContent();</span>
-<span class="fc" id="L1046">        final SynchronizerSupport syncSupport = fetchSynchronizerSupport();</span>
-<span class="fc" id="L1047">        syncSupport.lock(LockMode.WRITE);</span>
+<span class="fc" id="L1046">        checkContent();</span>
+<span class="fc" id="L1047">        SynchronizerSupport syncSupport = fetchSynchronizerSupport();</span>
+<span class="fc" id="L1048">        syncSupport.lock(LockMode.WRITE);</span>
         try
         {
-<span class="fc" id="L1050">            injectFileLocator(url);</span>
+<span class="fc" id="L1051">            injectFileLocator(url);</span>
 
-<span class="fc bfc" id="L1052" title="All 2 branches covered.">            if (getContent() instanceof InputStreamSupport)</span>
+<span class="fc bfc" id="L1053" title="All 2 branches covered.">            if (getContent() instanceof InputStreamSupport)</span>
             {
-<span class="fc" id="L1054">                loadFromStreamDirectly(in);</span>
+<span class="fc" id="L1055">                loadFromStreamDirectly(in);</span>
             }
             else
             {
-<span class="fc" id="L1058">                loadFromTransformedStream(in, encoding);</span>
+<span class="fc" id="L1059">                loadFromTransformedStream(in, encoding);</span>
             }
         }
         finally
         {
-<span class="fc" id="L1063">            syncSupport.unlock(LockMode.WRITE);</span>
+<span class="fc" id="L1064">            syncSupport.unlock(LockMode.WRITE);</span>
         }
-<span class="fc" id="L1065">    }</span>
+<span class="fc" id="L1066">    }</span>
 
     /**
      * Loads data from an input stream if the associated {@code FileBased}
@@ -1071,18 +1072,18 @@ public class FileHandler
      * @param in the input stream
      * @throws ConfigurationException if an error occurs
      */
-    private void loadFromStreamDirectly(final InputStream in)
+    private void loadFromStreamDirectly(InputStream in)
             throws ConfigurationException
     {
         try
         {
-<span class="fc" id="L1079">            ((InputStreamSupport) getContent()).read(in);</span>
+<span class="fc" id="L1080">            ((InputStreamSupport) getContent()).read(in);</span>
         }
-<span class="fc" id="L1081">        catch (final IOException e)</span>
+<span class="fc" id="L1082">        catch (IOException e)</span>
         {
-<span class="fc" id="L1083">            throw new ConfigurationException(e);</span>
-<span class="fc" id="L1084">        }</span>
-<span class="fc" id="L1085">    }</span>
+<span class="fc" id="L1084">            throw new ConfigurationException(e);</span>
+<span class="fc" id="L1085">        }</span>
+<span class="fc" id="L1086">    }</span>
 
     /**
      * Internal helper method for transforming an input stream to a reader and
@@ -1092,32 +1093,32 @@ public class FileHandler
      * @param encoding the encoding
      * @throws ConfigurationException if an error occurs
      */
-    private void loadFromTransformedStream(final InputStream in, final String encoding)
+    private void loadFromTransformedStream(InputStream in, String encoding)
             throws ConfigurationException
     {
-<span class="fc" id="L1098">        Reader reader = null;</span>
+<span class="fc" id="L1099">        Reader reader = null;</span>
 
-<span class="fc bfc" id="L1100" title="All 2 branches covered.">        if (encoding != null)</span>
+<span class="fc bfc" id="L1101" title="All 2 branches covered.">        if (encoding != null)</span>
         {
             try
             {
-<span class="fc" id="L1104">                reader = new InputStreamReader(in, encoding);</span>
+<span class="fc" id="L1105">                reader = new InputStreamReader(in, encoding);</span>
             }
-<span class="nc" id="L1106">            catch (final UnsupportedEncodingException e)</span>
+<span class="nc" id="L1107">            catch (UnsupportedEncodingException e)</span>
             {
-<span class="nc" id="L1108">                throw new ConfigurationException(</span>
+<span class="nc" id="L1109">                throw new ConfigurationException(</span>
                         &quot;The requested encoding is not supported, try the default encoding.&quot;,
                         e);
-<span class="fc" id="L1111">            }</span>
+<span class="fc" id="L1112">            }</span>
         }
 
-<span class="fc bfc" id="L1114" title="All 2 branches covered.">        if (reader == null)</span>
+<span class="fc bfc" id="L1115" title="All 2 branches covered.">        if (reader == null)</span>
         {
-<span class="fc" id="L1116">            reader = new InputStreamReader(in);</span>
+<span class="fc" id="L1117">            reader = new InputStreamReader(in);</span>
         }
 
-<span class="fc" id="L1119">        loadFromReader(reader);</span>
-<span class="fc" id="L1120">    }</span>
+<span class="fc" id="L1120">        loadFromReader(reader);</span>
+<span class="fc" id="L1121">    }</span>
 
     /**
      * Internal helper method for loading a file from the given reader.
@@ -1125,22 +1126,22 @@ public class FileHandler
      * @param in the reader
      * @throws ConfigurationException if an error occurs
      */
-    private void loadFromReader(final Reader in) throws ConfigurationException
+    private void loadFromReader(Reader in) throws ConfigurationException
     {
-<span class="fc" id="L1130">        fireLoadingEvent();</span>
+<span class="fc" id="L1131">        fireLoadingEvent();</span>
         try
         {
-<span class="fc" id="L1133">            getContent().read(in);</span>
+<span class="fc" id="L1134">            getContent().read(in);</span>
         }
-<span class="fc" id="L1135">        catch (final IOException ioex)</span>
+<span class="fc" id="L1136">        catch (IOException ioex)</span>
         {
-<span class="fc" id="L1137">            throw new ConfigurationException(ioex);</span>
+<span class="fc" id="L1138">            throw new ConfigurationException(ioex);</span>
         }
         finally
         {
-<span class="fc" id="L1141">            fireLoadedEvent();</span>
+<span class="fc" id="L1142">            fireLoadedEvent();</span>
         }
-<span class="fc" id="L1143">    }</span>
+<span class="fc" id="L1144">    }</span>
 
     /**
      * Internal helper method for saving data to the internal location stored
@@ -1150,22 +1151,22 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    private void save(final FileLocator locator) throws ConfigurationException
+    private void save(FileLocator locator) throws ConfigurationException
     {
-<span class="fc bfc" id="L1155" title="All 2 branches covered.">        if (!FileLocatorUtils.isLocationDefined(locator))</span>
+<span class="fc bfc" id="L1156" title="All 2 branches covered.">        if (!FileLocatorUtils.isLocationDefined(locator))</span>
         {
-<span class="fc" id="L1157">            throw new ConfigurationException(&quot;No file location has been set!&quot;);</span>
+<span class="fc" id="L1158">            throw new ConfigurationException(&quot;No file location has been set!&quot;);</span>
         }
 
-<span class="fc bfc" id="L1160" title="All 2 branches covered.">        if (locator.getSourceURL() != null)</span>
+<span class="fc bfc" id="L1161" title="All 2 branches covered.">        if (locator.getSourceURL() != null)</span>
         {
-<span class="fc" id="L1162">            save(locator.getSourceURL(), locator);</span>
+<span class="fc" id="L1163">            save(locator.getSourceURL(), locator);</span>
         }
         else
         {
-<span class="fc" id="L1166">            save(locator.getFileName(), locator);</span>
+<span class="fc" id="L1167">            save(locator.getFileName(), locator);</span>
         }
-<span class="fc" id="L1168">    }</span>
+<span class="fc" id="L1169">    }</span>
 
     /**
      * Internal helper method for saving data to the given file name.
@@ -1175,27 +1176,27 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    private void save(final String fileName, final FileLocator locator)
+    private void save(String fileName, FileLocator locator)
             throws ConfigurationException
     {
         URL url;
         try
         {
-<span class="fc" id="L1184">            url = FileLocatorUtils.obtainFileSystem(locator).getURL(</span>
-<span class="fc" id="L1185">                    locator.getBasePath(), fileName);</span>
+<span class="fc" id="L1185">            url = FileLocatorUtils.obtainFileSystem(locator).getURL(</span>
+<span class="fc" id="L1186">                    locator.getBasePath(), fileName);</span>
         }
-<span class="fc" id="L1187">        catch (final MalformedURLException e)</span>
+<span class="fc" id="L1188">        catch (MalformedURLException e)</span>
         {
-<span class="fc" id="L1189">            throw new ConfigurationException(e);</span>
-<span class="fc" id="L1190">        }</span>
+<span class="fc" id="L1190">            throw new ConfigurationException(e);</span>
+<span class="fc" id="L1191">        }</span>
 
-<span class="fc bfc" id="L1192" title="All 2 branches covered.">        if (url == null)</span>
+<span class="fc bfc" id="L1193" title="All 2 branches covered.">        if (url == null)</span>
         {
-<span class="fc" id="L1194">            throw new ConfigurationException(</span>
+<span class="fc" id="L1195">            throw new ConfigurationException(</span>
                     &quot;Cannot locate configuration source &quot; + fileName);
         }
-<span class="fc" id="L1197">        save(url, locator);</span>
-<span class="fc" id="L1198">    }</span>
+<span class="fc" id="L1198">        save(url, locator);</span>
+<span class="fc" id="L1199">    }</span>
 
     /**
      * Internal helper method for saving data to the given URL.
@@ -1205,30 +1206,30 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    private void save(final URL url, final FileLocator locator) throws ConfigurationException
+    private void save(URL url, FileLocator locator) throws ConfigurationException
     {
-<span class="fc" id="L1210">        OutputStream out = null;</span>
+<span class="fc" id="L1211">        OutputStream out = null;</span>
         try
         {
-<span class="fc" id="L1213">            out = FileLocatorUtils.obtainFileSystem(locator).getOutputStream(url);</span>
-<span class="fc" id="L1214">            saveToStream(out, locator.getEncoding(), url);</span>
-<span class="fc bfc" id="L1215" title="All 2 branches covered.">            if (out instanceof VerifiableOutputStream)</span>
+<span class="fc" id="L1214">            out = FileLocatorUtils.obtainFileSystem(locator).getOutputStream(url);</span>
+<span class="fc" id="L1215">            saveToStream(out, locator.getEncoding(), url);</span>
+<span class="fc bfc" id="L1216" title="All 2 branches covered.">            if (out instanceof VerifiableOutputStream)</span>
             {
                 try
                 {
-<span class="fc" id="L1219">                    ((VerifiableOutputStream) out).verify();</span>
+<span class="fc" id="L1220">                    ((VerifiableOutputStream) out).verify();</span>
                 }
-<span class="fc" id="L1221">                catch (final IOException e)</span>
+<span class="fc" id="L1222">                catch (IOException e)</span>
                 {
-<span class="fc" id="L1223">                    throw new ConfigurationException(e);</span>
-<span class="fc" id="L1224">                }</span>
+<span class="fc" id="L1224">                    throw new ConfigurationException(e);</span>
+<span class="fc" id="L1225">                }</span>
             }
         }
         finally
         {
-<span class="fc" id="L1229">            closeSilent(out);</span>
+<span class="fc" id="L1230">            closeSilent(out);</span>
         }
-<span class="fc" id="L1231">    }</span>
+<span class="fc" id="L1232">    }</span>
 
     /**
      * Internal helper method for saving data to the given {@code File}.
@@ -1238,24 +1239,24 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    private void save(final File file, final FileLocator locator) throws ConfigurationException
+    private void save(File file, FileLocator locator) throws ConfigurationException
     {
-<span class="fc" id="L1243">        OutputStream out = null;</span>
+<span class="fc" id="L1244">        OutputStream out = null;</span>
 
         try
         {
-<span class="fc" id="L1247">            out = FileLocatorUtils.obtainFileSystem(locator).getOutputStream(file);</span>
-<span class="fc" id="L1248">            saveToStream(out, locator.getEncoding(), file.toURI().toURL());</span>
+<span class="fc" id="L1248">            out = FileLocatorUtils.obtainFileSystem(locator).getOutputStream(file);</span>
+<span class="fc" id="L1249">            saveToStream(out, locator.getEncoding(), file.toURI().toURL());</span>
         }
-<span class="nc" id="L1250">        catch (final MalformedURLException muex)</span>
+<span class="nc" id="L1251">        catch (MalformedURLException muex)</span>
         {
-<span class="nc" id="L1252">            throw new ConfigurationException(muex);</span>
+<span class="nc" id="L1253">            throw new ConfigurationException(muex);</span>
         }
         finally
         {
-<span class="fc" id="L1256">            closeSilent(out);</span>
+<span class="fc" id="L1257">            closeSilent(out);</span>
         }
-<span class="fc" id="L1258">    }</span>
+<span class="fc" id="L1259">    }</span>
 
     /**
      * Internal helper method for saving a file to the given output stream.
@@ -1265,11 +1266,11 @@ public class FileHandler
      * @throws ConfigurationException if an error occurs during the save
      *         operation
      */
-    private void save(final OutputStream out, final FileLocator locator)
+    private void save(OutputStream out, FileLocator locator)
             throws ConfigurationException
     {
-<span class="fc" id="L1271">        save(out, locator.getEncoding());</span>
-<span class="fc" id="L1272">    }</span>
+<span class="fc" id="L1272">        save(out, locator.getEncoding());</span>
+<span class="fc" id="L1273">    }</span>
 
     /**
      * Internal helper method for saving a file to the given stream.
@@ -1279,43 +1280,43 @@ public class FileHandler
      * @param url the URL of the output file if known
      * @throws ConfigurationException if an error occurs
      */
-    private void saveToStream(final OutputStream out, final String encoding, final URL url)
+    private void saveToStream(OutputStream out, String encoding, URL url)
             throws ConfigurationException
     {
-<span class="fc" id="L1285">        checkContent();</span>
-<span class="fc" id="L1286">        final SynchronizerSupport syncSupport = fetchSynchronizerSupport();</span>
-<span class="fc" id="L1287">        syncSupport.lock(LockMode.WRITE);</span>
+<span class="fc" id="L1286">        checkContent();</span>
+<span class="fc" id="L1287">        SynchronizerSupport syncSupport = fetchSynchronizerSupport();</span>
+<span class="fc" id="L1288">        syncSupport.lock(LockMode.WRITE);</span>
         try
         {
-<span class="fc" id="L1290">            injectFileLocator(url);</span>
-<span class="fc" id="L1291">            Writer writer = null;</span>
+<span class="fc" id="L1291">            injectFileLocator(url);</span>
+<span class="fc" id="L1292">            Writer writer = null;</span>
 
-<span class="fc bfc" id="L1293" title="All 2 branches covered.">            if (encoding != null)</span>
+<span class="fc bfc" id="L1294" title="All 2 branches covered.">            if (encoding != null)</span>
             {
                 try
                 {
-<span class="fc" id="L1297">                    writer = new OutputStreamWriter(out, encoding);</span>
+<span class="fc" id="L1298">                    writer = new OutputStreamWriter(out, encoding);</span>
                 }
-<span class="nc" id="L1299">                catch (final UnsupportedEncodingException e)</span>
+<span class="nc" id="L1300">                catch (UnsupportedEncodingException e)</span>
                 {
-<span class="nc" id="L1301">                    throw new ConfigurationException(</span>
+<span class="nc" id="L1302">                    throw new ConfigurationException(</span>
                             &quot;The requested encoding is not supported, try the default encoding.&quot;,
                             e);
-<span class="fc" id="L1304">                }</span>
+<span class="fc" id="L1305">                }</span>
             }
 
-<span class="fc bfc" id="L1307" title="All 2 branches covered.">            if (writer == null)</span>
+<span class="fc bfc" id="L1308" title="All 2 branches covered.">            if (writer == null)</span>
             {
-<span class="fc" id="L1309">                writer = new OutputStreamWriter(out);</span>
+<span class="fc" id="L1310">                writer = new OutputStreamWriter(out);</span>
             }
 
-<span class="fc" id="L1312">            saveToWriter(writer);</span>
+<span class="fc" id="L1313">            saveToWriter(writer);</span>
         }
         finally
         {
-<span class="fc" id="L1316">            syncSupport.unlock(LockMode.WRITE);</span>
+<span class="fc" id="L1317">            syncSupport.unlock(LockMode.WRITE);</span>
         }
-<span class="fc" id="L1318">    }</span>
+<span class="fc" id="L1319">    }</span>
 
     /**
      * Internal helper method for saving a file into the given writer.
@@ -1323,22 +1324,22 @@ public class FileHandler
      * @param out the writer
      * @throws ConfigurationException if an error occurs
      */
-    private void saveToWriter(final Writer out) throws ConfigurationException
+    private void saveToWriter(Writer out) throws ConfigurationException
     {
-<span class="fc" id="L1328">        fireSavingEvent();</span>
+<span class="fc" id="L1329">        fireSavingEvent();</span>
         try
         {
-<span class="fc" id="L1331">            getContent().write(out);</span>
+<span class="fc" id="L1332">            getContent().write(out);</span>
         }
-<span class="fc" id="L1333">        catch (final IOException ioex)</span>
+<span class="fc" id="L1334">        catch (IOException ioex)</span>
         {
-<span class="fc" id="L1335">            throw new ConfigurationException(ioex);</span>
+<span class="fc" id="L1336">            throw new ConfigurationException(ioex);</span>
         }
         finally
         {
-<span class="fc" id="L1339">            fireSavedEvent();</span>
+<span class="fc" id="L1340">            fireSavedEvent();</span>
         }
-<span class="fc" id="L1341">    }</span>
+<span class="fc" id="L1342">    }</span>
 
     /**
      * Creates a {@code FileLocator} which is a copy of the passed in one, but
@@ -1348,11 +1349,11 @@ public class FileHandler
      * @param locator the {@code FileLocator} to copy
      * @return the manipulated {@code FileLocator} with the file name
      */
-    private FileLocator createLocatorWithFileName(final String fileName,
-            final FileLocator locator)
+    private FileLocator createLocatorWithFileName(String fileName,
+            FileLocator locator)
     {
-<span class="fc" id="L1354">        return FileLocatorUtils.fileLocator(locator).sourceURL(null)</span>
-<span class="fc" id="L1355">                .fileName(fileName).create();</span>
+<span class="fc" id="L1355">        return FileLocatorUtils.fileLocator(locator).sourceURL(null)</span>
+<span class="fc" id="L1356">                .fileName(fileName).create();</span>
     }
 
     /**
@@ -1363,11 +1364,11 @@ public class FileHandler
      */
     private void checkContent() throws ConfigurationException
     {
-<span class="fc bfc" id="L1366" title="All 2 branches covered.">        if (getContent() == null)</span>
+<span class="fc bfc" id="L1367" title="All 2 branches covered.">        if (getContent() == null)</span>
         {
-<span class="fc" id="L1368">            throw new ConfigurationException(&quot;No content available!&quot;);</span>
+<span class="fc" id="L1369">            throw new ConfigurationException(&quot;No content available!&quot;);</span>
         }
-<span class="fc" id="L1370">    }</span>
+<span class="fc" id="L1371">    }</span>
 
     /**
      * Checks whether a content object is available and returns the current
@@ -1381,8 +1382,8 @@ public class FileHandler
     private FileLocator checkContentAndGetLocator()
             throws ConfigurationException
     {
-<span class="fc" id="L1384">        checkContent();</span>
-<span class="fc" id="L1385">        return getFileLocator();</span>
+<span class="fc" id="L1385">        checkContent();</span>
+<span class="fc" id="L1386">        return getFileLocator();</span>
     }
 
     /**
@@ -1390,55 +1391,55 @@ public class FileHandler
      */
     private void fireLoadingEvent()
     {
-<span class="fc bfc" id="L1393" title="All 2 branches covered.">        for (final FileHandlerListener l : listeners)</span>
+<span class="fc bfc" id="L1394" title="All 2 branches covered.">        for (FileHandlerListener l : listeners)</span>
         {
-<span class="fc" id="L1395">            l.loading(this);</span>
-<span class="fc" id="L1396">        }</span>
-<span class="fc" id="L1397">    }</span>
+<span class="fc" id="L1396">            l.loading(this);</span>
+<span class="fc" id="L1397">        }</span>
+<span class="fc" id="L1398">    }</span>
 
     /**
      * Notifies the registered listeners about a completed load operation.
      */
     private void fireLoadedEvent()
     {
-<span class="fc bfc" id="L1404" title="All 2 branches covered.">        for (final FileHandlerListener l : listeners)</span>
+<span class="fc bfc" id="L1405" title="All 2 branches covered.">        for (FileHandlerListener l : listeners)</span>
         {
-<span class="fc" id="L1406">            l.loaded(this);</span>
-<span class="fc" id="L1407">        }</span>
-<span class="fc" id="L1408">    }</span>
+<span class="fc" id="L1407">            l.loaded(this);</span>
+<span class="fc" id="L1408">        }</span>
+<span class="fc" id="L1409">    }</span>
 
     /**
      * Notifies the registered listeners about the start of a save operation.
      */
     private void fireSavingEvent()
     {
-<span class="fc bfc" id="L1415" title="All 2 branches covered.">        for (final FileHandlerListener l : listeners)</span>
+<span class="fc bfc" id="L1416" title="All 2 branches covered.">        for (FileHandlerListener l : listeners)</span>
         {
-<span class="fc" id="L1417">            l.saving(this);</span>
-<span class="fc" id="L1418">        }</span>
-<span class="fc" id="L1419">    }</span>
+<span class="fc" id="L1418">            l.saving(this);</span>
+<span class="fc" id="L1419">        }</span>
+<span class="fc" id="L1420">    }</span>
 
     /**
      * Notifies the registered listeners about a completed save operation.
      */
     private void fireSavedEvent()
     {
-<span class="fc bfc" id="L1426" title="All 2 branches covered.">        for (final FileHandlerListener l : listeners)</span>
+<span class="fc bfc" id="L1427" title="All 2 branches covered.">        for (FileHandlerListener l : listeners)</span>
         {
-<span class="fc" id="L1428">            l.saved(this);</span>
-<span class="fc" id="L1429">        }</span>
-<span class="fc" id="L1430">    }</span>
+<span class="fc" id="L1429">            l.saved(this);</span>
+<span class="fc" id="L1430">        }</span>
+<span class="fc" id="L1431">    }</span>
 
     /**
      * Notifies the registered listeners about a property update.
      */
     private void fireLocationChangedEvent()
     {
-<span class="fc bfc" id="L1437" title="All 2 branches covered.">        for (final FileHandlerListener l : listeners)</span>
+<span class="fc bfc" id="L1438" title="All 2 branches covered.">        for (FileHandlerListener l : listeners)</span>
         {
-<span class="fc" id="L1439">            l.locationChanged(this);</span>
-<span class="fc" id="L1440">        }</span>
-<span class="fc" id="L1441">    }</span>
+<span class="fc" id="L1440">            l.locationChanged(this);</span>
+<span class="fc" id="L1441">        }</span>
+<span class="fc" id="L1442">    }</span>
 
     /**
      * Normalizes URLs to files. Ensures that file URLs start with the correct
@@ -1449,14 +1450,14 @@ public class FileHandler
      */
     private static String normalizeFileURL(String fileName)
     {
-<span class="fc bfc" id="L1452" title="All 4 branches covered.">        if (fileName != null &amp;&amp; fileName.startsWith(FILE_SCHEME)</span>
-<span class="fc bfc" id="L1453" title="All 2 branches covered.">                &amp;&amp; !fileName.startsWith(FILE_SCHEME_SLASH))</span>
+<span class="fc bfc" id="L1453" title="All 4 branches covered.">        if (fileName != null &amp;&amp; fileName.startsWith(FILE_SCHEME)</span>
+<span class="fc bfc" id="L1454" title="All 2 branches covered.">                &amp;&amp; !fileName.startsWith(FILE_SCHEME_SLASH))</span>
         {
-<span class="fc" id="L1455">            fileName =</span>
+<span class="fc" id="L1456">            fileName =</span>
                     FILE_SCHEME_SLASH
-<span class="fc" id="L1457">                            + fileName.substring(FILE_SCHEME.length());</span>
+<span class="fc" id="L1458">                            + fileName.substring(FILE_SCHEME.length());</span>
         }
-<span class="fc" id="L1459">        return fileName;</span>
+<span class="fc" id="L1460">        return fileName;</span>
     }
 
     /**
@@ -1465,20 +1466,20 @@ public class FileHandler
      *
      * @param cl the stream to be closed (may be &lt;b&gt;null&lt;/b&gt;)
      */
-    private static void closeSilent(final Closeable cl)
+    private static void closeSilent(Closeable cl)
     {
         try
         {
-<span class="fc bfc" id="L1472" title="All 2 branches covered.">            if (cl != null)</span>
+<span class="fc bfc" id="L1473" title="All 2 branches covered.">            if (cl != null)</span>
             {
-<span class="fc" id="L1474">                cl.close();</span>
+<span class="fc" id="L1475">                cl.close();</span>
             }
         }
-<span class="nc" id="L1477">        catch (final IOException e)</span>
+<span class="nc" id="L1478">        catch (IOException e)</span>
         {
-<span class="nc" id="L1479">            LogFactory.getLog(FileHandler.class).warn(&quot;Exception when closing &quot; + cl, e);</span>
-<span class="fc" id="L1480">        }</span>
-<span class="fc" id="L1481">    }</span>
+<span class="nc" id="L1480">            LogFactory.getLog(FileHandler.class).warn(&quot;Exception when closing &quot; + cl, e);</span>
+<span class="fc" id="L1481">        }</span>
+<span class="fc" id="L1482">    }</span>
 
     /**
      * Creates a {@code File} object from the content of the given
@@ -1488,20 +1489,20 @@ public class FileHandler
      * @param loc the {@code FileLocator}
      * @return a {@code File} object pointing to the associated file
      */
-    private static File createFile(final FileLocator loc)
+    private static File createFile(FileLocator loc)
     {
-<span class="pc bpc" id="L1493" title="1 of 4 branches missed.">        if (loc.getFileName() == null &amp;&amp; loc.getSourceURL() == null)</span>
+<span class="pc bpc" id="L1494" title="1 of 4 branches missed.">        if (loc.getFileName() == null &amp;&amp; loc.getSourceURL() == null)</span>
         {
-<span class="fc" id="L1495">            return null;</span>
+<span class="fc" id="L1496">            return null;</span>
         }
-<span class="pc bpc" id="L1497" title="1 of 2 branches missed.">        else if (loc.getSourceURL() != null)</span>
+<span class="pc bpc" id="L1498" title="1 of 2 branches missed.">        else if (loc.getSourceURL() != null)</span>
         {
-<span class="nc" id="L1499">            return FileLocatorUtils.fileFromURL(loc.getSourceURL());</span>
+<span class="nc" id="L1500">            return FileLocatorUtils.fileFromURL(loc.getSourceURL());</span>
         }
         else
         {
-<span class="fc" id="L1503">            return FileLocatorUtils.getFile(loc.getBasePath(),</span>
-<span class="fc" id="L1504">                    loc.getFileName());</span>
+<span class="fc" id="L1504">            return FileLocatorUtils.getFile(loc.getBasePath(),</span>
+<span class="fc" id="L1505">                    loc.getFileName());</span>
         }
     }
 
@@ -1512,7 +1513,7 @@ public class FileHandler
      */
     private static FileLocator emptyFileLocator()
     {
-<span class="fc" id="L1515">        return FileLocatorUtils.fileLocator().create();</span>
+<span class="fc" id="L1516">        return FileLocatorUtils.fileLocator().create();</span>
     }
 
     /**
@@ -1522,14 +1523,14 @@ public class FileHandler
      * @param c the {@code FileHandler} from which to copy the location
      * @return the same {@code FileHandler}
      */
-    private static FileHandler checkSourceHandler(final FileHandler c)
+    private static FileHandler checkSourceHandler(FileHandler c)
     {
-<span class="fc bfc" id="L1527" title="All 2 branches covered.">        if (c == null)</span>
+<span class="fc bfc" id="L1528" title="All 2 branches covered.">        if (c == null)</span>
         {
-<span class="fc" id="L1529">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L1530">            throw new IllegalArgumentException(</span>
                     &quot;FileHandler to assign must not be null!&quot;);
         }
-<span class="fc" id="L1532">        return c;</span>
+<span class="fc" id="L1533">        return c;</span>
     }
 
     /**
@@ -1540,7 +1541,7 @@ public class FileHandler
      * manipulated instance. (If we already had lambdas, this could be done
      * without a class in a more elegant way.)
      */
-<span class="fc" id="L1543">    private abstract class Updater</span>
+<span class="fc" id="L1544">    private abstract class Updater</span>
     {
         /**
          * Performs an update of the enclosing file handler's
@@ -1551,14 +1552,14 @@ public class FileHandler
             boolean done;
             do
             {
-<span class="fc" id="L1554">                final FileLocator oldLocator = fileLocator.get();</span>
-<span class="fc" id="L1555">                final FileLocatorBuilder builder =</span>
-<span class="fc" id="L1556">                        FileLocatorUtils.fileLocator(oldLocator);</span>
-<span class="fc" id="L1557">                updateBuilder(builder);</span>
-<span class="fc" id="L1558">                done = fileLocator.compareAndSet(oldLocator, builder.create());</span>
-<span class="pc bpc" id="L1559" title="1 of 2 branches missed.">            } while (!done);</span>
-<span class="fc" id="L1560">            fireLocationChangedEvent();</span>
-<span class="fc" id="L1561">        }</span>
+<span class="fc" id="L1555">                FileLocator oldLocator = fileLocator.get();</span>
+<span class="fc" id="L1556">                FileLocatorBuilder builder =</span>
+<span class="fc" id="L1557">                        FileLocatorUtils.fileLocator(oldLocator);</span>
+<span class="fc" id="L1558">                updateBuilder(builder);</span>
+<span class="fc" id="L1559">                done = fileLocator.compareAndSet(oldLocator, builder.create());</span>
+<span class="fc bfc" id="L1560" title="All 2 branches covered.">            } while (!done);</span>
+<span class="fc" id="L1561">            fireLocationChangedEvent();</span>
+<span class="fc" id="L1562">        }</span>
 
         /**
          * Updates the passed in builder object to apply the manipulation to be

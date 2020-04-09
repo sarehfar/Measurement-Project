@@ -18,14 +18,11 @@
 package org.apache.commons.configuration2;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
 import org.apache.commons.configuration2.io.InputStreamSupport;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,8 +46,8 @@ public class YAMLConfiguration extends AbstractYAMLBasedConfiguration
      */
     public YAMLConfiguration()
     {
-<span class="fc" id="L52">        super();</span>
-<span class="fc" id="L53">    }</span>
+<span class="fc" id="L49">        super();</span>
+<span class="fc" id="L50">    }</span>
 
     /**
      * Creates a new instance of {@code YAMLConfiguration} as a copy of the
@@ -60,54 +57,54 @@ public class YAMLConfiguration extends AbstractYAMLBasedConfiguration
      */
     public YAMLConfiguration(final HierarchicalConfiguration&lt;ImmutableNode&gt; c)
     {
-<span class="fc" id="L63">        super(c);</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L60">        super(c);</span>
+<span class="fc" id="L61">    }</span>
 
     @Override
     public void read(final Reader in) throws ConfigurationException
     {
         try
         {
-<span class="fc" id="L71">            final Yaml yaml = createYamlForReading(new LoaderOptions());</span>
-<span class="fc" id="L72">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
-<span class="fc" id="L73">            load(map);</span>
+<span class="fc" id="L68">            final Yaml yaml = new Yaml();</span>
+<span class="fc" id="L69">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
+<span class="fc" id="L70">            load(map);</span>
         }
-<span class="fc" id="L75">        catch (final Exception e)</span>
+<span class="nc" id="L72">        catch (final Exception e)</span>
         {
-<span class="nc" id="L77">            rethrowException(e);</span>
-<span class="fc" id="L78">        }</span>
-<span class="fc" id="L79">    }</span>
+<span class="nc" id="L74">            rethrowException(e);</span>
+<span class="fc" id="L75">        }</span>
+<span class="fc" id="L76">    }</span>
 
     public void read(final Reader in, final LoaderOptions options)
             throws ConfigurationException
     {
         try
         {
-<span class="nc" id="L86">            final Yaml yaml = createYamlForReading(options);</span>
-<span class="nc" id="L87">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
-<span class="nc" id="L88">            load(map);</span>
+<span class="nc" id="L83">            final Yaml yaml = new Yaml(options);</span>
+<span class="nc" id="L84">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
+<span class="nc" id="L85">            load(map);</span>
         }
-<span class="nc" id="L90">        catch (final Exception e)</span>
+<span class="nc" id="L87">        catch (final Exception e)</span>
         {
-<span class="nc" id="L92">            rethrowException(e);</span>
-<span class="nc" id="L93">        }</span>
-<span class="nc" id="L94">    }</span>
+<span class="nc" id="L89">            rethrowException(e);</span>
+<span class="nc" id="L90">        }</span>
+<span class="nc" id="L91">    }</span>
 
     @Override
     public void write(final Writer out) throws ConfigurationException, IOException
     {
-<span class="fc" id="L99">        final DumperOptions options = new DumperOptions();</span>
-<span class="fc" id="L100">        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);</span>
-<span class="fc" id="L101">        dump(out, options);</span>
-<span class="fc" id="L102">    }</span>
+<span class="fc" id="L96">        final DumperOptions options = new DumperOptions();</span>
+<span class="fc" id="L97">        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);</span>
+<span class="fc" id="L98">        dump(out, options);</span>
+<span class="fc" id="L99">    }</span>
 
     public void dump(final Writer out, final DumperOptions options)
             throws ConfigurationException, IOException
     {
-<span class="fc" id="L107">        final Yaml yaml = new Yaml(options);</span>
-<span class="fc" id="L108">        yaml.dump(constructMap(getNodeModel().getNodeHandler().getRootNode()),</span>
+<span class="fc" id="L104">        final Yaml yaml = new Yaml(options);</span>
+<span class="fc" id="L105">        yaml.dump(constructMap(getNodeModel().getNodeHandler().getRootNode()),</span>
                 out);
-<span class="fc" id="L110">    }</span>
+<span class="fc" id="L107">    }</span>
 
     /**
      * Loads the configuration from the given input stream.
@@ -120,60 +117,30 @@ public class YAMLConfiguration extends AbstractYAMLBasedConfiguration
     {
         try
         {
-<span class="fc" id="L123">            final Yaml yaml = createYamlForReading(new LoaderOptions());</span>
-<span class="nc" id="L124">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
-<span class="nc" id="L125">            load(map);</span>
+<span class="nc" id="L120">            final Yaml yaml = new Yaml();</span>
+<span class="nc" id="L121">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
+<span class="nc" id="L122">            load(map);</span>
         }
-<span class="fc" id="L127">        catch (final Exception e)</span>
+<span class="nc" id="L124">        catch (final Exception e)</span>
         {
-<span class="nc" id="L129">            rethrowException(e);</span>
-<span class="nc" id="L130">        }</span>
-<span class="nc" id="L131">    }</span>
+<span class="nc" id="L126">            rethrowException(e);</span>
+<span class="nc" id="L127">        }</span>
+<span class="nc" id="L128">    }</span>
 
     public void read(final InputStream in, final LoaderOptions options)
             throws ConfigurationException
     {
         try
         {
-<span class="nc" id="L138">            final Yaml yaml = createYamlForReading(options);</span>
-<span class="nc" id="L139">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
-<span class="nc" id="L140">            load(map);</span>
+<span class="nc" id="L135">            final Yaml yaml = new Yaml(options);</span>
+<span class="nc" id="L136">            final Map&lt;String, Object&gt; map = (Map) yaml.load(in);</span>
+<span class="nc" id="L137">            load(map);</span>
         }
-<span class="nc" id="L142">        catch (final Exception e)</span>
+<span class="nc" id="L139">        catch (final Exception e)</span>
         {
-<span class="nc" id="L144">            rethrowException(e);</span>
-<span class="nc" id="L145">        }</span>
-<span class="nc" id="L146">    }</span>
+<span class="nc" id="L141">            rethrowException(e);</span>
+<span class="nc" id="L142">        }</span>
+<span class="nc" id="L143">    }</span>
 
-    /**
-     * Creates a {@code Yaml} object for reading a Yaml file. The object is
-     * configured with some default settings.
-     *
-     * @param options options for loading the file
-     * @return the {@code Yaml} instance for loading a file
-     */
-    private static Yaml createYamlForReading(LoaderOptions options)
-    {
-<span class="fc" id="L157">        return new Yaml(createClassLoadingDisablingConstructor(), new Representer(), new DumperOptions(), options);</span>
-    }
-
-    /**
-     * Returns a {@code Constructor} object for the YAML parser that prevents
-     * all classes from being loaded. This effectively disables the dynamic
-     * creation of Java objects that are declared in YAML files to be loaded.
-     *
-     * @return the {@code Constructor} preventing object creation
-     */
-    private static Constructor createClassLoadingDisablingConstructor()
-    {
-<span class="fc" id="L169">        return new Constructor()</span>
-<span class="fc" id="L170">        {</span>
-            @Override
-            protected Class&lt;?&gt; getClassForName(String name)
-            {
-<span class="fc" id="L174">                throw new ConfigurationRuntimeException(&quot;Class instantiation is disabled.&quot;);</span>
-            }
-        };
-    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

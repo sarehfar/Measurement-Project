@@ -48,6 +48,7 @@ import org.apache.commons.logging.impl.NoOpLog;
  * uses a completely different logging framework.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class ConfigurationLogger
@@ -62,10 +63,10 @@ public class ConfigurationLogger
      * @param loggerName the logger name (must not be &lt;b&gt;null&lt;/b&gt;)
      * @throws IllegalArgumentException if the logger name is &lt;b&gt;null&lt;/b&gt;
      */
-    public ConfigurationLogger(final String loggerName)
+    public ConfigurationLogger(String loggerName)
     {
-<span class="fc" id="L67">        this(createLoggerForName(loggerName));</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L68">        this(createLoggerForName(loggerName));</span>
+<span class="fc" id="L69">    }</span>
 
     /**
      * Creates a new instance of {@code ConfigurationLogger} that uses a logger
@@ -75,10 +76,10 @@ public class ConfigurationLogger
      *        &lt;b&gt;null&lt;/b&gt;)
      * @throws IllegalArgumentException if the logger class is &lt;b&gt;null&lt;/b&gt;
      */
-    public ConfigurationLogger(final Class&lt;?&gt; logCls)
+    public ConfigurationLogger(Class&lt;?&gt; logCls)
     {
-<span class="fc" id="L80">        this(createLoggerForClass(logCls));</span>
-<span class="fc" id="L81">    }</span>
+<span class="fc" id="L81">        this(createLoggerForClass(logCls));</span>
+<span class="fc" id="L82">    }</span>
 
     /**
      * Creates a new, uninitialized instance of {@code ConfigurationLogger}.
@@ -89,8 +90,8 @@ public class ConfigurationLogger
      */
     protected ConfigurationLogger()
     {
-<span class="fc" id="L92">        this((Log) null);</span>
-<span class="fc" id="L93">    }</span>
+<span class="fc" id="L93">        this((Log) null);</span>
+<span class="fc" id="L94">    }</span>
 
     /**
      * Creates a new instance of {@code ConfigurationLogger} which wraps the
@@ -98,10 +99,10 @@ public class ConfigurationLogger
      *
      * @param wrapped the logger to be wrapped
      */
-    ConfigurationLogger(final Log wrapped)
-<span class="fc" id="L102">    {</span>
-<span class="fc" id="L103">        log = wrapped;</span>
-<span class="fc" id="L104">    }</span>
+    ConfigurationLogger(Log wrapped)
+<span class="fc" id="L103">    {</span>
+<span class="fc" id="L104">        log = wrapped;</span>
+<span class="fc" id="L105">    }</span>
 
     /**
      * Creates a new dummy logger which produces no output. If such a logger is
@@ -111,7 +112,7 @@ public class ConfigurationLogger
      */
     public static ConfigurationLogger newDummyLogger()
     {
-<span class="fc" id="L114">        return new ConfigurationLogger(new NoOpLog());</span>
+<span class="fc" id="L115">        return new ConfigurationLogger(new NoOpLog());</span>
     }
 
     /**
@@ -121,7 +122,7 @@ public class ConfigurationLogger
      */
     public boolean isDebugEnabled()
     {
-<span class="fc" id="L124">        return getLog().isDebugEnabled();</span>
+<span class="fc" id="L125">        return getLog().isDebugEnabled();</span>
     }
 
     /**
@@ -129,10 +130,10 @@ public class ConfigurationLogger
      *
      * @param msg the message to be logged
      */
-    public void debug(final String msg)
+    public void debug(String msg)
     {
-<span class="fc" id="L134">        getLog().debug(msg);</span>
-<span class="fc" id="L135">    }</span>
+<span class="fc" id="L135">        getLog().debug(msg);</span>
+<span class="fc" id="L136">    }</span>
 
     /**
      * Returns a flag whether logging on info level is enabled.
@@ -141,7 +142,7 @@ public class ConfigurationLogger
      */
     public boolean isInfoEnabled()
     {
-<span class="fc" id="L144">        return getLog().isInfoEnabled();</span>
+<span class="fc" id="L145">        return getLog().isInfoEnabled();</span>
     }
 
     /**
@@ -149,20 +150,20 @@ public class ConfigurationLogger
      *
      * @param msg the message to be logged
      */
-    public void info(final String msg)
+    public void info(String msg)
     {
-<span class="fc" id="L154">        getLog().info(msg);</span>
-<span class="fc" id="L155">    }</span>
+<span class="fc" id="L155">        getLog().info(msg);</span>
+<span class="fc" id="L156">    }</span>
 
     /**
      * Logs the specified message on warn level.
      *
      * @param msg the message to be logged
      */
-    public void warn(final String msg)
+    public void warn(String msg)
     {
-<span class="fc" id="L164">        getLog().warn(msg);</span>
-<span class="fc" id="L165">    }</span>
+<span class="fc" id="L165">        getLog().warn(msg);</span>
+<span class="fc" id="L166">    }</span>
 
     /**
      * Logs the specified exception on warn level.
@@ -170,20 +171,20 @@ public class ConfigurationLogger
      * @param msg the message to be logged
      * @param ex the exception to be logged
      */
-    public void warn(final String msg, final Throwable ex)
+    public void warn(String msg, Throwable ex)
     {
-<span class="fc" id="L175">        getLog().warn(msg, ex);</span>
-<span class="fc" id="L176">    }</span>
+<span class="fc" id="L176">        getLog().warn(msg, ex);</span>
+<span class="fc" id="L177">    }</span>
 
     /**
      * Logs the specified message on error level.
      *
      * @param msg the message to be logged
      */
-    public void error(final String msg)
+    public void error(String msg)
     {
-<span class="fc" id="L185">        getLog().error(msg);</span>
-<span class="fc" id="L186">    }</span>
+<span class="fc" id="L186">        getLog().error(msg);</span>
+<span class="fc" id="L187">    }</span>
 
     /**
      * Logs the specified exception on error level.
@@ -191,10 +192,10 @@ public class ConfigurationLogger
      * @param msg the message to be logged
      * @param ex the exception to be logged
      */
-    public void error(final String msg, final Throwable ex)
+    public void error(String msg, Throwable ex)
     {
-<span class="fc" id="L196">        getLog().error(msg, ex);</span>
-<span class="fc" id="L197">    }</span>
+<span class="fc" id="L197">        getLog().error(msg, ex);</span>
+<span class="fc" id="L198">    }</span>
 
     /**
      * Returns the internal logger.
@@ -203,7 +204,7 @@ public class ConfigurationLogger
      */
     Log getLog()
     {
-<span class="fc" id="L206">        return log;</span>
+<span class="fc" id="L207">        return log;</span>
     }
 
     /**
@@ -214,13 +215,13 @@ public class ConfigurationLogger
      * @return the logger object
      * @throws IllegalArgumentException if the logger name is undefined
      */
-    private static Log createLoggerForName(final String name)
+    private static Log createLoggerForName(String name)
     {
-<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (name == null)</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        if (name == null)</span>
         {
-<span class="fc" id="L221">            throw new IllegalArgumentException(&quot;Logger name must not be null!&quot;);</span>
+<span class="fc" id="L222">            throw new IllegalArgumentException(&quot;Logger name must not be null!&quot;);</span>
         }
-<span class="fc" id="L223">        return LogFactory.getLog(name);</span>
+<span class="fc" id="L224">        return LogFactory.getLog(name);</span>
     }
 
     /**
@@ -231,14 +232,14 @@ public class ConfigurationLogger
      * @return the logger object
      * @throws IllegalArgumentException if the logger class is undefined
      */
-    private static Log createLoggerForClass(final Class&lt;?&gt; cls)
+    private static Log createLoggerForClass(Class&lt;?&gt; cls)
     {
-<span class="fc bfc" id="L236" title="All 2 branches covered.">        if (cls == null)</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">        if (cls == null)</span>
         {
-<span class="fc" id="L238">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L239">            throw new IllegalArgumentException(</span>
                     &quot;Logger class must not be null!&quot;);
         }
-<span class="fc" id="L241">        return LogFactory.getLog(cls);</span>
+<span class="fc" id="L242">        return LogFactory.getLog(cls);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

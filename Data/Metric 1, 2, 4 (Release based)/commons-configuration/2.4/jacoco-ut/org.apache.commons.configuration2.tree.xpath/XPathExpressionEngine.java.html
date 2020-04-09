@@ -36,7 +36,7 @@ import org.apache.commons.lang3.StringUtils;
  * is able to evaluate XPATH expressions.
  * &lt;/p&gt;
  * &lt;p&gt;
- * This class makes use of &lt;a href=&quot;https://commons.apache.org/jxpath/&quot;&gt; Commons
+ * This class makes use of &lt;a href=&quot;http://commons.apache.org/jxpath/&quot;&gt; Commons
  * JXPath&lt;/a&gt; for handling XPath expressions and mapping them to the nodes of a
  * hierarchical configuration. This makes the rich and powerful XPATH syntax
  * available for accessing properties from a configuration object.
@@ -135,6 +135,7 @@ import org.apache.commons.lang3.StringUtils;
  * &lt;/p&gt;
  *
  * @since 1.3
+ * @version $Id$
  */
 public class XPathExpressionEngine implements ExpressionEngine
 {
@@ -172,8 +173,8 @@ public class XPathExpressionEngine implements ExpressionEngine
      */
     public XPathExpressionEngine()
     {
-<span class="fc" id="L175">        this(new XPathContextFactory());</span>
-<span class="fc" id="L176">    }</span>
+<span class="fc" id="L176">        this(new XPathContextFactory());</span>
+<span class="fc" id="L177">    }</span>
 
     /**
      * Creates a new instance of {@code XPathExpressionEngine} and sets the
@@ -182,9 +183,9 @@ public class XPathExpressionEngine implements ExpressionEngine
      * @param factory the {@code XPathContextFactory}
      */
     XPathExpressionEngine(final XPathContextFactory factory)
-<span class="fc" id="L185">    {</span>
-<span class="fc" id="L186">        contextFactory = factory;</span>
-<span class="fc" id="L187">    }</span>
+<span class="fc" id="L186">    {</span>
+<span class="fc" id="L187">        contextFactory = factory;</span>
+<span class="fc" id="L188">    }</span>
 
     /**
      * {@inheritDoc} This implementation interprets the passed in key as an XPATH
@@ -194,18 +195,18 @@ public class XPathExpressionEngine implements ExpressionEngine
     public &lt;T&gt; List&lt;QueryResult&lt;T&gt;&gt; query(final T root, final String key,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L197" title="All 2 branches covered.">        if (StringUtils.isEmpty(key))</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        if (StringUtils.isEmpty(key))</span>
         {
-<span class="fc" id="L199">            final QueryResult&lt;T&gt; result = createResult(root);</span>
-<span class="fc" id="L200">            return Collections.singletonList(result);</span>
+<span class="fc" id="L200">            final QueryResult&lt;T&gt; result = createResult(root);</span>
+<span class="fc" id="L201">            return Collections.singletonList(result);</span>
         }
-<span class="fc" id="L202">        final JXPathContext context = createContext(root, handler);</span>
-<span class="fc" id="L203">        List&lt;?&gt; results = context.selectNodes(key);</span>
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (results == null)</span>
+<span class="fc" id="L203">        final JXPathContext context = createContext(root, handler);</span>
+<span class="fc" id="L204">        List&lt;?&gt; results = context.selectNodes(key);</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        if (results == null)</span>
         {
-<span class="nc" id="L206">            results = Collections.emptyList();</span>
+<span class="nc" id="L207">            results = Collections.emptyList();</span>
         }
-<span class="fc" id="L208">        return convertResults(results);</span>
+<span class="fc" id="L209">        return convertResults(results);</span>
     }
 
     /**
@@ -220,46 +221,46 @@ public class XPathExpressionEngine implements ExpressionEngine
     @Override
     public &lt;T&gt; String nodeKey(final T node, final String parentKey, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L223" title="All 2 branches covered.">        if (parentKey == null)</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        if (parentKey == null)</span>
         {
             // name of the root node
-<span class="fc" id="L226">            return StringUtils.EMPTY;</span>
+<span class="fc" id="L227">            return StringUtils.EMPTY;</span>
         }
-<span class="fc bfc" id="L228" title="All 2 branches covered.">        else if (handler.nodeName(node) == null)</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">        else if (handler.nodeName(node) == null)</span>
         {
             // paranoia check for undefined node names
-<span class="fc" id="L231">            return parentKey;</span>
+<span class="fc" id="L232">            return parentKey;</span>
         }
 
         else
         {
-<span class="fc" id="L236">            final StringBuilder buf =</span>
-<span class="fc" id="L237">                    new StringBuilder(parentKey.length()</span>
-<span class="fc" id="L238">                            + handler.nodeName(node).length()</span>
-<span class="fc" id="L239">                            + PATH_DELIMITER.length());</span>
-<span class="fc bfc" id="L240" title="All 2 branches covered.">            if (parentKey.length() &gt; 0)</span>
+<span class="fc" id="L237">            final StringBuilder buf =</span>
+<span class="fc" id="L238">                    new StringBuilder(parentKey.length()</span>
+<span class="fc" id="L239">                            + handler.nodeName(node).length()</span>
+<span class="fc" id="L240">                            + PATH_DELIMITER.length());</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">            if (parentKey.length() &gt; 0)</span>
             {
-<span class="fc" id="L242">                buf.append(parentKey);</span>
-<span class="fc" id="L243">                buf.append(PATH_DELIMITER);</span>
+<span class="fc" id="L243">                buf.append(parentKey);</span>
+<span class="fc" id="L244">                buf.append(PATH_DELIMITER);</span>
             }
-<span class="fc" id="L245">            buf.append(handler.nodeName(node));</span>
-<span class="fc" id="L246">            return buf.toString();</span>
+<span class="fc" id="L246">            buf.append(handler.nodeName(node));</span>
+<span class="fc" id="L247">            return buf.toString();</span>
         }
     }
 
     @Override
     public String attributeKey(final String parentKey, final String attributeName)
     {
-<span class="fc" id="L253">        final StringBuilder buf =</span>
-<span class="fc" id="L254">                new StringBuilder(StringUtils.length(parentKey)</span>
-<span class="fc" id="L255">                        + StringUtils.length(attributeName)</span>
-<span class="fc" id="L256">                        + PATH_DELIMITER.length() + ATTR_DELIMITER.length());</span>
-<span class="fc bfc" id="L257" title="All 2 branches covered.">        if (StringUtils.isNotEmpty(parentKey))</span>
+<span class="fc" id="L254">        final StringBuilder buf =</span>
+<span class="fc" id="L255">                new StringBuilder(StringUtils.length(parentKey)</span>
+<span class="fc" id="L256">                        + StringUtils.length(attributeName)</span>
+<span class="fc" id="L257">                        + PATH_DELIMITER.length() + ATTR_DELIMITER.length());</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">        if (StringUtils.isNotEmpty(parentKey))</span>
         {
-<span class="fc" id="L259">            buf.append(parentKey).append(PATH_DELIMITER);</span>
+<span class="fc" id="L260">            buf.append(parentKey).append(PATH_DELIMITER);</span>
         }
-<span class="fc" id="L261">        buf.append(ATTR_DELIMITER).append(attributeName);</span>
-<span class="fc" id="L262">        return buf.toString();</span>
+<span class="fc" id="L262">        buf.append(ATTR_DELIMITER).append(attributeName);</span>
+<span class="fc" id="L263">        return buf.toString();</span>
     }
 
     /**
@@ -270,23 +271,23 @@ public class XPathExpressionEngine implements ExpressionEngine
     public &lt;T&gt; String canonicalKey(final T node, final String parentKey,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L273">        final T parent = handler.getParent(node);</span>
-<span class="fc bfc" id="L274" title="All 2 branches covered.">        if (parent == null)</span>
+<span class="fc" id="L274">        final T parent = handler.getParent(node);</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (parent == null)</span>
         {
             // this is the root node
-<span class="fc" id="L277">            return StringUtils.defaultString(parentKey);</span>
+<span class="fc" id="L278">            return StringUtils.defaultString(parentKey);</span>
         }
 
-<span class="fc" id="L280">        final StringBuilder buf = new StringBuilder(BUF_SIZE);</span>
-<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (StringUtils.isNotEmpty(parentKey))</span>
+<span class="fc" id="L281">        final StringBuilder buf = new StringBuilder(BUF_SIZE);</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        if (StringUtils.isNotEmpty(parentKey))</span>
         {
-<span class="fc" id="L283">            buf.append(parentKey).append(PATH_DELIMITER);</span>
+<span class="fc" id="L284">            buf.append(parentKey).append(PATH_DELIMITER);</span>
         }
-<span class="fc" id="L285">        buf.append(handler.nodeName(node));</span>
-<span class="fc" id="L286">        buf.append(START_INDEX);</span>
-<span class="fc" id="L287">        buf.append(determineIndex(parent, node, handler));</span>
-<span class="fc" id="L288">        buf.append(END_INDEX);</span>
-<span class="fc" id="L289">        return buf.toString();</span>
+<span class="fc" id="L286">        buf.append(handler.nodeName(node));</span>
+<span class="fc" id="L287">        buf.append(START_INDEX);</span>
+<span class="fc" id="L288">        buf.append(determineIndex(parent, node, handler));</span>
+<span class="fc" id="L289">        buf.append(END_INDEX);</span>
+<span class="fc" id="L290">        return buf.toString();</span>
     }
 
     /**
@@ -297,33 +298,33 @@ public class XPathExpressionEngine implements ExpressionEngine
     public &lt;T&gt; NodeAddData&lt;T&gt; prepareAdd(final T root, final String key,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L300" title="All 2 branches covered.">        if (key == null)</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">        if (key == null)</span>
         {
-<span class="fc" id="L302">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L303">            throw new IllegalArgumentException(</span>
                     &quot;prepareAdd: key must not be null!&quot;);
         }
 
-<span class="fc" id="L306">        String addKey = key;</span>
-<span class="fc" id="L307">        int index = findKeySeparator(addKey);</span>
-<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (index &lt; 0)</span>
+<span class="fc" id="L307">        String addKey = key;</span>
+<span class="fc" id="L308">        int index = findKeySeparator(addKey);</span>
+<span class="fc bfc" id="L309" title="All 2 branches covered.">        if (index &lt; 0)</span>
         {
-<span class="fc" id="L310">            addKey = generateKeyForAdd(root, addKey, handler);</span>
-<span class="fc" id="L311">            index = findKeySeparator(addKey);</span>
+<span class="fc" id="L311">            addKey = generateKeyForAdd(root, addKey, handler);</span>
+<span class="fc" id="L312">            index = findKeySeparator(addKey);</span>
         }
-<span class="fc bfc" id="L313" title="All 2 branches covered.">        else if (index &gt;= addKey.length() - 1)</span>
+<span class="fc bfc" id="L314" title="All 2 branches covered.">        else if (index &gt;= addKey.length() - 1)</span>
         {
-<span class="nc" id="L315">            invalidPath(addKey, &quot; new node path must not be empty.&quot;);</span>
+<span class="nc" id="L316">            invalidPath(addKey, &quot; new node path must not be empty.&quot;);</span>
         }
 
-<span class="fc" id="L318">        final List&lt;QueryResult&lt;T&gt;&gt; nodes =</span>
-<span class="fc" id="L319">                query(root, addKey.substring(0, index).trim(), handler);</span>
-<span class="fc bfc" id="L320" title="All 2 branches covered.">        if (nodes.size() != 1)</span>
+<span class="fc" id="L319">        final List&lt;QueryResult&lt;T&gt;&gt; nodes =</span>
+<span class="fc" id="L320">                query(root, addKey.substring(0, index).trim(), handler);</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">        if (nodes.size() != 1)</span>
         {
-<span class="fc" id="L322">            throw new IllegalArgumentException(&quot;prepareAdd: key '&quot; + key</span>
+<span class="fc" id="L323">            throw new IllegalArgumentException(&quot;prepareAdd: key '&quot; + key</span>
                     + &quot;' must select exactly one target node!&quot;);
         }
 
-<span class="fc" id="L326">        return createNodeAddData(addKey.substring(index).trim(), nodes.get(0));</span>
+<span class="fc" id="L327">        return createNodeAddData(addKey.substring(index).trim(), nodes.get(0));</span>
     }
 
     /**
@@ -336,7 +337,7 @@ public class XPathExpressionEngine implements ExpressionEngine
      */
     private &lt;T&gt; JXPathContext createContext(final T root, final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L339">        return getContextFactory().createContext(root, handler);</span>
+<span class="fc" id="L340">        return getContextFactory().createContext(root, handler);</span>
     }
 
     /**
@@ -351,69 +352,69 @@ public class XPathExpressionEngine implements ExpressionEngine
     &lt;T&gt; NodeAddData&lt;T&gt; createNodeAddData(final String path,
             final QueryResult&lt;T&gt; parentNodeResult)
     {
-<span class="fc bfc" id="L354" title="All 2 branches covered.">        if (parentNodeResult.isAttributeResult())</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">        if (parentNodeResult.isAttributeResult())</span>
         {
-<span class="nc" id="L356">            invalidPath(path, &quot; cannot add properties to an attribute.&quot;);</span>
+<span class="nc" id="L357">            invalidPath(path, &quot; cannot add properties to an attribute.&quot;);</span>
         }
-<span class="fc" id="L358">        final List&lt;String&gt; pathNodes = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L359">        String lastComponent = null;</span>
-<span class="fc" id="L360">        boolean attr = false;</span>
-<span class="fc" id="L361">        boolean first = true;</span>
+<span class="fc" id="L359">        final List&lt;String&gt; pathNodes = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L360">        String lastComponent = null;</span>
+<span class="fc" id="L361">        boolean attr = false;</span>
+<span class="fc" id="L362">        boolean first = true;</span>
 
-<span class="fc" id="L363">        final StringTokenizer tok =</span>
+<span class="fc" id="L364">        final StringTokenizer tok =</span>
                 new StringTokenizer(path, NODE_PATH_DELIMITERS, true);
-<span class="fc bfc" id="L365" title="All 2 branches covered.">        while (tok.hasMoreTokens())</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">        while (tok.hasMoreTokens())</span>
         {
-<span class="fc" id="L367">            final String token = tok.nextToken();</span>
-<span class="fc bfc" id="L368" title="All 2 branches covered.">            if (PATH_DELIMITER.equals(token))</span>
+<span class="fc" id="L368">            final String token = tok.nextToken();</span>
+<span class="fc bfc" id="L369" title="All 2 branches covered.">            if (PATH_DELIMITER.equals(token))</span>
             {
-<span class="fc bfc" id="L370" title="All 2 branches covered.">                if (attr)</span>
+<span class="fc bfc" id="L371" title="All 2 branches covered.">                if (attr)</span>
                 {
-<span class="nc" id="L372">                    invalidPath(path, &quot; contains an attribute&quot;</span>
+<span class="nc" id="L373">                    invalidPath(path, &quot; contains an attribute&quot;</span>
                             + &quot; delimiter at a disallowed position.&quot;);
                 }
-<span class="fc bfc" id="L375" title="All 2 branches covered.">                if (lastComponent == null)</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">                if (lastComponent == null)</span>
                 {
-<span class="nc" id="L377">                    invalidPath(path,</span>
+<span class="nc" id="L378">                    invalidPath(path,</span>
                             &quot; contains a '/' at a disallowed position.&quot;);
                 }
-<span class="fc" id="L380">                pathNodes.add(lastComponent);</span>
-<span class="fc" id="L381">                lastComponent = null;</span>
+<span class="fc" id="L381">                pathNodes.add(lastComponent);</span>
+<span class="fc" id="L382">                lastComponent = null;</span>
             }
 
-<span class="fc bfc" id="L384" title="All 2 branches covered.">            else if (ATTR_DELIMITER.equals(token))</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">            else if (ATTR_DELIMITER.equals(token))</span>
             {
-<span class="fc bfc" id="L386" title="All 2 branches covered.">                if (attr)</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">                if (attr)</span>
                 {
-<span class="nc" id="L388">                    invalidPath(path,</span>
+<span class="nc" id="L389">                    invalidPath(path,</span>
                             &quot; contains multiple attribute delimiters.&quot;);
                 }
-<span class="fc bfc" id="L391" title="All 4 branches covered.">                if (lastComponent == null &amp;&amp; !first)</span>
+<span class="fc bfc" id="L392" title="All 4 branches covered.">                if (lastComponent == null &amp;&amp; !first)</span>
                 {
-<span class="nc" id="L393">                    invalidPath(path,</span>
+<span class="nc" id="L394">                    invalidPath(path,</span>
                             &quot; contains an attribute delimiter at a disallowed position.&quot;);
                 }
-<span class="fc bfc" id="L396" title="All 2 branches covered.">                if (lastComponent != null)</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">                if (lastComponent != null)</span>
                 {
-<span class="fc" id="L398">                    pathNodes.add(lastComponent);</span>
+<span class="fc" id="L399">                    pathNodes.add(lastComponent);</span>
                 }
-<span class="fc" id="L400">                attr = true;</span>
-<span class="fc" id="L401">                lastComponent = null;</span>
+<span class="fc" id="L401">                attr = true;</span>
+<span class="fc" id="L402">                lastComponent = null;</span>
             }
 
             else
             {
-<span class="fc" id="L406">                lastComponent = token;</span>
+<span class="fc" id="L407">                lastComponent = token;</span>
             }
-<span class="fc" id="L408">            first = false;</span>
-<span class="fc" id="L409">        }</span>
+<span class="fc" id="L409">            first = false;</span>
+<span class="fc" id="L410">        }</span>
 
-<span class="fc bfc" id="L411" title="All 2 branches covered.">        if (lastComponent == null)</span>
+<span class="fc bfc" id="L412" title="All 2 branches covered.">        if (lastComponent == null)</span>
         {
-<span class="nc" id="L413">            invalidPath(path, &quot;contains no components.&quot;);</span>
+<span class="nc" id="L414">            invalidPath(path, &quot;contains no components.&quot;);</span>
         }
 
-<span class="fc" id="L416">        return new NodeAddData&lt;&gt;(parentNodeResult.getNode(), lastComponent,</span>
+<span class="fc" id="L417">        return new NodeAddData&lt;&gt;(parentNodeResult.getNode(), lastComponent,</span>
                 attr, pathNodes);
     }
 
@@ -424,7 +425,7 @@ public class XPathExpressionEngine implements ExpressionEngine
      */
     XPathContextFactory getContextFactory()
     {
-<span class="fc" id="L427">        return contextFactory;</span>
+<span class="fc" id="L428">        return contextFactory;</span>
     }
 
     /**
@@ -442,22 +443,22 @@ public class XPathExpressionEngine implements ExpressionEngine
     private &lt;T&gt; String generateKeyForAdd(final T root, final String key,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L445">        int pos = key.lastIndexOf(PATH_DELIMITER, key.length());</span>
+<span class="fc" id="L446">        int pos = key.lastIndexOf(PATH_DELIMITER, key.length());</span>
 
-<span class="fc bfc" id="L447" title="All 2 branches covered.">        while (pos &gt;= 0)</span>
+<span class="fc bfc" id="L448" title="All 2 branches covered.">        while (pos &gt;= 0)</span>
         {
-<span class="fc" id="L449">            final String keyExisting = key.substring(0, pos);</span>
-<span class="fc bfc" id="L450" title="All 2 branches covered.">            if (!query(root, keyExisting, handler).isEmpty())</span>
+<span class="fc" id="L450">            final String keyExisting = key.substring(0, pos);</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">            if (!query(root, keyExisting, handler).isEmpty())</span>
             {
-<span class="fc" id="L452">                final StringBuilder buf = new StringBuilder(key.length() + 1);</span>
-<span class="fc" id="L453">                buf.append(keyExisting).append(SPACE);</span>
-<span class="fc" id="L454">                buf.append(key.substring(pos + 1));</span>
-<span class="fc" id="L455">                return buf.toString();</span>
+<span class="fc" id="L453">                final StringBuilder buf = new StringBuilder(key.length() + 1);</span>
+<span class="fc" id="L454">                buf.append(keyExisting).append(SPACE);</span>
+<span class="fc" id="L455">                buf.append(key.substring(pos + 1));</span>
+<span class="fc" id="L456">                return buf.toString();</span>
             }
-<span class="fc" id="L457">            pos = key.lastIndexOf(PATH_DELIMITER, pos - 1);</span>
-<span class="fc" id="L458">        }</span>
+<span class="fc" id="L458">            pos = key.lastIndexOf(PATH_DELIMITER, pos - 1);</span>
+<span class="fc" id="L459">        }</span>
 
-<span class="fc" id="L460">        return SPACE + key;</span>
+<span class="fc" id="L461">        return SPACE + key;</span>
     }
 
     /**
@@ -473,7 +474,7 @@ public class XPathExpressionEngine implements ExpressionEngine
     private static &lt;T&gt; int determineIndex(final T parent, final T child,
             final NodeHandler&lt;T&gt; handler)
     {
-<span class="fc" id="L476">        return handler.getChildren(parent, handler.nodeName(child)).indexOf(</span>
+<span class="fc" id="L477">        return handler.getChildren(parent, handler.nodeName(child)).indexOf(</span>
                 child) + 1;
     }
 
@@ -485,7 +486,7 @@ public class XPathExpressionEngine implements ExpressionEngine
      */
     private static void invalidPath(final String path, final String msg)
     {
-<span class="fc" id="L488">        throw new IllegalArgumentException(&quot;Invalid node path: \&quot;&quot; + path</span>
+<span class="fc" id="L489">        throw new IllegalArgumentException(&quot;Invalid node path: \&quot;&quot; + path</span>
                 + &quot;\&quot; &quot; + msg);
     }
 
@@ -498,12 +499,12 @@ public class XPathExpressionEngine implements ExpressionEngine
      */
     private static int findKeySeparator(final String key)
     {
-<span class="fc" id="L501">        int index = key.length() - 1;</span>
-<span class="fc bfc" id="L502" title="All 4 branches covered.">        while (index &gt;= 0 &amp;&amp; !Character.isWhitespace(key.charAt(index)))</span>
+<span class="fc" id="L502">        int index = key.length() - 1;</span>
+<span class="fc bfc" id="L503" title="All 4 branches covered.">        while (index &gt;= 0 &amp;&amp; !Character.isWhitespace(key.charAt(index)))</span>
         {
-<span class="fc" id="L504">            index--;</span>
+<span class="fc" id="L505">            index--;</span>
         }
-<span class="fc" id="L506">        return index;</span>
+<span class="fc" id="L507">        return index;</span>
     }
 
     /**
@@ -516,14 +517,14 @@ public class XPathExpressionEngine implements ExpressionEngine
      */
     private static &lt;T&gt; List&lt;QueryResult&lt;T&gt;&gt; convertResults(final List&lt;?&gt; results)
     {
-<span class="fc" id="L519">        final List&lt;QueryResult&lt;T&gt;&gt; queryResults =</span>
-<span class="fc" id="L520">                new ArrayList&lt;&gt;(results.size());</span>
-<span class="fc bfc" id="L521" title="All 2 branches covered.">        for (final Object res : results)</span>
+<span class="fc" id="L520">        final List&lt;QueryResult&lt;T&gt;&gt; queryResults =</span>
+<span class="fc" id="L521">                new ArrayList&lt;&gt;(results.size());</span>
+<span class="fc bfc" id="L522" title="All 2 branches covered.">        for (final Object res : results)</span>
         {
-<span class="fc" id="L523">            final QueryResult&lt;T&gt; queryResult = createResult(res);</span>
-<span class="fc" id="L524">            queryResults.add(queryResult);</span>
-<span class="fc" id="L525">        }</span>
-<span class="fc" id="L526">        return queryResults;</span>
+<span class="fc" id="L524">            final QueryResult&lt;T&gt; queryResult = createResult(res);</span>
+<span class="fc" id="L525">            queryResults.add(queryResult);</span>
+<span class="fc" id="L526">        }</span>
+<span class="fc" id="L527">        return queryResults;</span>
     }
 
     /**
@@ -544,18 +545,18 @@ public class XPathExpressionEngine implements ExpressionEngine
     @SuppressWarnings(&quot;unchecked&quot;)
     private static &lt;T&gt; QueryResult&lt;T&gt; createResult(final Object resObj)
     {
-<span class="fc bfc" id="L547" title="All 2 branches covered.">        if (resObj instanceof QueryResult)</span>
+<span class="fc bfc" id="L548" title="All 2 branches covered.">        if (resObj instanceof QueryResult)</span>
         {
-<span class="fc" id="L549">            return (QueryResult&lt;T&gt;) resObj;</span>
+<span class="fc" id="L550">            return (QueryResult&lt;T&gt;) resObj;</span>
         }
-<span class="fc" id="L551">        return QueryResult.createNodeResult((T) resObj);</span>
+<span class="fc" id="L552">        return QueryResult.createNodeResult((T) resObj);</span>
     }
 
     // static initializer: registers the configuration node pointer factory
     static
     {
-<span class="fc" id="L557">        JXPathContextReferenceImpl</span>
-<span class="fc" id="L558">                .addNodePointerFactory(new ConfigurationNodePointerFactory());</span>
-<span class="fc" id="L559">    }</span>
+<span class="fc" id="L558">        JXPathContextReferenceImpl</span>
+<span class="fc" id="L559">                .addNodePointerFactory(new ConfigurationNodePointerFactory());</span>
+<span class="fc" id="L560">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

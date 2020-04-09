@@ -58,7 +58,7 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      * @param c the configuration to be copied
      */
     protected AbstractYAMLBasedConfiguration(
-            final HierarchicalConfiguration&lt;ImmutableNode&gt; c)
+            HierarchicalConfiguration&lt;ImmutableNode&gt; c)
     {
 <span class="fc" id="L63">        super(c);</span>
 <span class="fc" id="L64">        initLogger(new ConfigurationLogger(getClass()));</span>
@@ -71,9 +71,9 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      *
      * @param map the map to be processed
      */
-    protected void load(final Map&lt;String, Object&gt; map)
+    protected void load(Map&lt;String, Object&gt; map)
     {
-<span class="fc" id="L76">        final List&lt;ImmutableNode&gt; roots = constructHierarchy(&quot;&quot;, map);</span>
+<span class="fc" id="L76">        List&lt;ImmutableNode&gt; roots = constructHierarchy(&quot;&quot;, map);</span>
 <span class="fc" id="L77">        getNodeModel().setRootNode(roots.get(0));</span>
 <span class="fc" id="L78">    }</span>
 
@@ -84,12 +84,12 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      * @param node The configuration node to create a map from.
      * @return A Map that contains the configuration node information.
      */
-    protected Map&lt;String, Object&gt; constructMap(final ImmutableNode node)
+    protected Map&lt;String, Object&gt; constructMap(ImmutableNode node)
     {
-<span class="fc" id="L89">        final Map&lt;String, Object&gt; map = new HashMap&lt;&gt;(node.getChildren().size());</span>
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        for (final ImmutableNode cNode : node.getChildren())</span>
+<span class="fc" id="L89">        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;(node.getChildren().size());</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        for (ImmutableNode cNode : node.getChildren())</span>
         {
-<span class="fc bfc" id="L92" title="All 2 branches covered.">            final Object value = cNode.getChildren().isEmpty() ? cNode.getValue()</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            Object value = cNode.getChildren().isEmpty() ? cNode.getValue()</span>
 <span class="fc" id="L93">                    : constructMap(cNode);</span>
 <span class="fc" id="L94">            addEntry(map, cNode.getNodeName(), value);</span>
 <span class="fc" id="L95">        }</span>
@@ -105,10 +105,10 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      * @param key the key
      * @param value the value
      */
-    private static void addEntry(final Map&lt;String, Object&gt; map, final String key,
-            final Object value)
+    private static void addEntry(Map&lt;String, Object&gt; map, String key,
+            Object value)
     {
-<span class="fc" id="L111">        final Object oldValue = map.get(key);</span>
+<span class="fc" id="L111">        Object oldValue = map.get(key);</span>
 <span class="fc bfc" id="L112" title="All 2 branches covered.">        if (oldValue == null)</span>
         {
 <span class="fc" id="L114">            map.put(key, value);</span>
@@ -117,18 +117,17 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
         {
             // safe case because the collection was created by ourselves
             @SuppressWarnings(&quot;unchecked&quot;)
-            final
-<span class="fc" id="L121">            Collection&lt;Object&gt; values = (Collection&lt;Object&gt;) oldValue;</span>
-<span class="fc" id="L122">            values.add(value);</span>
-<span class="fc" id="L123">        }</span>
+<span class="fc" id="L120">            Collection&lt;Object&gt; values = (Collection&lt;Object&gt;) oldValue;</span>
+<span class="fc" id="L121">            values.add(value);</span>
+<span class="fc" id="L122">        }</span>
         else
         {
-<span class="fc" id="L126">            final Collection&lt;Object&gt; values = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L127">            values.add(oldValue);</span>
-<span class="fc" id="L128">            values.add(value);</span>
-<span class="fc" id="L129">            map.put(key, values);</span>
+<span class="fc" id="L125">            Collection&lt;Object&gt; values = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L126">            values.add(oldValue);</span>
+<span class="fc" id="L127">            values.add(value);</span>
+<span class="fc" id="L128">            map.put(key, values);</span>
         }
-<span class="fc" id="L131">    }</span>
+<span class="fc" id="L130">    }</span>
 
     /**
      * Creates a part of the hierarchical nodes structure of the resulting
@@ -140,21 +139,21 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      * @param elem the element to be processed
      * @return a list with configuration nodes representing the element
      */
-    private static List&lt;ImmutableNode&gt; constructHierarchy(final String key,
-            final Object elem)
+    private static List&lt;ImmutableNode&gt; constructHierarchy(String key,
+            Object elem)
     {
-<span class="fc bfc" id="L146" title="All 2 branches covered.">        if (elem instanceof Map)</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (elem instanceof Map)</span>
         {
-<span class="fc" id="L148">            return parseMap((Map&lt;String, Object&gt;) elem, key);</span>
+<span class="fc" id="L147">            return parseMap((Map&lt;String, Object&gt;) elem, key);</span>
         }
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        else if (elem instanceof Collection)</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        else if (elem instanceof Collection)</span>
         {
-<span class="fc" id="L152">            return parseCollection((Collection&lt;Object&gt;) elem, key);</span>
+<span class="fc" id="L151">            return parseCollection((Collection&lt;Object&gt;) elem, key);</span>
         }
         else
         {
-<span class="fc" id="L156">            return Collections.singletonList(</span>
-<span class="fc" id="L157">                    new ImmutableNode.Builder().name(key).value(elem).create());</span>
+<span class="fc" id="L155">            return Collections.singletonList(</span>
+<span class="fc" id="L156">                    new ImmutableNode.Builder().name(key).value(elem).create());</span>
         }
     }
 
@@ -166,19 +165,19 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      * @param key the key under which this map is to be stored
      * @return a node representing this map
      */
-    private static List&lt;ImmutableNode&gt; parseMap(final Map&lt;String, Object&gt; map, final String key)
+    private static List&lt;ImmutableNode&gt; parseMap(Map&lt;String, Object&gt; map, String key)
     {
-<span class="fc" id="L171">        final ImmutableNode.Builder subtree = new ImmutableNode.Builder().name(key);</span>
-<span class="fc bfc" id="L172" title="All 2 branches covered.">        for (final Map.Entry&lt;String, Object&gt; entry : map.entrySet())</span>
+<span class="fc" id="L170">        ImmutableNode.Builder subtree = new ImmutableNode.Builder().name(key);</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (Map.Entry&lt;String, Object&gt; entry : map.entrySet())</span>
         {
-<span class="fc" id="L174">            final List&lt;ImmutableNode&gt; children =</span>
-<span class="fc" id="L175">                    constructHierarchy(entry.getKey(), entry.getValue());</span>
-<span class="fc bfc" id="L176" title="All 2 branches covered.">            for (final ImmutableNode child : children)</span>
+<span class="fc" id="L173">            List&lt;ImmutableNode&gt; children =</span>
+<span class="fc" id="L174">                    constructHierarchy(entry.getKey(), entry.getValue());</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            for (ImmutableNode child : children)</span>
             {
-<span class="fc" id="L178">                subtree.addChild(child);</span>
-<span class="fc" id="L179">            }</span>
-<span class="fc" id="L180">        }</span>
-<span class="fc" id="L181">        return Collections.singletonList(subtree.create());</span>
+<span class="fc" id="L177">                subtree.addChild(child);</span>
+<span class="fc" id="L178">            }</span>
+<span class="fc" id="L179">        }</span>
+<span class="fc" id="L180">        return Collections.singletonList(subtree.create());</span>
     }
 
     /**
@@ -189,14 +188,14 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      * @param key the key under which this collection is to be stored
      * @return a node representing this collection
      */
-    private static List&lt;ImmutableNode&gt; parseCollection(final Collection&lt;Object&gt; col, final String key)
+    private static List&lt;ImmutableNode&gt; parseCollection(Collection&lt;Object&gt; col, String key)
     {
-<span class="fc" id="L194">        final List&lt;ImmutableNode&gt; nodes = new ArrayList&lt;&gt;(col.size());</span>
-<span class="fc bfc" id="L195" title="All 2 branches covered.">        for (final Object elem : col)</span>
+<span class="fc" id="L193">        List&lt;ImmutableNode&gt; nodes = new ArrayList&lt;&gt;(col.size());</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        for (Object elem : col)</span>
         {
-<span class="fc" id="L197">            nodes.addAll(constructHierarchy(key, elem));</span>
-<span class="fc" id="L198">        }</span>
-<span class="fc" id="L199">        return nodes;</span>
+<span class="fc" id="L196">            nodes.addAll(constructHierarchy(key, elem));</span>
+<span class="fc" id="L197">        }</span>
+<span class="fc" id="L198">        return nodes;</span>
     }
 
     /**
@@ -205,14 +204,17 @@ public class AbstractYAMLBasedConfiguration extends BaseHierarchicalConfiguratio
      * @param e the exception to be wrapped
      * @throws ConfigurationException the resulting exception
      */
-    static void rethrowException(final Exception e) throws ConfigurationException
+    static void rethrowException(Exception e) throws ConfigurationException
     {
-<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if (e instanceof ClassCastException)</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (e instanceof ClassCastException)</span>
         {
-<span class="nc" id="L212">            throw new ConfigurationException(&quot;Error parsing&quot;, e);</span>
+<span class="nc" id="L211">            throw new ConfigurationException(&quot;Error parsing&quot;, e);</span>
         }
-<span class="fc" id="L214">        throw new ConfigurationException(&quot;Unable to load the configuration&quot;,</span>
-                e);
+        else
+        {
+<span class="nc" id="L215">            throw new ConfigurationException(&quot;Unable to load the configuration&quot;,</span>
+                    e);
+        }
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

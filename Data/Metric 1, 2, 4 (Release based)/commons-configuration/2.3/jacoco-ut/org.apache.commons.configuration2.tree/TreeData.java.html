@@ -26,6 +26,7 @@ import java.util.Map;
  * stores the current root node and additional information which is not part
  * of the {@code ImmutableNode} class.
  *
+ * @version $Id$
  * @since 2.0
  */
 class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHandler
@@ -62,23 +63,23 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      * @param tracker the {@code NodeTracker}
      * @param refTracker the {@code ReferenceTracker}
      */
-    public TreeData(final ImmutableNode root,
-            final Map&lt;ImmutableNode, ImmutableNode&gt; parentMapping,
-            final Map&lt;ImmutableNode, ImmutableNode&gt; replacements,
-            final NodeTracker tracker, final ReferenceTracker refTracker)
-<span class="fc" id="L69">    {</span>
-<span class="fc" id="L70">        this.root = root;</span>
-<span class="fc" id="L71">        this.parentMapping = parentMapping;</span>
-<span class="fc" id="L72">        replacementMapping = replacements;</span>
-<span class="fc" id="L73">        inverseReplacementMapping = createInverseMapping(replacements);</span>
-<span class="fc" id="L74">        nodeTracker = tracker;</span>
-<span class="fc" id="L75">        referenceTracker = refTracker;</span>
-<span class="fc" id="L76">    }</span>
+    public TreeData(ImmutableNode root,
+            Map&lt;ImmutableNode, ImmutableNode&gt; parentMapping,
+            Map&lt;ImmutableNode, ImmutableNode&gt; replacements,
+            NodeTracker tracker, ReferenceTracker refTracker)
+<span class="fc" id="L70">    {</span>
+<span class="fc" id="L71">        this.root = root;</span>
+<span class="fc" id="L72">        this.parentMapping = parentMapping;</span>
+<span class="fc" id="L73">        replacementMapping = replacements;</span>
+<span class="fc" id="L74">        inverseReplacementMapping = createInverseMapping(replacements);</span>
+<span class="fc" id="L75">        nodeTracker = tracker;</span>
+<span class="fc" id="L76">        referenceTracker = refTracker;</span>
+<span class="fc" id="L77">    }</span>
 
     @Override
     public ImmutableNode getRootNode()
     {
-<span class="fc" id="L81">        return root;</span>
+<span class="fc" id="L82">        return root;</span>
     }
 
     /**
@@ -88,7 +89,7 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      */
     public NodeTracker getNodeTracker()
     {
-<span class="fc" id="L91">        return nodeTracker;</span>
+<span class="fc" id="L92">        return nodeTracker;</span>
     }
 
     /**
@@ -98,7 +99,7 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      */
     public ReferenceTracker getReferenceTracker()
     {
-<span class="fc" id="L101">        return referenceTracker;</span>
+<span class="fc" id="L102">        return referenceTracker;</span>
     }
 
     /**
@@ -111,21 +112,21 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      * @throws IllegalArgumentException if the node cannot be resolved
      */
     @Override
-    public ImmutableNode getParent(final ImmutableNode node)
+    public ImmutableNode getParent(ImmutableNode node)
     {
-<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (node == getRootNode())</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (node == getRootNode())</span>
         {
-<span class="fc" id="L118">            return null;</span>
+<span class="fc" id="L119">            return null;</span>
         }
-<span class="fc" id="L120">        final ImmutableNode org = handleReplacements(node, inverseReplacementMapping);</span>
+<span class="fc" id="L121">        ImmutableNode org = handleReplacements(node, inverseReplacementMapping);</span>
 
-<span class="fc" id="L122">        final ImmutableNode parent = parentMapping.get(org);</span>
-<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (parent == null)</span>
+<span class="fc" id="L123">        ImmutableNode parent = parentMapping.get(org);</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (parent == null)</span>
         {
-<span class="fc" id="L125">            throw new IllegalArgumentException(&quot;Cannot determine parent! &quot;</span>
+<span class="fc" id="L126">            throw new IllegalArgumentException(&quot;Cannot determine parent! &quot;</span>
                     + node + &quot; is not part of this model.&quot;);
         }
-<span class="fc" id="L128">        return handleReplacements(parent, replacementMapping);</span>
+<span class="fc" id="L129">        return handleReplacements(parent, replacementMapping);</span>
     }
 
     /**
@@ -135,7 +136,7 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      */
     public Map&lt;ImmutableNode, ImmutableNode&gt; copyParentMapping()
     {
-<span class="fc" id="L138">        return new HashMap&lt;&gt;(parentMapping);</span>
+<span class="fc" id="L139">        return new HashMap&lt;&gt;(parentMapping);</span>
     }
 
     /**
@@ -145,7 +146,7 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      */
     public Map&lt;ImmutableNode, ImmutableNode&gt; copyReplacementMapping()
     {
-<span class="fc" id="L148">        return new HashMap&lt;&gt;(replacementMapping);</span>
+<span class="fc" id="L149">        return new HashMap&lt;&gt;(replacementMapping);</span>
     }
 
     /**
@@ -156,9 +157,9 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      * @param newTracker the new {@code NodeTracker}
      * @return the updated instance
      */
-    public TreeData updateNodeTracker(final NodeTracker newTracker)
+    public TreeData updateNodeTracker(NodeTracker newTracker)
     {
-<span class="fc" id="L161">        return new TreeData(root, parentMapping, replacementMapping,</span>
+<span class="fc" id="L162">        return new TreeData(root, parentMapping, replacementMapping,</span>
                 newTracker, referenceTracker);
     }
 
@@ -170,9 +171,9 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      * @param newTracker the new {@code ReferenceTracker}
      * @return the updated instance
      */
-    public TreeData updateReferenceTracker(final ReferenceTracker newTracker)
+    public TreeData updateReferenceTracker(ReferenceTracker newTracker)
     {
-<span class="nc" id="L175">        return new TreeData(root, parentMapping, replacementMapping,</span>
+<span class="nc" id="L176">        return new TreeData(root, parentMapping, replacementMapping,</span>
                 nodeTracker, newTracker);
     }
 
@@ -180,9 +181,9 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      * {@inheritDoc} This implementation delegates to the reference tracker.
      */
     @Override
-    public Object getReference(final ImmutableNode node)
+    public Object getReference(ImmutableNode node)
     {
-<span class="fc" id="L185">        return getReferenceTracker().getReference(node);</span>
+<span class="fc" id="L186">        return getReferenceTracker().getReference(node);</span>
     }
 
     /**
@@ -191,7 +192,7 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
     @Override
     public List&lt;Object&gt; removedReferences()
     {
-<span class="fc" id="L194">        return getReferenceTracker().getRemovedReferences();</span>
+<span class="fc" id="L195">        return getReferenceTracker().getRemovedReferences();</span>
     }
 
     /**
@@ -207,20 +208,20 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      * @param mapping the replacement mapping
      * @return the corresponding node according to the mapping
      */
-    private static ImmutableNode handleReplacements(final ImmutableNode replace,
-            final Map&lt;ImmutableNode, ImmutableNode&gt; mapping)
+    private static ImmutableNode handleReplacements(ImmutableNode replace,
+            Map&lt;ImmutableNode, ImmutableNode&gt; mapping)
     {
-<span class="fc" id="L213">        ImmutableNode node = replace;</span>
+<span class="fc" id="L214">        ImmutableNode node = replace;</span>
         ImmutableNode org;
         do
         {
-<span class="fc" id="L217">            org = mapping.get(node);</span>
-<span class="fc bfc" id="L218" title="All 2 branches covered.">            if (org != null)</span>
+<span class="fc" id="L218">            org = mapping.get(node);</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if (org != null)</span>
             {
-<span class="fc" id="L220">                node = org;</span>
+<span class="fc" id="L221">                node = org;</span>
             }
-<span class="fc bfc" id="L222" title="All 2 branches covered.">        } while (org != null);</span>
-<span class="fc" id="L223">        return node;</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        } while (org != null);</span>
+<span class="fc" id="L224">        return node;</span>
     }
 
     /**
@@ -230,16 +231,16 @@ class TreeData extends AbstractImmutableNodeHandler implements ReferenceNodeHand
      * @return the inverse replacement mapping
      */
     private Map&lt;ImmutableNode, ImmutableNode&gt; createInverseMapping(
-            final Map&lt;ImmutableNode, ImmutableNode&gt; replacements)
+            Map&lt;ImmutableNode, ImmutableNode&gt; replacements)
     {
-<span class="fc" id="L235">        final Map&lt;ImmutableNode, ImmutableNode&gt; inverseMapping =</span>
+<span class="fc" id="L236">        Map&lt;ImmutableNode, ImmutableNode&gt; inverseMapping =</span>
                 new HashMap&lt;&gt;();
-<span class="fc bfc" id="L237" title="All 2 branches covered.">        for (final Map.Entry&lt;ImmutableNode, ImmutableNode&gt; e : replacements</span>
-<span class="fc" id="L238">                .entrySet())</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">        for (Map.Entry&lt;ImmutableNode, ImmutableNode&gt; e : replacements</span>
+<span class="fc" id="L239">                .entrySet())</span>
         {
-<span class="fc" id="L240">            inverseMapping.put(e.getValue(), e.getKey());</span>
-<span class="fc" id="L241">        }</span>
-<span class="fc" id="L242">        return inverseMapping;</span>
+<span class="fc" id="L241">            inverseMapping.put(e.getValue(), e.getKey());</span>
+<span class="fc" id="L242">        }</span>
+<span class="fc" id="L243">        return inverseMapping;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

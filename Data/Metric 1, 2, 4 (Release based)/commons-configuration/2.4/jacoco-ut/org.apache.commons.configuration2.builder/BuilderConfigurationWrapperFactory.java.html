@@ -46,6 +46,7 @@ import org.apache.commons.configuration2.event.EventSource;
  * different data object on each call.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class BuilderConfigurationWrapperFactory
@@ -60,9 +61,9 @@ public class BuilderConfigurationWrapperFactory
      * @param evSrcSupport the level of {@code EventSource} support
      */
     public BuilderConfigurationWrapperFactory(final EventSourceSupport evSrcSupport)
-<span class="fc" id="L63">    {</span>
-<span class="fc" id="L64">        eventSourceSupport = evSrcSupport;</span>
-<span class="fc" id="L65">    }</span>
+<span class="fc" id="L64">    {</span>
+<span class="fc" id="L65">        eventSourceSupport = evSrcSupport;</span>
+<span class="fc" id="L66">    }</span>
 
     /**
      * Creates a new instance of {@code BuilderConfigurationWrapperFactory}
@@ -70,8 +71,8 @@ public class BuilderConfigurationWrapperFactory
      */
     public BuilderConfigurationWrapperFactory()
     {
-<span class="fc" id="L73">        this(EventSourceSupport.NONE);</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L74">        this(EventSourceSupport.NONE);</span>
+<span class="fc" id="L75">    }</span>
 
     /**
      * Creates a wrapper {@code ImmutableConfiguration} on top of the specified
@@ -93,8 +94,8 @@ public class BuilderConfigurationWrapperFactory
     public &lt;T extends ImmutableConfiguration&gt; T createBuilderConfigurationWrapper(
             final Class&lt;T&gt; ifcClass, final ConfigurationBuilder&lt;? extends T&gt; builder)
     {
-<span class="fc" id="L96">        return createBuilderConfigurationWrapper(ifcClass, builder,</span>
-<span class="fc" id="L97">                getEventSourceSupport());</span>
+<span class="fc" id="L97">        return createBuilderConfigurationWrapper(ifcClass, builder,</span>
+<span class="fc" id="L98">                getEventSourceSupport());</span>
     }
 
     /**
@@ -105,7 +106,7 @@ public class BuilderConfigurationWrapperFactory
      */
     public EventSourceSupport getEventSourceSupport()
     {
-<span class="fc" id="L108">        return eventSourceSupport;</span>
+<span class="fc" id="L109">        return eventSourceSupport;</span>
     }
 
     /**
@@ -131,19 +132,19 @@ public class BuilderConfigurationWrapperFactory
             final Class&lt;T&gt; ifcClass, final ConfigurationBuilder&lt;? extends T&gt; builder,
             final EventSourceSupport evSrcSupport)
     {
-<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (ifcClass == null)</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (ifcClass == null)</span>
         {
-<span class="fc" id="L136">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L137">            throw new IllegalArgumentException(</span>
                     &quot;Interface class must not be null!&quot;);
         }
-<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (builder == null)</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (builder == null)</span>
         {
-<span class="fc" id="L141">            throw new IllegalArgumentException(&quot;Builder must not be null!&quot;);</span>
+<span class="fc" id="L142">            throw new IllegalArgumentException(&quot;Builder must not be null!&quot;);</span>
         }
 
-<span class="fc" id="L144">        return ifcClass.cast(Proxy.newProxyInstance(</span>
-<span class="fc" id="L145">                BuilderConfigurationWrapperFactory.class.getClassLoader(),</span>
-<span class="fc" id="L146">                fetchSupportedInterfaces(ifcClass, evSrcSupport),</span>
+<span class="fc" id="L145">        return ifcClass.cast(Proxy.newProxyInstance(</span>
+<span class="fc" id="L146">                BuilderConfigurationWrapperFactory.class.getClassLoader(),</span>
+<span class="fc" id="L147">                fetchSupportedInterfaces(ifcClass, evSrcSupport),</span>
                 new BuilderConfigurationWrapperInvocationHandler(builder,
                         evSrcSupport)));
     }
@@ -160,17 +161,17 @@ public class BuilderConfigurationWrapperFactory
     private static Class&lt;?&gt;[] fetchSupportedInterfaces(final Class&lt;?&gt; ifcClass,
             final EventSourceSupport evSrcSupport)
     {
-<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (EventSourceSupport.NONE == evSrcSupport)</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (EventSourceSupport.NONE == evSrcSupport)</span>
         {
-<span class="fc" id="L165">            return new Class&lt;?&gt;[] {</span>
+<span class="fc" id="L166">            return new Class&lt;?&gt;[] {</span>
                 ifcClass
             };
         }
 
-<span class="fc" id="L170">        final Class&lt;?&gt;[] result = new Class&lt;?&gt;[2];</span>
-<span class="fc" id="L171">        result[0] = EventSource.class;</span>
-<span class="fc" id="L172">        result[1] = ifcClass;</span>
-<span class="fc" id="L173">        return result;</span>
+<span class="fc" id="L171">        final Class&lt;?&gt;[] result = new Class&lt;?&gt;[2];</span>
+<span class="fc" id="L172">        result[0] = EventSource.class;</span>
+<span class="fc" id="L173">        result[1] = ifcClass;</span>
+<span class="fc" id="L174">        return result;</span>
     }
 
     /**
@@ -186,7 +187,7 @@ public class BuilderConfigurationWrapperFactory
      * See the documentation of the single constants for more details.
      * &lt;/p&gt;
      */
-<span class="fc" id="L189">    public enum EventSourceSupport</span>
+<span class="fc" id="L190">    public enum EventSourceSupport</span>
     {
         /**
          * No support of the {@code EventSource} interface. If this option is
@@ -194,7 +195,7 @@ public class BuilderConfigurationWrapperFactory
          * {@code BuilderConfigurationWrapperFactory} do not implement the
          * {@code EventSource} interface.
          */
-<span class="fc" id="L197">        NONE,</span>
+<span class="fc" id="L198">        NONE,</span>
 
         /**
          * Dummy support of the {@code EventSource} interface. This option
@@ -203,7 +204,7 @@ public class BuilderConfigurationWrapperFactory
          * {@code EventSource} interface, however, this implementation consists
          * only of empty dummy methods without real functionality.
          */
-<span class="fc" id="L206">        DUMMY,</span>
+<span class="fc" id="L207">        DUMMY,</span>
 
         /**
          * {@code EventSource} support is implemented by delegating to the
@@ -213,7 +214,7 @@ public class BuilderConfigurationWrapperFactory
          * builder. Because the {@code ConfigurationBuilder} interface extends
          * {@code EventSource} this delegation is always possible.
          */
-<span class="fc" id="L216">        BUILDER</span>
+<span class="fc" id="L217">        BUILDER</span>
     }
 
     /**
@@ -240,10 +241,10 @@ public class BuilderConfigurationWrapperFactory
         public BuilderConfigurationWrapperInvocationHandler(
                 final ConfigurationBuilder&lt;? extends ImmutableConfiguration&gt; wrappedBuilder,
                 final EventSourceSupport evSrcSupport)
-<span class="fc" id="L243">        {</span>
-<span class="fc" id="L244">            builder = wrappedBuilder;</span>
-<span class="fc" id="L245">            eventSourceSupport = evSrcSupport;</span>
-<span class="fc" id="L246">        }</span>
+<span class="fc" id="L244">        {</span>
+<span class="fc" id="L245">            builder = wrappedBuilder;</span>
+<span class="fc" id="L246">            eventSourceSupport = evSrcSupport;</span>
+<span class="fc" id="L247">        }</span>
 
         /**
          * Handles method invocations. This implementation handles methods of
@@ -265,11 +266,11 @@ public class BuilderConfigurationWrapperFactory
         public Object invoke(final Object proxy, final Method method, final Object[] args)
                 throws Throwable
         {
-<span class="fc bfc" id="L268" title="All 2 branches covered.">            if (EventSource.class.equals(method.getDeclaringClass()))</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">            if (EventSource.class.equals(method.getDeclaringClass()))</span>
             {
-<span class="fc" id="L270">                return handleEventSourceInvocation(method, args);</span>
+<span class="fc" id="L271">                return handleEventSourceInvocation(method, args);</span>
             }
-<span class="fc" id="L272">            return handleConfigurationInvocation(method, args);</span>
+<span class="fc" id="L273">            return handleConfigurationInvocation(method, args);</span>
         }
 
         /**
@@ -284,7 +285,7 @@ public class BuilderConfigurationWrapperFactory
         private Object handleConfigurationInvocation(final Method method,
                 final Object[] args) throws Exception
         {
-<span class="fc" id="L287">            return method.invoke(builder.getConfiguration(), args);</span>
+<span class="fc" id="L288">            return method.invoke(builder.getConfiguration(), args);</span>
         }
 
         /**
@@ -297,13 +298,13 @@ public class BuilderConfigurationWrapperFactory
          * @return the return value of the method
          * @throws Exception if an error occurs
          */
-        private Object handleEventSourceInvocation(final Method method, final Object... args)
+        private Object handleEventSourceInvocation(final Method method, final Object[] args)
                 throws Exception
         {
             final Object target =
-<span class="fc bfc" id="L304" title="All 2 branches covered.">                    EventSourceSupport.DUMMY == eventSourceSupport ? ConfigurationUtils</span>
-<span class="fc" id="L305">                            .asEventSource(this, true) : builder;</span>
-<span class="fc" id="L306">            return method.invoke(target, args);</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">                    (EventSourceSupport.DUMMY == eventSourceSupport) ? ConfigurationUtils</span>
+<span class="fc" id="L306">                            .asEventSource(this, true) : builder;</span>
+<span class="fc" id="L307">            return method.invoke(target, args);</span>
         }
     }
 }

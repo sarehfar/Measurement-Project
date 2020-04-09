@@ -25,6 +25,10 @@ package org.apache.commons.configuration2;
  * events. By registering a {@code ContentHandler} at an instance
  * it is possible to perform XML processing on a configuration object.&lt;/p&gt;
  *
+ * @author &lt;a
+ * href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons
+ * Configuration team&lt;/a&gt;
+ * @version $Id$
  */
 public class BaseConfigurationXMLReader extends ConfigurationXMLReader
 {
@@ -36,8 +40,8 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
      */
     public BaseConfigurationXMLReader()
     {
-<span class="fc" id="L39">        super();</span>
-<span class="fc" id="L40">    }</span>
+<span class="fc" id="L43">        super();</span>
+<span class="fc" id="L44">    }</span>
 
     /**
      * Creates a new instance of {@code BaseConfigurationXMLReader} and
@@ -47,9 +51,9 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
      */
     public BaseConfigurationXMLReader(final Configuration conf)
     {
-<span class="fc" id="L50">        this();</span>
-<span class="fc" id="L51">        setConfiguration(conf);</span>
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L54">        this();</span>
+<span class="fc" id="L55">        setConfiguration(conf);</span>
+<span class="fc" id="L56">    }</span>
 
     /**
      * Returns the actual configuration to be processed.
@@ -58,7 +62,7 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
      */
     public Configuration getConfiguration()
     {
-<span class="fc" id="L61">        return config;</span>
+<span class="fc" id="L65">        return config;</span>
     }
 
     /**
@@ -68,8 +72,8 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
      */
     public void setConfiguration(final Configuration conf)
     {
-<span class="fc" id="L71">        config = conf;</span>
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L75">        config = conf;</span>
+<span class="fc" id="L76">    }</span>
 
     /**
      * Returns the configuration to be processed.
@@ -79,7 +83,7 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
     @Override
     public Configuration getParsedConfiguration()
     {
-<span class="fc" id="L82">        return getConfiguration();</span>
+<span class="fc" id="L86">        return getConfiguration();</span>
     }
 
     /**
@@ -91,17 +95,17 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
     @Override
     protected void processKeys()
     {
-<span class="fc" id="L94">        fireElementStart(getRootName(), null);</span>
-<span class="fc" id="L95">        new SAXConverter().process(getConfiguration());</span>
-<span class="fc" id="L96">        fireElementEnd(getRootName());</span>
-<span class="fc" id="L97">    }</span>
+<span class="fc" id="L98">        fireElementStart(getRootName(), null);</span>
+<span class="fc" id="L99">        new SAXConverter().process(getConfiguration());</span>
+<span class="fc" id="L100">        fireElementEnd(getRootName());</span>
+<span class="fc" id="L101">    }</span>
 
     /**
      * An internally used helper class to iterate over all configuration keys
      * ant to generate corresponding SAX events.
      *
      */
-<span class="fc" id="L104">    class SAXConverter extends HierarchicalConfigurationConverter</span>
+<span class="fc" id="L108">    class SAXConverter extends HierarchicalConfigurationConverter</span>
     {
         /**
          * Callback for the start of an element.
@@ -112,12 +116,12 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
         @Override
         protected void elementStart(final String name, final Object value)
         {
-<span class="fc" id="L115">            fireElementStart(name, null);</span>
-<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (value != null)</span>
+<span class="fc" id="L119">            fireElementStart(name, null);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">            if (value != null)</span>
             {
-<span class="fc" id="L118">                fireCharacters(value.toString());</span>
+<span class="fc" id="L122">                fireCharacters(value.toString());</span>
             }
-<span class="fc" id="L120">        }</span>
+<span class="fc" id="L124">        }</span>
 
         /**
          * Callback for the end of an element.
@@ -127,8 +131,8 @@ public class BaseConfigurationXMLReader extends ConfigurationXMLReader
         @Override
         protected void elementEnd(final String name)
         {
-<span class="fc" id="L130">            fireElementEnd(name);</span>
-<span class="fc" id="L131">        }</span>
+<span class="fc" id="L134">            fireElementEnd(name);</span>
+<span class="fc" id="L135">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

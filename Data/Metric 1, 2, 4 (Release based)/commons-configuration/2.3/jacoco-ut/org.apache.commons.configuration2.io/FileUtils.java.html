@@ -28,35 +28,37 @@ import java.nio.charset.Charset;
  * The copied constants and methods are &lt;em&gt;literally&lt;/em&gt; copied.&lt;br /&gt;
  *
  * See CONFIGURATION-521 for a discussion.
+ * @version $Id$
  */
-<span class="nc" id="L32">class FileUtils {</span>
+<span class="nc" id="L33">class FileUtils {</span>
     /**
      * The UTF-8 character set, used to decode octets in URLs.
      */
-<span class="fc" id="L36">    private static final Charset UTF8 = Charset.forName(&quot;UTF-8&quot;);</span>
+<span class="fc" id="L37">    private static final Charset UTF8 = Charset.forName(&quot;UTF-8&quot;);</span>
 
     //-----------------------------------------------------------------------
     /**
-     * Convert from a {@code URL} to a {@code File}.
+     * Convert from a &lt;code&gt;URL&lt;/code&gt; to a &lt;code&gt;File&lt;/code&gt;.
      * &lt;p&gt;
      * From version 1.1 this method will decode the URL.
-     * Syntax such as {@code file:///my%20docs/file.txt} will be
-     * correctly decoded to {@code /my docs/file.txt}. Starting with version
+     * Syntax such as &lt;code&gt;file:///my%20docs/file.txt&lt;/code&gt; will be
+     * correctly decoded to &lt;code&gt;/my docs/file.txt&lt;/code&gt;. Starting with version
      * 1.5, this method uses UTF-8 to decode percent-encoded octets to characters.
      * Additionally, malformed percent-encoded octets are handled leniently by
      * passing them through literally.
      *
      * @param url  the file URL to convert, {@code null} returns {@code null}
-     * @return the equivalent {@code File} object, or {@code null}
-     *  if the URL's protocol is not {@code file}
+     * @return the equivalent &lt;code&gt;File&lt;/code&gt; object, or {@code null}
+     *  if the URL's protocol is not &lt;code&gt;file&lt;/code&gt;
      */
     public static File toFile(final URL url) {
-<span class="fc bfc" id="L54" title="All 4 branches covered.">        if (url == null || !&quot;file&quot;.equalsIgnoreCase(url.getProtocol())) {</span>
-<span class="fc" id="L55">            return null;</span>
+<span class="fc bfc" id="L55" title="All 4 branches covered.">        if (url == null || !&quot;file&quot;.equalsIgnoreCase(url.getProtocol())) {</span>
+<span class="fc" id="L56">            return null;</span>
+        } else {
+<span class="fc" id="L58">            String filename = url.getFile().replace('/', File.separatorChar);</span>
+<span class="fc" id="L59">            filename = decodeUrl(filename);</span>
+<span class="fc" id="L60">            return new File(filename);</span>
         }
-<span class="fc" id="L57">        String fileName = url.getFile().replace('/', File.separatorChar);</span>
-<span class="fc" id="L58">        fileName = decodeUrl(fileName);</span>
-<span class="fc" id="L59">        return new File(fileName);</span>
     }
 
     /**
@@ -74,36 +76,36 @@ import java.nio.charset.Charset;
      *         {@code null}.
      */
     static String decodeUrl(final String url) {
-<span class="fc" id="L77">        String decoded = url;</span>
-<span class="pc bpc" id="L78" title="1 of 4 branches missed.">        if (url != null &amp;&amp; url.indexOf('%') &gt;= 0) {</span>
-<span class="fc" id="L79">            final int n = url.length();</span>
-<span class="fc" id="L80">            final StringBuffer buffer = new StringBuffer();</span>
-<span class="fc" id="L81">            final ByteBuffer bytes = ByteBuffer.allocate(n);</span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">            for (int i = 0; i &lt; n;) {</span>
-<span class="fc bfc" id="L83" title="All 2 branches covered.">                if (url.charAt(i) == '%') {</span>
+<span class="fc" id="L79">        String decoded = url;</span>
+<span class="pc bpc" id="L80" title="1 of 4 branches missed.">        if (url != null &amp;&amp; url.indexOf('%') &gt;= 0) {</span>
+<span class="fc" id="L81">            final int n = url.length();</span>
+<span class="fc" id="L82">            final StringBuffer buffer = new StringBuffer();</span>
+<span class="fc" id="L83">            final ByteBuffer bytes = ByteBuffer.allocate(n);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">            for (int i = 0; i &lt; n;) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">                if (url.charAt(i) == '%') {</span>
                     try {
                         do {
-<span class="fc" id="L86">                            final byte octet = (byte) Integer.parseInt(url.substring(i + 1, i + 3), 16);</span>
-<span class="fc" id="L87">                            bytes.put(octet);</span>
-<span class="fc" id="L88">                            i += 3;</span>
-<span class="pc bpc" id="L89" title="2 of 4 branches missed.">                        } while (i &lt; n &amp;&amp; url.charAt(i) == '%');</span>
+<span class="fc" id="L88">                            final byte octet = (byte) Integer.parseInt(url.substring(i + 1, i + 3), 16);</span>
+<span class="fc" id="L89">                            bytes.put(octet);</span>
+<span class="fc" id="L90">                            i += 3;</span>
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">                        } while (i &lt; n &amp;&amp; url.charAt(i) == '%');</span>
                         continue;
-<span class="nc" id="L91">                    } catch (final RuntimeException e) {</span>
+<span class="nc" id="L93">                    } catch (final RuntimeException e) {</span>
                         // malformed percent-encoded octet, fall through and
                         // append characters literally
                     } finally {
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">                        if (bytes.position() &gt; 0) {</span>
-<span class="fc" id="L96">                            bytes.flip();</span>
-<span class="fc" id="L97">                            buffer.append(UTF8.decode(bytes).toString());</span>
-<span class="fc" id="L98">                            bytes.clear();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">                        if (bytes.position() &gt; 0) {</span>
+<span class="fc" id="L98">                            bytes.flip();</span>
+<span class="fc" id="L99">                            buffer.append(UTF8.decode(bytes).toString());</span>
+<span class="fc" id="L100">                            bytes.clear();</span>
                         }
                     }
                 }
-<span class="fc" id="L102">                buffer.append(url.charAt(i++));</span>
+<span class="fc" id="L104">                buffer.append(url.charAt(i++));</span>
             }
-<span class="fc" id="L104">            decoded = buffer.toString();</span>
+<span class="fc" id="L106">            decoded = buffer.toString();</span>
         }
-<span class="fc" id="L106">        return decoded;</span>
+<span class="fc" id="L108">        return decoded;</span>
     }
 
 }

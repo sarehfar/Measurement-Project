@@ -46,36 +46,37 @@ import org.apache.commons.lang3.ClassUtils;
  * actual conversion.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
-<span class="fc" id="L51">public class DefaultConversionHandler implements ConversionHandler</span>
+<span class="fc" id="L52">public class DefaultConversionHandler implements ConversionHandler</span>
 {
     /**
      * A default instance of this class. Because an instance of this class can
      * be shared between arbitrary objects it is possible to make use of this
      * default instance anywhere.
      */
-<span class="fc" id="L58">    public static final DefaultConversionHandler INSTANCE =</span>
+<span class="fc" id="L59">    public static final DefaultConversionHandler INSTANCE =</span>
             new DefaultConversionHandler();
 
     /** The default format for dates. */
     public static final String DEFAULT_DATE_FORMAT = &quot;yyyy-MM-dd HH:mm:ss&quot;;
 
     /** A helper object used for extracting values from complex objects. */
-<span class="fc" id="L65">    private static final AbstractListDelimiterHandler EXTRACTOR =</span>
+<span class="fc" id="L66">    private static final AbstractListDelimiterHandler EXTRACTOR =</span>
             (AbstractListDelimiterHandler) DisabledListDelimiterHandler.INSTANCE;
 
     /**
      * Constant for a default {@code ConfigurationInterpolator} to be used if
      * none is provided by the caller.
      */
-<span class="fc" id="L72">    private static final ConfigurationInterpolator NULL_INTERPOLATOR =</span>
+<span class="fc" id="L73">    private static final ConfigurationInterpolator NULL_INTERPOLATOR =</span>
             new ConfigurationInterpolator()
-<span class="fc" id="L74">            {</span>
+<span class="fc" id="L75">            {</span>
                 @Override
-                public Object interpolate(final Object value)
+                public Object interpolate(Object value)
                 {
-<span class="fc" id="L78">                    return value;</span>
+<span class="fc" id="L79">                    return value;</span>
                 }
             };
 
@@ -89,8 +90,8 @@ import org.apache.commons.lang3.ClassUtils;
      */
     public String getDateFormat()
     {
-<span class="fc" id="L92">        final String fmt = dateFormat;</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        return fmt != null ? fmt : DEFAULT_DATE_FORMAT;</span>
+<span class="fc" id="L93">        String fmt = dateFormat;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        return (fmt != null) ? fmt : DEFAULT_DATE_FORMAT;</span>
     }
 
     /**
@@ -103,16 +104,16 @@ import org.apache.commons.lang3.ClassUtils;
      * @param dateFormat the date format string
      * @see #DEFAULT_DATE_FORMAT
      */
-    public void setDateFormat(final String dateFormat)
+    public void setDateFormat(String dateFormat)
     {
-<span class="fc" id="L108">        this.dateFormat = dateFormat;</span>
-<span class="fc" id="L109">    }</span>
+<span class="fc" id="L109">        this.dateFormat = dateFormat;</span>
+<span class="fc" id="L110">    }</span>
 
     @Override
-    public &lt;T&gt; T to(final Object src, final Class&lt;T&gt; targetCls, final ConfigurationInterpolator ci)
+    public &lt;T&gt; T to(Object src, Class&lt;T&gt; targetCls, ConfigurationInterpolator ci)
     {
-<span class="fc" id="L114">        final ConfigurationInterpolator interpolator = fetchInterpolator(ci);</span>
-<span class="fc" id="L115">        return convert(interpolator.interpolate(src), targetCls, interpolator);</span>
+<span class="fc" id="L115">        ConfigurationInterpolator interpolator = fetchInterpolator(ci);</span>
+<span class="fc" id="L116">        return convert(interpolator.interpolate(src), targetCls, interpolator);</span>
     }
 
     /**
@@ -123,21 +124,21 @@ import org.apache.commons.lang3.ClassUtils;
      * too.
      */
     @Override
-    public Object toArray(final Object src, final Class&lt;?&gt; elemClass,
-            final ConfigurationInterpolator ci)
+    public Object toArray(Object src, Class&lt;?&gt; elemClass,
+            ConfigurationInterpolator ci)
     {
-<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (src == null)</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (src == null)</span>
         {
-<span class="fc" id="L131">            return null;</span>
+<span class="fc" id="L132">            return null;</span>
         }
-<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (isEmptyElement(src))</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (isEmptyElement(src))</span>
         {
-<span class="fc" id="L135">            return Array.newInstance(elemClass, 0);</span>
+<span class="fc" id="L136">            return Array.newInstance(elemClass, 0);</span>
         }
 
-<span class="fc" id="L138">        final ConfigurationInterpolator interpolator = fetchInterpolator(ci);</span>
-<span class="fc bfc" id="L139" title="All 2 branches covered.">        return elemClass.isPrimitive() ? toPrimitiveArray(src, elemClass,</span>
-<span class="fc" id="L140">                interpolator) : toObjectArray(src, elemClass, interpolator);</span>
+<span class="fc" id="L139">        ConfigurationInterpolator interpolator = fetchInterpolator(ci);</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        return elemClass.isPrimitive() ? toPrimitiveArray(src, elemClass,</span>
+<span class="fc" id="L141">                interpolator) : toObjectArray(src, elemClass, interpolator);</span>
     }
 
     /**
@@ -149,21 +150,21 @@ import org.apache.commons.lang3.ClassUtils;
      * @throws IllegalArgumentException if the target collection is &lt;b&gt;null&lt;/b&gt;
      */
     @Override
-    public &lt;T&gt; void toCollection(final Object src, final Class&lt;T&gt; elemClass,
-            final ConfigurationInterpolator ci, final Collection&lt;T&gt; dest)
+    public &lt;T&gt; void toCollection(Object src, Class&lt;T&gt; elemClass,
+            ConfigurationInterpolator ci, Collection&lt;T&gt; dest)
     {
-<span class="fc bfc" id="L155" title="All 2 branches covered.">        if (dest == null)</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (dest == null)</span>
         {
-<span class="fc" id="L157">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L158">            throw new IllegalArgumentException(</span>
                     &quot;Target collection must not be null!&quot;);
         }
 
-<span class="fc bfc" id="L161" title="All 4 branches covered.">        if (src != null &amp;&amp; !isEmptyElement(src))</span>
+<span class="fc bfc" id="L162" title="All 4 branches covered.">        if (src != null &amp;&amp; !isEmptyElement(src))</span>
         {
-<span class="fc" id="L163">            final ConfigurationInterpolator interpolator = fetchInterpolator(ci);</span>
-<span class="fc" id="L164">            convertToCollection(src, elemClass, interpolator, dest);</span>
+<span class="fc" id="L164">            ConfigurationInterpolator interpolator = fetchInterpolator(ci);</span>
+<span class="fc" id="L165">            convertToCollection(src, elemClass, interpolator, dest);</span>
         }
-<span class="fc" id="L166">    }</span>
+<span class="fc" id="L167">    }</span>
 
     /**
      * Tests whether the passed in object is complex (which means that it
@@ -181,10 +182,10 @@ import org.apache.commons.lang3.ClassUtils;
      * @param src the source object
      * @return &lt;b&gt;true&lt;/b&gt; if this is a complex object, &lt;b&gt;false&lt;/b&gt; otherwise
      */
-    protected boolean isComplexObject(final Object src)
+    protected boolean isComplexObject(Object src)
     {
-<span class="fc bfc" id="L186" title="All 6 branches covered.">        return src instanceof Iterator&lt;?&gt; || src instanceof Iterable&lt;?&gt;</span>
-<span class="fc bfc" id="L187" title="All 2 branches covered.">                || (src != null &amp;&amp; src.getClass().isArray());</span>
+<span class="fc bfc" id="L187" title="All 6 branches covered.">        return src instanceof Iterator&lt;?&gt; || src instanceof Iterable&lt;?&gt;</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">                || (src != null &amp;&amp; src.getClass().isArray());</span>
     }
 
     /**
@@ -198,10 +199,10 @@ import org.apache.commons.lang3.ClassUtils;
      * @param src the object to be tested
      * @return a flag whether this object is an empty element
      */
-    protected boolean isEmptyElement(final Object src)
+    protected boolean isEmptyElement(Object src)
     {
-<span class="fc bfc" id="L203" title="All 2 branches covered.">        return (src instanceof CharSequence)</span>
-<span class="fc bfc" id="L204" title="All 2 branches covered.">                &amp;&amp; ((CharSequence) src).length() == 0;</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">        return (src instanceof CharSequence)</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                &amp;&amp; ((CharSequence) src).length() == 0;</span>
     }
 
     /**
@@ -226,13 +227,13 @@ import org.apache.commons.lang3.ClassUtils;
      * @return the converted value
      * @throws ConversionException if conversion is not possible
      */
-    protected &lt;T&gt; T convert(final Object src, final Class&lt;T&gt; targetCls,
-            final ConfigurationInterpolator ci)
+    protected &lt;T&gt; T convert(Object src, Class&lt;T&gt; targetCls,
+            ConfigurationInterpolator ci)
     {
-        final Object conversionSrc =
-<span class="fc bfc" id="L233" title="All 2 branches covered.">                isComplexObject(src) ? extractConversionValue(src, targetCls,</span>
-<span class="fc" id="L234">                        ci) : src;</span>
-<span class="fc" id="L235">        return convertValue(ci.interpolate(conversionSrc), targetCls, ci);</span>
+        Object conversionSrc =
+<span class="fc bfc" id="L234" title="All 2 branches covered.">                isComplexObject(src) ? extractConversionValue(src, targetCls,</span>
+<span class="fc" id="L235">                        ci) : src;</span>
+<span class="fc" id="L236">        return convertValue(ci.interpolate(conversionSrc), targetCls, ci);</span>
     }
 
     /**
@@ -245,9 +246,9 @@ import org.apache.commons.lang3.ClassUtils;
      * @param limit the number of elements to extract
      * @return a collection with all extracted values
      */
-    protected Collection&lt;?&gt; extractValues(final Object source, final int limit)
+    protected Collection&lt;?&gt; extractValues(Object source, int limit)
     {
-<span class="fc" id="L250">        return EXTRACTOR.flatten(source, limit);</span>
+<span class="fc" id="L251">        return EXTRACTOR.flatten(source, limit);</span>
     }
 
     /**
@@ -258,9 +259,9 @@ import org.apache.commons.lang3.ClassUtils;
      *        object)
      * @return a collection with all extracted values
      */
-    protected Collection&lt;?&gt; extractValues(final Object source)
+    protected Collection&lt;?&gt; extractValues(Object source)
     {
-<span class="fc" id="L263">        return extractValues(source, Integer.MAX_VALUE);</span>
+<span class="fc" id="L264">        return extractValues(source, Integer.MAX_VALUE);</span>
     }
 
     /**
@@ -274,12 +275,12 @@ import org.apache.commons.lang3.ClassUtils;
      * @return the value to be converted (may be &lt;b&gt;null&lt;/b&gt; if no values are
      *         found)
      */
-    protected Object extractConversionValue(final Object container,
-            final Class&lt;?&gt; targetCls, final ConfigurationInterpolator ci)
+    protected Object extractConversionValue(Object container,
+            Class&lt;?&gt; targetCls, ConfigurationInterpolator ci)
     {
-<span class="fc" id="L280">        final Collection&lt;?&gt; values = extractValues(container, 1);</span>
-<span class="fc bfc" id="L281" title="All 2 branches covered.">        return values.isEmpty() ? null : ci.interpolate(values.iterator()</span>
-<span class="fc" id="L282">                .next());</span>
+<span class="fc" id="L281">        Collection&lt;?&gt; values = extractValues(container, 1);</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        return values.isEmpty() ? null : ci.interpolate(values.iterator()</span>
+<span class="fc" id="L283">                .next());</span>
     }
 
     /**
@@ -296,18 +297,17 @@ import org.apache.commons.lang3.ClassUtils;
      * @return the converted value
      * @throws ConversionException if conversion is not possible
      */
-    protected &lt;T&gt; T convertValue(final Object src, final Class&lt;T&gt; targetCls,
-            final ConfigurationInterpolator ci)
+    protected &lt;T&gt; T convertValue(Object src, Class&lt;T&gt; targetCls,
+            ConfigurationInterpolator ci)
     {
-<span class="fc bfc" id="L302" title="All 2 branches covered.">        if (src == null)</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">        if (src == null)</span>
         {
-<span class="fc" id="L304">            return null;</span>
+<span class="fc" id="L305">            return null;</span>
         }
 
         // This is a safe cast because PropertyConverter either returns an
         // object of the correct class or throws an exception.
         @SuppressWarnings(&quot;unchecked&quot;)
-        final
 <span class="fc" id="L311">        T result = (T) PropertyConverter.to(targetCls, src,</span>
                this);
 <span class="fc" id="L313">        return result;</span>
@@ -322,16 +322,15 @@ import org.apache.commons.lang3.ClassUtils;
      * @return the result array
      * @throws ConversionException if a conversion cannot be performed
      */
-    private &lt;T&gt; T[] toObjectArray(final Object src, final Class&lt;T&gt; elemClass,
-            final ConfigurationInterpolator ci)
+    private &lt;T&gt; T[] toObjectArray(Object src, Class&lt;T&gt; elemClass,
+            ConfigurationInterpolator ci)
     {
-<span class="fc" id="L328">        final Collection&lt;T&gt; convertedCol = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L328">        Collection&lt;T&gt; convertedCol = new LinkedList&lt;&gt;();</span>
 <span class="fc" id="L329">        convertToCollection(src, elemClass, ci, convertedCol);</span>
         // Safe to cast because the element class is specified
         @SuppressWarnings(&quot;unchecked&quot;)
-        final
-<span class="fc" id="L333">        T[] result = (T[]) Array.newInstance(elemClass, convertedCol.size());</span>
-<span class="fc" id="L334">        return convertedCol.toArray(result);</span>
+<span class="fc" id="L332">        T[] result = (T[]) Array.newInstance(elemClass, convertedCol.size());</span>
+<span class="fc" id="L333">        return convertedCol.toArray(result);</span>
     }
 
     /**
@@ -346,42 +345,42 @@ import org.apache.commons.lang3.ClassUtils;
      * @return the result array
      * @throws ConversionException if a conversion cannot be performed
      */
-    private Object toPrimitiveArray(final Object src, final Class&lt;?&gt; elemClass,
-            final ConfigurationInterpolator ci)
+    private Object toPrimitiveArray(Object src, Class&lt;?&gt; elemClass,
+            ConfigurationInterpolator ci)
     {
-<span class="fc bfc" id="L352" title="All 2 branches covered.">        if (src.getClass().isArray())</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">        if (src.getClass().isArray())</span>
         {
-<span class="fc bfc" id="L354" title="All 2 branches covered.">            if (src.getClass().getComponentType().equals(elemClass))</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">            if (src.getClass().getComponentType().equals(elemClass))</span>
             {
-<span class="fc" id="L356">                return src;</span>
+<span class="fc" id="L355">                return src;</span>
             }
 
-<span class="fc" id="L359">            if (src.getClass().getComponentType()</span>
-<span class="fc bfc" id="L360" title="All 2 branches covered.">                    .equals(ClassUtils.primitiveToWrapper(elemClass)))</span>
+<span class="fc" id="L358">            if (src.getClass().getComponentType()</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">                    .equals(ClassUtils.primitiveToWrapper(elemClass)))</span>
             {
                 // the value is an array of the wrapper type derived from the
                 // specified primitive type
-<span class="fc" id="L364">                final int length = Array.getLength(src);</span>
-<span class="fc" id="L365">                final Object array = Array.newInstance(elemClass, length);</span>
+<span class="fc" id="L363">                int length = Array.getLength(src);</span>
+<span class="fc" id="L364">                Object array = Array.newInstance(elemClass, length);</span>
 
-<span class="fc bfc" id="L367" title="All 2 branches covered.">                for (int i = 0; i &lt; length; i++)</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">                for (int i = 0; i &lt; length; i++)</span>
                 {
-<span class="fc" id="L369">                    Array.set(array, i, Array.get(src, i));</span>
+<span class="fc" id="L368">                    Array.set(array, i, Array.get(src, i));</span>
                 }
-<span class="fc" id="L371">                return array;</span>
+<span class="fc" id="L370">                return array;</span>
             }
         }
 
-<span class="fc" id="L375">        final Collection&lt;?&gt; values = extractValues(src);</span>
-<span class="fc" id="L376">        final Class&lt;?&gt; targetClass = ClassUtils.primitiveToWrapper(elemClass);</span>
-<span class="fc" id="L377">        final Object array = Array.newInstance(elemClass, values.size());</span>
-<span class="fc" id="L378">        int idx = 0;</span>
-<span class="fc bfc" id="L379" title="All 2 branches covered.">        for (final Object value : values)</span>
+<span class="fc" id="L374">        Collection&lt;?&gt; values = extractValues(src);</span>
+<span class="fc" id="L375">        Class&lt;?&gt; targetClass = ClassUtils.primitiveToWrapper(elemClass);</span>
+<span class="fc" id="L376">        Object array = Array.newInstance(elemClass, values.size());</span>
+<span class="fc" id="L377">        int idx = 0;</span>
+<span class="fc bfc" id="L378" title="All 2 branches covered.">        for (Object value : values)</span>
         {
-<span class="fc" id="L381">            Array.set(array, idx++,</span>
-<span class="fc" id="L382">                    convertValue(ci.interpolate(value), targetClass, ci));</span>
-<span class="fc" id="L383">        }</span>
-<span class="fc" id="L384">        return array;</span>
+<span class="fc" id="L380">            Array.set(array, idx++,</span>
+<span class="fc" id="L381">                    convertValue(ci.interpolate(value), targetClass, ci));</span>
+<span class="fc" id="L382">        }</span>
+<span class="fc" id="L383">        return array;</span>
     }
 
     /**
@@ -395,14 +394,14 @@ import org.apache.commons.lang3.ClassUtils;
      * @param dest the collection in which to store the results
      * @throws ConversionException if a conversion cannot be performed
      */
-    private &lt;T&gt; void convertToCollection(final Object src, final Class&lt;T&gt; elemClass,
-            final ConfigurationInterpolator ci, final Collection&lt;T&gt; dest)
+    private &lt;T&gt; void convertToCollection(Object src, Class&lt;T&gt; elemClass,
+            ConfigurationInterpolator ci, Collection&lt;T&gt; dest)
     {
-<span class="fc bfc" id="L401" title="All 2 branches covered.">        for (final Object o : extractValues(ci.interpolate(src)))</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">        for (Object o : extractValues(ci.interpolate(src)))</span>
         {
-<span class="fc" id="L403">            dest.add(convert(o, elemClass, ci));</span>
-<span class="fc" id="L404">        }</span>
-<span class="fc" id="L405">    }</span>
+<span class="fc" id="L402">            dest.add(convert(o, elemClass, ci));</span>
+<span class="fc" id="L403">        }</span>
+<span class="fc" id="L404">    }</span>
 
     /**
      * Obtains a {@code ConfigurationInterpolator}. If the passed in one is not
@@ -412,9 +411,9 @@ import org.apache.commons.lang3.ClassUtils;
      * @return the {@code ConfigurationInterpolator} to be used
      */
     private static ConfigurationInterpolator fetchInterpolator(
-            final ConfigurationInterpolator ci)
+            ConfigurationInterpolator ci)
     {
-<span class="fc bfc" id="L417" title="All 2 branches covered.">        return ci != null ? ci : NULL_INTERPOLATOR;</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        return (ci != null) ? ci : NULL_INTERPOLATOR;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

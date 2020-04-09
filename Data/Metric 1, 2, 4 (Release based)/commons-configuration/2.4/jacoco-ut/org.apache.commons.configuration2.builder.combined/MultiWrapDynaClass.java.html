@@ -31,12 +31,13 @@ import org.apache.commons.beanutils.DynaProperty;
  * multiple other {@code DynaClass} instances.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 class MultiWrapDynaClass implements DynaClass
 {
     /** An empty array for converting the properties collection to an array. */
-<span class="fc" id="L39">    private static final DynaProperty[] EMPTY_PROPS = new DynaProperty[0];</span>
+<span class="fc" id="L40">    private static final DynaProperty[] EMPTY_PROPS = new DynaProperty[0];</span>
 
     /** A collection with all properties of this class. */
     private final Collection&lt;DynaProperty&gt; properties;
@@ -51,11 +52,11 @@ class MultiWrapDynaClass implements DynaClass
      * @param wrappedCls the collection with wrapped classes
      */
     public MultiWrapDynaClass(final Collection&lt;? extends DynaClass&gt; wrappedCls)
-<span class="fc" id="L54">    {</span>
-<span class="fc" id="L55">        properties = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L56">        namedProperties = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L57">        initProperties(wrappedCls);</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L55">    {</span>
+<span class="fc" id="L56">        properties = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L57">        namedProperties = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L58">        initProperties(wrappedCls);</span>
+<span class="fc" id="L59">    }</span>
 
     /**
      * {@inheritDoc} The name of this class is not relevant.
@@ -63,19 +64,19 @@ class MultiWrapDynaClass implements DynaClass
     @Override
     public String getName()
     {
-<span class="fc" id="L66">        return null;</span>
+<span class="fc" id="L67">        return null;</span>
     }
 
     @Override
     public DynaProperty getDynaProperty(final String name)
     {
-<span class="fc" id="L72">        return namedProperties.get(name);</span>
+<span class="fc" id="L73">        return namedProperties.get(name);</span>
     }
 
     @Override
     public DynaProperty[] getDynaProperties()
     {
-<span class="nc" id="L78">        return properties.toArray(EMPTY_PROPS);</span>
+<span class="nc" id="L79">        return properties.toArray(EMPTY_PROPS);</span>
     }
 
     /**
@@ -86,7 +87,7 @@ class MultiWrapDynaClass implements DynaClass
     public DynaBean newInstance() throws IllegalAccessException,
             InstantiationException
     {
-<span class="fc" id="L89">        throw new UnsupportedOperationException(</span>
+<span class="fc" id="L90">        throw new UnsupportedOperationException(</span>
                 &quot;Cannot create an instance of MultiWrapDynaBean!&quot;);
     }
 
@@ -97,15 +98,15 @@ class MultiWrapDynaClass implements DynaClass
      */
     private void initProperties(final Collection&lt;? extends DynaClass&gt; wrappedCls)
     {
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (final DynaClass cls : wrappedCls)</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        for (final DynaClass cls : wrappedCls)</span>
         {
-<span class="fc" id="L102">            final DynaProperty[] props = cls.getDynaProperties();</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">            for (final DynaProperty p : props)</span>
+<span class="fc" id="L103">            final DynaProperty[] props = cls.getDynaProperties();</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            for (final DynaProperty p : props)</span>
             {
-<span class="fc" id="L105">                properties.add(p);</span>
-<span class="fc" id="L106">                namedProperties.put(p.getName(), p);</span>
+<span class="fc" id="L106">                properties.add(p);</span>
+<span class="fc" id="L107">                namedProperties.put(p.getName(), p);</span>
             }
-<span class="fc" id="L108">        }</span>
-<span class="fc" id="L109">    }</span>
+<span class="fc" id="L109">        }</span>
+<span class="fc" id="L110">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

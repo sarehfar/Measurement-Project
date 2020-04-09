@@ -179,9 +179,10 @@ import org.apache.commons.configuration2.tree.UnionCombiner;
  * &lt;/p&gt;
  *
  * @since 1.3
+ * @version $Id$
  */
 public class CombinedConfiguration extends BaseHierarchicalConfiguration implements
-        EventListener&lt;ConfigurationEvent&gt;
+        EventListener&lt;ConfigurationEvent&gt;, Cloneable
 {
     /**
      * Constant for the event type fired when the internal node structure of a
@@ -189,19 +190,19 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      *
      * @since 2.0
      */
-<span class="fc" id="L192">    public static final EventType&lt;ConfigurationEvent&gt; COMBINED_INVALIDATE =</span>
+<span class="fc" id="L193">    public static final EventType&lt;ConfigurationEvent&gt; COMBINED_INVALIDATE =</span>
             new EventType&lt;&gt;(ConfigurationEvent.ANY,
                     &quot;COMBINED_INVALIDATE&quot;);
 
     /** Constant for the expression engine for parsing the at path. */
-<span class="fc" id="L197">    private static final DefaultExpressionEngine AT_ENGINE = DefaultExpressionEngine.INSTANCE;</span>
+<span class="fc" id="L198">    private static final DefaultExpressionEngine AT_ENGINE = DefaultExpressionEngine.INSTANCE;</span>
 
     /** Constant for the default node combiner. */
-<span class="fc" id="L200">    private static final NodeCombiner DEFAULT_COMBINER = new UnionCombiner();</span>
+<span class="fc" id="L201">    private static final NodeCombiner DEFAULT_COMBINER = new UnionCombiner();</span>
 
     /** Constant for a root node for an empty configuration. */
-<span class="fc" id="L203">    private static final ImmutableNode EMPTY_ROOT = new ImmutableNode.Builder()</span>
-<span class="fc" id="L204">            .create();</span>
+<span class="fc" id="L204">    private static final ImmutableNode EMPTY_ROOT = new ImmutableNode.Builder()</span>
+<span class="fc" id="L205">            .create();</span>
 
     /** Stores the combiner. */
     private NodeCombiner nodeCombiner;
@@ -228,11 +229,11 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param comb the node combiner (can be &lt;b&gt;null&lt;/b&gt;, then a union combiner
      * is used as default)
      */
-    public CombinedConfiguration(final NodeCombiner comb)
-<span class="fc" id="L232">    {</span>
-<span class="fc bfc" id="L233" title="All 2 branches covered.">        nodeCombiner = comb != null ? comb : DEFAULT_COMBINER;</span>
-<span class="fc" id="L234">        initChildCollections();</span>
-<span class="fc" id="L235">    }</span>
+    public CombinedConfiguration(NodeCombiner comb)
+<span class="fc" id="L233">    {</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        nodeCombiner = (comb != null) ? comb : DEFAULT_COMBINER;</span>
+<span class="fc" id="L235">        initChildCollections();</span>
+<span class="fc" id="L236">    }</span>
 
     /**
      * Creates a new instance of {@code CombinedConfiguration} that uses
@@ -242,8 +243,8 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public CombinedConfiguration()
     {
-<span class="fc" id="L245">        this(null);</span>
-<span class="fc" id="L246">    }</span>
+<span class="fc" id="L246">        this(null);</span>
+<span class="fc" id="L247">    }</span>
 
     /**
      * Returns the node combiner that is used for creating the combined node
@@ -253,14 +254,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public NodeCombiner getNodeCombiner()
     {
-<span class="fc" id="L256">        beginRead(true);</span>
+<span class="fc" id="L257">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L259">            return nodeCombiner;</span>
+<span class="fc" id="L260">            return nodeCombiner;</span>
         }
         finally
         {
-<span class="fc" id="L263">            endRead();</span>
+<span class="fc" id="L264">            endRead();</span>
         }
     }
 
@@ -273,25 +274,25 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      *
      * @param nodeCombiner the node combiner
      */
-    public void setNodeCombiner(final NodeCombiner nodeCombiner)
+    public void setNodeCombiner(NodeCombiner nodeCombiner)
     {
-<span class="fc bfc" id="L278" title="All 2 branches covered.">        if (nodeCombiner == null)</span>
+<span class="fc bfc" id="L279" title="All 2 branches covered.">        if (nodeCombiner == null)</span>
         {
-<span class="fc" id="L280">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L281">            throw new IllegalArgumentException(</span>
                     &quot;Node combiner must not be null!&quot;);
         }
 
-<span class="fc" id="L284">        beginWrite(true);</span>
+<span class="fc" id="L285">        beginWrite(true);</span>
         try
         {
-<span class="fc" id="L287">            this.nodeCombiner = nodeCombiner;</span>
-<span class="fc" id="L288">            invalidateInternal();</span>
+<span class="fc" id="L288">            this.nodeCombiner = nodeCombiner;</span>
+<span class="fc" id="L289">            invalidateInternal();</span>
         }
         finally
         {
-<span class="fc" id="L292">            endWrite();</span>
+<span class="fc" id="L293">            endWrite();</span>
         }
-<span class="fc" id="L294">    }</span>
+<span class="fc" id="L295">    }</span>
 
     /**
      * Returns the {@code ExpressionEngine} for converting flat child
@@ -302,14 +303,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public ExpressionEngine getConversionExpressionEngine()
     {
-<span class="fc" id="L305">        beginRead(true);</span>
+<span class="fc" id="L306">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L308">            return conversionExpressionEngine;</span>
+<span class="fc" id="L309">            return conversionExpressionEngine;</span>
         }
         finally
         {
-<span class="fc" id="L312">            endRead();</span>
+<span class="fc" id="L313">            endRead();</span>
         }
     }
 
@@ -329,18 +330,18 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @since 1.6
      */
     public void setConversionExpressionEngine(
-            final ExpressionEngine conversionExpressionEngine)
+            ExpressionEngine conversionExpressionEngine)
     {
-<span class="fc" id="L334">        beginWrite(true);</span>
+<span class="fc" id="L335">        beginWrite(true);</span>
         try
         {
-<span class="fc" id="L337">            this.conversionExpressionEngine = conversionExpressionEngine;</span>
+<span class="fc" id="L338">            this.conversionExpressionEngine = conversionExpressionEngine;</span>
         }
         finally
         {
-<span class="fc" id="L341">            endWrite();</span>
+<span class="fc" id="L342">            endWrite();</span>
         }
-<span class="fc" id="L343">    }</span>
+<span class="fc" id="L344">    }</span>
 
     /**
      * Adds a new configuration to this combined configuration. It is possible
@@ -358,47 +359,47 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param at the position of this configuration in the combined tree (can be
      * &lt;b&gt;null&lt;/b&gt;)
      */
-    public void addConfiguration(final Configuration config, final String name,
-            final String at)
+    public void addConfiguration(Configuration config, String name,
+            String at)
     {
-<span class="fc bfc" id="L364" title="All 2 branches covered.">        if (config == null)</span>
+<span class="fc bfc" id="L365" title="All 2 branches covered.">        if (config == null)</span>
         {
-<span class="fc" id="L366">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L367">            throw new IllegalArgumentException(</span>
                     &quot;Added configuration must not be null!&quot;);
         }
 
-<span class="fc" id="L370">        beginWrite(true);</span>
+<span class="fc" id="L371">        beginWrite(true);</span>
         try
         {
-<span class="fc bfc" id="L373" title="All 4 branches covered.">            if (name != null &amp;&amp; namedConfigurations.containsKey(name))</span>
+<span class="fc bfc" id="L374" title="All 4 branches covered.">            if (name != null &amp;&amp; namedConfigurations.containsKey(name))</span>
             {
-<span class="fc" id="L375">                throw new ConfigurationRuntimeException(</span>
+<span class="fc" id="L376">                throw new ConfigurationRuntimeException(</span>
                         &quot;A configuration with the name '&quot;
                                 + name
                                 + &quot;' already exists in this combined configuration!&quot;);
             }
 
-<span class="fc" id="L381">            final ConfigData cd = new ConfigData(config, name, at);</span>
-<span class="fc bfc" id="L382" title="All 2 branches covered.">            if (getLogger().isDebugEnabled())</span>
+<span class="fc" id="L382">            ConfigData cd = new ConfigData(config, name, at);</span>
+<span class="fc bfc" id="L383" title="All 2 branches covered.">            if (getLogger().isDebugEnabled())</span>
             {
-<span class="fc" id="L384">                getLogger()</span>
-<span class="fc" id="L385">                        .debug(&quot;Adding configuration &quot; + config + &quot; with name &quot;</span>
+<span class="fc" id="L385">                getLogger()</span>
+<span class="fc" id="L386">                        .debug(&quot;Adding configuration &quot; + config + &quot; with name &quot;</span>
                                 + name);
             }
-<span class="fc" id="L388">            configurations.add(cd);</span>
-<span class="fc bfc" id="L389" title="All 2 branches covered.">            if (name != null)</span>
+<span class="fc" id="L389">            configurations.add(cd);</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">            if (name != null)</span>
             {
-<span class="fc" id="L391">                namedConfigurations.put(name, config);</span>
+<span class="fc" id="L392">                namedConfigurations.put(name, config);</span>
             }
 
-<span class="fc" id="L394">            invalidateInternal();</span>
+<span class="fc" id="L395">            invalidateInternal();</span>
         }
         finally
         {
-<span class="fc" id="L398">            endWrite();</span>
+<span class="fc" id="L399">            endWrite();</span>
         }
-<span class="fc" id="L400">        registerListenerAt(config);</span>
-<span class="fc" id="L401">    }</span>
+<span class="fc" id="L401">        registerListenerAt(config);</span>
+<span class="fc" id="L402">    }</span>
 
     /**
      * Adds a new configuration to this combined configuration with an optional
@@ -408,10 +409,10 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param config the configuration to add (must not be &lt;b&gt;null&lt;/b&gt;)
      * @param name the name of this configuration (can be &lt;b&gt;null&lt;/b&gt;)
      */
-    public void addConfiguration(final Configuration config, final String name)
+    public void addConfiguration(Configuration config, String name)
     {
-<span class="fc" id="L413">        addConfiguration(config, name, null);</span>
-<span class="fc" id="L414">    }</span>
+<span class="fc" id="L414">        addConfiguration(config, name, null);</span>
+<span class="fc" id="L415">    }</span>
 
     /**
      * Adds a new configuration to this combined configuration. The new
@@ -420,10 +421,10 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      *
      * @param config the configuration to add (must not be &lt;b&gt;null&lt;/b&gt;)
      */
-    public void addConfiguration(final Configuration config)
+    public void addConfiguration(Configuration config)
     {
-<span class="fc" id="L425">        addConfiguration(config, null, null);</span>
-<span class="fc" id="L426">    }</span>
+<span class="fc" id="L426">        addConfiguration(config, null, null);</span>
+<span class="fc" id="L427">    }</span>
 
     /**
      * Returns the number of configurations that are contained in this combined
@@ -433,14 +434,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public int getNumberOfConfigurations()
     {
-<span class="fc" id="L436">        beginRead(true);</span>
+<span class="fc" id="L437">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L439">            return getNumberOfConfigurationsInternal();</span>
+<span class="fc" id="L440">            return getNumberOfConfigurationsInternal();</span>
         }
         finally
         {
-<span class="fc" id="L443">            endRead();</span>
+<span class="fc" id="L444">            endRead();</span>
         }
     }
 
@@ -452,17 +453,17 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param index the index
      * @return the configuration at this index
      */
-    public Configuration getConfiguration(final int index)
+    public Configuration getConfiguration(int index)
     {
-<span class="fc" id="L457">        beginRead(true);</span>
+<span class="fc" id="L458">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L460">            final ConfigData cd = configurations.get(index);</span>
-<span class="fc" id="L461">            return cd.getConfiguration();</span>
+<span class="fc" id="L461">            ConfigData cd = configurations.get(index);</span>
+<span class="fc" id="L462">            return cd.getConfiguration();</span>
         }
         finally
         {
-<span class="fc" id="L465">            endRead();</span>
+<span class="fc" id="L466">            endRead();</span>
         }
     }
 
@@ -473,16 +474,16 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param name the name of the configuration
      * @return the configuration with this name
      */
-    public Configuration getConfiguration(final String name)
+    public Configuration getConfiguration(String name)
     {
-<span class="fc" id="L478">        beginRead(true);</span>
+<span class="fc" id="L479">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L481">            return namedConfigurations.get(name);</span>
+<span class="fc" id="L482">            return namedConfigurations.get(name);</span>
         }
         finally
         {
-<span class="fc" id="L485">            endRead();</span>
+<span class="fc" id="L486">            endRead();</span>
         }
     }
 
@@ -493,20 +494,20 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public List&lt;Configuration&gt; getConfigurations()
     {
-<span class="fc" id="L496">        beginRead(true);</span>
+<span class="fc" id="L497">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L499">            final List&lt;Configuration&gt; list =</span>
-<span class="fc" id="L500">                    new ArrayList&lt;&gt;(getNumberOfConfigurationsInternal());</span>
-<span class="fc bfc" id="L501" title="All 2 branches covered.">            for (final ConfigData cd : configurations)</span>
+<span class="fc" id="L500">            List&lt;Configuration&gt; list =</span>
+<span class="fc" id="L501">                    new ArrayList&lt;&gt;(getNumberOfConfigurationsInternal());</span>
+<span class="fc bfc" id="L502" title="All 2 branches covered.">            for (ConfigData cd : configurations)</span>
             {
-<span class="fc" id="L503">                list.add(cd.getConfiguration());</span>
-<span class="fc" id="L504">            }</span>
-<span class="fc" id="L505">            return list;</span>
+<span class="fc" id="L504">                list.add(cd.getConfiguration());</span>
+<span class="fc" id="L505">            }</span>
+<span class="fc" id="L506">            return list;</span>
         }
         finally
         {
-<span class="fc" id="L509">            endRead();</span>
+<span class="fc" id="L510">            endRead();</span>
         }
     }
 
@@ -519,19 +520,19 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public List&lt;String&gt; getConfigurationNameList()
     {
-<span class="fc" id="L522">        beginRead(true);</span>
+<span class="fc" id="L523">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L525">            final List&lt;String&gt; list = new ArrayList&lt;&gt;(getNumberOfConfigurationsInternal());</span>
-<span class="fc bfc" id="L526" title="All 2 branches covered.">            for (final ConfigData cd : configurations)</span>
+<span class="fc" id="L526">            List&lt;String&gt; list = new ArrayList&lt;&gt;(getNumberOfConfigurationsInternal());</span>
+<span class="fc bfc" id="L527" title="All 2 branches covered.">            for (ConfigData cd : configurations)</span>
             {
-<span class="fc" id="L528">                list.add(cd.getName());</span>
-<span class="fc" id="L529">            }</span>
-<span class="fc" id="L530">            return list;</span>
+<span class="fc" id="L529">                list.add(cd.getName());</span>
+<span class="fc" id="L530">            }</span>
+<span class="fc" id="L531">            return list;</span>
         }
         finally
         {
-<span class="fc" id="L534">            endRead();</span>
+<span class="fc" id="L535">            endRead();</span>
         }
     }
 
@@ -541,18 +542,18 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param config the configuration to be removed
      * @return a flag whether this configuration was found and could be removed
      */
-    public boolean removeConfiguration(final Configuration config)
+    public boolean removeConfiguration(Configuration config)
     {
-<span class="pc bfc" id="L546" title="All 2 branches covered.">        for (int index = 0; index &lt; getNumberOfConfigurations(); index++)</span>
+<span class="pc bfc" id="L547" title="All 2 branches covered.">        for (int index = 0; index &lt; getNumberOfConfigurations(); index++)</span>
         {
-<span class="pc bpc" id="L548" title="1 of 2 branches missed.">            if (configurations.get(index).getConfiguration() == config)</span>
+<span class="pc bpc" id="L549" title="1 of 2 branches missed.">            if (configurations.get(index).getConfiguration() == config)</span>
             {
-<span class="fc" id="L550">                removeConfigurationAt(index);</span>
-<span class="fc" id="L551">                return true;</span>
+<span class="fc" id="L551">                removeConfigurationAt(index);</span>
+<span class="fc" id="L552">                return true;</span>
             }
         }
 
-<span class="fc" id="L555">        return false;</span>
+<span class="fc" id="L556">        return false;</span>
     }
 
     /**
@@ -561,16 +562,16 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param index the index
      * @return the removed configuration
      */
-    public Configuration removeConfigurationAt(final int index)
+    public Configuration removeConfigurationAt(int index)
     {
-<span class="fc" id="L566">        final ConfigData cd = configurations.remove(index);</span>
-<span class="fc bfc" id="L567" title="All 2 branches covered.">        if (cd.getName() != null)</span>
+<span class="fc" id="L567">        ConfigData cd = configurations.remove(index);</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">        if (cd.getName() != null)</span>
         {
-<span class="fc" id="L569">            namedConfigurations.remove(cd.getName());</span>
+<span class="fc" id="L570">            namedConfigurations.remove(cd.getName());</span>
         }
-<span class="fc" id="L571">        unregisterListenerAt(cd.getConfiguration());</span>
-<span class="fc" id="L572">        invalidateInternal();</span>
-<span class="fc" id="L573">        return cd.getConfiguration();</span>
+<span class="fc" id="L572">        unregisterListenerAt(cd.getConfiguration());</span>
+<span class="fc" id="L573">        invalidateInternal();</span>
+<span class="fc" id="L574">        return cd.getConfiguration();</span>
     }
 
     /**
@@ -580,14 +581,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @return the removed configuration (&lt;b&gt;null&lt;/b&gt; if this configuration
      * was not found)
      */
-    public Configuration removeConfiguration(final String name)
+    public Configuration removeConfiguration(String name)
     {
-<span class="fc" id="L585">        final Configuration conf = getConfiguration(name);</span>
-<span class="fc bfc" id="L586" title="All 2 branches covered.">        if (conf != null)</span>
+<span class="fc" id="L586">        Configuration conf = getConfiguration(name);</span>
+<span class="fc bfc" id="L587" title="All 2 branches covered.">        if (conf != null)</span>
         {
-<span class="fc" id="L588">            removeConfiguration(conf);</span>
+<span class="fc" id="L589">            removeConfiguration(conf);</span>
         }
-<span class="fc" id="L590">        return conf;</span>
+<span class="fc" id="L591">        return conf;</span>
     }
 
     /**
@@ -600,14 +601,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public Set&lt;String&gt; getConfigurationNames()
     {
-<span class="fc" id="L603">        beginRead(true);</span>
+<span class="fc" id="L604">        beginRead(true);</span>
         try
         {
-<span class="fc" id="L606">            return namedConfigurations.keySet();</span>
+<span class="fc" id="L607">            return namedConfigurations.keySet();</span>
         }
         finally
         {
-<span class="fc" id="L610">            endRead();</span>
+<span class="fc" id="L611">            endRead();</span>
         }
     }
 
@@ -621,16 +622,16 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     public void invalidate()
     {
-<span class="fc" id="L624">        beginWrite(true);</span>
+<span class="fc" id="L625">        beginWrite(true);</span>
         try
         {
-<span class="fc" id="L627">            invalidateInternal();</span>
+<span class="fc" id="L628">            invalidateInternal();</span>
         }
         finally
         {
-<span class="fc" id="L631">            endWrite();</span>
+<span class="fc" id="L632">            endWrite();</span>
         }
-<span class="fc" id="L633">    }</span>
+<span class="fc" id="L634">    }</span>
 
     /**
      * Event listener call back for configuration update events. This method is
@@ -640,13 +641,13 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param event the update event
      */
     @Override
-    public void onEvent(final ConfigurationEvent event)
+    public void onEvent(ConfigurationEvent event)
     {
-<span class="fc bfc" id="L645" title="All 2 branches covered.">        if (event.isBeforeUpdate())</span>
+<span class="fc bfc" id="L646" title="All 2 branches covered.">        if (event.isBeforeUpdate())</span>
         {
-<span class="fc" id="L647">            invalidate();</span>
+<span class="fc" id="L648">            invalidate();</span>
         }
-<span class="fc" id="L649">    }</span>
+<span class="fc" id="L650">    }</span>
 
     /**
      * Clears this configuration. All contained configurations will be removed.
@@ -654,10 +655,10 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
     @Override
     protected void clearInternal()
     {
-<span class="fc" id="L657">        unregisterListenerAtChildren();</span>
-<span class="fc" id="L658">        initChildCollections();</span>
-<span class="fc" id="L659">        invalidateInternal();</span>
-<span class="fc" id="L660">    }</span>
+<span class="fc" id="L658">        unregisterListenerAtChildren();</span>
+<span class="fc" id="L659">        initChildCollections();</span>
+<span class="fc" id="L660">        invalidateInternal();</span>
+<span class="fc" id="L661">    }</span>
 
     /**
      * Returns a copy of this object. This implementation performs a deep clone,
@@ -671,22 +672,22 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
     @Override
     public Object clone()
     {
-<span class="fc" id="L674">        beginRead(false);</span>
+<span class="fc" id="L675">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L677">            final CombinedConfiguration copy = (CombinedConfiguration) super.clone();</span>
-<span class="fc" id="L678">            copy.initChildCollections();</span>
-<span class="fc bfc" id="L679" title="All 2 branches covered.">            for (final ConfigData cd : configurations)</span>
+<span class="fc" id="L678">            CombinedConfiguration copy = (CombinedConfiguration) super.clone();</span>
+<span class="fc" id="L679">            copy.initChildCollections();</span>
+<span class="fc bfc" id="L680" title="All 2 branches covered.">            for (ConfigData cd : configurations)</span>
             {
-<span class="fc" id="L681">                copy.addConfiguration(ConfigurationUtils.cloneConfiguration(cd</span>
-<span class="fc" id="L682">                        .getConfiguration()), cd.getName(), cd.getAt());</span>
-<span class="fc" id="L683">            }</span>
+<span class="fc" id="L682">                copy.addConfiguration(ConfigurationUtils.cloneConfiguration(cd</span>
+<span class="fc" id="L683">                        .getConfiguration()), cd.getName(), cd.getAt());</span>
+<span class="fc" id="L684">            }</span>
 
-<span class="fc" id="L685">            return copy;</span>
+<span class="fc" id="L686">            return copy;</span>
         }
         finally
         {
-<span class="fc" id="L689">            endRead();</span>
+<span class="fc" id="L690">            endRead();</span>
         }
     }
 
@@ -713,26 +714,26 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * and the source cannot be determined, or if the key is &lt;b&gt;null&lt;/b&gt;
      * @since 1.5
      */
-    public Configuration getSource(final String key)
+    public Configuration getSource(String key)
     {
-<span class="fc bfc" id="L718" title="All 2 branches covered.">        if (key == null)</span>
+<span class="fc bfc" id="L719" title="All 2 branches covered.">        if (key == null)</span>
         {
-<span class="fc" id="L720">            throw new IllegalArgumentException(&quot;Key must not be null!&quot;);</span>
+<span class="fc" id="L721">            throw new IllegalArgumentException(&quot;Key must not be null!&quot;);</span>
         }
 
-<span class="fc" id="L723">        final Set&lt;Configuration&gt; sources = getSources(key);</span>
-<span class="fc bfc" id="L724" title="All 2 branches covered.">        if (sources.isEmpty())</span>
+<span class="fc" id="L724">        Set&lt;Configuration&gt; sources = getSources(key);</span>
+<span class="fc bfc" id="L725" title="All 2 branches covered.">        if (sources.isEmpty())</span>
         {
-<span class="fc" id="L726">            return null;</span>
+<span class="fc" id="L727">            return null;</span>
         }
-<span class="fc" id="L728">        final Iterator&lt;Configuration&gt; iterator = sources.iterator();</span>
-<span class="fc" id="L729">        final Configuration source = iterator.next();</span>
-<span class="fc bfc" id="L730" title="All 2 branches covered.">        if (iterator.hasNext())</span>
+<span class="fc" id="L729">        Iterator&lt;Configuration&gt; iterator = sources.iterator();</span>
+<span class="fc" id="L730">        Configuration source = iterator.next();</span>
+<span class="fc bfc" id="L731" title="All 2 branches covered.">        if (iterator.hasNext())</span>
         {
-<span class="fc" id="L732">            throw new IllegalArgumentException(&quot;The key &quot; + key</span>
+<span class="fc" id="L733">            throw new IllegalArgumentException(&quot;The key &quot; + key</span>
                     + &quot; is defined by multiple sources!&quot;);
         }
-<span class="fc" id="L735">        return source;</span>
+<span class="fc" id="L736">        return source;</span>
     }
 
     /**
@@ -753,34 +754,34 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @return a set with the configuration sources, which contain this property
      * @since 2.0
      */
-    public Set&lt;Configuration&gt; getSources(final String key)
+    public Set&lt;Configuration&gt; getSources(String key)
     {
-<span class="fc" id="L758">        beginRead(false);</span>
+<span class="fc" id="L759">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L761">            final List&lt;QueryResult&lt;ImmutableNode&gt;&gt; results = fetchNodeList(key);</span>
-<span class="fc" id="L762">            final Set&lt;Configuration&gt; sources = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L762">            List&lt;QueryResult&lt;ImmutableNode&gt;&gt; results = fetchNodeList(key);</span>
+<span class="fc" id="L763">            Set&lt;Configuration&gt; sources = new HashSet&lt;&gt;();</span>
 
-<span class="fc bfc" id="L764" title="All 2 branches covered.">            for (final QueryResult&lt;ImmutableNode&gt; result : results)</span>
+<span class="fc bfc" id="L765" title="All 2 branches covered.">            for (QueryResult&lt;ImmutableNode&gt; result : results)</span>
             {
-<span class="fc" id="L766">                final Set&lt;Configuration&gt; resultSources =</span>
-<span class="fc" id="L767">                        findSourceConfigurations(result.getNode());</span>
-<span class="fc bfc" id="L768" title="All 2 branches covered.">                if (resultSources.isEmpty())</span>
+<span class="fc" id="L767">                Set&lt;Configuration&gt; resultSources =</span>
+<span class="fc" id="L768">                        findSourceConfigurations(result.getNode());</span>
+<span class="fc bfc" id="L769" title="All 2 branches covered.">                if (resultSources.isEmpty())</span>
                 {
                     // key must be defined in combined configuration
-<span class="fc" id="L771">                    sources.add(this);</span>
+<span class="fc" id="L772">                    sources.add(this);</span>
                 }
                 else
                 {
-<span class="fc" id="L775">                    sources.addAll(resultSources);</span>
+<span class="fc" id="L776">                    sources.addAll(resultSources);</span>
                 }
-<span class="fc" id="L777">            }</span>
+<span class="fc" id="L778">            }</span>
 
-<span class="fc" id="L779">            return sources;</span>
+<span class="fc" id="L780">            return sources;</span>
         }
         finally
         {
-<span class="fc" id="L783">            endRead();</span>
+<span class="fc" id="L784">            endRead();</span>
         }
     }
 
@@ -789,62 +790,62 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * is available. If not, it is constructed by requesting a write lock.
      */
     @Override
-    protected void beginRead(final boolean optimize)
+    protected void beginRead(boolean optimize)
     {
-<span class="fc bfc" id="L794" title="All 2 branches covered.">        if (optimize)</span>
+<span class="fc bfc" id="L795" title="All 2 branches covered.">        if (optimize)</span>
         {
             // just need a lock, don't construct configuration
-<span class="fc" id="L797">            super.beginRead(true);</span>
-<span class="fc" id="L798">            return;</span>
+<span class="fc" id="L798">            super.beginRead(true);</span>
+<span class="fc" id="L799">            return;</span>
         }
 
-<span class="fc" id="L801">        boolean lockObtained = false;</span>
+<span class="fc" id="L802">        boolean lockObtained = false;</span>
         do
         {
-<span class="fc" id="L804">            super.beginRead(false);</span>
-<span class="fc bfc" id="L805" title="All 2 branches covered.">            if (isUpToDate())</span>
+<span class="fc" id="L805">            super.beginRead(false);</span>
+<span class="fc bfc" id="L806" title="All 2 branches covered.">            if (isUpToDate())</span>
             {
-<span class="fc" id="L807">                lockObtained = true;</span>
+<span class="fc" id="L808">                lockObtained = true;</span>
             }
             else
             {
                 // release read lock and try to obtain a write lock
-<span class="fc" id="L812">                endRead();</span>
-<span class="fc" id="L813">                beginWrite(false); // this constructs the root node</span>
-<span class="fc" id="L814">                endWrite();</span>
+<span class="fc" id="L813">                endRead();</span>
+<span class="fc" id="L814">                beginWrite(false); // this constructs the root node</span>
+<span class="fc" id="L815">                endWrite();</span>
             }
-<span class="fc bfc" id="L816" title="All 2 branches covered.">        } while (!lockObtained);</span>
-<span class="fc" id="L817">    }</span>
+<span class="fc bfc" id="L817" title="All 2 branches covered.">        } while (!lockObtained);</span>
+<span class="fc" id="L818">    }</span>
 
     /**
      * {@inheritDoc} This implementation checks whether a combined root node
      * is available. If not, it is constructed now.
      */
     @Override
-    protected void beginWrite(final boolean optimize)
+    protected void beginWrite(boolean optimize)
     {
-<span class="fc" id="L826">        super.beginWrite(true);</span>
-<span class="fc bfc" id="L827" title="All 2 branches covered.">        if (optimize)</span>
+<span class="fc" id="L827">        super.beginWrite(true);</span>
+<span class="fc bfc" id="L828" title="All 2 branches covered.">        if (optimize)</span>
         {
             // just need a lock, don't construct configuration
-<span class="fc" id="L830">            return;</span>
+<span class="fc" id="L831">            return;</span>
         }
 
         try
         {
-<span class="fc bfc" id="L835" title="All 2 branches covered.">            if (!isUpToDate())</span>
+<span class="fc bfc" id="L836" title="All 2 branches covered.">            if (!isUpToDate())</span>
             {
-<span class="fc" id="L837">                getSubConfigurationParentModel().replaceRoot(</span>
-<span class="fc" id="L838">                        constructCombinedNode(), this);</span>
-<span class="fc" id="L839">                upToDate = true;</span>
+<span class="fc" id="L838">                getSubConfigurationParentModel().replaceRoot(</span>
+<span class="fc" id="L839">                        constructCombinedNode(), this);</span>
+<span class="fc" id="L840">                upToDate = true;</span>
             }
         }
-<span class="fc" id="L842">        catch (final RuntimeException rex)</span>
+<span class="fc" id="L843">        catch (RuntimeException rex)</span>
         {
-<span class="fc" id="L844">            endWrite();</span>
-<span class="fc" id="L845">            throw rex;</span>
-<span class="fc" id="L846">        }</span>
-<span class="fc" id="L847">    }</span>
+<span class="fc" id="L845">            endWrite();</span>
+<span class="fc" id="L846">            throw rex;</span>
+<span class="fc" id="L847">        }</span>
+<span class="fc" id="L848">    }</span>
 
     /**
      * Returns a flag whether this configuration has been invalidated. This
@@ -855,7 +856,7 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     private boolean isUpToDate()
     {
-<span class="fc" id="L858">        return upToDate;</span>
+<span class="fc" id="L859">        return upToDate;</span>
     }
 
     /**
@@ -866,9 +867,9 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     private void invalidateInternal()
     {
-<span class="fc" id="L869">        upToDate = false;</span>
-<span class="fc" id="L870">        fireEvent(COMBINED_INVALIDATE, null, null, false);</span>
-<span class="fc" id="L871">    }</span>
+<span class="fc" id="L870">        upToDate = false;</span>
+<span class="fc" id="L871">        fireEvent(COMBINED_INVALIDATE, null, null, false);</span>
+<span class="fc" id="L872">    }</span>
 
     /**
      * Initializes internal data structures for storing information about
@@ -876,9 +877,9 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     private void initChildCollections()
     {
-<span class="fc" id="L879">        configurations = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L880">        namedConfigurations = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L881">    }</span>
+<span class="fc" id="L880">        configurations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L881">        namedConfigurations = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L882">    }</span>
 
     /**
      * Creates the root node of this combined configuration.
@@ -887,29 +888,33 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     private ImmutableNode constructCombinedNode()
     {
-<span class="fc bfc" id="L890" title="All 2 branches covered.">        if (getNumberOfConfigurationsInternal() &lt; 1)</span>
+<span class="fc bfc" id="L891" title="All 2 branches covered.">        if (getNumberOfConfigurationsInternal() &lt; 1)</span>
         {
-<span class="fc bfc" id="L892" title="All 2 branches covered.">            if (getLogger().isDebugEnabled())</span>
+<span class="fc bfc" id="L893" title="All 2 branches covered.">            if (getLogger().isDebugEnabled())</span>
             {
-<span class="fc" id="L894">                getLogger().debug(&quot;No configurations defined for &quot; + this);</span>
+<span class="fc" id="L895">                getLogger().debug(&quot;No configurations defined for &quot; + this);</span>
             }
-<span class="fc" id="L896">            return EMPTY_ROOT;</span>
+<span class="fc" id="L897">            return EMPTY_ROOT;</span>
         }
-<span class="fc" id="L898">        final Iterator&lt;ConfigData&gt; it = configurations.iterator();</span>
-<span class="fc" id="L899">        ImmutableNode node = it.next().getTransformedRoot();</span>
-<span class="fc bfc" id="L900" title="All 2 branches covered.">        while (it.hasNext())</span>
+
+        else
         {
-<span class="fc" id="L902">            node = nodeCombiner.combine(node,</span>
-<span class="fc" id="L903">                    it.next().getTransformedRoot());</span>
+<span class="fc" id="L902">            Iterator&lt;ConfigData&gt; it = configurations.iterator();</span>
+<span class="fc" id="L903">            ImmutableNode node = it.next().getTransformedRoot();</span>
+<span class="fc bfc" id="L904" title="All 2 branches covered.">            while (it.hasNext())</span>
+            {
+<span class="fc" id="L906">                node = nodeCombiner.combine(node,</span>
+<span class="fc" id="L907">                        it.next().getTransformedRoot());</span>
+            }
+<span class="fc bfc" id="L909" title="All 2 branches covered.">            if (getLogger().isDebugEnabled())</span>
+            {
+<span class="fc" id="L911">                ByteArrayOutputStream os = new ByteArrayOutputStream();</span>
+<span class="fc" id="L912">                PrintStream stream = new PrintStream(os);</span>
+<span class="fc" id="L913">                TreeUtils.printTree(stream, node);</span>
+<span class="fc" id="L914">                getLogger().debug(os.toString());</span>
+            }
+<span class="fc" id="L916">            return node;</span>
         }
-<span class="fc bfc" id="L905" title="All 2 branches covered.">        if (getLogger().isDebugEnabled())</span>
-        {
-<span class="fc" id="L907">            final ByteArrayOutputStream os = new ByteArrayOutputStream();</span>
-<span class="fc" id="L908">            final PrintStream stream = new PrintStream(os);</span>
-<span class="fc" id="L909">            TreeUtils.printTree(stream, node);</span>
-<span class="fc" id="L910">            getLogger().debug(os.toString());</span>
-        }
-<span class="fc" id="L912">        return node;</span>
     }
 
     /**
@@ -919,24 +924,24 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      * @param node the node
      * @return a set with the owning configurations
      */
-    private Set&lt;Configuration&gt; findSourceConfigurations(final ImmutableNode node)
+    private Set&lt;Configuration&gt; findSourceConfigurations(ImmutableNode node)
     {
-<span class="fc" id="L924">        final Set&lt;Configuration&gt; result = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L925">        final FindNodeVisitor&lt;ImmutableNode&gt; visitor =</span>
+<span class="fc" id="L929">        Set&lt;Configuration&gt; result = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L930">        FindNodeVisitor&lt;ImmutableNode&gt; visitor =</span>
                 new FindNodeVisitor&lt;&gt;(node);
 
-<span class="fc bfc" id="L928" title="All 2 branches covered.">        for (final ConfigData cd : configurations)</span>
+<span class="fc bfc" id="L933" title="All 2 branches covered.">        for (ConfigData cd : configurations)</span>
         {
-<span class="fc" id="L930">            NodeTreeWalker.INSTANCE.walkBFS(cd.getRootNode(), visitor,</span>
-<span class="fc" id="L931">                    getModel().getNodeHandler());</span>
-<span class="fc bfc" id="L932" title="All 2 branches covered.">            if (visitor.isFound())</span>
+<span class="fc" id="L935">            NodeTreeWalker.INSTANCE.walkBFS(cd.getRootNode(), visitor,</span>
+<span class="fc" id="L936">                    getModel().getNodeHandler());</span>
+<span class="fc bfc" id="L937" title="All 2 branches covered.">            if (visitor.isFound())</span>
             {
-<span class="fc" id="L934">                result.add(cd.getConfiguration());</span>
-<span class="fc" id="L935">                visitor.reset();</span>
+<span class="fc" id="L939">                result.add(cd.getConfiguration());</span>
+<span class="fc" id="L940">                visitor.reset();</span>
             }
-<span class="fc" id="L937">        }</span>
+<span class="fc" id="L942">        }</span>
 
-<span class="fc" id="L939">        return result;</span>
+<span class="fc" id="L944">        return result;</span>
     }
 
     /**
@@ -945,14 +950,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      *
      * @param configuration the child configuration
      */
-    private void registerListenerAt(final Configuration configuration)
+    private void registerListenerAt(Configuration configuration)
     {
-<span class="fc bfc" id="L950" title="All 2 branches covered.">        if (configuration instanceof EventSource)</span>
+<span class="fc bfc" id="L955" title="All 2 branches covered.">        if (configuration instanceof EventSource)</span>
         {
-<span class="fc" id="L952">            ((EventSource) configuration).addEventListener(</span>
+<span class="fc" id="L957">            ((EventSource) configuration).addEventListener(</span>
                     ConfigurationEvent.ANY, this);
         }
-<span class="fc" id="L955">    }</span>
+<span class="fc" id="L960">    }</span>
 
     /**
      * Removes this combined configuration as listener from the given child
@@ -960,14 +965,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      *
      * @param configuration the child configuration
      */
-    private void unregisterListenerAt(final Configuration configuration)
+    private void unregisterListenerAt(Configuration configuration)
     {
-<span class="pc bpc" id="L965" title="1 of 2 branches missed.">        if (configuration instanceof EventSource)</span>
+<span class="pc bpc" id="L970" title="1 of 2 branches missed.">        if (configuration instanceof EventSource)</span>
         {
-<span class="fc" id="L967">            ((EventSource) configuration).removeEventListener(</span>
+<span class="fc" id="L972">            ((EventSource) configuration).removeEventListener(</span>
                     ConfigurationEvent.ANY, this);
         }
-<span class="fc" id="L970">    }</span>
+<span class="fc" id="L975">    }</span>
 
     /**
      * Removes this combined configuration as listener from all child
@@ -975,14 +980,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     private void unregisterListenerAtChildren()
     {
-<span class="pc bpc" id="L978" title="1 of 2 branches missed.">        if (configurations != null)</span>
+<span class="pc bpc" id="L983" title="1 of 2 branches missed.">        if (configurations != null)</span>
         {
-<span class="fc bfc" id="L980" title="All 2 branches covered.">            for (final ConfigData child : configurations)</span>
+<span class="fc bfc" id="L985" title="All 2 branches covered.">            for (ConfigData child : configurations)</span>
             {
-<span class="fc" id="L982">                unregisterListenerAt(child.getConfiguration());</span>
-<span class="fc" id="L983">            }</span>
+<span class="fc" id="L987">                unregisterListenerAt(child.getConfiguration());</span>
+<span class="fc" id="L988">            }</span>
         }
-<span class="fc" id="L985">    }</span>
+<span class="fc" id="L990">    }</span>
 
     /**
      * Returns the number of child configurations in this combined
@@ -993,7 +998,7 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
      */
     private int getNumberOfConfigurationsInternal()
     {
-<span class="fc" id="L996">        return configurations.size();</span>
+<span class="fc" id="L1001">        return configurations.size();</span>
     }
 
     /**
@@ -1025,13 +1030,13 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          * @param n the name
          * @param at the at position
          */
-        public ConfigData(final Configuration config, final String n, final String at)
-<span class="fc" id="L1029">        {</span>
-<span class="fc" id="L1030">            configuration = config;</span>
-<span class="fc" id="L1031">            name = n;</span>
-<span class="fc" id="L1032">            atPath = parseAt(at);</span>
-<span class="fc" id="L1033">            this.at = at;</span>
-<span class="fc" id="L1034">        }</span>
+        public ConfigData(Configuration config, String n, String at)
+<span class="fc" id="L1034">        {</span>
+<span class="fc" id="L1035">            configuration = config;</span>
+<span class="fc" id="L1036">            name = n;</span>
+<span class="fc" id="L1037">            atPath = parseAt(at);</span>
+<span class="fc" id="L1038">            this.at = at;</span>
+<span class="fc" id="L1039">        }</span>
 
         /**
          * Returns the stored configuration.
@@ -1040,7 +1045,7 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          */
         public Configuration getConfiguration()
         {
-<span class="fc" id="L1043">            return configuration;</span>
+<span class="fc" id="L1048">            return configuration;</span>
         }
 
         /**
@@ -1050,7 +1055,7 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          */
         public String getName()
         {
-<span class="fc" id="L1053">            return name;</span>
+<span class="fc" id="L1058">            return name;</span>
         }
 
         /**
@@ -1060,7 +1065,7 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          */
         public String getAt()
         {
-<span class="fc" id="L1063">            return at;</span>
+<span class="fc" id="L1068">            return at;</span>
         }
 
         /**
@@ -1071,7 +1076,7 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          */
         public ImmutableNode getRootNode()
         {
-<span class="fc" id="L1074">            return rootNode;</span>
+<span class="fc" id="L1079">            return rootNode;</span>
         }
 
         /**
@@ -1083,8 +1088,8 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          */
         public ImmutableNode getTransformedRoot()
         {
-<span class="fc" id="L1086">            final ImmutableNode configRoot = getRootNodeOfConfiguration();</span>
-<span class="fc bfc" id="L1087" title="All 2 branches covered.">            return atPath == null ? configRoot : prependAtPath(configRoot);</span>
+<span class="fc" id="L1091">            ImmutableNode configRoot = getRootNodeOfConfiguration();</span>
+<span class="fc bfc" id="L1092" title="All 2 branches covered.">            return (atPath == null) ? configRoot : prependAtPath(configRoot);</span>
         }
 
         /**
@@ -1093,14 +1098,14 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          * @param node the root node of the represented configuration
          * @return the new root node including the at path
          */
-        private ImmutableNode prependAtPath(final ImmutableNode node)
+        private ImmutableNode prependAtPath(ImmutableNode node)
         {
-<span class="fc" id="L1098">            final ImmutableNode.Builder pathBuilder = new ImmutableNode.Builder();</span>
-<span class="fc" id="L1099">            final Iterator&lt;String&gt; pathIterator = atPath.iterator();</span>
-<span class="fc" id="L1100">            prependAtPathComponent(pathBuilder, pathIterator.next(),</span>
+<span class="fc" id="L1103">            ImmutableNode.Builder pathBuilder = new ImmutableNode.Builder();</span>
+<span class="fc" id="L1104">            Iterator&lt;String&gt; pathIterator = atPath.iterator();</span>
+<span class="fc" id="L1105">            prependAtPathComponent(pathBuilder, pathIterator.next(),</span>
                     pathIterator, node);
-<span class="fc" id="L1102">            return new ImmutableNode.Builder(1).addChild(pathBuilder.create())</span>
-<span class="fc" id="L1103">                    .create();</span>
+<span class="fc" id="L1107">            return new ImmutableNode.Builder(1).addChild(pathBuilder.create())</span>
+<span class="fc" id="L1108">                    .create();</span>
         }
 
         /**
@@ -1113,26 +1118,26 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          * @param components an iterator with all components of the at path
          * @param orgRoot the original root node of the wrapped configuration
          */
-        private void prependAtPathComponent(final ImmutableNode.Builder builder,
-                final String currentComponent, final Iterator&lt;String&gt; components,
-                final ImmutableNode orgRoot)
+        private void prependAtPathComponent(ImmutableNode.Builder builder,
+                String currentComponent, Iterator&lt;String&gt; components,
+                ImmutableNode orgRoot)
         {
-<span class="fc" id="L1120">            builder.name(currentComponent);</span>
-<span class="fc bfc" id="L1121" title="All 2 branches covered.">            if (components.hasNext())</span>
+<span class="fc" id="L1125">            builder.name(currentComponent);</span>
+<span class="fc bfc" id="L1126" title="All 2 branches covered.">            if (components.hasNext())</span>
             {
-<span class="fc" id="L1123">                final ImmutableNode.Builder childBuilder =</span>
+<span class="fc" id="L1128">                ImmutableNode.Builder childBuilder =</span>
                         new ImmutableNode.Builder();
-<span class="fc" id="L1125">                prependAtPathComponent(childBuilder, components.next(),</span>
+<span class="fc" id="L1130">                prependAtPathComponent(childBuilder, components.next(),</span>
                         components, orgRoot);
-<span class="fc" id="L1127">                builder.addChild(childBuilder.create());</span>
-<span class="fc" id="L1128">            }</span>
+<span class="fc" id="L1132">                builder.addChild(childBuilder.create());</span>
+<span class="fc" id="L1133">            }</span>
             else
             {
-<span class="fc" id="L1131">                builder.addChildren(orgRoot.getChildren());</span>
-<span class="fc" id="L1132">                builder.addAttributes(orgRoot.getAttributes());</span>
-<span class="fc" id="L1133">                builder.value(orgRoot.getValue());</span>
+<span class="fc" id="L1136">                builder.addChildren(orgRoot.getChildren());</span>
+<span class="fc" id="L1137">                builder.addAttributes(orgRoot.getAttributes());</span>
+<span class="fc" id="L1138">                builder.value(orgRoot.getValue());</span>
             }
-<span class="fc" id="L1135">        }</span>
+<span class="fc" id="L1140">        }</span>
 
         /**
          * Obtains the root node of the wrapped configuration. If necessary, a
@@ -1143,20 +1148,20 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          */
         private ImmutableNode getRootNodeOfConfiguration()
         {
-<span class="fc" id="L1146">            getConfiguration().lock(LockMode.READ);</span>
+<span class="fc" id="L1151">            getConfiguration().lock(LockMode.READ);</span>
             try
             {
-<span class="fc" id="L1149">                final ImmutableNode root =</span>
+<span class="fc" id="L1154">                ImmutableNode root =</span>
                         ConfigurationUtils
-<span class="fc" id="L1151">                                .convertToHierarchical(getConfiguration(),</span>
-<span class="fc" id="L1152">                                        conversionExpressionEngine).getNodeModel()</span>
-<span class="fc" id="L1153">                                .getInMemoryRepresentation();</span>
-<span class="fc" id="L1154">                rootNode = root;</span>
-<span class="fc" id="L1155">                return root;</span>
+<span class="fc" id="L1156">                                .convertToHierarchical(getConfiguration(),</span>
+<span class="fc" id="L1157">                                        conversionExpressionEngine).getNodeModel()</span>
+<span class="fc" id="L1158">                                .getInMemoryRepresentation();</span>
+<span class="fc" id="L1159">                rootNode = root;</span>
+<span class="fc" id="L1160">                return root;</span>
             }
             finally
             {
-<span class="fc" id="L1159">                getConfiguration().unlock(LockMode.READ);</span>
+<span class="fc" id="L1164">                getConfiguration().unlock(LockMode.READ);</span>
             }
         }
 
@@ -1166,21 +1171,21 @@ public class CombinedConfiguration extends BaseHierarchicalConfiguration impleme
          * @param at the at string
          * @return a collection with the names of the single components
          */
-        private Collection&lt;String&gt; parseAt(final String at)
+        private Collection&lt;String&gt; parseAt(String at)
         {
-<span class="fc bfc" id="L1171" title="All 2 branches covered.">            if (at == null)</span>
+<span class="fc bfc" id="L1176" title="All 2 branches covered.">            if (at == null)</span>
             {
-<span class="fc" id="L1173">                return null;</span>
+<span class="fc" id="L1178">                return null;</span>
             }
 
-<span class="fc" id="L1176">            final Collection&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L1177">            final DefaultConfigurationKey.KeyIterator it = new DefaultConfigurationKey(</span>
-<span class="fc" id="L1178">                    AT_ENGINE, at).iterator();</span>
-<span class="fc bfc" id="L1179" title="All 2 branches covered.">            while (it.hasNext())</span>
+<span class="fc" id="L1181">            Collection&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1182">            DefaultConfigurationKey.KeyIterator it = new DefaultConfigurationKey(</span>
+<span class="fc" id="L1183">                    AT_ENGINE, at).iterator();</span>
+<span class="fc bfc" id="L1184" title="All 2 branches covered.">            while (it.hasNext())</span>
             {
-<span class="fc" id="L1181">                result.add(it.nextKey());</span>
+<span class="fc" id="L1186">                result.add(it.nextKey());</span>
             }
-<span class="fc" id="L1183">            return result;</span>
+<span class="fc" id="L1188">            return result;</span>
         }
     }
 }

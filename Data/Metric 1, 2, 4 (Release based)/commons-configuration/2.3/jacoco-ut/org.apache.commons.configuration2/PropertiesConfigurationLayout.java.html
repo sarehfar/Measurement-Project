@@ -19,12 +19,9 @@ package org.apache.commons.configuration2;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.URL;
-import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -104,12 +101,13 @@ import org.apache.commons.lang3.StringUtils;
  * which has multiple values defined in one line using the separator character.&lt;/li&gt;
  * &lt;li&gt;The {@code AppVendor} property appears twice. The comment lines
  * are concatenated, so that {@code layout.getComment(&quot;AppVendor&quot;);} will
- * result in {@code Application vendor&amp;lt;CR&amp;gt;Another vendor}, with
- * {@code &amp;lt;CR&amp;gt;} meaning the line separator. In addition the
+ * result in &lt;code&gt;Application vendor&amp;lt;CR&amp;gt;Another vendor&lt;/code&gt;, with
+ * &lt;code&gt;&amp;lt;CR&amp;gt;&lt;/code&gt; meaning the line separator. In addition the
  * &amp;quot;single line&amp;quot; flag is set to &lt;b&gt;false&lt;/b&gt; for this property. When
  * the file is saved, two property definitions will be written (in series).&lt;/li&gt;
  * &lt;/ul&gt;
  *
+ * @version $Id$
  * @since 1.3
  */
 public class PropertiesConfigurationLayout implements EventListener&lt;ConfigurationEvent&gt;
@@ -141,16 +139,13 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
     /** Stores the force single line flag. */
     private boolean forceSingleLine;
 
-    /** Seen includes. */
-<span class="fc" id="L145">    private final ArrayDeque&lt;URL&gt; seenStack = new ArrayDeque&lt;&gt;();</span>
-
     /**
      * Creates a new, empty instance of {@code PropertiesConfigurationLayout}.
      */
     public PropertiesConfigurationLayout()
     {
-<span class="fc" id="L152">        this(null);</span>
-<span class="fc" id="L153">    }</span>
+<span class="fc" id="L147">        this(null);</span>
+<span class="fc" id="L148">    }</span>
 
     /**
      * Creates a new instance of {@code PropertiesConfigurationLayout} and
@@ -158,16 +153,16 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      *
      * @param c the layout object to be copied
      */
-    public PropertiesConfigurationLayout(final PropertiesConfigurationLayout c)
-<span class="fc" id="L162">    {</span>
-<span class="fc" id="L163">        loadCounter = new AtomicInteger();</span>
-<span class="fc" id="L164">        layoutData = new LinkedHashMap&lt;&gt;();</span>
+    public PropertiesConfigurationLayout(PropertiesConfigurationLayout c)
+<span class="fc" id="L157">    {</span>
+<span class="fc" id="L158">        loadCounter = new AtomicInteger();</span>
+<span class="fc" id="L159">        layoutData = new LinkedHashMap&lt;&gt;();</span>
 
-<span class="fc bfc" id="L166" title="All 2 branches covered.">        if (c != null)</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (c != null)</span>
         {
-<span class="fc" id="L168">            copyFrom(c);</span>
+<span class="fc" id="L163">            copyFrom(c);</span>
         }
-<span class="fc" id="L170">    }</span>
+<span class="fc" id="L165">    }</span>
 
     /**
      * Returns the comment for the specified property key in a canonical form.
@@ -183,9 +178,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * characters or not
      * @return the canonical comment for this key (can be &lt;b&gt;null&lt;/b&gt;)
      */
-    public String getCanonicalComment(final String key, final boolean commentChar)
+    public String getCanonicalComment(String key, boolean commentChar)
     {
-<span class="fc" id="L188">        return constructCanonicalComment(getComment(key), commentChar);</span>
+<span class="fc" id="L183">        return constructCanonicalComment(getComment(key), commentChar);</span>
     }
 
     /**
@@ -197,9 +192,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param key the key of the property
      * @return the comment for this key (can be &lt;b&gt;null&lt;/b&gt;)
      */
-    public String getComment(final String key)
+    public String getComment(String key)
     {
-<span class="fc" id="L202">        return fetchLayoutData(key).getComment();</span>
+<span class="fc" id="L197">        return fetchLayoutData(key).getComment();</span>
     }
 
     /**
@@ -212,10 +207,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param comment the comment for this key (can be &lt;b&gt;null&lt;/b&gt;, then the
      * comment will be removed)
      */
-    public void setComment(final String key, final String comment)
+    public void setComment(String key, String comment)
     {
-<span class="fc" id="L217">        fetchLayoutData(key).setComment(comment);</span>
-<span class="fc" id="L218">    }</span>
+<span class="fc" id="L212">        fetchLayoutData(key).setComment(comment);</span>
+<span class="fc" id="L213">    }</span>
 
     /**
      * Returns the number of blanc lines before this property key. If this key
@@ -225,9 +220,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @return the number of blanc lines before the property definition for this
      * key
      */
-    public int getBlancLinesBefore(final String key)
+    public int getBlancLinesBefore(String key)
     {
-<span class="fc" id="L230">        return fetchLayoutData(key).getBlancLines();</span>
+<span class="fc" id="L225">        return fetchLayoutData(key).getBlancLines();</span>
     }
 
     /**
@@ -238,10 +233,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param number the number of blanc lines to add before this property
      * definition
      */
-    public void setBlancLinesBefore(final String key, final int number)
+    public void setBlancLinesBefore(String key, int number)
     {
-<span class="fc" id="L243">        fetchLayoutData(key).setBlancLines(number);</span>
-<span class="fc" id="L244">    }</span>
+<span class="fc" id="L238">        fetchLayoutData(key).setBlancLines(number);</span>
+<span class="fc" id="L239">    }</span>
 
     /**
      * Returns the header comment of the represented properties file in a
@@ -252,9 +247,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param commentChar determines the presence of comment characters
      * @return the header comment (can be &lt;b&gt;null&lt;/b&gt;)
      */
-    public String getCanonicalHeaderComment(final boolean commentChar)
+    public String getCanonicalHeaderComment(boolean commentChar)
     {
-<span class="fc" id="L257">        return constructCanonicalComment(getHeaderComment(), commentChar);</span>
+<span class="fc" id="L252">        return constructCanonicalComment(getHeaderComment(), commentChar);</span>
     }
 
     /**
@@ -267,7 +262,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      */
     public String getHeaderComment()
     {
-<span class="fc" id="L270">        return headerComment;</span>
+<span class="fc" id="L265">        return headerComment;</span>
     }
 
     /**
@@ -276,10 +271,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      *
      * @param comment the comment
      */
-    public void setHeaderComment(final String comment)
+    public void setHeaderComment(String comment)
     {
-<span class="fc" id="L281">        headerComment = comment;</span>
-<span class="fc" id="L282">    }</span>
+<span class="fc" id="L276">        headerComment = comment;</span>
+<span class="fc" id="L277">    }</span>
 
     /**
      * Returns the footer comment of the represented properties file in a
@@ -291,9 +286,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @see #getCanonicalHeaderComment(boolean)
      * @since 2.0
      */
-    public String getCanonicalFooterCooment(final boolean commentChar)
+    public String getCanonicalFooterCooment(boolean commentChar)
     {
-<span class="fc" id="L296">        return constructCanonicalComment(getFooterComment(), commentChar);</span>
+<span class="fc" id="L291">        return constructCanonicalComment(getFooterComment(), commentChar);</span>
     }
 
     /**
@@ -307,7 +302,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      */
     public String getFooterComment()
     {
-<span class="fc" id="L310">        return footerComment;</span>
+<span class="fc" id="L305">        return footerComment;</span>
     }
 
     /**
@@ -317,10 +312,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param footerComment the footer comment
      * @since 2.0
      */
-    public void setFooterComment(final String footerComment)
+    public void setFooterComment(String footerComment)
     {
-<span class="fc" id="L322">        this.footerComment = footerComment;</span>
-<span class="fc" id="L323">    }</span>
+<span class="fc" id="L317">        this.footerComment = footerComment;</span>
+<span class="fc" id="L318">    }</span>
 
     /**
      * Returns a flag whether the specified property is defined on a single
@@ -329,9 +324,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param key the property key
      * @return a flag if this property is defined on a single line
      */
-    public boolean isSingleLine(final String key)
+    public boolean isSingleLine(String key)
     {
-<span class="fc" id="L334">        return fetchLayoutData(key).isSingleLine();</span>
+<span class="fc" id="L329">        return fetchLayoutData(key).isSingleLine();</span>
     }
 
     /**
@@ -345,10 +340,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param key the property key
      * @param f the single line flag
      */
-    public void setSingleLine(final String key, final boolean f)
+    public void setSingleLine(String key, boolean f)
     {
-<span class="fc" id="L350">        fetchLayoutData(key).setSingleLine(f);</span>
-<span class="fc" id="L351">    }</span>
+<span class="fc" id="L345">        fetchLayoutData(key).setSingleLine(f);</span>
+<span class="fc" id="L346">    }</span>
 
     /**
      * Returns the &amp;quot;force single line&amp;quot; flag.
@@ -358,7 +353,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      */
     public boolean isForceSingleLine()
     {
-<span class="fc" id="L361">        return forceSingleLine;</span>
+<span class="fc" id="L356">        return forceSingleLine;</span>
     }
 
     /**
@@ -370,10 +365,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      *
      * @param f the force single line flag
      */
-    public void setForceSingleLine(final boolean f)
+    public void setForceSingleLine(boolean f)
     {
-<span class="fc" id="L375">        forceSingleLine = f;</span>
-<span class="fc" id="L376">    }</span>
+<span class="fc" id="L370">        forceSingleLine = f;</span>
+<span class="fc" id="L371">    }</span>
 
     /**
      * Returns the separator for the property with the given key.
@@ -382,9 +377,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @return the property separator for this property
      * @since 1.7
      */
-    public String getSeparator(final String key)
+    public String getSeparator(String key)
     {
-<span class="fc" id="L387">        return fetchLayoutData(key).getSeparator();</span>
+<span class="fc" id="L382">        return fetchLayoutData(key).getSeparator();</span>
     }
 
     /**
@@ -403,10 +398,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param sep the separator to be used for this property
      * @since 1.7
      */
-    public void setSeparator(final String key, final String sep)
+    public void setSeparator(String key, String sep)
     {
-<span class="fc" id="L408">        fetchLayoutData(key).setSeparator(sep);</span>
-<span class="fc" id="L409">    }</span>
+<span class="fc" id="L403">        fetchLayoutData(key).setSeparator(sep);</span>
+<span class="fc" id="L404">    }</span>
 
     /**
      * Returns the global separator.
@@ -416,7 +411,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      */
     public String getGlobalSeparator()
     {
-<span class="fc" id="L419">        return globalSeparator;</span>
+<span class="fc" id="L414">        return globalSeparator;</span>
     }
 
     /**
@@ -433,10 +428,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param globalSeparator the separator to be used for all properties
      * @since 1.7
      */
-    public void setGlobalSeparator(final String globalSeparator)
+    public void setGlobalSeparator(String globalSeparator)
     {
-<span class="fc" id="L438">        this.globalSeparator = globalSeparator;</span>
-<span class="fc" id="L439">    }</span>
+<span class="fc" id="L433">        this.globalSeparator = globalSeparator;</span>
+<span class="fc" id="L434">    }</span>
 
     /**
      * Returns the line separator.
@@ -446,7 +441,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      */
     public String getLineSeparator()
     {
-<span class="fc" id="L449">        return lineSeparator;</span>
+<span class="fc" id="L444">        return lineSeparator;</span>
     }
 
     /**
@@ -457,10 +452,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param lineSeparator the line separator
      * @since 1.7
      */
-    public void setLineSeparator(final String lineSeparator)
+    public void setLineSeparator(String lineSeparator)
     {
-<span class="fc" id="L462">        this.lineSeparator = lineSeparator;</span>
-<span class="fc" id="L463">    }</span>
+<span class="fc" id="L457">        this.lineSeparator = lineSeparator;</span>
+<span class="fc" id="L458">    }</span>
 
     /**
      * Returns a set with all property keys managed by this object.
@@ -469,7 +464,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      */
     public Set&lt;String&gt; getKeys()
     {
-<span class="fc" id="L472">        return layoutData.keySet();</span>
+<span class="fc" id="L467">        return layoutData.keySet();</span>
     }
 
     /**
@@ -480,60 +475,60 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param in the reader to the properties file
      * @throws ConfigurationException if an error occurs
      */
-    public void load(final PropertiesConfiguration config, final Reader in)
+    public void load(PropertiesConfiguration config, Reader in)
             throws ConfigurationException
     {
-<span class="fc" id="L486">        loadCounter.incrementAndGet();</span>
-<span class="fc" id="L487">        final PropertiesConfiguration.PropertiesReader reader =</span>
-<span class="fc" id="L488">                config.getIOFactory().createPropertiesReader(in);</span>
+<span class="fc" id="L481">        loadCounter.incrementAndGet();</span>
+<span class="fc" id="L482">        PropertiesConfiguration.PropertiesReader reader =</span>
+<span class="fc" id="L483">                config.getIOFactory().createPropertiesReader(in);</span>
 
         try
         {
-<span class="fc bfc" id="L492" title="All 2 branches covered.">            while (reader.nextProperty())</span>
+<span class="fc bfc" id="L487" title="All 2 branches covered.">            while (reader.nextProperty())</span>
             {
-<span class="fc bfc" id="L494" title="All 2 branches covered.">                if (config.propertyLoaded(reader.getPropertyName(),</span>
-<span class="fc" id="L495">                        reader.getPropertyValue(), seenStack))</span>
+<span class="fc bfc" id="L489" title="All 2 branches covered.">                if (config.propertyLoaded(reader.getPropertyName(),</span>
+<span class="fc" id="L490">                        reader.getPropertyValue()))</span>
                 {
-<span class="fc" id="L497">                    final boolean contained = layoutData.containsKey(reader</span>
-<span class="fc" id="L498">                            .getPropertyName());</span>
-<span class="fc" id="L499">                    int blancLines = 0;</span>
-<span class="fc" id="L500">                    int idx = checkHeaderComment(reader.getCommentLines());</span>
-<span class="fc bfc" id="L501" title="All 2 branches covered.">                    while (idx &lt; reader.getCommentLines().size()</span>
-<span class="fc bfc" id="L502" title="All 2 branches covered.">                            &amp;&amp; reader.getCommentLines().get(idx).length() &lt; 1)</span>
+<span class="fc" id="L492">                    boolean contained = layoutData.containsKey(reader</span>
+<span class="fc" id="L493">                            .getPropertyName());</span>
+<span class="fc" id="L494">                    int blancLines = 0;</span>
+<span class="fc" id="L495">                    int idx = checkHeaderComment(reader.getCommentLines());</span>
+<span class="fc bfc" id="L496" title="All 2 branches covered.">                    while (idx &lt; reader.getCommentLines().size()</span>
+<span class="fc bfc" id="L497" title="All 2 branches covered.">                            &amp;&amp; reader.getCommentLines().get(idx).length() &lt; 1)</span>
                     {
-<span class="fc" id="L504">                        idx++;</span>
-<span class="fc" id="L505">                        blancLines++;</span>
+<span class="fc" id="L499">                        idx++;</span>
+<span class="fc" id="L500">                        blancLines++;</span>
                     }
-<span class="fc" id="L507">                    final String comment = extractComment(reader.getCommentLines(),</span>
-<span class="fc" id="L508">                            idx, reader.getCommentLines().size() - 1);</span>
-<span class="fc" id="L509">                    final PropertyLayoutData data = fetchLayoutData(reader</span>
-<span class="fc" id="L510">                            .getPropertyName());</span>
-<span class="fc bfc" id="L511" title="All 2 branches covered.">                    if (contained)</span>
+<span class="fc" id="L502">                    String comment = extractComment(reader.getCommentLines(),</span>
+<span class="fc" id="L503">                            idx, reader.getCommentLines().size() - 1);</span>
+<span class="fc" id="L504">                    PropertyLayoutData data = fetchLayoutData(reader</span>
+<span class="fc" id="L505">                            .getPropertyName());</span>
+<span class="fc bfc" id="L506" title="All 2 branches covered.">                    if (contained)</span>
                     {
-<span class="fc" id="L513">                        data.addComment(comment);</span>
-<span class="fc" id="L514">                        data.setSingleLine(false);</span>
+<span class="fc" id="L508">                        data.addComment(comment);</span>
+<span class="fc" id="L509">                        data.setSingleLine(false);</span>
                     }
                     else
                     {
-<span class="fc" id="L518">                        data.setComment(comment);</span>
-<span class="fc" id="L519">                        data.setBlancLines(blancLines);</span>
-<span class="fc" id="L520">                        data.setSeparator(reader.getPropertySeparator());</span>
+<span class="fc" id="L513">                        data.setComment(comment);</span>
+<span class="fc" id="L514">                        data.setBlancLines(blancLines);</span>
+<span class="fc" id="L515">                        data.setSeparator(reader.getPropertySeparator());</span>
                     }
-<span class="fc" id="L522">                }</span>
+<span class="fc" id="L517">                }</span>
             }
 
-<span class="fc" id="L525">            setFooterComment(extractComment(reader.getCommentLines(), 0, reader</span>
-<span class="fc" id="L526">                    .getCommentLines().size() - 1));</span>
+<span class="fc" id="L520">            setFooterComment(extractComment(reader.getCommentLines(), 0, reader</span>
+<span class="fc" id="L521">                    .getCommentLines().size() - 1));</span>
         }
-<span class="nc" id="L528">        catch (final IOException ioex)</span>
+<span class="nc" id="L523">        catch (IOException ioex)</span>
         {
-<span class="nc" id="L530">            throw new ConfigurationException(ioex);</span>
+<span class="nc" id="L525">            throw new ConfigurationException(ioex);</span>
         }
         finally
         {
-<span class="fc" id="L534">            loadCounter.decrementAndGet();</span>
+<span class="fc" id="L529">            loadCounter.decrementAndGet();</span>
         }
-<span class="fc" id="L536">    }</span>
+<span class="fc" id="L531">    }</span>
 
     /**
      * Writes the properties file to the given writer, preserving as much of its
@@ -543,55 +538,55 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param out the writer
      * @throws ConfigurationException if an error occurs
      */
-    public void save(final PropertiesConfiguration config, final Writer out) throws ConfigurationException
+    public void save(PropertiesConfiguration config, Writer out) throws ConfigurationException
     {
         try
         {
-<span class="fc" id="L550">            final PropertiesConfiguration.PropertiesWriter writer =</span>
-<span class="fc" id="L551">                    config.getIOFactory().createPropertiesWriter(out,</span>
-<span class="fc" id="L552">                            config.getListDelimiterHandler());</span>
-<span class="fc" id="L553">            writer.setGlobalSeparator(getGlobalSeparator());</span>
-<span class="fc bfc" id="L554" title="All 2 branches covered.">            if (getLineSeparator() != null)</span>
+<span class="fc" id="L545">            PropertiesConfiguration.PropertiesWriter writer =</span>
+<span class="fc" id="L546">                    config.getIOFactory().createPropertiesWriter(out,</span>
+<span class="fc" id="L547">                            config.getListDelimiterHandler());</span>
+<span class="fc" id="L548">            writer.setGlobalSeparator(getGlobalSeparator());</span>
+<span class="fc bfc" id="L549" title="All 2 branches covered.">            if (getLineSeparator() != null)</span>
             {
-<span class="fc" id="L556">                writer.setLineSeparator(getLineSeparator());</span>
+<span class="fc" id="L551">                writer.setLineSeparator(getLineSeparator());</span>
             }
 
-<span class="fc bfc" id="L559" title="All 2 branches covered.">            if (headerComment != null)</span>
+<span class="fc bfc" id="L554" title="All 2 branches covered.">            if (headerComment != null)</span>
             {
-<span class="fc" id="L561">                writeComment(writer, getCanonicalHeaderComment(true));</span>
-<span class="fc" id="L562">                writer.writeln(null);</span>
+<span class="fc" id="L556">                writeComment(writer, getCanonicalHeaderComment(true));</span>
+<span class="fc" id="L557">                writer.writeln(null);</span>
             }
 
-<span class="fc bfc" id="L565" title="All 2 branches covered.">            for (final String key : getKeys())</span>
+<span class="fc bfc" id="L560" title="All 2 branches covered.">            for (String key : getKeys())</span>
             {
-<span class="fc bfc" id="L567" title="All 2 branches covered.">                if (config.containsKeyInternal(key))</span>
+<span class="fc bfc" id="L562" title="All 2 branches covered.">                if (config.containsKeyInternal(key))</span>
                 {
 
                     // Output blank lines before property
-<span class="fc bfc" id="L571" title="All 2 branches covered.">                    for (int i = 0; i &lt; getBlancLinesBefore(key); i++)</span>
+<span class="fc bfc" id="L566" title="All 2 branches covered.">                    for (int i = 0; i &lt; getBlancLinesBefore(key); i++)</span>
                     {
-<span class="fc" id="L573">                        writer.writeln(null);</span>
+<span class="fc" id="L568">                        writer.writeln(null);</span>
                     }
 
                     // Output the comment
-<span class="fc" id="L577">                    writeComment(writer, getCanonicalComment(key, true));</span>
+<span class="fc" id="L572">                    writeComment(writer, getCanonicalComment(key, true));</span>
 
                     // Output the property and its value
-<span class="fc bfc" id="L580" title="All 4 branches covered.">                    final boolean singleLine = isForceSingleLine() || isSingleLine(key);</span>
-<span class="fc" id="L581">                    writer.setCurrentSeparator(getSeparator(key));</span>
-<span class="fc" id="L582">                    writer.writeProperty(key, config.getPropertyInternal(</span>
+<span class="fc bfc" id="L575" title="All 4 branches covered.">                    boolean singleLine = isForceSingleLine() || isSingleLine(key);</span>
+<span class="fc" id="L576">                    writer.setCurrentSeparator(getSeparator(key));</span>
+<span class="fc" id="L577">                    writer.writeProperty(key, config.getPropertyInternal(</span>
                             key), singleLine);
                 }
-<span class="fc" id="L585">            }</span>
+<span class="fc" id="L580">            }</span>
 
-<span class="fc" id="L587">            writeComment(writer, getCanonicalFooterCooment(true));</span>
-<span class="fc" id="L588">            writer.flush();</span>
+<span class="fc" id="L582">            writeComment(writer, getCanonicalFooterCooment(true));</span>
+<span class="fc" id="L583">            writer.flush();</span>
         }
-<span class="nc" id="L590">        catch (final IOException ioex)</span>
+<span class="nc" id="L585">        catch (IOException ioex)</span>
         {
-<span class="nc" id="L592">            throw new ConfigurationException(ioex);</span>
-<span class="fc" id="L593">        }</span>
-<span class="fc" id="L594">    }</span>
+<span class="nc" id="L587">            throw new ConfigurationException(ioex);</span>
+<span class="fc" id="L588">        }</span>
+<span class="fc" id="L589">    }</span>
 
     /**
      * The event listener callback. Here event notifications of the
@@ -600,34 +595,34 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param event the event object
      */
     @Override
-    public void onEvent(final ConfigurationEvent event)
+    public void onEvent(ConfigurationEvent event)
     {
-<span class="pc bpc" id="L605" title="1 of 4 branches missed.">        if (!event.isBeforeUpdate() &amp;&amp; loadCounter.get() == 0)</span>
+<span class="pc bpc" id="L600" title="1 of 4 branches missed.">        if (!event.isBeforeUpdate() &amp;&amp; loadCounter.get() == 0)</span>
         {
-<span class="fc bfc" id="L607" title="All 2 branches covered.">            if (ConfigurationEvent.ADD_PROPERTY.equals(event.getEventType()))</span>
+<span class="fc bfc" id="L602" title="All 2 branches covered.">            if (ConfigurationEvent.ADD_PROPERTY.equals(event.getEventType()))</span>
             {
-<span class="fc" id="L609">                final boolean contained =</span>
-<span class="fc" id="L610">                        layoutData.containsKey(event.getPropertyName());</span>
-<span class="fc" id="L611">                final PropertyLayoutData data =</span>
-<span class="fc" id="L612">                        fetchLayoutData(event.getPropertyName());</span>
-<span class="fc bfc" id="L613" title="All 2 branches covered.">                data.setSingleLine(!contained);</span>
-<span class="fc" id="L614">            }</span>
-<span class="fc bfc" id="L615" title="All 2 branches covered.">            else if (ConfigurationEvent.CLEAR_PROPERTY.equals(event</span>
-<span class="fc" id="L616">                    .getEventType()))</span>
+<span class="fc" id="L604">                boolean contained =</span>
+<span class="fc" id="L605">                        layoutData.containsKey(event.getPropertyName());</span>
+<span class="fc" id="L606">                PropertyLayoutData data =</span>
+<span class="fc" id="L607">                        fetchLayoutData(event.getPropertyName());</span>
+<span class="fc bfc" id="L608" title="All 2 branches covered.">                data.setSingleLine(!contained);</span>
+<span class="fc" id="L609">            }</span>
+<span class="fc bfc" id="L610" title="All 2 branches covered.">            else if (ConfigurationEvent.CLEAR_PROPERTY.equals(event</span>
+<span class="fc" id="L611">                    .getEventType()))</span>
             {
-<span class="fc" id="L618">                layoutData.remove(event.getPropertyName());</span>
+<span class="fc" id="L613">                layoutData.remove(event.getPropertyName());</span>
             }
-<span class="fc bfc" id="L620" title="All 2 branches covered.">            else if (ConfigurationEvent.CLEAR.equals(event.getEventType()))</span>
+<span class="fc bfc" id="L615" title="All 2 branches covered.">            else if (ConfigurationEvent.CLEAR.equals(event.getEventType()))</span>
             {
-<span class="fc" id="L622">                clear();</span>
+<span class="fc" id="L617">                clear();</span>
             }
-<span class="pc bpc" id="L624" title="1 of 2 branches missed.">            else if (ConfigurationEvent.SET_PROPERTY.equals(event</span>
-<span class="fc" id="L625">                    .getEventType()))</span>
+<span class="pc bpc" id="L619" title="1 of 2 branches missed.">            else if (ConfigurationEvent.SET_PROPERTY.equals(event</span>
+<span class="fc" id="L620">                    .getEventType()))</span>
             {
-<span class="fc" id="L627">                fetchLayoutData(event.getPropertyName());</span>
+<span class="fc" id="L622">                fetchLayoutData(event.getPropertyName());</span>
             }
         }
-<span class="fc" id="L630">    }</span>
+<span class="fc" id="L625">    }</span>
 
     /**
      * Returns a layout data object for the specified key. If this is a new key,
@@ -636,22 +631,22 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param key the key
      * @return the corresponding layout data object
      */
-    private PropertyLayoutData fetchLayoutData(final String key)
+    private PropertyLayoutData fetchLayoutData(String key)
     {
-<span class="fc bfc" id="L641" title="All 2 branches covered.">        if (key == null)</span>
+<span class="fc bfc" id="L636" title="All 2 branches covered.">        if (key == null)</span>
         {
-<span class="fc" id="L643">            throw new IllegalArgumentException(&quot;Property key must not be null!&quot;);</span>
+<span class="fc" id="L638">            throw new IllegalArgumentException(&quot;Property key must not be null!&quot;);</span>
         }
 
-<span class="fc" id="L646">        PropertyLayoutData data = layoutData.get(key);</span>
-<span class="fc bfc" id="L647" title="All 2 branches covered.">        if (data == null)</span>
+<span class="fc" id="L641">        PropertyLayoutData data = layoutData.get(key);</span>
+<span class="fc bfc" id="L642" title="All 2 branches covered.">        if (data == null)</span>
         {
-<span class="fc" id="L649">            data = new PropertyLayoutData();</span>
-<span class="fc" id="L650">            data.setSingleLine(true);</span>
-<span class="fc" id="L651">            layoutData.put(key, data);</span>
+<span class="fc" id="L644">            data = new PropertyLayoutData();</span>
+<span class="fc" id="L645">            data.setSingleLine(true);</span>
+<span class="fc" id="L646">            layoutData.put(key, data);</span>
         }
 
-<span class="fc" id="L654">        return data;</span>
+<span class="fc" id="L649">        return data;</span>
     }
 
     /**
@@ -659,11 +654,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      */
     private void clear()
     {
-<span class="fc" id="L662">        seenStack.clear();</span>
-<span class="fc" id="L663">        layoutData.clear();</span>
-<span class="fc" id="L664">        setHeaderComment(null);</span>
-<span class="fc" id="L665">        setFooterComment(null);</span>
-<span class="fc" id="L666">    }</span>
+<span class="fc" id="L657">        layoutData.clear();</span>
+<span class="fc" id="L658">        setHeaderComment(null);</span>
+<span class="fc" id="L659">        setFooterComment(null);</span>
+<span class="fc" id="L660">    }</span>
 
     /**
      * Tests whether a line is a comment, i.e. whether it starts with a comment
@@ -672,9 +666,9 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param line the line
      * @return a flag if this is a comment line
      */
-    static boolean isCommentLine(final String line)
+    static boolean isCommentLine(String line)
     {
-<span class="fc" id="L677">        return PropertiesConfiguration.isCommentLine(line);</span>
+<span class="fc" id="L671">        return PropertiesConfiguration.isCommentLine(line);</span>
     }
 
     /**
@@ -687,28 +681,28 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * enforced; if &lt;b&gt;false&lt;/b&gt;, it will be removed
      * @return the trimmed comment
      */
-    static String trimComment(final String s, final boolean comment)
+    static String trimComment(String s, boolean comment)
     {
-<span class="fc" id="L692">        final StringBuilder buf = new StringBuilder(s.length());</span>
-<span class="fc" id="L693">        int lastPos = 0;</span>
+<span class="fc" id="L686">        StringBuilder buf = new StringBuilder(s.length());</span>
+<span class="fc" id="L687">        int lastPos = 0;</span>
         int pos;
 
         do
         {
-<span class="fc" id="L698">            pos = s.indexOf(CR, lastPos);</span>
-<span class="fc bfc" id="L699" title="All 2 branches covered.">            if (pos &gt;= 0)</span>
+<span class="fc" id="L692">            pos = s.indexOf(CR, lastPos);</span>
+<span class="fc bfc" id="L693" title="All 2 branches covered.">            if (pos &gt;= 0)</span>
             {
-<span class="fc" id="L701">                final String line = s.substring(lastPos, pos);</span>
-<span class="fc" id="L702">                buf.append(stripCommentChar(line, comment)).append(CR);</span>
-<span class="fc" id="L703">                lastPos = pos + CR.length();</span>
+<span class="fc" id="L695">                String line = s.substring(lastPos, pos);</span>
+<span class="fc" id="L696">                buf.append(stripCommentChar(line, comment)).append(CR);</span>
+<span class="fc" id="L697">                lastPos = pos + CR.length();</span>
             }
-<span class="fc bfc" id="L705" title="All 2 branches covered.">        } while (pos &gt;= 0);</span>
+<span class="fc bfc" id="L699" title="All 2 branches covered.">        } while (pos &gt;= 0);</span>
 
-<span class="fc bfc" id="L707" title="All 2 branches covered.">        if (lastPos &lt; s.length())</span>
+<span class="fc bfc" id="L701" title="All 2 branches covered.">        if (lastPos &lt; s.length())</span>
         {
-<span class="fc" id="L709">            buf.append(stripCommentChar(s.substring(lastPos), comment));</span>
+<span class="fc" id="L703">            buf.append(stripCommentChar(s.substring(lastPos), comment));</span>
         }
-<span class="fc" id="L711">        return buf.toString();</span>
+<span class="fc" id="L705">        return buf.toString();</span>
     }
 
     /**
@@ -720,34 +714,41 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * enforced; if &lt;b&gt;false&lt;/b&gt;, it will be removed
      * @return the line without comment character
      */
-    static String stripCommentChar(final String s, final boolean comment)
+    static String stripCommentChar(String s, boolean comment)
     {
-<span class="fc bfc" id="L725" title="All 4 branches covered.">        if (StringUtils.isBlank(s) || (isCommentLine(s) == comment))</span>
+<span class="fc bfc" id="L719" title="All 4 branches covered.">        if (StringUtils.isBlank(s) || (isCommentLine(s) == comment))</span>
         {
-<span class="fc" id="L727">            return s;</span>
+<span class="fc" id="L721">            return s;</span>
         }
-<span class="fc bfc" id="L729" title="All 2 branches covered.">        if (!comment)</span>
+
+        else
         {
-<span class="fc" id="L731">            int pos = 0;</span>
-            // find first comment character
-<span class="fc bfc" id="L733" title="All 2 branches covered.">            while (PropertiesConfiguration.COMMENT_CHARS.indexOf(s</span>
-<span class="fc" id="L734">                    .charAt(pos)) &lt; 0)</span>
+<span class="fc bfc" id="L726" title="All 2 branches covered.">            if (!comment)</span>
             {
-<span class="fc" id="L736">                pos++;</span>
-            }
+<span class="fc" id="L728">                int pos = 0;</span>
+                // find first comment character
+<span class="fc bfc" id="L730" title="All 2 branches covered.">                while (PropertiesConfiguration.COMMENT_CHARS.indexOf(s</span>
+<span class="fc" id="L731">                        .charAt(pos)) &lt; 0)</span>
+                {
+<span class="fc" id="L733">                    pos++;</span>
+                }
 
-            // Remove leading spaces
-<span class="fc" id="L740">            pos++;</span>
-<span class="pc bpc" id="L741" title="1 of 2 branches missed.">            while (pos &lt; s.length()</span>
-<span class="fc bfc" id="L742" title="All 2 branches covered.">                    &amp;&amp; Character.isWhitespace(s.charAt(pos)))</span>
+                // Remove leading spaces
+<span class="fc" id="L737">                pos++;</span>
+<span class="pc bpc" id="L738" title="1 of 2 branches missed.">                while (pos &lt; s.length()</span>
+<span class="fc bfc" id="L739" title="All 2 branches covered.">                        &amp;&amp; Character.isWhitespace(s.charAt(pos)))</span>
+                {
+<span class="fc" id="L741">                    pos++;</span>
+                }
+
+<span class="pc bpc" id="L744" title="1 of 2 branches missed.">                return (pos &lt; s.length()) ? s.substring(pos)</span>
+<span class="nc" id="L745">                        : StringUtils.EMPTY;</span>
+            }
+            else
             {
-<span class="fc" id="L744">                pos++;</span>
+<span class="fc" id="L749">                return COMMENT_PREFIX + s;</span>
             }
-
-<span class="pc bpc" id="L747" title="1 of 2 branches missed.">            return pos &lt; s.length() ? s.substring(pos)</span>
-<span class="nc" id="L748">                    : StringUtils.EMPTY;</span>
         }
-<span class="fc" id="L750">        return COMMENT_PREFIX + s;</span>
     }
 
     /**
@@ -759,19 +760,23 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param to the end index (inclusive)
      * @return the comment string (&lt;b&gt;null&lt;/b&gt; if it is undefined)
      */
-    private String extractComment(final List&lt;String&gt; commentLines, final int from, final int to)
+    private String extractComment(List&lt;String&gt; commentLines, int from, int to)
     {
-<span class="fc bfc" id="L764" title="All 2 branches covered.">        if (to &lt; from)</span>
+<span class="fc bfc" id="L765" title="All 2 branches covered.">        if (to &lt; from)</span>
         {
-<span class="fc" id="L766">            return null;</span>
+<span class="fc" id="L767">            return null;</span>
         }
-<span class="fc" id="L768">        final StringBuilder buf = new StringBuilder(commentLines.get(from));</span>
-<span class="fc bfc" id="L769" title="All 2 branches covered.">        for (int i = from + 1; i &lt;= to; i++)</span>
+
+        else
         {
-<span class="fc" id="L771">            buf.append(CR);</span>
-<span class="fc" id="L772">            buf.append(commentLines.get(i));</span>
+<span class="fc" id="L772">            StringBuilder buf = new StringBuilder(commentLines.get(from));</span>
+<span class="fc bfc" id="L773" title="All 2 branches covered.">            for (int i = from + 1; i &lt;= to; i++)</span>
+            {
+<span class="fc" id="L775">                buf.append(CR);</span>
+<span class="fc" id="L776">                buf.append(commentLines.get(i));</span>
+            }
+<span class="fc" id="L778">            return buf.toString();</span>
         }
-<span class="fc" id="L774">        return buf.toString();</span>
     }
 
     /**
@@ -785,24 +790,27 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param commentLines the comment lines
      * @return the index of the next line after the header comment
      */
-    private int checkHeaderComment(final List&lt;String&gt; commentLines)
+    private int checkHeaderComment(List&lt;String&gt; commentLines)
     {
-<span class="fc bfc" id="L790" title="All 4 branches covered.">        if (loadCounter.get() == 1 &amp;&amp; layoutData.isEmpty())</span>
+<span class="fc bfc" id="L795" title="All 4 branches covered.">        if (loadCounter.get() == 1 &amp;&amp; layoutData.isEmpty())</span>
         {
             // This is the first comment. Search for blanc lines.
-<span class="fc" id="L793">            int index = commentLines.size() - 1;</span>
-<span class="fc bfc" id="L794" title="All 2 branches covered.">            while (index &gt;= 0</span>
-<span class="fc bfc" id="L795" title="All 2 branches covered.">                    &amp;&amp; commentLines.get(index).length() &gt; 0)</span>
+<span class="fc" id="L798">            int index = commentLines.size() - 1;</span>
+<span class="fc bfc" id="L799" title="All 2 branches covered.">            while (index &gt;= 0</span>
+<span class="fc bfc" id="L800" title="All 2 branches covered.">                    &amp;&amp; commentLines.get(index).length() &gt; 0)</span>
             {
-<span class="fc" id="L797">                index--;</span>
+<span class="fc" id="L802">                index--;</span>
             }
-<span class="fc bfc" id="L799" title="All 2 branches covered.">            if (getHeaderComment() == null)</span>
+<span class="fc bfc" id="L804" title="All 2 branches covered.">            if (getHeaderComment() == null)</span>
             {
-<span class="fc" id="L801">                setHeaderComment(extractComment(commentLines, 0, index - 1));</span>
+<span class="fc" id="L806">                setHeaderComment(extractComment(commentLines, 0, index - 1));</span>
             }
-<span class="fc" id="L803">            return index + 1;</span>
+<span class="fc" id="L808">            return index + 1;</span>
         }
-<span class="fc" id="L805">        return 0;</span>
+        else
+        {
+<span class="fc" id="L812">            return 0;</span>
+        }
     }
 
     /**
@@ -810,17 +818,17 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      *
      * @param c the layout object to copy
      */
-    private void copyFrom(final PropertiesConfigurationLayout c)
+    private void copyFrom(PropertiesConfigurationLayout c)
     {
-<span class="fc bfc" id="L815" title="All 2 branches covered.">        for (final String key : c.getKeys())</span>
+<span class="fc bfc" id="L823" title="All 2 branches covered.">        for (String key : c.getKeys())</span>
         {
-<span class="fc" id="L817">            final PropertyLayoutData data = c.layoutData.get(key);</span>
-<span class="fc" id="L818">            layoutData.put(key, data.clone());</span>
-<span class="fc" id="L819">        }</span>
+<span class="fc" id="L825">            PropertyLayoutData data = c.layoutData.get(key);</span>
+<span class="fc" id="L826">            layoutData.put(key, data.clone());</span>
+<span class="fc" id="L827">        }</span>
 
-<span class="fc" id="L821">        setHeaderComment(c.getHeaderComment());</span>
-<span class="fc" id="L822">        setFooterComment(c.getFooterComment());</span>
-<span class="fc" id="L823">    }</span>
+<span class="fc" id="L829">        setHeaderComment(c.getHeaderComment());</span>
+<span class="fc" id="L830">        setFooterComment(c.getFooterComment());</span>
+<span class="fc" id="L831">    }</span>
 
     /**
      * Helper method for writing a comment line. This method ensures that the
@@ -831,15 +839,15 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @throws IOException if an IO error occurs
      */
     private static void writeComment(
-            final PropertiesConfiguration.PropertiesWriter writer, final String comment)
+            PropertiesConfiguration.PropertiesWriter writer, String comment)
             throws IOException
     {
-<span class="fc bfc" id="L837" title="All 2 branches covered.">        if (comment != null)</span>
+<span class="fc bfc" id="L845" title="All 2 branches covered.">        if (comment != null)</span>
         {
-<span class="fc" id="L839">            writer.writeln(StringUtils.replace(comment, CR, writer</span>
-<span class="fc" id="L840">                    .getLineSeparator()));</span>
+<span class="fc" id="L847">            writer.writeln(StringUtils.replace(comment, CR, writer</span>
+<span class="fc" id="L848">                    .getLineSeparator()));</span>
         }
-<span class="fc" id="L842">    }</span>
+<span class="fc" id="L850">    }</span>
 
     /**
      * Helper method for generating a comment string. Depending on the boolean
@@ -850,10 +858,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
      * @param commentChar determines the presence of comment characters
      * @return the canonical comment string (can be &lt;b&gt;null&lt;/b&gt;)
      */
-    private static String constructCanonicalComment(final String comment,
-            final boolean commentChar)
+    private static String constructCanonicalComment(String comment,
+            boolean commentChar)
     {
-<span class="fc bfc" id="L856" title="All 2 branches covered.">        return comment == null ? null : trimComment(comment, commentChar);</span>
+<span class="fc bfc" id="L864" title="All 2 branches covered.">        return (comment == null) ? null : trimComment(comment, commentChar);</span>
     }
 
     /**
@@ -878,10 +886,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          * Creates a new instance of {@code PropertyLayoutData}.
          */
         public PropertyLayoutData()
-<span class="fc" id="L881">        {</span>
-<span class="fc" id="L882">            singleLine = true;</span>
-<span class="fc" id="L883">            separator = PropertiesConfiguration.DEFAULT_SEPARATOR;</span>
-<span class="fc" id="L884">        }</span>
+<span class="fc" id="L889">        {</span>
+<span class="fc" id="L890">            singleLine = true;</span>
+<span class="fc" id="L891">            separator = PropertiesConfiguration.DEFAULT_SEPARATOR;</span>
+<span class="fc" id="L892">        }</span>
 
         /**
          * Returns the number of blanc lines before this property.
@@ -890,7 +898,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          */
         public int getBlancLines()
         {
-<span class="fc" id="L893">            return blancLines;</span>
+<span class="fc" id="L901">            return blancLines;</span>
         }
 
         /**
@@ -898,10 +906,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          *
          * @param blancLines the number of properties before this property
          */
-        public void setBlancLines(final int blancLines)
+        public void setBlancLines(int blancLines)
         {
-<span class="fc" id="L903">            this.blancLines = blancLines;</span>
-<span class="fc" id="L904">        }</span>
+<span class="fc" id="L911">            this.blancLines = blancLines;</span>
+<span class="fc" id="L912">        }</span>
 
         /**
          * Returns the single line flag.
@@ -910,7 +918,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          */
         public boolean isSingleLine()
         {
-<span class="fc" id="L913">            return singleLine;</span>
+<span class="fc" id="L921">            return singleLine;</span>
         }
 
         /**
@@ -918,10 +926,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          *
          * @param singleLine the single line flag
          */
-        public void setSingleLine(final boolean singleLine)
+        public void setSingleLine(boolean singleLine)
         {
-<span class="fc" id="L923">            this.singleLine = singleLine;</span>
-<span class="fc" id="L924">        }</span>
+<span class="fc" id="L931">            this.singleLine = singleLine;</span>
+<span class="fc" id="L932">        }</span>
 
         /**
          * Adds a comment for this property. If already a comment exists, the
@@ -929,37 +937,37 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          *
          * @param s the comment to add
          */
-        public void addComment(final String s)
+        public void addComment(String s)
         {
-<span class="fc bfc" id="L934" title="All 2 branches covered.">            if (s != null)</span>
+<span class="fc bfc" id="L942" title="All 2 branches covered.">            if (s != null)</span>
             {
-<span class="pc bpc" id="L936" title="1 of 2 branches missed.">                if (comment == null)</span>
+<span class="pc bpc" id="L944" title="1 of 2 branches missed.">                if (comment == null)</span>
                 {
-<span class="nc" id="L938">                    comment = new StringBuffer(s);</span>
+<span class="nc" id="L946">                    comment = new StringBuffer(s);</span>
                 }
                 else
                 {
-<span class="fc" id="L942">                    comment.append(CR).append(s);</span>
+<span class="fc" id="L950">                    comment.append(CR).append(s);</span>
                 }
             }
-<span class="fc" id="L945">        }</span>
+<span class="fc" id="L953">        }</span>
 
         /**
          * Sets the comment for this property.
          *
          * @param s the new comment (can be &lt;b&gt;null&lt;/b&gt;)
          */
-        public void setComment(final String s)
+        public void setComment(String s)
         {
-<span class="fc bfc" id="L954" title="All 2 branches covered.">            if (s == null)</span>
+<span class="fc bfc" id="L962" title="All 2 branches covered.">            if (s == null)</span>
             {
-<span class="fc" id="L956">                comment = null;</span>
+<span class="fc" id="L964">                comment = null;</span>
             }
             else
             {
-<span class="fc" id="L960">                comment = new StringBuffer(s);</span>
+<span class="fc" id="L968">                comment = new StringBuffer(s);</span>
             }
-<span class="fc" id="L962">        }</span>
+<span class="fc" id="L970">        }</span>
 
         /**
          * Returns the comment for this property. The comment is returned as it
@@ -969,7 +977,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          */
         public String getComment()
         {
-<span class="fc" id="L972">            return Objects.toString(comment, null);</span>
+<span class="fc bfc" id="L980" title="All 2 branches covered.">            return (comment == null) ? null : comment.toString();</span>
         }
 
         /**
@@ -979,7 +987,7 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          */
         public String getSeparator()
         {
-<span class="fc" id="L982">            return separator;</span>
+<span class="fc" id="L990">            return separator;</span>
         }
 
         /**
@@ -987,10 +995,10 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
          *
          * @param separator the property separator
          */
-        public void setSeparator(final String separator)
+        public void setSeparator(String separator)
         {
-<span class="fc" id="L992">            this.separator = separator;</span>
-<span class="fc" id="L993">        }</span>
+<span class="fc" id="L1000">            this.separator = separator;</span>
+<span class="fc" id="L1001">        }</span>
 
         /**
          * Creates a copy of this object.
@@ -1002,18 +1010,18 @@ public class PropertiesConfigurationLayout implements EventListener&lt;Configura
         {
             try
             {
-<span class="fc" id="L1005">                final PropertyLayoutData copy = (PropertyLayoutData) super.clone();</span>
-<span class="fc bfc" id="L1006" title="All 2 branches covered.">                if (comment != null)</span>
+<span class="fc" id="L1013">                PropertyLayoutData copy = (PropertyLayoutData) super.clone();</span>
+<span class="fc bfc" id="L1014" title="All 2 branches covered.">                if (comment != null)</span>
                 {
                     // must copy string buffer, too
-<span class="fc" id="L1009">                    copy.comment = new StringBuffer(getComment());</span>
+<span class="fc" id="L1017">                    copy.comment = new StringBuffer(getComment());</span>
                 }
-<span class="fc" id="L1011">                return copy;</span>
+<span class="fc" id="L1019">                return copy;</span>
             }
-<span class="nc" id="L1013">            catch (final CloneNotSupportedException cnex)</span>
+<span class="nc" id="L1021">            catch (CloneNotSupportedException cnex)</span>
             {
                 // This cannot happen!
-<span class="nc" id="L1016">                throw new ConfigurationRuntimeException(cnex);</span>
+<span class="nc" id="L1024">                throw new ConfigurationRuntimeException(cnex);</span>
             }
         }
     }

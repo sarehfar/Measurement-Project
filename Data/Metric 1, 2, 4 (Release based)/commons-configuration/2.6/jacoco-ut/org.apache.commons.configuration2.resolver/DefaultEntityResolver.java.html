@@ -79,38 +79,37 @@ import org.xml.sax.SAXException;
      * @return an input source for the specified entity
      * @throws org.xml.sax.SAXException if a parsing exception occurs
      */
-    @SuppressWarnings(&quot;resource&quot;) // The stream is managed by the InputSource returned by this method.
     @Override
     public InputSource resolveEntity(final String publicId, final String systemId)
             throws SAXException
     {
         // Has this system identifier been registered?
-<span class="fc" id="L88">        URL entityURL = null;</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (publicId != null)</span>
+<span class="fc" id="L87">        URL entityURL = null;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (publicId != null)</span>
         {
-<span class="fc" id="L91">            entityURL = getRegisteredEntities().get(publicId);</span>
+<span class="fc" id="L90">            entityURL = getRegisteredEntities().get(publicId);</span>
         }
 
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (entityURL != null)</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (entityURL != null)</span>
         {
             // Obtain an InputSource for this URL. This code is based on the
             // createInputSourceFromURL() method of Commons Digester.
             try
             {
-<span class="nc" id="L100">                final URLConnection connection = entityURL.openConnection();</span>
-<span class="nc" id="L101">                connection.setUseCaches(false);</span>
-<span class="nc" id="L102">                final InputStream stream = connection.getInputStream();</span>
-<span class="nc" id="L103">                final InputSource source = new InputSource(stream);</span>
-<span class="nc" id="L104">                source.setSystemId(entityURL.toExternalForm());</span>
-<span class="nc" id="L105">                return source;</span>
+<span class="nc" id="L99">                final URLConnection connection = entityURL.openConnection();</span>
+<span class="nc" id="L100">                connection.setUseCaches(false);</span>
+<span class="nc" id="L101">                final InputStream stream = connection.getInputStream();</span>
+<span class="nc" id="L102">                final InputSource source = new InputSource(stream);</span>
+<span class="nc" id="L103">                source.setSystemId(entityURL.toExternalForm());</span>
+<span class="nc" id="L104">                return source;</span>
             }
-<span class="nc" id="L107">            catch (final IOException e)</span>
+<span class="nc" id="L106">            catch (final IOException e)</span>
             {
-<span class="nc" id="L109">                throw new SAXException(e);</span>
+<span class="nc" id="L108">                throw new SAXException(e);</span>
             }
         }
         // default processing behavior
-<span class="fc" id="L113">        return null;</span>
+<span class="fc" id="L112">        return null;</span>
     }
 
     /**
@@ -122,7 +121,7 @@ import org.xml.sax.SAXException;
     @Override
     public Map&lt;String, URL&gt; getRegisteredEntities()
     {
-<span class="fc" id="L125">        return registeredEntities;</span>
+<span class="fc" id="L124">        return registeredEntities;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

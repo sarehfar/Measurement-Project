@@ -30,26 +30,21 @@ import org.apache.commons.configuration2.reloading.ReloadingDetector;
  * Instances have no state and can be shared between multiple builders.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
-<span class="fc" id="L35">public class DefaultReloadingDetectorFactory implements</span>
+<span class="fc" id="L36">public class DefaultReloadingDetectorFactory implements</span>
         ReloadingDetectorFactory
 {
     @Override
-    public ReloadingDetector createReloadingDetector(final FileHandler handler,
-            final FileBasedBuilderParametersImpl params)
+    public ReloadingDetector createReloadingDetector(FileHandler handler,
+            FileBasedBuilderParametersImpl params)
             throws ConfigurationException
     {
-<span class="fc" id="L43">        final Long refreshDelay = params.getReloadingRefreshDelay();</span>
-
-        final FileHandlerReloadingDetector fileHandlerReloadingDetector =
-<span class="fc bfc" id="L46" title="All 2 branches covered.">                refreshDelay != null ? new FileHandlerReloadingDetector(</span>
-<span class="fc" id="L47">                handler, refreshDelay) : new FileHandlerReloadingDetector(</span>
+<span class="fc" id="L44">        Long refreshDelay = params.getReloadingRefreshDelay();</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        return (refreshDelay != null) ? new FileHandlerReloadingDetector(</span>
+<span class="fc" id="L46">                handler, refreshDelay) : new FileHandlerReloadingDetector(</span>
                 handler);
-
-<span class="fc" id="L50">        fileHandlerReloadingDetector.refresh();</span>
-
-<span class="fc" id="L52">        return fileHandlerReloadingDetector;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

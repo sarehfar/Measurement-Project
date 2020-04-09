@@ -101,6 +101,7 @@ import org.apache.commons.configuration2.reloading.ReloadingController;
  * builder is reset.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  * @param &lt;T&gt; the concrete type of {@code ImmutableConfiguration} objects created by this
  *        builder
@@ -136,8 +137,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public BasicConfigurationBuilder(final Class&lt;? extends T&gt; resCls)
     {
-<span class="fc" id="L139">        this(resCls, null);</span>
-<span class="fc" id="L140">    }</span>
+<span class="fc" id="L140">        this(resCls, null);</span>
+<span class="fc" id="L141">    }</span>
 
     /**
      * Creates a new instance of {@code BasicConfigurationBuilder} and
@@ -151,8 +152,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public BasicConfigurationBuilder(final Class&lt;? extends T&gt; resCls, final Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L154">        this(resCls, params, false);</span>
-<span class="fc" id="L155">    }</span>
+<span class="fc" id="L155">        this(resCls, params, false);</span>
+<span class="fc" id="L156">    }</span>
 
     /**
      * Creates a new instance of {@code BasicConfigurationBuilder} and
@@ -169,17 +170,17 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public BasicConfigurationBuilder(final Class&lt;? extends T&gt; resCls,
             final Map&lt;String, Object&gt; params, final boolean allowFailOnInit)
-<span class="fc" id="L172">    {</span>
-<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (resCls == null)</span>
+<span class="fc" id="L173">    {</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (resCls == null)</span>
         {
-<span class="fc" id="L175">            throw new IllegalArgumentException(&quot;Result class must not be null!&quot;);</span>
+<span class="fc" id="L176">            throw new IllegalArgumentException(&quot;Result class must not be null!&quot;);</span>
         }
 
-<span class="fc" id="L178">        resultClass = resCls;</span>
-<span class="fc" id="L179">        this.allowFailOnInit = allowFailOnInit;</span>
-<span class="fc" id="L180">        eventListeners = new EventListenerList();</span>
-<span class="fc" id="L181">        updateParameters(params);</span>
-<span class="fc" id="L182">    }</span>
+<span class="fc" id="L179">        resultClass = resCls;</span>
+<span class="fc" id="L180">        this.allowFailOnInit = allowFailOnInit;</span>
+<span class="fc" id="L181">        eventListeners = new EventListenerList();</span>
+<span class="fc" id="L182">        updateParameters(params);</span>
+<span class="fc" id="L183">    }</span>
 
     /**
      * Returns the result class of this builder. The objects produced by this
@@ -189,7 +190,7 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public Class&lt;? extends T&gt; getResultClass()
     {
-<span class="fc" id="L192">        return resultClass;</span>
+<span class="fc" id="L193">        return resultClass;</span>
     }
 
     /**
@@ -200,7 +201,7 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public boolean isAllowFailOnInit()
     {
-<span class="fc" id="L203">        return allowFailOnInit;</span>
+<span class="fc" id="L204">        return allowFailOnInit;</span>
     }
 
     /**
@@ -214,8 +215,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     public synchronized BasicConfigurationBuilder&lt;T&gt; setParameters(
             final Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L217">        updateParameters(params);</span>
-<span class="fc" id="L218">        return this;</span>
+<span class="fc" id="L218">        updateParameters(params);</span>
+<span class="fc" id="L219">        return this;</span>
     }
 
     /**
@@ -229,14 +230,14 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     public synchronized BasicConfigurationBuilder&lt;T&gt; addParameters(
             final Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L232">        final Map&lt;String, Object&gt; newParams =</span>
-<span class="fc" id="L233">                new HashMap&lt;&gt;(getParameters());</span>
-<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (params != null)</span>
+<span class="fc" id="L233">        final Map&lt;String, Object&gt; newParams =</span>
+<span class="fc" id="L234">                new HashMap&lt;&gt;(getParameters());</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        if (params != null)</span>
         {
-<span class="fc" id="L236">            newParams.putAll(params);</span>
+<span class="fc" id="L237">            newParams.putAll(params);</span>
         }
-<span class="fc" id="L238">        updateParameters(newParams);</span>
-<span class="fc" id="L239">        return this;</span>
+<span class="fc" id="L239">        updateParameters(newParams);</span>
+<span class="fc" id="L240">        return this;</span>
     }
 
     /**
@@ -250,14 +251,14 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public BasicConfigurationBuilder&lt;T&gt; configure(final BuilderParameters... params)
     {
-<span class="fc" id="L253">        final Map&lt;String, Object&gt; newParams = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L254" title="All 2 branches covered.">        for (final BuilderParameters p : params)</span>
+<span class="fc" id="L254">        final Map&lt;String, Object&gt; newParams = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        for (final BuilderParameters p : params)</span>
         {
-<span class="fc" id="L256">            newParams.putAll(p.getParameters());</span>
-<span class="fc" id="L257">            handleEventListenerProviders(p);</span>
+<span class="fc" id="L257">            newParams.putAll(p.getParameters());</span>
+<span class="fc" id="L258">            handleEventListenerProviders(p);</span>
         }
 
-<span class="fc" id="L260">        return setParameters(newParams);</span>
+<span class="fc" id="L261">        return setParameters(newParams);</span>
     }
 
     /**
@@ -269,31 +270,31 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     @Override
     public T getConfiguration() throws ConfigurationException
     {
-<span class="fc" id="L272">        fireBuilderEvent(new ConfigurationBuilderEvent(this,</span>
+<span class="fc" id="L273">        fireBuilderEvent(new ConfigurationBuilderEvent(this,</span>
                 ConfigurationBuilderEvent.CONFIGURATION_REQUEST));
 
-<span class="fc" id="L275">        T resObj = result;</span>
-<span class="fc" id="L276">        boolean created = false;</span>
-<span class="fc bfc" id="L277" title="All 2 branches covered.">        if (resObj == null)</span>
+<span class="fc" id="L276">        T resObj = result;</span>
+<span class="fc" id="L277">        boolean created = false;</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">        if (resObj == null)</span>
         {
-<span class="fc" id="L279">            synchronized (this)</span>
+<span class="fc" id="L280">            synchronized (this)</span>
             {
-<span class="fc" id="L281">                resObj = result;</span>
-<span class="fc bfc" id="L282" title="All 2 branches covered.">                if (resObj == null)</span>
+<span class="fc" id="L282">                resObj = result;</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">                if (resObj == null)</span>
                 {
-<span class="fc" id="L284">                    result = resObj = createResult();</span>
-<span class="fc" id="L285">                    created = true;</span>
+<span class="fc" id="L285">                    result = resObj = createResult();</span>
+<span class="fc" id="L286">                    created = true;</span>
                 }
-<span class="fc" id="L287">            }</span>
+<span class="fc" id="L288">            }</span>
         }
 
-<span class="fc bfc" id="L290" title="All 2 branches covered.">        if (created)</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        if (created)</span>
         {
-<span class="fc" id="L292">            fireBuilderEvent(new ConfigurationBuilderResultCreatedEvent(this,</span>
+<span class="fc" id="L293">            fireBuilderEvent(new ConfigurationBuilderResultCreatedEvent(this,</span>
                     ConfigurationBuilderResultCreatedEvent.RESULT_CREATED,
                     resObj));
         }
-<span class="fc" id="L296">        return resObj;</span>
+<span class="fc" id="L297">        return resObj;</span>
     }
 
     /**
@@ -307,8 +308,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     public &lt;E extends Event&gt; void addEventListener(
             final EventType&lt;E&gt; eventType, final EventListener&lt;? super E&gt; listener)
     {
-<span class="fc" id="L310">        installEventListener(eventType, listener);</span>
-<span class="fc" id="L311">    }</span>
+<span class="fc" id="L311">        installEventListener(eventType, listener);</span>
+<span class="fc" id="L312">    }</span>
 
     /**
      * {@inheritDoc} This implementation also takes care that the event listener
@@ -318,8 +319,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     public &lt;E extends Event&gt; boolean removeEventListener(
             final EventType&lt;E&gt; eventType, final EventListener&lt;? super E&gt; listener)
     {
-<span class="fc" id="L321">        fetchEventSource().removeEventListener(eventType, listener);</span>
-<span class="fc" id="L322">        return eventListeners.removeEventListener(eventType, listener);</span>
+<span class="fc" id="L322">        fetchEventSource().removeEventListener(eventType, listener);</span>
+<span class="fc" id="L323">        return eventListeners.removeEventListener(eventType, listener);</span>
     }
 
     /**
@@ -330,20 +331,20 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     public void resetResult()
     {
         T oldResult;
-<span class="fc" id="L333">        synchronized (this)</span>
+<span class="fc" id="L334">        synchronized (this)</span>
         {
-<span class="fc" id="L335">            oldResult = result;</span>
-<span class="fc" id="L336">            result = null;</span>
-<span class="fc" id="L337">            resultDeclaration = null;</span>
-<span class="fc" id="L338">        }</span>
+<span class="fc" id="L336">            oldResult = result;</span>
+<span class="fc" id="L337">            result = null;</span>
+<span class="fc" id="L338">            resultDeclaration = null;</span>
+<span class="fc" id="L339">        }</span>
 
-<span class="fc bfc" id="L340" title="All 2 branches covered.">        if (oldResult != null)</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">        if (oldResult != null)</span>
         {
-<span class="fc" id="L342">            removeEventListeners(oldResult);</span>
+<span class="fc" id="L343">            removeEventListeners(oldResult);</span>
         }
-<span class="fc" id="L344">        fireBuilderEvent(new ConfigurationBuilderEvent(this,</span>
+<span class="fc" id="L345">        fireBuilderEvent(new ConfigurationBuilderEvent(this,</span>
                 ConfigurationBuilderEvent.RESET));
-<span class="fc" id="L346">    }</span>
+<span class="fc" id="L347">    }</span>
 
     /**
      * Removes all initialization parameters of this builder. This method can be
@@ -352,8 +353,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public void resetParameters()
     {
-<span class="fc" id="L355">        setParameters(null);</span>
-<span class="fc" id="L356">    }</span>
+<span class="fc" id="L356">        setParameters(null);</span>
+<span class="fc" id="L357">    }</span>
 
     /**
      * Resets this builder. This is a convenience method which combines calls to
@@ -361,9 +362,9 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     public synchronized void reset()
     {
-<span class="fc" id="L364">        resetParameters();</span>
-<span class="fc" id="L365">        resetResult();</span>
-<span class="fc" id="L366">    }</span>
+<span class="fc" id="L365">        resetParameters();</span>
+<span class="fc" id="L366">        resetResult();</span>
+<span class="fc" id="L367">    }</span>
 
     /**
      * Connects this builder with a {@code ReloadingController}. With this
@@ -385,13 +386,13 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     public final void connectToReloadingController(
             final ReloadingController controller)
     {
-<span class="fc bfc" id="L388" title="All 2 branches covered.">        if (controller == null)</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">        if (controller == null)</span>
         {
-<span class="fc" id="L390">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L391">            throw new IllegalArgumentException(</span>
                     &quot;ReloadingController must not be null!&quot;);
         }
-<span class="fc" id="L393">        ReloadingBuilderSupportListener.connect(this, controller);</span>
-<span class="fc" id="L394">    }</span>
+<span class="fc" id="L394">        ReloadingBuilderSupportListener.connect(this, controller);</span>
+<span class="fc" id="L395">    }</span>
 
     /**
      * Creates a new, initialized result object. This method is called by
@@ -413,21 +414,21 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     protected T createResult() throws ConfigurationException
     {
-<span class="fc" id="L416">        final T resObj = createResultInstance();</span>
+<span class="fc" id="L417">        final T resObj = createResultInstance();</span>
 
         try
         {
-<span class="fc" id="L420">            initResultInstance(resObj);</span>
+<span class="fc" id="L421">            initResultInstance(resObj);</span>
         }
-<span class="fc" id="L422">        catch (final ConfigurationException cex)</span>
+<span class="fc" id="L423">        catch (final ConfigurationException cex)</span>
         {
-<span class="fc bfc" id="L424" title="All 2 branches covered.">            if (!isAllowFailOnInit())</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">            if (!isAllowFailOnInit())</span>
             {
-<span class="fc" id="L426">                throw cex;</span>
+<span class="fc" id="L427">                throw cex;</span>
             }
-<span class="fc" id="L428">        }</span>
+<span class="fc" id="L429">        }</span>
 
-<span class="fc" id="L430">        return resObj;</span>
+<span class="fc" id="L431">        return resObj;</span>
     }
 
     /**
@@ -443,9 +444,9 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     protected T createResultInstance() throws ConfigurationException
     {
-<span class="fc" id="L446">        final Object bean = fetchBeanHelper().createBean(getResultDeclaration());</span>
-<span class="fc" id="L447">        checkResultInstance(bean);</span>
-<span class="fc" id="L448">        return getResultClass().cast(bean);</span>
+<span class="fc" id="L447">        final Object bean = fetchBeanHelper().createBean(getResultDeclaration());</span>
+<span class="fc" id="L448">        checkResultInstance(bean);</span>
+<span class="fc" id="L449">        return getResultClass().cast(bean);</span>
     }
 
     /**
@@ -462,10 +463,10 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     protected void initResultInstance(final T obj) throws ConfigurationException
     {
-<span class="fc" id="L465">        fetchBeanHelper().initBean(obj, getResultDeclaration());</span>
-<span class="fc" id="L466">        registerEventListeners(obj);</span>
-<span class="fc" id="L467">        handleInitializable(obj);</span>
-<span class="fc" id="L468">    }</span>
+<span class="fc" id="L466">        fetchBeanHelper().initBean(obj, getResultDeclaration());</span>
+<span class="fc" id="L467">        registerEventListeners(obj);</span>
+<span class="fc" id="L468">        handleInitializable(obj);</span>
+<span class="fc" id="L469">    }</span>
 
     /**
      * Returns the {@code BeanDeclaration} that is used to create and initialize
@@ -480,11 +481,11 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     protected final synchronized BeanDeclaration getResultDeclaration()
             throws ConfigurationException
     {
-<span class="fc bfc" id="L483" title="All 2 branches covered.">        if (resultDeclaration == null)</span>
+<span class="fc bfc" id="L484" title="All 2 branches covered.">        if (resultDeclaration == null)</span>
         {
-<span class="fc" id="L485">            resultDeclaration = createResultDeclaration(getFilteredParameters());</span>
+<span class="fc" id="L486">            resultDeclaration = createResultDeclaration(getFilteredParameters());</span>
         }
-<span class="fc" id="L487">        return resultDeclaration;</span>
+<span class="fc" id="L488">        return resultDeclaration;</span>
     }
 
     /**
@@ -496,11 +497,11 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     protected final synchronized Map&lt;String, Object&gt; getParameters()
     {
-<span class="pc bpc" id="L499" title="1 of 2 branches missed.">        if (parameters != null)</span>
+<span class="pc bpc" id="L500" title="1 of 2 branches missed.">        if (parameters != null)</span>
         {
-<span class="fc" id="L501">            return parameters;</span>
+<span class="fc" id="L502">            return parameters;</span>
         }
-<span class="nc" id="L503">        return Collections.emptyMap();</span>
+<span class="nc" id="L504">        return Collections.emptyMap();</span>
     }
 
     /**
@@ -513,9 +514,9 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     protected final BeanHelper fetchBeanHelper()
     {
-<span class="fc" id="L516">        final BeanHelper helper =</span>
-<span class="fc" id="L517">                BasicBuilderParameters.fetchBeanHelper(getParameters());</span>
-<span class="fc bfc" id="L518" title="All 2 branches covered.">        return helper != null ? helper : BeanHelper.INSTANCE;</span>
+<span class="fc" id="L517">        final BeanHelper helper =</span>
+<span class="fc" id="L518">                BasicBuilderParameters.fetchBeanHelper(getParameters());</span>
+<span class="fc bfc" id="L519" title="All 2 branches covered.">        return (helper != null) ? helper : BeanHelper.INSTANCE;</span>
     }
 
     /**
@@ -534,45 +535,45 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     protected BeanDeclaration createResultDeclaration(
             final Map&lt;String, Object&gt; params) throws ConfigurationException
     {
-<span class="fc" id="L537">        return new BeanDeclaration()</span>
-<span class="fc" id="L538">        {</span>
+<span class="fc" id="L538">        return new BeanDeclaration()</span>
+<span class="fc" id="L539">        {</span>
             @Override
             public Map&lt;String, Object&gt; getNestedBeanDeclarations()
             {
                 // no nested beans
-<span class="fc" id="L543">                return Collections.emptyMap();</span>
+<span class="fc" id="L544">                return Collections.emptyMap();</span>
             }
 
             @Override
             public Collection&lt;ConstructorArg&gt; getConstructorArgs()
             {
                 // no constructor arguments
-<span class="fc" id="L550">                return Collections.emptySet();</span>
+<span class="fc" id="L551">                return Collections.emptySet();</span>
             }
 
             @Override
             public Map&lt;String, Object&gt; getBeanProperties()
             {
                 // the properties are equivalent to the parameters
-<span class="fc" id="L557">                return params;</span>
+<span class="fc" id="L558">                return params;</span>
             }
 
             @Override
             public Object getBeanFactoryParameter()
             {
-<span class="nc" id="L563">                return null;</span>
+<span class="nc" id="L564">                return null;</span>
             }
 
             @Override
             public String getBeanFactoryName()
             {
-<span class="fc" id="L569">                return null;</span>
+<span class="fc" id="L570">                return null;</span>
             }
 
             @Override
             public String getBeanClassName()
             {
-<span class="fc" id="L575">                return getResultClass().getName();</span>
+<span class="fc" id="L576">                return getResultClass().getName();</span>
             }
         };
     }
@@ -589,8 +590,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     protected synchronized void copyEventListeners(
             final BasicConfigurationBuilder&lt;?&gt; target)
     {
-<span class="fc" id="L592">        copyEventListeners(target, eventListeners);</span>
-<span class="fc" id="L593">    }</span>
+<span class="fc" id="L593">        copyEventListeners(target, eventListeners);</span>
+<span class="fc" id="L594">    }</span>
 
     /**
      * Copies all event listeners in the specified list to the specified target
@@ -605,8 +606,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     protected void copyEventListeners(final BasicConfigurationBuilder&lt;?&gt; target,
             final EventListenerList listeners)
     {
-<span class="fc" id="L608">        target.eventListeners.addAll(listeners);</span>
-<span class="fc" id="L609">    }</span>
+<span class="fc" id="L609">        target.eventListeners.addAll(listeners);</span>
+<span class="fc" id="L610">    }</span>
 
     /**
      * Adds the specified event listener to this object. This method is called
@@ -621,9 +622,9 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     protected final &lt;E extends Event&gt; void installEventListener(
             final EventType&lt;E&gt; eventType, final EventListener&lt;? super E&gt; listener)
     {
-<span class="fc" id="L624">        fetchEventSource().addEventListener(eventType, listener);</span>
-<span class="fc" id="L625">        eventListeners.addEventListener(eventType, listener);</span>
-<span class="fc" id="L626">    }</span>
+<span class="fc" id="L625">        fetchEventSource().addEventListener(eventType, listener);</span>
+<span class="fc" id="L626">        eventListeners.addEventListener(eventType, listener);</span>
+<span class="fc" id="L627">    }</span>
 
     /**
      * Sends the specified builder event to all registered listeners.
@@ -632,8 +633,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     protected void fireBuilderEvent(final ConfigurationBuilderEvent event)
     {
-<span class="fc" id="L635">        eventListeners.fire(event);</span>
-<span class="fc" id="L636">    }</span>
+<span class="fc" id="L636">        eventListeners.fire(event);</span>
+<span class="fc" id="L637">    }</span>
 
     /**
      * Replaces the current map with parameters by a new one.
@@ -642,13 +643,13 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private void updateParameters(final Map&lt;String, Object&gt; newParams)
     {
-<span class="fc" id="L645">        final Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L646" title="All 2 branches covered.">        if (newParams != null)</span>
+<span class="fc" id="L646">        final Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L647" title="All 2 branches covered.">        if (newParams != null)</span>
         {
-<span class="fc" id="L648">            map.putAll(newParams);</span>
+<span class="fc" id="L649">            map.putAll(newParams);</span>
         }
-<span class="fc" id="L650">        parameters = Collections.unmodifiableMap(map);</span>
-<span class="fc" id="L651">    }</span>
+<span class="fc" id="L651">        parameters = Collections.unmodifiableMap(map);</span>
+<span class="fc" id="L652">    }</span>
 
     /**
      * Registers the available event listeners at the given object. This method
@@ -658,13 +659,13 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private void registerEventListeners(final T obj)
     {
-<span class="fc" id="L661">        final EventSource evSrc = ConfigurationUtils.asEventSource(obj, true);</span>
-<span class="fc bfc" id="L662" title="All 2 branches covered.">        for (final EventListenerRegistrationData&lt;?&gt; regData : eventListeners</span>
-<span class="fc" id="L663">                .getRegistrations())</span>
+<span class="fc" id="L662">        final EventSource evSrc = ConfigurationUtils.asEventSource(obj, true);</span>
+<span class="fc bfc" id="L663" title="All 2 branches covered.">        for (final EventListenerRegistrationData&lt;?&gt; regData : eventListeners</span>
+<span class="fc" id="L664">                .getRegistrations())</span>
         {
-<span class="fc" id="L665">            registerListener(evSrc, regData);</span>
-<span class="fc" id="L666">        }</span>
-<span class="fc" id="L667">    }</span>
+<span class="fc" id="L666">            registerListener(evSrc, regData);</span>
+<span class="fc" id="L667">        }</span>
+<span class="fc" id="L668">    }</span>
 
     /**
      * Removes all available event listeners from the given result object. This
@@ -675,13 +676,13 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private void removeEventListeners(final T obj)
     {
-<span class="fc" id="L678">        final EventSource evSrc = ConfigurationUtils.asEventSource(obj, true);</span>
-<span class="fc bfc" id="L679" title="All 2 branches covered.">        for (final EventListenerRegistrationData&lt;?&gt; regData : eventListeners</span>
-<span class="fc" id="L680">                .getRegistrations())</span>
+<span class="fc" id="L679">        final EventSource evSrc = ConfigurationUtils.asEventSource(obj, true);</span>
+<span class="fc bfc" id="L680" title="All 2 branches covered.">        for (final EventListenerRegistrationData&lt;?&gt; regData : eventListeners</span>
+<span class="fc" id="L681">                .getRegistrations())</span>
         {
-<span class="fc" id="L682">            removeListener(evSrc, regData);</span>
-<span class="fc" id="L683">        }</span>
-<span class="fc" id="L684">    }</span>
+<span class="fc" id="L683">            removeListener(evSrc, regData);</span>
+<span class="fc" id="L684">        }</span>
+<span class="fc" id="L685">    }</span>
 
     /**
      * Returns an {@code EventSource} for the current result object. If there is
@@ -692,7 +693,7 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private EventSource fetchEventSource()
     {
-<span class="fc" id="L695">        return ConfigurationUtils.asEventSource(result, true);</span>
+<span class="fc" id="L696">        return ConfigurationUtils.asEventSource(result, true);</span>
     }
 
     /**
@@ -704,12 +705,12 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private void handleEventListenerProviders(final BuilderParameters params)
     {
-<span class="fc bfc" id="L707" title="All 2 branches covered.">        if (params instanceof EventListenerProvider)</span>
+<span class="fc bfc" id="L708" title="All 2 branches covered.">        if (params instanceof EventListenerProvider)</span>
         {
-<span class="fc" id="L709">            eventListeners.addAll(((EventListenerProvider) params)</span>
-<span class="fc" id="L710">                    .getListeners());</span>
+<span class="fc" id="L710">            eventListeners.addAll(((EventListenerProvider) params)</span>
+<span class="fc" id="L711">                    .getListeners());</span>
         }
-<span class="fc" id="L712">    }</span>
+<span class="fc" id="L713">    }</span>
 
     /**
      * Checks whether the class of the result configuration is compatible with
@@ -722,12 +723,12 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private void checkResultInstance(final Object inst)
     {
-<span class="fc bfc" id="L725" title="All 2 branches covered.">        if (!getResultClass().isInstance(inst))</span>
+<span class="fc bfc" id="L726" title="All 2 branches covered.">        if (!getResultClass().isInstance(inst))</span>
         {
-<span class="fc" id="L727">            throw new ConfigurationRuntimeException(</span>
+<span class="fc" id="L728">            throw new ConfigurationRuntimeException(</span>
                     &quot;Incompatible result object: &quot; + inst);
         }
-<span class="fc" id="L730">    }</span>
+<span class="fc" id="L731">    }</span>
 
     /**
      * Returns a map with initialization parameters where all parameters
@@ -737,18 +738,18 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private Map&lt;String, Object&gt; getFilteredParameters()
     {
-<span class="fc" id="L740">        final Map&lt;String, Object&gt; filteredMap =</span>
-<span class="fc" id="L741">                new HashMap&lt;&gt;(getParameters());</span>
-<span class="fc" id="L742">        for (final Iterator&lt;String&gt; it = filteredMap.keySet().iterator(); it</span>
-<span class="fc bfc" id="L743" title="All 2 branches covered.">                .hasNext();)</span>
+<span class="fc" id="L741">        final Map&lt;String, Object&gt; filteredMap =</span>
+<span class="fc" id="L742">                new HashMap&lt;&gt;(getParameters());</span>
+<span class="fc" id="L743">        for (final Iterator&lt;String&gt; it = filteredMap.keySet().iterator(); it</span>
+<span class="fc bfc" id="L744" title="All 2 branches covered.">                .hasNext();)</span>
         {
-<span class="fc" id="L745">            final String key = it.next();</span>
-<span class="fc bfc" id="L746" title="All 2 branches covered.">            if (key.startsWith(BuilderParameters.RESERVED_PARAMETER_PREFIX))</span>
+<span class="fc" id="L746">            final String key = it.next();</span>
+<span class="fc bfc" id="L747" title="All 2 branches covered.">            if (key.startsWith(BuilderParameters.RESERVED_PARAMETER_PREFIX))</span>
             {
-<span class="fc" id="L748">                it.remove();</span>
+<span class="fc" id="L749">                it.remove();</span>
             }
-<span class="fc" id="L750">        }</span>
-<span class="fc" id="L751">        return filteredMap;</span>
+<span class="fc" id="L751">        }</span>
+<span class="fc" id="L752">        return filteredMap;</span>
     }
 
     /**
@@ -761,11 +762,11 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
      */
     private void handleInitializable(final T obj)
     {
-<span class="fc bfc" id="L764" title="All 2 branches covered.">        if (obj instanceof Initializable)</span>
+<span class="fc bfc" id="L765" title="All 2 branches covered.">        if (obj instanceof Initializable)</span>
         {
-<span class="fc" id="L766">            ((Initializable) obj).initialize();</span>
+<span class="fc" id="L767">            ((Initializable) obj).initialize();</span>
         }
-<span class="fc" id="L768">    }</span>
+<span class="fc" id="L769">    }</span>
 
     /**
      * Registers an event listener at an event source object.
@@ -777,8 +778,8 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     private static &lt;E extends Event&gt; void registerListener(final EventSource evSrc,
             final EventListenerRegistrationData&lt;E&gt; regData)
     {
-<span class="fc" id="L780">        evSrc.addEventListener(regData.getEventType(), regData.getListener());</span>
-<span class="fc" id="L781">    }</span>
+<span class="fc" id="L781">        evSrc.addEventListener(regData.getEventType(), regData.getListener());</span>
+<span class="fc" id="L782">    }</span>
 
     /**
      * Removes an event listener from an event source object.
@@ -790,7 +791,7 @@ public class BasicConfigurationBuilder&lt;T extends ImmutableConfiguration&gt; i
     private static &lt;E extends Event&gt; void removeListener(final EventSource evSrc,
             final EventListenerRegistrationData&lt;E&gt; regData)
     {
-<span class="fc" id="L793">        evSrc.removeEventListener(regData.getEventType(), regData.getListener());</span>
-<span class="fc" id="L794">    }</span>
+<span class="fc" id="L794">        evSrc.removeEventListener(regData.getEventType(), regData.getListener());</span>
+<span class="fc" id="L795">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -63,9 +63,9 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
 <span class="fc" id="L63">    {</span>
 <span class="fc" id="L64">    }</span>
 
-    public ConfigurationPropertiesFactoryBean(final Configuration configuration)
+    public ConfigurationPropertiesFactoryBean(Configuration configuration)
 <span class="fc" id="L67">    {</span>
-<span class="fc" id="L68">        Assert.notNull(configuration, &quot;configuration&quot;);</span>
+<span class="fc" id="L68">        Assert.notNull(configuration);</span>
 <span class="fc" id="L69">        this.compositeConfiguration = new CompositeConfiguration(configuration);</span>
 <span class="fc" id="L70">    }</span>
 
@@ -75,14 +75,14 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
     @Override
     public Properties getObject() throws Exception
     {
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        return compositeConfiguration != null ? ConfigurationConverter.getProperties(compositeConfiguration) : null;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        return (compositeConfiguration != null) ? ConfigurationConverter.getProperties(compositeConfiguration) : null;</span>
     }
 
     /**
      * @see org.springframework.beans.factory.FactoryBean#getObjectType()
      */
     @Override
-    public Class&lt;?&gt; getObjectType()
+    public Class getObjectType()
     {
 <span class="nc" id="L87">        return java.util.Properties.class;</span>
     }
@@ -116,7 +116,7 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
 
 <span class="fc bfc" id="L117" title="All 2 branches covered.">        if (configurations != null)</span>
         {
-<span class="fc bfc" id="L119" title="All 2 branches covered.">            for (final Configuration configuration : configurations)</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">            for (Configuration configuration : configurations)</span>
             {
 <span class="fc" id="L121">                compositeConfiguration.addConfiguration(configuration);</span>
             }
@@ -124,10 +124,10 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
 
 <span class="fc bfc" id="L125" title="All 2 branches covered.">        if (locations != null)</span>
         {
-<span class="fc bfc" id="L127" title="All 2 branches covered.">            for (final Resource location : locations)</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">            for (Resource location : locations)</span>
             {
-<span class="fc" id="L129">                final URL url = location.getURL();</span>
-<span class="fc" id="L130">                final Configuration props = new Configurations().properties(url);</span>
+<span class="fc" id="L129">                URL url = location.getURL();</span>
+<span class="fc" id="L130">                Configuration props = new Configurations().properties(url);</span>
 <span class="fc" id="L131">                compositeConfiguration.addConfiguration(props);</span>
             }
         }
@@ -143,7 +143,7 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
      *
      * @param configurations commons configurations objects which will be used as properties.
      */
-    public void setConfigurations(final Configuration... configurations)
+    public void setConfigurations(Configuration[] configurations)
     {
 <span class="fc" id="L148">        this.configurations = defensiveCopy(configurations);</span>
 <span class="fc" id="L149">    }</span>
@@ -160,7 +160,7 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
      *
      * @param locations resources of configuration files
      */
-    public void setLocations(final Resource... locations)
+    public void setLocations(Resource[] locations)
     {
 <span class="fc" id="L165">        this.locations = defensiveCopy(locations);</span>
 <span class="fc" id="L166">    }</span>
@@ -176,7 +176,7 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
      * @see org.apache.commons.configuration2.AbstractConfiguration#setThrowExceptionOnMissing(boolean)
      * @param throwExceptionOnMissing The new value for the property
      */
-    public void setThrowExceptionOnMissing(final boolean throwExceptionOnMissing)
+    public void setThrowExceptionOnMissing(boolean throwExceptionOnMissing)
     {
 <span class="nc" id="L181">        this.throwExceptionOnMissing = throwExceptionOnMissing;</span>
 <span class="nc" id="L182">    }</span>
@@ -194,9 +194,9 @@ public class ConfigurationPropertiesFactoryBean implements InitializingBean, Fac
      * @param &lt;T&gt; the type of the array
      * @return the defensive copy of the array
      */
-    private static &lt;T&gt; T[] defensiveCopy(final T[] src)
+    private static &lt;T&gt; T[] defensiveCopy(T[] src)
     {
-<span class="fc bfc" id="L199" title="All 2 branches covered.">        return src != null ? src.clone() : null;</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        return (src != null) ? src.clone() : null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

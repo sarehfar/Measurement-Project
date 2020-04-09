@@ -30,9 +30,12 @@ import org.apache.commons.configuration2.AbstractConfiguration;
  * type, so they throw a {@code UnsupportedOperationException} exception.
  * &lt;/p&gt;
  *
+ * @author &lt;a
+ * href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons
+ * Configuration team&lt;/a&gt;
  * @since 1.2
  */
-<span class="fc" id="L35">abstract class BaseWebConfiguration extends AbstractConfiguration</span>
+<span class="fc" id="L38">abstract class BaseWebConfiguration extends AbstractConfiguration</span>
 {
     /**
      * Checks if this configuration is empty. This implementation makes use of
@@ -44,7 +47,7 @@ import org.apache.commons.configuration2.AbstractConfiguration;
     @Override
     protected boolean isEmptyInternal()
     {
-<span class="fc bfc" id="L47" title="All 2 branches covered.">        return !getKeysInternal().hasNext();</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        return !getKeysInternal().hasNext();</span>
     }
 
     /**
@@ -56,7 +59,7 @@ import org.apache.commons.configuration2.AbstractConfiguration;
     @Override
     protected boolean containsKeyInternal(final String key)
     {
-<span class="fc bfc" id="L59" title="All 2 branches covered.">        return getPropertyInternal(key) != null;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        return getPropertyInternal(key) != null;</span>
     }
 
     /**
@@ -70,7 +73,7 @@ import org.apache.commons.configuration2.AbstractConfiguration;
     @Override
     protected void clearPropertyDirect(final String key)
     {
-<span class="fc" id="L73">        throw new UnsupportedOperationException(&quot;Read only configuration&quot;);</span>
+<span class="fc" id="L76">        throw new UnsupportedOperationException(&quot;Read only configuration&quot;);</span>
     }
 
     /**
@@ -85,7 +88,7 @@ import org.apache.commons.configuration2.AbstractConfiguration;
     @Override
     protected void addPropertyDirect(final String key, final Object obj)
     {
-<span class="fc" id="L88">        throw new UnsupportedOperationException(&quot;Read only configuration&quot;);</span>
+<span class="fc" id="L91">        throw new UnsupportedOperationException(&quot;Read only configuration&quot;);</span>
     }
 
     /**
@@ -98,14 +101,14 @@ import org.apache.commons.configuration2.AbstractConfiguration;
      */
     protected Object handleDelimiters(Object value)
     {
-<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (value instanceof String)</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (value instanceof String)</span>
         {
-<span class="fc" id="L103">            final Collection&lt;String&gt; values =</span>
-<span class="fc" id="L104">                    getListDelimiterHandler().split((String) value, true);</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">            value = values.size() &gt; 1 ? values : values.iterator().next();</span>
+<span class="fc" id="L106">            final Collection&lt;String&gt; values =</span>
+<span class="fc" id="L107">                    getListDelimiterHandler().split((String) value, true);</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            value = values.size() &gt; 1 ? values : values.iterator().next();</span>
         }
 
-<span class="fc" id="L108">        return value;</span>
+<span class="fc" id="L111">        return value;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

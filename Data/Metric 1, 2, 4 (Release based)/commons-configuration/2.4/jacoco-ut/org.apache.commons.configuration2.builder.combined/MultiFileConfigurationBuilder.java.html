@@ -72,6 +72,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
  * are used to initialize the builders for managed configurations.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  * @param &lt;T&gt; the concrete type of {@code Configuration} objects created by this
  *        builder
@@ -86,22 +87,22 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     private static final String KEY_INTERPOLATOR = &quot;interpolator&quot;;
 
     /** A cache for already created managed builders. */
-<span class="fc" id="L89">    private final ConcurrentMap&lt;String, FileBasedConfigurationBuilder&lt;T&gt;&gt; managedBuilders =</span>
+<span class="fc" id="L90">    private final ConcurrentMap&lt;String, FileBasedConfigurationBuilder&lt;T&gt;&gt; managedBuilders =</span>
             new ConcurrentHashMap&lt;&gt;();
 
     /** Stores the {@code ConfigurationInterpolator} object. */
-<span class="fc" id="L93">    private final AtomicReference&lt;ConfigurationInterpolator&gt; interpolator =</span>
+<span class="fc" id="L94">    private final AtomicReference&lt;ConfigurationInterpolator&gt; interpolator =</span>
             new AtomicReference&lt;&gt;();
 
     /**
      * A flag for preventing reentrant access to managed builders on
      * interpolation of the file name pattern.
      */
-<span class="fc" id="L100">    private final ThreadLocal&lt;Boolean&gt; inInterpolation =</span>
+<span class="fc" id="L101">    private final ThreadLocal&lt;Boolean&gt; inInterpolation =</span>
             new ThreadLocal&lt;&gt;();
 
     /** A list for the event listeners to be passed to managed builders. */
-<span class="fc" id="L104">    private final EventListenerList configurationListeners = new EventListenerList();</span>
+<span class="fc" id="L105">    private final EventListenerList configurationListeners = new EventListenerList();</span>
 
     /**
      * A specialized event listener which gets registered at all managed
@@ -109,8 +110,15 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
      * builders to the listeners registered at this
      * {@code MultiFileConfigurationBuilder}.
      */
-<span class="fc" id="L112">    private final EventListener&lt;ConfigurationBuilderEvent&gt; managedBuilderDelegationListener =</span>
-<span class="fc" id="L113">            event -&gt; handleManagedBuilderEvent(event);</span>
+<span class="fc" id="L113">    private final EventListener&lt;ConfigurationBuilderEvent&gt; managedBuilderDelegationListener =</span>
+            new EventListener&lt;ConfigurationBuilderEvent&gt;()
+<span class="fc" id="L115">            {</span>
+                @Override
+                public void onEvent(final ConfigurationBuilderEvent event)
+                {
+<span class="fc" id="L119">                    handleManagedBuilderEvent(event);</span>
+<span class="fc" id="L120">                }</span>
+            };
 
     /**
      * Creates a new instance of {@code MultiFileConfigurationBuilder} and sets
@@ -126,8 +134,8 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     public MultiFileConfigurationBuilder(final Class&lt;? extends T&gt; resCls,
             final Map&lt;String, Object&gt; params, final boolean allowFailOnInit)
     {
-<span class="fc" id="L129">        super(resCls, params, allowFailOnInit);</span>
-<span class="fc" id="L130">    }</span>
+<span class="fc" id="L137">        super(resCls, params, allowFailOnInit);</span>
+<span class="fc" id="L138">    }</span>
 
     /**
      * Creates a new instance of {@code MultiFileConfigurationBuilder} and sets
@@ -140,8 +148,8 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     public MultiFileConfigurationBuilder(final Class&lt;? extends T&gt; resCls,
             final Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L143">        super(resCls, params);</span>
-<span class="fc" id="L144">    }</span>
+<span class="fc" id="L151">        super(resCls, params);</span>
+<span class="fc" id="L152">    }</span>
 
     /**
      * Creates a new instance of {@code MultiFileConfigurationBuilder} without
@@ -152,8 +160,8 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
      */
     public MultiFileConfigurationBuilder(final Class&lt;? extends T&gt; resCls)
     {
-<span class="fc" id="L155">        super(resCls);</span>
-<span class="fc" id="L156">    }</span>
+<span class="fc" id="L163">        super(resCls);</span>
+<span class="fc" id="L164">    }</span>
 
     /**
      * {@inheritDoc} This method is overridden to adapt the return type.
@@ -161,8 +169,8 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     @Override
     public MultiFileConfigurationBuilder&lt;T&gt; configure(final BuilderParameters... params)
     {
-<span class="fc" id="L164">        super.configure(params);</span>
-<span class="fc" id="L165">        return this;</span>
+<span class="fc" id="L172">        super.configure(params);</span>
+<span class="fc" id="L173">        return this;</span>
     }
 
     /**
@@ -174,7 +182,7 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     @Override
     public T getConfiguration() throws ConfigurationException
     {
-<span class="fc" id="L177">        return getManagedBuilder().getConfiguration();</span>
+<span class="fc" id="L185">        return getManagedBuilder().getConfiguration();</span>
     }
 
     /**
@@ -192,35 +200,35 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     public FileBasedConfigurationBuilder&lt;T&gt; getManagedBuilder()
             throws ConfigurationException
     {
-<span class="fc" id="L195">        final Map&lt;String, Object&gt; params = getParameters();</span>
-<span class="fc" id="L196">        final MultiFileBuilderParametersImpl multiParams =</span>
-<span class="fc" id="L197">                MultiFileBuilderParametersImpl.fromParameters(params, true);</span>
-<span class="fc bfc" id="L198" title="All 2 branches covered.">        if (multiParams.getFilePattern() == null)</span>
+<span class="fc" id="L203">        final Map&lt;String, Object&gt; params = getParameters();</span>
+<span class="fc" id="L204">        final MultiFileBuilderParametersImpl multiParams =</span>
+<span class="fc" id="L205">                MultiFileBuilderParametersImpl.fromParameters(params, true);</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        if (multiParams.getFilePattern() == null)</span>
         {
-<span class="fc" id="L200">            throw new ConfigurationException(&quot;No file name pattern is set!&quot;);</span>
+<span class="fc" id="L208">            throw new ConfigurationException(&quot;No file name pattern is set!&quot;);</span>
         }
-<span class="fc" id="L202">        final String fileName = fetchFileName(multiParams);</span>
+<span class="fc" id="L210">        final String fileName = fetchFileName(multiParams);</span>
 
-<span class="fc" id="L204">        FileBasedConfigurationBuilder&lt;T&gt; builder =</span>
-<span class="fc" id="L205">                getManagedBuilders().get(fileName);</span>
-<span class="fc bfc" id="L206" title="All 2 branches covered.">        if (builder == null)</span>
+<span class="fc" id="L212">        FileBasedConfigurationBuilder&lt;T&gt; builder =</span>
+<span class="fc" id="L213">                getManagedBuilders().get(fileName);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (builder == null)</span>
         {
-<span class="fc" id="L208">            builder =</span>
-<span class="fc" id="L209">                    createInitializedManagedBuilder(fileName,</span>
-<span class="fc" id="L210">                            createManagedBuilderParameters(params, multiParams));</span>
-<span class="fc" id="L211">            final FileBasedConfigurationBuilder&lt;T&gt; newBuilder =</span>
-<span class="fc" id="L212">                    ConcurrentUtils.putIfAbsent(getManagedBuilders(), fileName,</span>
+<span class="fc" id="L216">            builder =</span>
+<span class="fc" id="L217">                    createInitializedManagedBuilder(fileName,</span>
+<span class="fc" id="L218">                            createManagedBuilderParameters(params, multiParams));</span>
+<span class="fc" id="L219">            final FileBasedConfigurationBuilder&lt;T&gt; newBuilder =</span>
+<span class="fc" id="L220">                    ConcurrentUtils.putIfAbsent(getManagedBuilders(), fileName,</span>
                             builder);
-<span class="pc bpc" id="L214" title="1 of 2 branches missed.">            if (newBuilder == builder)</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">            if (newBuilder == builder)</span>
             {
-<span class="fc" id="L216">                initListeners(newBuilder);</span>
+<span class="fc" id="L224">                initListeners(newBuilder);</span>
             }
             else
             {
-<span class="nc" id="L220">                builder = newBuilder;</span>
+<span class="nc" id="L228">                builder = newBuilder;</span>
             }
         }
-<span class="fc" id="L223">        return builder;</span>
+<span class="fc" id="L231">        return builder;</span>
     }
 
     /**
@@ -233,17 +241,17 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     public synchronized &lt;E extends Event&gt; void addEventListener(
             final EventType&lt;E&gt; eventType, final EventListener&lt;? super E&gt; l)
     {
-<span class="fc" id="L236">        super.addEventListener(eventType, l);</span>
-<span class="fc bfc" id="L237" title="All 2 branches covered.">        if (isEventTypeForManagedBuilders(eventType))</span>
+<span class="fc" id="L244">        super.addEventListener(eventType, l);</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (isEventTypeForManagedBuilders(eventType))</span>
         {
-<span class="fc bfc" id="L239" title="All 2 branches covered.">            for (final FileBasedConfigurationBuilder&lt;T&gt; b : getManagedBuilders()</span>
-<span class="fc" id="L240">                    .values())</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">            for (final FileBasedConfigurationBuilder&lt;T&gt; b : getManagedBuilders()</span>
+<span class="fc" id="L248">                    .values())</span>
             {
-<span class="fc" id="L242">                b.addEventListener(eventType, l);</span>
-<span class="fc" id="L243">            }</span>
-<span class="fc" id="L244">            configurationListeners.addEventListener(eventType, l);</span>
+<span class="fc" id="L250">                b.addEventListener(eventType, l);</span>
+<span class="fc" id="L251">            }</span>
+<span class="fc" id="L252">            configurationListeners.addEventListener(eventType, l);</span>
         }
-<span class="fc" id="L246">    }</span>
+<span class="fc" id="L254">    }</span>
 
     /**
      * {@inheritDoc} This implementation ensures that the listener is also
@@ -253,17 +261,17 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     public synchronized &lt;E extends Event&gt; boolean removeEventListener(
             final EventType&lt;E&gt; eventType, final EventListener&lt;? super E&gt; l)
     {
-<span class="fc" id="L256">        final boolean result = super.removeEventListener(eventType, l);</span>
-<span class="fc bfc" id="L257" title="All 2 branches covered.">        if (isEventTypeForManagedBuilders(eventType))</span>
+<span class="fc" id="L264">        final boolean result = super.removeEventListener(eventType, l);</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">        if (isEventTypeForManagedBuilders(eventType))</span>
         {
-<span class="fc bfc" id="L259" title="All 2 branches covered.">            for (final FileBasedConfigurationBuilder&lt;T&gt; b : getManagedBuilders()</span>
-<span class="fc" id="L260">                    .values())</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">            for (final FileBasedConfigurationBuilder&lt;T&gt; b : getManagedBuilders()</span>
+<span class="fc" id="L268">                    .values())</span>
             {
-<span class="fc" id="L262">                b.removeEventListener(eventType, l);</span>
-<span class="fc" id="L263">            }</span>
-<span class="fc" id="L264">            configurationListeners.removeEventListener(eventType, l);</span>
+<span class="fc" id="L270">                b.removeEventListener(eventType, l);</span>
+<span class="fc" id="L271">            }</span>
+<span class="fc" id="L272">            configurationListeners.removeEventListener(eventType, l);</span>
         }
-<span class="fc" id="L266">        return result;</span>
+<span class="fc" id="L274">        return result;</span>
     }
 
     /**
@@ -273,15 +281,15 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     @Override
     public synchronized void resetParameters()
     {
-<span class="fc bfc" id="L276" title="All 2 branches covered.">        for (final FileBasedConfigurationBuilder&lt;T&gt; b : getManagedBuilders().values())</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        for (final FileBasedConfigurationBuilder&lt;T&gt; b : getManagedBuilders().values())</span>
         {
-<span class="fc" id="L278">            b.removeEventListener(ConfigurationBuilderEvent.ANY,</span>
+<span class="fc" id="L286">            b.removeEventListener(ConfigurationBuilderEvent.ANY,</span>
                     managedBuilderDelegationListener);
-<span class="fc" id="L280">        }</span>
-<span class="fc" id="L281">        getManagedBuilders().clear();</span>
-<span class="fc" id="L282">        interpolator.set(null);</span>
-<span class="fc" id="L283">        super.resetParameters();</span>
-<span class="fc" id="L284">    }</span>
+<span class="fc" id="L288">        }</span>
+<span class="fc" id="L289">        getManagedBuilders().clear();</span>
+<span class="fc" id="L290">        interpolator.set(null);</span>
+<span class="fc" id="L291">        super.resetParameters();</span>
+<span class="fc" id="L292">    }</span>
 
     /**
      * Returns the {@code ConfigurationInterpolator} used by this instance. This
@@ -299,19 +307,19 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
         // however, always the same instance is returned.
         do
         {
-<span class="fc" id="L302">            result = interpolator.get();</span>
-<span class="fc bfc" id="L303" title="All 2 branches covered.">            if (result != null)</span>
+<span class="fc" id="L310">            result = interpolator.get();</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">            if (result != null)</span>
             {
-<span class="fc" id="L305">                done = true;</span>
+<span class="fc" id="L313">                done = true;</span>
             }
             else
             {
-<span class="fc" id="L309">                result = createInterpolator();</span>
-<span class="fc" id="L310">                done = interpolator.compareAndSet(null, result);</span>
+<span class="fc" id="L317">                result = createInterpolator();</span>
+<span class="fc" id="L318">                done = interpolator.compareAndSet(null, result);</span>
             }
-<span class="pc bpc" id="L312" title="1 of 2 branches missed.">        } while (!done);</span>
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">        } while (!done);</span>
 
-<span class="fc" id="L314">        return result;</span>
+<span class="fc" id="L322">        return result;</span>
     }
 
     /**
@@ -327,10 +335,10 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
      */
     protected ConfigurationInterpolator createInterpolator()
     {
-<span class="fc" id="L330">        final InterpolatorSpecification spec =</span>
+<span class="fc" id="L338">        final InterpolatorSpecification spec =</span>
                 BasicBuilderParameters
-<span class="fc" id="L332">                        .fetchInterpolatorSpecification(getParameters());</span>
-<span class="fc" id="L333">        return ConfigurationInterpolator.fromSpecification(spec);</span>
+<span class="fc" id="L340">                        .fetchInterpolatorSpecification(getParameters());</span>
+<span class="fc" id="L341">        return ConfigurationInterpolator.fromSpecification(spec);</span>
     }
 
     /**
@@ -345,8 +353,8 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     protected String constructFileName(
             final MultiFileBuilderParametersImpl multiParams)
     {
-<span class="fc" id="L348">        final ConfigurationInterpolator ci = getInterpolator();</span>
-<span class="fc" id="L349">        return String.valueOf(ci.interpolate(multiParams.getFilePattern()));</span>
+<span class="fc" id="L356">        final ConfigurationInterpolator ci = getInterpolator();</span>
+<span class="fc" id="L357">        return String.valueOf(ci.interpolate(multiParams.getFilePattern()));</span>
     }
 
     /**
@@ -367,8 +375,8 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
             final String fileName, final Map&lt;String, Object&gt; params)
             throws ConfigurationException
     {
-<span class="fc" id="L370">        return new FileBasedConfigurationBuilder&lt;&gt;(getResultClass(), params,</span>
-<span class="fc" id="L371">                isAllowFailOnInit());</span>
+<span class="fc" id="L378">        return new FileBasedConfigurationBuilder&lt;&gt;(getResultClass(), params,</span>
+<span class="fc" id="L379">                isAllowFailOnInit());</span>
     }
 
     /**
@@ -387,10 +395,10 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
             final String fileName, final Map&lt;String, Object&gt; params)
             throws ConfigurationException
     {
-<span class="fc" id="L390">        final FileBasedConfigurationBuilder&lt;T&gt; managedBuilder =</span>
-<span class="fc" id="L391">                createManagedBuilder(fileName, params);</span>
-<span class="fc" id="L392">        managedBuilder.getFileHandler().setFileName(fileName);</span>
-<span class="fc" id="L393">        return managedBuilder;</span>
+<span class="fc" id="L398">        final FileBasedConfigurationBuilder&lt;T&gt; managedBuilder =</span>
+<span class="fc" id="L399">                createManagedBuilder(fileName, params);</span>
+<span class="fc" id="L400">        managedBuilder.getFileHandler().setFileName(fileName);</span>
+<span class="fc" id="L401">        return managedBuilder;</span>
     }
 
     /**
@@ -403,7 +411,7 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
      */
     protected ConcurrentMap&lt;String, FileBasedConfigurationBuilder&lt;T&gt;&gt; getManagedBuilders()
     {
-<span class="fc" id="L406">        return managedBuilders;</span>
+<span class="fc" id="L414">        return managedBuilders;</span>
     }
 
     /**
@@ -417,10 +425,10 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
      */
     private void initListeners(final FileBasedConfigurationBuilder&lt;T&gt; newBuilder)
     {
-<span class="fc" id="L420">        copyEventListeners(newBuilder, configurationListeners);</span>
-<span class="fc" id="L421">        newBuilder.addEventListener(ConfigurationBuilderEvent.ANY,</span>
+<span class="fc" id="L428">        copyEventListeners(newBuilder, configurationListeners);</span>
+<span class="fc" id="L429">        newBuilder.addEventListener(ConfigurationBuilderEvent.ANY,</span>
                 managedBuilderDelegationListener);
-<span class="fc" id="L423">    }</span>
+<span class="fc" id="L431">    }</span>
 
     /**
      * Generates a file name for a managed builder based on the file name
@@ -435,24 +443,24 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     private String fetchFileName(final MultiFileBuilderParametersImpl multiParams)
     {
         String fileName;
-<span class="fc" id="L438">        final Boolean reentrant = inInterpolation.get();</span>
-<span class="fc bfc" id="L439" title="All 4 branches covered.">        if (reentrant != null &amp;&amp; reentrant.booleanValue())</span>
+<span class="fc" id="L446">        final Boolean reentrant = inInterpolation.get();</span>
+<span class="fc bfc" id="L447" title="All 4 branches covered.">        if (reentrant != null &amp;&amp; reentrant.booleanValue())</span>
         {
-<span class="fc" id="L441">            fileName = multiParams.getFilePattern();</span>
+<span class="fc" id="L449">            fileName = multiParams.getFilePattern();</span>
         }
         else
         {
-<span class="fc" id="L445">            inInterpolation.set(Boolean.TRUE);</span>
+<span class="fc" id="L453">            inInterpolation.set(Boolean.TRUE);</span>
             try
             {
-<span class="fc" id="L448">                fileName = constructFileName(multiParams);</span>
+<span class="fc" id="L456">                fileName = constructFileName(multiParams);</span>
             }
             finally
             {
-<span class="fc" id="L452">                inInterpolation.set(Boolean.FALSE);</span>
+<span class="fc" id="L460">                inInterpolation.set(Boolean.FALSE);</span>
             }
         }
-<span class="fc" id="L455">        return fileName;</span>
+<span class="fc" id="L463">        return fileName;</span>
     }
 
     /**
@@ -464,15 +472,15 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
      */
     private void handleManagedBuilderEvent(final ConfigurationBuilderEvent event)
     {
-<span class="fc bfc" id="L467" title="All 2 branches covered.">        if (ConfigurationBuilderEvent.RESET.equals(event.getEventType()))</span>
+<span class="fc bfc" id="L475" title="All 2 branches covered.">        if (ConfigurationBuilderEvent.RESET.equals(event.getEventType()))</span>
         {
-<span class="fc" id="L469">            resetResult();</span>
+<span class="fc" id="L477">            resetResult();</span>
         }
         else
         {
-<span class="fc" id="L473">            fireBuilderEvent(createEventWithChangedSource(event));</span>
+<span class="fc" id="L481">            fireBuilderEvent(createEventWithChangedSource(event));</span>
         }
-<span class="fc" id="L475">    }</span>
+<span class="fc" id="L483">    }</span>
 
     /**
      * Creates a new {@code ConfigurationBuilderEvent} based on the passed in
@@ -487,21 +495,21 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
     private ConfigurationBuilderEvent createEventWithChangedSource(
             final ConfigurationBuilderEvent event)
     {
-<span class="fc bfc" id="L490" title="All 2 branches covered.">        if (ConfigurationBuilderResultCreatedEvent.RESULT_CREATED.equals(event</span>
-<span class="fc" id="L491">                .getEventType()))</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">        if (ConfigurationBuilderResultCreatedEvent.RESULT_CREATED.equals(event</span>
+<span class="fc" id="L499">                .getEventType()))</span>
         {
-<span class="fc" id="L493">            return new ConfigurationBuilderResultCreatedEvent(this,</span>
+<span class="fc" id="L501">            return new ConfigurationBuilderResultCreatedEvent(this,</span>
                     ConfigurationBuilderResultCreatedEvent.RESULT_CREATED,
                     ((ConfigurationBuilderResultCreatedEvent) event)
-<span class="fc" id="L496">                            .getConfiguration());</span>
+<span class="fc" id="L504">                            .getConfiguration());</span>
         }
         @SuppressWarnings(&quot;unchecked&quot;)
         final
         // This is safe due to the constructor of ConfigurationBuilderEvent
-<span class="fc" id="L501">        EventType&lt;? extends ConfigurationBuilderEvent&gt; type =</span>
+<span class="fc" id="L509">        EventType&lt;? extends ConfigurationBuilderEvent&gt; type =</span>
                 (EventType&lt;? extends ConfigurationBuilderEvent&gt;) event
-<span class="fc" id="L503">                        .getEventType();</span>
-<span class="fc" id="L504">        return new ConfigurationBuilderEvent(this, type);</span>
+<span class="fc" id="L511">                        .getEventType();</span>
+<span class="fc" id="L512">        return new ConfigurationBuilderEvent(this, type);</span>
     }
 
     /**
@@ -517,19 +525,19 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
             final Map&lt;String, Object&gt; params,
             final MultiFileBuilderParametersImpl multiParams)
     {
-<span class="fc" id="L520">        final Map&lt;String, Object&gt; newParams = new HashMap&lt;&gt;(params);</span>
-<span class="fc" id="L521">        newParams.remove(KEY_INTERPOLATOR);</span>
-<span class="fc" id="L522">        final BuilderParameters managedBuilderParameters =</span>
-<span class="fc" id="L523">                multiParams.getManagedBuilderParameters();</span>
-<span class="fc bfc" id="L524" title="All 2 branches covered.">        if (managedBuilderParameters != null)</span>
+<span class="fc" id="L528">        final Map&lt;String, Object&gt; newParams = new HashMap&lt;&gt;(params);</span>
+<span class="fc" id="L529">        newParams.remove(KEY_INTERPOLATOR);</span>
+<span class="fc" id="L530">        final BuilderParameters managedBuilderParameters =</span>
+<span class="fc" id="L531">                multiParams.getManagedBuilderParameters();</span>
+<span class="fc bfc" id="L532" title="All 2 branches covered.">        if (managedBuilderParameters != null)</span>
         {
             // clone parameters as they are applied to multiple builders
-<span class="fc" id="L527">            final BuilderParameters copy =</span>
+<span class="fc" id="L535">            final BuilderParameters copy =</span>
                     (BuilderParameters) ConfigurationUtils
-<span class="fc" id="L529">                            .cloneIfPossible(managedBuilderParameters);</span>
-<span class="fc" id="L530">            newParams.putAll(copy.getParameters());</span>
+<span class="fc" id="L537">                            .cloneIfPossible(managedBuilderParameters);</span>
+<span class="fc" id="L538">            newParams.putAll(copy.getParameters());</span>
         }
-<span class="fc" id="L532">        return newParams;</span>
+<span class="fc" id="L540">        return newParams;</span>
     }
 
     /**
@@ -544,8 +552,8 @@ public class MultiFileConfigurationBuilder&lt;T extends FileBasedConfiguration&g
      */
     private static boolean isEventTypeForManagedBuilders(final EventType&lt;?&gt; eventType)
     {
-<span class="fc" id="L547">        return !EventType</span>
-<span class="fc bfc" id="L548" title="All 2 branches covered.">                .isInstanceOf(eventType, ConfigurationBuilderEvent.ANY);</span>
+<span class="fc" id="L555">        return !EventType</span>
+<span class="fc bfc" id="L556" title="All 2 branches covered.">                .isInstanceOf(eventType, ConfigurationBuilderEvent.ANY);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

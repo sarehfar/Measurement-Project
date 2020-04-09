@@ -49,6 +49,7 @@ import org.apache.commons.configuration2.io.FileLocatorUtils;
  * obtains the file's modification date and stores it internally.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class FileHandlerReloadingDetector implements ReloadingDetector
@@ -84,10 +85,10 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      *        performed in all cases
      */
     public FileHandlerReloadingDetector(final FileHandler handler, final long refreshDelay)
-<span class="fc" id="L87">    {</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        fileHandler = handler != null ? handler : new FileHandler();</span>
-<span class="fc" id="L89">        this.refreshDelay = refreshDelay;</span>
-<span class="fc" id="L90">    }</span>
+<span class="fc" id="L88">    {</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        fileHandler = (handler != null) ? handler : new FileHandler();</span>
+<span class="fc" id="L90">        this.refreshDelay = refreshDelay;</span>
+<span class="fc" id="L91">    }</span>
 
     /**
      * Creates a new instance of {@code FileHandlerReloadingDetector} and
@@ -99,8 +100,8 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     public FileHandlerReloadingDetector(final FileHandler handler)
     {
-<span class="fc" id="L102">        this(handler, DEFAULT_REFRESH_DELAY);</span>
-<span class="fc" id="L103">    }</span>
+<span class="fc" id="L103">        this(handler, DEFAULT_REFRESH_DELAY);</span>
+<span class="fc" id="L104">    }</span>
 
     /**
      * Creates a new instance of {@code FileHandlerReloadingDetector} with an
@@ -110,8 +111,8 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     public FileHandlerReloadingDetector()
     {
-<span class="fc" id="L113">        this(null);</span>
-<span class="fc" id="L114">    }</span>
+<span class="fc" id="L114">        this(null);</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * Returns the {@code FileHandler} associated with this object. The
@@ -122,7 +123,7 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     public FileHandler getFileHandler()
     {
-<span class="fc" id="L125">        return fileHandler;</span>
+<span class="fc" id="L126">        return fileHandler;</span>
     }
 
     /**
@@ -136,7 +137,7 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     public long getRefreshDelay()
     {
-<span class="fc" id="L139">        return refreshDelay;</span>
+<span class="fc" id="L140">        return refreshDelay;</span>
     }
 
     /**
@@ -149,30 +150,30 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
     @Override
     public boolean isReloadingRequired()
     {
-<span class="fc" id="L152">        final long now = System.currentTimeMillis();</span>
-<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (now &gt;= lastChecked + getRefreshDelay())</span>
+<span class="fc" id="L153">        final long now = System.currentTimeMillis();</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (now &gt;= lastChecked + getRefreshDelay())</span>
         {
-<span class="fc" id="L155">            lastChecked = now;</span>
+<span class="fc" id="L156">            lastChecked = now;</span>
 
-<span class="fc" id="L157">            final long modified = getLastModificationDate();</span>
-<span class="fc bfc" id="L158" title="All 2 branches covered.">            if (modified &gt; 0)</span>
+<span class="fc" id="L158">            final long modified = getLastModificationDate();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">            if (modified &gt; 0)</span>
             {
-<span class="fc bfc" id="L160" title="All 2 branches covered.">                if (lastModified == 0)</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                if (lastModified == 0)</span>
                 {
                     // initialization
-<span class="fc" id="L163">                    updateLastModified(modified);</span>
+<span class="fc" id="L164">                    updateLastModified(modified);</span>
                 }
                 else
                 {
-<span class="fc bfc" id="L167" title="All 2 branches covered.">                    if (modified != lastModified)</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">                    if (modified != lastModified)</span>
                     {
-<span class="fc" id="L169">                        return true;</span>
+<span class="fc" id="L170">                        return true;</span>
                     }
                 }
             }
         }
 
-<span class="fc" id="L175">        return false;</span>
+<span class="fc" id="L176">        return false;</span>
     }
 
     /**
@@ -183,8 +184,8 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
     @Override
     public void reloadingPerformed()
     {
-<span class="fc" id="L186">        updateLastModified(getLastModificationDate());</span>
-<span class="fc" id="L187">    }</span>
+<span class="fc" id="L187">        updateLastModified(getLastModificationDate());</span>
+<span class="fc" id="L188">    }</span>
 
     /**
      * Tells this implementation that the internally stored state should be
@@ -193,8 +194,8 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     public void refresh()
     {
-<span class="fc" id="L196">        updateLastModified(getLastModificationDate());</span>
-<span class="fc" id="L197">    }</span>
+<span class="fc" id="L197">        updateLastModified(getLastModificationDate());</span>
+<span class="fc" id="L198">    }</span>
 
     /**
      * Returns the date of the last modification of the monitored file. A return
@@ -204,8 +205,8 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     protected long getLastModificationDate()
     {
-<span class="fc" id="L207">        final File file = getExistingFile();</span>
-<span class="fc bfc" id="L208" title="All 2 branches covered.">        return file != null ? file.lastModified() : 0;</span>
+<span class="fc" id="L208">        final File file = getExistingFile();</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        return (file != null) ? file.lastModified() : 0;</span>
     }
 
     /**
@@ -217,8 +218,8 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     protected void updateLastModified(final long time)
     {
-<span class="fc" id="L220">        lastModified = time;</span>
-<span class="fc" id="L221">    }</span>
+<span class="fc" id="L221">        lastModified = time;</span>
+<span class="fc" id="L222">    }</span>
 
     /**
      * Returns the {@code File} object which is monitored by this object. This
@@ -231,8 +232,8 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     protected File getFile()
     {
-<span class="fc" id="L234">        final URL url = getFileHandler().getURL();</span>
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        return url != null ? fileFromURL(url) : getFileHandler().getFile();</span>
+<span class="fc" id="L235">        final URL url = getFileHandler().getURL();</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        return (url != null) ? fileFromURL(url) : getFileHandler().getFile();</span>
     }
 
     /**
@@ -242,13 +243,13 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     private File getExistingFile()
     {
-<span class="fc" id="L245">        File file = getFile();</span>
-<span class="fc bfc" id="L246" title="All 4 branches covered.">        if (file != null &amp;&amp; !file.exists())</span>
+<span class="fc" id="L246">        File file = getFile();</span>
+<span class="fc bfc" id="L247" title="All 4 branches covered.">        if (file != null &amp;&amp; !file.exists())</span>
         {
-<span class="fc" id="L248">            file = null;</span>
+<span class="fc" id="L249">            file = null;</span>
         }
 
-<span class="fc" id="L251">        return file;</span>
+<span class="fc" id="L252">        return file;</span>
     }
 
     /**
@@ -260,20 +261,20 @@ public class FileHandlerReloadingDetector implements ReloadingDetector
      */
     private static File fileFromURL(final URL url)
     {
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (JAR_PROTOCOL.equals(url.getProtocol()))</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (JAR_PROTOCOL.equals(url.getProtocol()))</span>
         {
-<span class="fc" id="L265">            final String path = url.getPath();</span>
+<span class="fc" id="L266">            final String path = url.getPath();</span>
             try
             {
-<span class="fc" id="L268">                return FileLocatorUtils.fileFromURL(new URL(path.substring(0,</span>
-<span class="fc" id="L269">                        path.indexOf('!'))));</span>
+<span class="fc" id="L269">                return FileLocatorUtils.fileFromURL(new URL(path.substring(0,</span>
+<span class="fc" id="L270">                        path.indexOf('!'))));</span>
             }
-<span class="nc" id="L271">            catch (final MalformedURLException mex)</span>
+<span class="nc" id="L272">            catch (final MalformedURLException mex)</span>
             {
-<span class="nc" id="L273">                return null;</span>
+<span class="nc" id="L274">                return null;</span>
             }
         }
-<span class="fc" id="L276">        return FileLocatorUtils.fileFromURL(url);</span>
+<span class="fc" id="L277">        return FileLocatorUtils.fileFromURL(url);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

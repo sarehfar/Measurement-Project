@@ -110,6 +110,7 @@ import org.apache.commons.lang3.StringUtils;
  * &lt;/p&gt;
  *
  * @since 1.3
+ * @version $Id$
  */
 public class XMLBeanDeclaration implements BeanDeclaration
 {
@@ -171,8 +172,8 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     public &lt;T&gt; XMLBeanDeclaration(final HierarchicalConfiguration&lt;T&gt; config, final String key)
     {
-<span class="fc" id="L174">        this(config, key, false);</span>
-<span class="fc" id="L175">    }</span>
+<span class="fc" id="L175">        this(config, key, false);</span>
+<span class="fc" id="L176">    }</span>
 
     /**
      * Creates a new instance of {@code XMLBeanDeclaration} and initializes it
@@ -190,8 +191,8 @@ public class XMLBeanDeclaration implements BeanDeclaration
     public &lt;T&gt; XMLBeanDeclaration(final HierarchicalConfiguration&lt;T&gt; config, final String key,
             final boolean optional)
     {
-<span class="fc" id="L193">        this(config, key, optional, null);</span>
-<span class="fc" id="L194">    }</span>
+<span class="fc" id="L194">        this(config, key, optional, null);</span>
+<span class="fc" id="L195">    }</span>
 
     /**
      * Creates a new instance of {@code XMLBeanDeclaration} and initializes it
@@ -219,32 +220,32 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     public &lt;T&gt; XMLBeanDeclaration(final HierarchicalConfiguration&lt;T&gt; config, final String key,
             final boolean optional, final String defBeanClsName)
-<span class="fc" id="L222">    {</span>
-<span class="fc bfc" id="L223" title="All 2 branches covered.">        if (config == null)</span>
+<span class="fc" id="L223">    {</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        if (config == null)</span>
         {
-<span class="fc" id="L225">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L226">            throw new IllegalArgumentException(</span>
                     &quot;Configuration must not be null!&quot;);
         }
 
         HierarchicalConfiguration&lt;?&gt; tmpconfiguration;
         try
         {
-<span class="fc" id="L232">            tmpconfiguration = config.configurationAt(key);</span>
+<span class="fc" id="L233">            tmpconfiguration = config.configurationAt(key);</span>
         }
-<span class="fc" id="L234">        catch (final ConfigurationRuntimeException iex)</span>
+<span class="fc" id="L235">        catch (final ConfigurationRuntimeException iex)</span>
         {
             // If we reach this block, the key does not have exactly one value
-<span class="pc bpc" id="L237" title="1 of 4 branches missed.">            if (!optional || config.getMaxIndex(key) &gt; 0)</span>
+<span class="pc bpc" id="L238" title="1 of 4 branches missed.">            if (!optional || config.getMaxIndex(key) &gt; 0)</span>
             {
-<span class="fc" id="L239">                throw iex;</span>
+<span class="fc" id="L240">                throw iex;</span>
             }
-<span class="fc" id="L241">            tmpconfiguration = new BaseHierarchicalConfiguration();</span>
-<span class="fc" id="L242">        }</span>
-<span class="fc" id="L243">        this.node = createNodeDataFromConfiguration(tmpconfiguration);</span>
-<span class="fc" id="L244">        this.configuration = tmpconfiguration;</span>
-<span class="fc" id="L245">        defaultBeanClassName = defBeanClsName;</span>
-<span class="fc" id="L246">        initSubnodeConfiguration(getConfiguration());</span>
-<span class="fc" id="L247">    }</span>
+<span class="fc" id="L242">            tmpconfiguration = new BaseHierarchicalConfiguration();</span>
+<span class="fc" id="L243">        }</span>
+<span class="fc" id="L244">        this.node = createNodeDataFromConfiguration(tmpconfiguration);</span>
+<span class="fc" id="L245">        this.configuration = tmpconfiguration;</span>
+<span class="fc" id="L246">        defaultBeanClassName = defBeanClsName;</span>
+<span class="fc" id="L247">        initSubnodeConfiguration(getConfiguration());</span>
+<span class="fc" id="L248">    }</span>
 
     /**
      * Creates a new instance of {@code XMLBeanDeclaration} and
@@ -256,8 +257,8 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     public &lt;T&gt; XMLBeanDeclaration(final HierarchicalConfiguration&lt;T&gt; config)
     {
-<span class="fc" id="L259">        this(config, (String) null);</span>
-<span class="fc" id="L260">    }</span>
+<span class="fc" id="L260">        this(config, (String) null);</span>
+<span class="fc" id="L261">    }</span>
 
     /**
      * Creates a new instance of {@code XMLBeanDeclaration} and
@@ -269,12 +270,12 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     XMLBeanDeclaration(final HierarchicalConfiguration&lt;?&gt; config,
             final NodeData&lt;?&gt; node)
-<span class="fc" id="L272">    {</span>
-<span class="fc" id="L273">        this.node = node;</span>
-<span class="fc" id="L274">        configuration = config;</span>
-<span class="fc" id="L275">        defaultBeanClassName = null;</span>
-<span class="fc" id="L276">        initSubnodeConfiguration(config);</span>
-<span class="fc" id="L277">    }</span>
+<span class="fc" id="L273">    {</span>
+<span class="fc" id="L274">        this.node = node;</span>
+<span class="fc" id="L275">        configuration = config;</span>
+<span class="fc" id="L276">        defaultBeanClassName = null;</span>
+<span class="fc" id="L277">        initSubnodeConfiguration(config);</span>
+<span class="fc" id="L278">    }</span>
 
     /**
      * Returns the configuration object this bean declaration is based on.
@@ -283,7 +284,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     public HierarchicalConfiguration&lt;?&gt; getConfiguration()
     {
-<span class="fc" id="L286">        return configuration;</span>
+<span class="fc" id="L287">        return configuration;</span>
     }
 
     /**
@@ -296,7 +297,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     public String getDefaultBeanClassName()
     {
-<span class="fc" id="L299">        return defaultBeanClassName;</span>
+<span class="fc" id="L300">        return defaultBeanClassName;</span>
     }
 
     /**
@@ -308,7 +309,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
     @Override
     public String getBeanFactoryName()
     {
-<span class="fc" id="L311">        return getConfiguration().getString(ATTR_BEAN_FACTORY, null);</span>
+<span class="fc" id="L312">        return getConfiguration().getString(ATTR_BEAN_FACTORY, null);</span>
     }
 
     /**
@@ -320,7 +321,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
     @Override
     public Object getBeanFactoryParameter()
     {
-<span class="fc" id="L323">        return getConfiguration().getProperty(ATTR_FACTORY_PARAM);</span>
+<span class="fc" id="L324">        return getConfiguration().getProperty(ATTR_FACTORY_PARAM);</span>
     }
 
     /**
@@ -332,7 +333,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
     @Override
     public String getBeanClassName()
     {
-<span class="fc" id="L335">        return getConfiguration().getString(ATTR_BEAN_CLASS, getDefaultBeanClassName());</span>
+<span class="fc" id="L336">        return getConfiguration().getString(ATTR_BEAN_CLASS, getDefaultBeanClassName());</span>
     }
 
     /**
@@ -344,16 +345,16 @@ public class XMLBeanDeclaration implements BeanDeclaration
     @Override
     public Map&lt;String, Object&gt; getBeanProperties()
     {
-<span class="fc" id="L347">        final Map&lt;String, Object&gt; props = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L348" title="All 2 branches covered.">        for (final String key : getAttributeNames())</span>
+<span class="fc" id="L348">        final Map&lt;String, Object&gt; props = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">        for (final String key : getAttributeNames())</span>
         {
-<span class="fc bfc" id="L350" title="All 2 branches covered.">            if (!isReservedAttributeName(key))</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">            if (!isReservedAttributeName(key))</span>
             {
-<span class="fc" id="L352">                props.put(key, interpolate(getNode().getAttribute(key)));</span>
+<span class="fc" id="L353">                props.put(key, interpolate(getNode().getAttribute(key)));</span>
             }
-<span class="fc" id="L354">        }</span>
+<span class="fc" id="L355">        }</span>
 
-<span class="fc" id="L356">        return props;</span>
+<span class="fc" id="L357">        return props;</span>
     }
 
     /**
@@ -366,39 +367,39 @@ public class XMLBeanDeclaration implements BeanDeclaration
     @Override
     public Map&lt;String, Object&gt; getNestedBeanDeclarations()
     {
-<span class="fc" id="L369">        final Map&lt;String, Object&gt; nested = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L370" title="All 2 branches covered.">        for (final NodeData&lt;?&gt; child : getNode().getChildren())</span>
+<span class="fc" id="L370">        final Map&lt;String, Object&gt; nested = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L371" title="All 2 branches covered.">        for (final NodeData&lt;?&gt; child : getNode().getChildren())</span>
         {
-<span class="fc bfc" id="L372" title="All 2 branches covered.">            if (!isReservedChildName(child.nodeName()))</span>
+<span class="fc bfc" id="L373" title="All 2 branches covered.">            if (!isReservedChildName(child.nodeName()))</span>
             {
-<span class="pc bpc" id="L374" title="1 of 2 branches missed.">                if (nested.containsKey(child.nodeName()))</span>
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">                if (nested.containsKey(child.nodeName()))</span>
                 {
-<span class="nc" id="L376">                    final Object obj = nested.get(child.nodeName());</span>
+<span class="nc" id="L377">                    final Object obj = nested.get(child.nodeName());</span>
                     List&lt;BeanDeclaration&gt; list;
-<span class="nc bnc" id="L378" title="All 2 branches missed.">                    if (obj instanceof List)</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">                    if (obj instanceof List)</span>
                     {
                         // Safe because we created the lists ourselves.
                         @SuppressWarnings(&quot;unchecked&quot;)
                         final
-<span class="nc" id="L383">                        List&lt;BeanDeclaration&gt; tmpList = (List&lt;BeanDeclaration&gt;) obj;</span>
-<span class="nc" id="L384">                        list = tmpList;</span>
-<span class="nc" id="L385">                    }</span>
+<span class="nc" id="L384">                        List&lt;BeanDeclaration&gt; tmpList = (List&lt;BeanDeclaration&gt;) obj;</span>
+<span class="nc" id="L385">                        list = tmpList;</span>
+<span class="nc" id="L386">                    }</span>
                     else
                     {
-<span class="nc" id="L388">                        list = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L389">                        list.add((BeanDeclaration) obj);</span>
-<span class="nc" id="L390">                        nested.put(child.nodeName(), list);</span>
+<span class="nc" id="L389">                        list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L390">                        list.add((BeanDeclaration) obj);</span>
+<span class="nc" id="L391">                        nested.put(child.nodeName(), list);</span>
                     }
-<span class="nc" id="L392">                    list.add(createBeanDeclaration(child));</span>
-<span class="nc" id="L393">                }</span>
+<span class="nc" id="L393">                    list.add(createBeanDeclaration(child));</span>
+<span class="nc" id="L394">                }</span>
                 else
                 {
-<span class="fc" id="L396">                    nested.put(child.nodeName(), createBeanDeclaration(child));</span>
+<span class="fc" id="L397">                    nested.put(child.nodeName(), createBeanDeclaration(child));</span>
                 }
             }
-<span class="fc" id="L399">        }</span>
+<span class="fc" id="L400">        }</span>
 
-<span class="fc" id="L401">        return nested;</span>
+<span class="fc" id="L402">        return nested;</span>
     }
 
     /**
@@ -411,12 +412,12 @@ public class XMLBeanDeclaration implements BeanDeclaration
     @Override
     public Collection&lt;ConstructorArg&gt; getConstructorArgs()
     {
-<span class="fc" id="L414">        final Collection&lt;ConstructorArg&gt; args = new LinkedList&lt;&gt;();</span>
-<span class="fc bfc" id="L415" title="All 2 branches covered.">        for (final NodeData&lt;?&gt; child : getNode().getChildren(ELEM_CTOR_ARG))</span>
+<span class="fc" id="L415">        final Collection&lt;ConstructorArg&gt; args = new LinkedList&lt;&gt;();</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        for (final NodeData&lt;?&gt; child : getNode().getChildren(ELEM_CTOR_ARG))</span>
         {
-<span class="fc" id="L417">            args.add(createConstructorArg(child));</span>
-<span class="fc" id="L418">        }</span>
-<span class="fc" id="L419">        return args;</span>
+<span class="fc" id="L418">            args.add(createConstructorArg(child));</span>
+<span class="fc" id="L419">        }</span>
+<span class="fc" id="L420">        return args;</span>
     }
 
     /**
@@ -430,9 +431,9 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     protected Object interpolate(final Object value)
     {
-<span class="fc" id="L433">        final ConfigurationInterpolator interpolator =</span>
-<span class="fc" id="L434">                getConfiguration().getInterpolator();</span>
-<span class="pc bpc" id="L435" title="1 of 2 branches missed.">        return interpolator != null ? interpolator.interpolate(value) : value;</span>
+<span class="fc" id="L434">        final ConfigurationInterpolator interpolator =</span>
+<span class="fc" id="L435">                getConfiguration().getInterpolator();</span>
+<span class="pc bpc" id="L436" title="1 of 2 branches missed.">        return interpolator != null ? interpolator.interpolate(value) : value;</span>
     }
 
     /**
@@ -448,7 +449,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     protected boolean isReservedChildName(final String name)
     {
-<span class="fc" id="L451">        return isReservedName(name);</span>
+<span class="fc" id="L452">        return isReservedName(name);</span>
     }
 
     /**
@@ -464,7 +465,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     protected boolean isReservedAttributeName(final String name)
     {
-<span class="fc" id="L467">        return isReservedName(name);</span>
+<span class="fc" id="L468">        return isReservedName(name);</span>
     }
 
     /**
@@ -478,7 +479,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     protected boolean isReservedName(final String name)
     {
-<span class="pc bpc" id="L481" title="1 of 4 branches missed.">        return name == null || name.startsWith(RESERVED_PREFIX);</span>
+<span class="pc bpc" id="L482" title="1 of 4 branches missed.">        return name == null || name.startsWith(RESERVED_PREFIX);</span>
     }
 
     /**
@@ -489,7 +490,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     protected Set&lt;String&gt; getAttributeNames()
     {
-<span class="fc" id="L492">        return getNode().getAttributes();</span>
+<span class="fc" id="L493">        return getNode().getAttributes();</span>
     }
 
     /**
@@ -499,7 +500,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     NodeData&lt;?&gt; getNode()
     {
-<span class="fc" id="L502">        return node;</span>
+<span class="fc" id="L503">        return node;</span>
     }
 
     /**
@@ -517,16 +518,16 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     BeanDeclaration createBeanDeclaration(final NodeData&lt;?&gt; node)
     {
-<span class="pc bpc" id="L520" title="1 of 2 branches missed.">        for (final HierarchicalConfiguration&lt;?&gt; config : getConfiguration()</span>
-<span class="fc" id="L521">                .configurationsAt(node.escapedNodeName(getConfiguration())))</span>
+<span class="pc bpc" id="L521" title="1 of 2 branches missed.">        for (final HierarchicalConfiguration&lt;?&gt; config : getConfiguration()</span>
+<span class="fc" id="L522">                .configurationsAt(node.escapedNodeName(getConfiguration())))</span>
         {
-<span class="pc bpc" id="L523" title="1 of 2 branches missed.">            if (node.matchesConfigRootNode(config))</span>
+<span class="pc bpc" id="L524" title="1 of 2 branches missed.">            if (node.matchesConfigRootNode(config))</span>
             {
-<span class="fc" id="L525">                return new XMLBeanDeclaration(config, node);</span>
+<span class="fc" id="L526">                return new XMLBeanDeclaration(config, node);</span>
             }
-<span class="nc" id="L527">        }</span>
-<span class="nc" id="L528">        throw new ConfigurationRuntimeException(&quot;Unable to match node for &quot;</span>
-<span class="nc" id="L529">                + node.nodeName());</span>
+<span class="nc" id="L528">        }</span>
+<span class="nc" id="L529">        throw new ConfigurationRuntimeException(&quot;Unable to match node for &quot;</span>
+<span class="nc" id="L530">                + node.nodeName());</span>
     }
 
     /**
@@ -537,8 +538,8 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     private void initSubnodeConfiguration(final HierarchicalConfiguration&lt;?&gt; conf)
     {
-<span class="fc" id="L540">        conf.setExpressionEngine(null);</span>
-<span class="fc" id="L541">    }</span>
+<span class="fc" id="L541">        conf.setExpressionEngine(null);</span>
+<span class="fc" id="L542">    }</span>
 
     /**
      * Creates a {@code ConstructorArg} object for the specified configuration
@@ -549,14 +550,14 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     private ConstructorArg createConstructorArg(final NodeData&lt;?&gt; child)
     {
-<span class="fc" id="L552">        final String type = getAttribute(child, ATTR_CTOR_TYPE);</span>
-<span class="fc bfc" id="L553" title="All 2 branches covered.">        if (isBeanDeclarationArgument(child))</span>
+<span class="fc" id="L553">        final String type = getAttribute(child, ATTR_CTOR_TYPE);</span>
+<span class="fc bfc" id="L554" title="All 2 branches covered.">        if (isBeanDeclarationArgument(child))</span>
         {
-<span class="fc" id="L555">            return ConstructorArg.forValue(</span>
-<span class="fc" id="L556">                    getAttribute(child, ATTR_CTOR_VALUE), type);</span>
+<span class="fc" id="L556">            return ConstructorArg.forValue(</span>
+<span class="fc" id="L557">                    getAttribute(child, ATTR_CTOR_VALUE), type);</span>
         }
-<span class="fc" id="L558">        return ConstructorArg.forBeanDeclaration(</span>
-<span class="fc" id="L559">                createBeanDeclaration(child), type);</span>
+<span class="fc" id="L559">        return ConstructorArg.forBeanDeclaration(</span>
+<span class="fc" id="L560">                createBeanDeclaration(child), type);</span>
     }
 
     /**
@@ -569,8 +570,8 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     private String getAttribute(final NodeData&lt;?&gt; nd, final String attr)
     {
-<span class="fc" id="L572">        final Object value = nd.getAttribute(attr);</span>
-<span class="fc bfc" id="L573" title="All 2 branches covered.">        return value == null ? null : String.valueOf(interpolate(value));</span>
+<span class="fc" id="L573">        final Object value = nd.getAttribute(attr);</span>
+<span class="fc bfc" id="L574" title="All 2 branches covered.">        return value == null ? null : String.valueOf(interpolate(value));</span>
     }
 
     /**
@@ -582,7 +583,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
      */
     private static boolean isBeanDeclarationArgument(final NodeData&lt;?&gt; nd)
     {
-<span class="fc bfc" id="L585" title="All 2 branches covered.">        return !nd.getAttributes().contains(ATTR_BEAN_CLASS_NAME);</span>
+<span class="fc bfc" id="L586" title="All 2 branches covered.">        return !nd.getAttributes().contains(ATTR_BEAN_CLASS_NAME);</span>
     }
 
     /**
@@ -596,8 +597,8 @@ public class XMLBeanDeclaration implements BeanDeclaration
     private static &lt;T&gt; NodeData&lt;T&gt; createNodeDataFromConfiguration(
             final HierarchicalConfiguration&lt;T&gt; config)
     {
-<span class="fc" id="L599">        final NodeHandler&lt;T&gt; handler = config.getNodeModel().getNodeHandler();</span>
-<span class="fc" id="L600">        return new NodeData&lt;&gt;(handler.getRootNode(), handler);</span>
+<span class="fc" id="L600">        final NodeHandler&lt;T&gt; handler = config.getNodeModel().getNodeHandler();</span>
+<span class="fc" id="L601">        return new NodeData&lt;&gt;(handler.getRootNode(), handler);</span>
     }
 
     /**
@@ -621,10 +622,10 @@ public class XMLBeanDeclaration implements BeanDeclaration
          * @param hndlr the handler
          */
         public NodeData(final T nd, final NodeHandler&lt;T&gt; hndlr)
-<span class="fc" id="L624">        {</span>
-<span class="fc" id="L625">            node = nd;</span>
-<span class="fc" id="L626">            handler = hndlr;</span>
-<span class="fc" id="L627">        }</span>
+<span class="fc" id="L625">        {</span>
+<span class="fc" id="L626">            node = nd;</span>
+<span class="fc" id="L627">            handler = hndlr;</span>
+<span class="fc" id="L628">        }</span>
 
         /**
          * Returns the name of the wrapped node.
@@ -633,7 +634,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         public String nodeName()
         {
-<span class="fc" id="L636">            return handler.nodeName(node);</span>
+<span class="fc" id="L637">            return handler.nodeName(node);</span>
         }
 
         /**
@@ -647,7 +648,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         public String escapedNodeName(final HierarchicalConfiguration&lt;?&gt; config)
         {
-<span class="fc" id="L650">            return config.getExpressionEngine().nodeKey(node,</span>
+<span class="fc" id="L651">            return config.getExpressionEngine().nodeKey(node,</span>
                     StringUtils.EMPTY, handler);
         }
 
@@ -659,7 +660,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         public List&lt;NodeData&lt;T&gt;&gt; getChildren()
         {
-<span class="fc" id="L662">            return wrapInNodeData(handler.getChildren(node));</span>
+<span class="fc" id="L663">            return wrapInNodeData(handler.getChildren(node));</span>
         }
 
         /**
@@ -671,7 +672,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         public List&lt;NodeData&lt;T&gt;&gt; getChildren(final String name)
         {
-<span class="fc" id="L674">            return wrapInNodeData(handler.getChildren(node, name));</span>
+<span class="fc" id="L675">            return wrapInNodeData(handler.getChildren(node, name));</span>
         }
 
         /**
@@ -681,7 +682,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         public Set&lt;String&gt; getAttributes()
         {
-<span class="fc" id="L684">            return handler.getAttributes(node);</span>
+<span class="fc" id="L685">            return handler.getAttributes(node);</span>
         }
 
         /**
@@ -693,7 +694,7 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         public Object getAttribute(final String key)
         {
-<span class="fc" id="L696">            return handler.getAttributeValue(node, key);</span>
+<span class="fc" id="L697">            return handler.getAttributeValue(node, key);</span>
         }
 
         /**
@@ -705,8 +706,8 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         public boolean matchesConfigRootNode(final HierarchicalConfiguration&lt;?&gt; config)
         {
-<span class="fc" id="L708">            return config.getNodeModel().getNodeHandler().getRootNode()</span>
-<span class="fc" id="L709">                    .equals(node);</span>
+<span class="fc" id="L709">            return config.getNodeModel().getNodeHandler().getRootNode()</span>
+<span class="fc" id="L710">                    .equals(node);</span>
         }
 
         /**
@@ -717,12 +718,12 @@ public class XMLBeanDeclaration implements BeanDeclaration
          */
         private List&lt;NodeData&lt;T&gt;&gt; wrapInNodeData(final List&lt;T&gt; nodes)
         {
-<span class="fc" id="L720">            final List&lt;NodeData&lt;T&gt;&gt; result = new ArrayList&lt;&gt;(nodes.size());</span>
-<span class="fc bfc" id="L721" title="All 2 branches covered.">            for (final T node : nodes)</span>
+<span class="fc" id="L721">            final List&lt;NodeData&lt;T&gt;&gt; result = new ArrayList&lt;&gt;(nodes.size());</span>
+<span class="fc bfc" id="L722" title="All 2 branches covered.">            for (final T node : nodes)</span>
             {
-<span class="fc" id="L723">                result.add(new NodeData&lt;&gt;(node, handler));</span>
-<span class="fc" id="L724">            }</span>
-<span class="fc" id="L725">            return result;</span>
+<span class="fc" id="L724">                result.add(new NodeData&lt;&gt;(node, handler));</span>
+<span class="fc" id="L725">            }</span>
+<span class="fc" id="L726">            return result;</span>
         }
     }
 }

@@ -48,6 +48,7 @@ import org.apache.commons.configuration2.sync.Synchronizer;
  * {@code ConfigurationBuilder}.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class BasicBuilderParameters implements Cloneable, BuilderParameters,
@@ -95,9 +96,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * Creates a new instance of {@code BasicBuilderParameters}.
      */
     public BasicBuilderParameters()
-<span class="fc" id="L98">    {</span>
-<span class="fc" id="L99">        properties = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L99">    {</span>
+<span class="fc" id="L100">        properties = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L101">    }</span>
 
     /**
      * {@inheritDoc} This implementation returns a copy of the internal
@@ -108,18 +109,18 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
     @Override
     public Map&lt;String, Object&gt; getParameters()
     {
-<span class="fc" id="L111">        final HashMap&lt;String, Object&gt; result =</span>
+<span class="fc" id="L112">        HashMap&lt;String, Object&gt; result =</span>
                 new HashMap&lt;&gt;(properties);
-<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (result.containsKey(PROP_INTERPOLATOR))</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (result.containsKey(PROP_INTERPOLATOR))</span>
         {
             // A custom ConfigurationInterpolator overrides lookups
-<span class="fc" id="L116">            result.remove(PROP_PREFIX_LOOKUPS);</span>
-<span class="fc" id="L117">            result.remove(PROP_DEFAULT_LOOKUPS);</span>
-<span class="fc" id="L118">            result.remove(PROP_PARENT_INTERPOLATOR);</span>
+<span class="fc" id="L117">            result.remove(PROP_PREFIX_LOOKUPS);</span>
+<span class="fc" id="L118">            result.remove(PROP_DEFAULT_LOOKUPS);</span>
+<span class="fc" id="L119">            result.remove(PROP_PARENT_INTERPOLATOR);</span>
         }
 
-<span class="fc" id="L121">        createDefensiveCopies(result);</span>
-<span class="fc" id="L122">        return result;</span>
+<span class="fc" id="L122">        createDefensiveCopies(result);</span>
+<span class="fc" id="L123">        return result;</span>
     }
 
     /**
@@ -131,9 +132,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @return a reference to this object for method chaining
      */
     @Override
-    public BasicBuilderParameters setLogger(final ConfigurationLogger log)
+    public BasicBuilderParameters setLogger(ConfigurationLogger log)
     {
-<span class="fc" id="L136">        return setProperty(PROP_LOGGER, log);</span>
+<span class="fc" id="L137">        return setProperty(PROP_LOGGER, log);</span>
     }
 
     /**
@@ -148,9 +149,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @return a reference to this object for method chaining
      */
     @Override
-    public BasicBuilderParameters setThrowExceptionOnMissing(final boolean b)
+    public BasicBuilderParameters setThrowExceptionOnMissing(boolean b)
     {
-<span class="fc" id="L153">        return setProperty(PROP_THROW_EXCEPTION_ON_MISSING, Boolean.valueOf(b));</span>
+<span class="fc" id="L154">        return setProperty(PROP_THROW_EXCEPTION_ON_MISSING, Boolean.valueOf(b));</span>
     }
 
     /**
@@ -166,9 +167,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      */
     @Override
     public BasicBuilderParameters setListDelimiterHandler(
-            final ListDelimiterHandler handler)
+            ListDelimiterHandler handler)
     {
-<span class="fc" id="L171">        return setProperty(PROP_LIST_DELIMITER_HANDLER, handler);</span>
+<span class="fc" id="L172">        return setProperty(PROP_LIST_DELIMITER_HANDLER, handler);</span>
     }
 
     /**
@@ -176,9 +177,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * without modifications.
      */
     @Override
-    public BasicBuilderParameters setInterpolator(final ConfigurationInterpolator ci)
+    public BasicBuilderParameters setInterpolator(ConfigurationInterpolator ci)
     {
-<span class="fc" id="L181">        return setProperty(PROP_INTERPOLATOR, ci);</span>
+<span class="fc" id="L182">        return setProperty(PROP_INTERPOLATOR, ci);</span>
     }
 
     /**
@@ -188,15 +189,18 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      */
     @Override
     public BasicBuilderParameters setPrefixLookups(
-            final Map&lt;String, ? extends Lookup&gt; lookups)
+            Map&lt;String, ? extends Lookup&gt; lookups)
     {
-<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (lookups == null)</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (lookups == null)</span>
         {
-<span class="fc" id="L195">            properties.remove(PROP_PREFIX_LOOKUPS);</span>
-<span class="fc" id="L196">            return this;</span>
+<span class="fc" id="L196">            properties.remove(PROP_PREFIX_LOOKUPS);</span>
+<span class="fc" id="L197">            return this;</span>
         }
-<span class="fc" id="L198">        return setProperty(PROP_PREFIX_LOOKUPS,</span>
-                new HashMap&lt;&gt;(lookups));
+        else
+        {
+<span class="fc" id="L201">            return setProperty(PROP_PREFIX_LOOKUPS,</span>
+                    new HashMap&lt;&gt;(lookups));
+        }
     }
 
     /**
@@ -206,15 +210,18 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      */
     @Override
     public BasicBuilderParameters setDefaultLookups(
-            final Collection&lt;? extends Lookup&gt; lookups)
+            Collection&lt;? extends Lookup&gt; lookups)
     {
-<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (lookups == null)</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        if (lookups == null)</span>
         {
-<span class="fc" id="L213">            properties.remove(PROP_DEFAULT_LOOKUPS);</span>
-<span class="fc" id="L214">            return this;</span>
+<span class="fc" id="L217">            properties.remove(PROP_DEFAULT_LOOKUPS);</span>
+<span class="fc" id="L218">            return this;</span>
         }
-<span class="fc" id="L216">        return setProperty(PROP_DEFAULT_LOOKUPS, new ArrayList&lt;&gt;(</span>
-                lookups));
+        else
+        {
+<span class="fc" id="L222">            return setProperty(PROP_DEFAULT_LOOKUPS, new ArrayList&lt;&gt;(</span>
+                    lookups));
+        }
     }
 
     /**
@@ -223,9 +230,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      */
     @Override
     public BasicBuilderParameters setParentInterpolator(
-            final ConfigurationInterpolator parent)
+            ConfigurationInterpolator parent)
     {
-<span class="fc" id="L228">        return setProperty(PROP_PARENT_INTERPOLATOR, parent);</span>
+<span class="fc" id="L235">        return setProperty(PROP_PARENT_INTERPOLATOR, parent);</span>
     }
 
     /**
@@ -233,9 +240,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * {@code Synchronizer} object in the internal parameters map.
      */
     @Override
-    public BasicBuilderParameters setSynchronizer(final Synchronizer sync)
+    public BasicBuilderParameters setSynchronizer(Synchronizer sync)
     {
-<span class="fc" id="L238">        return setProperty(PROP_SYNCHRONIZER, sync);</span>
+<span class="fc" id="L245">        return setProperty(PROP_SYNCHRONIZER, sync);</span>
     }
 
     /**
@@ -243,9 +250,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * {@code ConversionHandler} object in the internal parameters map.
      */
     @Override
-    public BasicBuilderParameters setConversionHandler(final ConversionHandler handler)
+    public BasicBuilderParameters setConversionHandler(ConversionHandler handler)
     {
-<span class="fc" id="L248">        return setProperty(PROP_CONVERSION_HANDLER, handler);</span>
+<span class="fc" id="L255">        return setProperty(PROP_CONVERSION_HANDLER, handler);</span>
     }
 
     /**
@@ -256,9 +263,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * obtain the {@code BeanHelper} instance from a parameters map.
      */
     @Override
-    public BasicBuilderParameters setBeanHelper(final BeanHelper beanHelper)
+    public BasicBuilderParameters setBeanHelper(BeanHelper beanHelper)
     {
-<span class="fc" id="L261">        return setProperty(PROP_BEAN_HELPER, beanHelper);</span>
+<span class="fc" id="L268">        return setProperty(PROP_BEAN_HELPER, beanHelper);</span>
     }
 
     /**
@@ -267,9 +274,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      */
     @Override
     public BasicBuilderParameters setConfigurationDecoder(
-            final ConfigurationDecoder decoder)
+            ConfigurationDecoder decoder)
     {
-<span class="fc" id="L272">        return setProperty(PROP_CONFIGURATION_DECODER, decoder);</span>
+<span class="fc" id="L279">        return setProperty(PROP_CONFIGURATION_DECODER, decoder);</span>
     }
 
     /**
@@ -283,23 +290,23 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      *        &lt;b&gt;null&lt;/b&gt;)
      * @throws IllegalArgumentException if the passed in object is &lt;b&gt;null&lt;/b&gt;
      */
-    public void merge(final BuilderParameters p)
+    public void merge(BuilderParameters p)
     {
-<span class="fc bfc" id="L288" title="All 2 branches covered.">        if (p == null)</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        if (p == null)</span>
         {
-<span class="fc" id="L290">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L297">            throw new IllegalArgumentException(</span>
                     &quot;Parameters to merge must not be null!&quot;);
         }
 
-<span class="fc bfc" id="L294" title="All 2 branches covered.">        for (final Map.Entry&lt;String, Object&gt; e : p.getParameters().entrySet())</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">        for (Map.Entry&lt;String, Object&gt; e : p.getParameters().entrySet())</span>
         {
-<span class="fc bfc" id="L296" title="All 2 branches covered.">            if (!properties.containsKey(e.getKey())</span>
-<span class="fc bfc" id="L297" title="All 2 branches covered.">                    &amp;&amp; !e.getKey().startsWith(RESERVED_PARAMETER_PREFIX))</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">            if (!properties.containsKey(e.getKey())</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">                    &amp;&amp; !e.getKey().startsWith(RESERVED_PARAMETER_PREFIX))</span>
             {
-<span class="fc" id="L299">                storeProperty(e.getKey(), e.getValue());</span>
+<span class="fc" id="L306">                storeProperty(e.getKey(), e.getValue());</span>
             }
-<span class="fc" id="L301">        }</span>
-<span class="fc" id="L302">    }</span>
+<span class="fc" id="L308">        }</span>
+<span class="fc" id="L309">    }</span>
 
     /**
      * Inherits properties from the specified map. This can be used for instance
@@ -319,18 +326,18 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @param source the source properties to inherit from
      * @throws IllegalArgumentException if the source map is &lt;b&gt;null&lt;/b&gt;
      */
-    public void inheritFrom(final Map&lt;String, ?&gt; source)
+    public void inheritFrom(Map&lt;String, ?&gt; source)
     {
-<span class="fc bfc" id="L324" title="All 2 branches covered.">        if (source == null)</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">        if (source == null)</span>
         {
-<span class="fc" id="L326">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L333">            throw new IllegalArgumentException(</span>
                     &quot;Source properties must not be null!&quot;);
         }
-<span class="fc" id="L329">        copyPropertiesFrom(source, PROP_BEAN_HELPER, PROP_CONFIGURATION_DECODER,</span>
+<span class="fc" id="L336">        copyPropertiesFrom(source, PROP_BEAN_HELPER, PROP_CONFIGURATION_DECODER,</span>
                 PROP_CONVERSION_HANDLER, PROP_LIST_DELIMITER_HANDLER,
                 PROP_LOGGER, PROP_SYNCHRONIZER,
                 PROP_THROW_EXCEPTION_ON_MISSING);
-<span class="fc" id="L333">    }</span>
+<span class="fc" id="L340">    }</span>
 
     /**
      * Obtains a specification for a {@link ConfigurationInterpolator} from the
@@ -344,19 +351,19 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      *         invalid data
      */
     public static InterpolatorSpecification fetchInterpolatorSpecification(
-            final Map&lt;String, Object&gt; params)
+            Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L349">        checkParameters(params);</span>
-<span class="fc" id="L350">        return new InterpolatorSpecification.Builder()</span>
-<span class="fc" id="L351">                .withInterpolator(</span>
-<span class="fc" id="L352">                        fetchParameter(params, PROP_INTERPOLATOR,</span>
+<span class="fc" id="L356">        checkParameters(params);</span>
+<span class="fc" id="L357">        return new InterpolatorSpecification.Builder()</span>
+<span class="fc" id="L358">                .withInterpolator(</span>
+<span class="fc" id="L359">                        fetchParameter(params, PROP_INTERPOLATOR,</span>
                                 ConfigurationInterpolator.class))
-<span class="fc" id="L354">                .withParentInterpolator(</span>
-<span class="fc" id="L355">                        fetchParameter(params, PROP_PARENT_INTERPOLATOR,</span>
+<span class="fc" id="L361">                .withParentInterpolator(</span>
+<span class="fc" id="L362">                        fetchParameter(params, PROP_PARENT_INTERPOLATOR,</span>
                                 ConfigurationInterpolator.class))
-<span class="fc" id="L357">                .withPrefixLookups(fetchAndCheckPrefixLookups(params))</span>
-<span class="fc" id="L358">                .withDefaultLookups(fetchAndCheckDefaultLookups(params))</span>
-<span class="fc" id="L359">                .create();</span>
+<span class="fc" id="L364">                .withPrefixLookups(fetchAndCheckPrefixLookups(params))</span>
+<span class="fc" id="L365">                .withDefaultLookups(fetchAndCheckDefaultLookups(params))</span>
+<span class="fc" id="L366">                .create();</span>
     }
 
     /**
@@ -369,10 +376,10 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @return the {@code BeanHelper} stored in this map or &lt;b&gt;null&lt;/b&gt;
      * @throws IllegalArgumentException if the map is &lt;b&gt;null&lt;/b&gt;
      */
-    public static BeanHelper fetchBeanHelper(final Map&lt;String, Object&gt; params)
+    public static BeanHelper fetchBeanHelper(Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L374">        checkParameters(params);</span>
-<span class="fc" id="L375">        return (BeanHelper) params.get(PROP_BEAN_HELPER);</span>
+<span class="fc" id="L381">        checkParameters(params);</span>
+<span class="fc" id="L382">        return (BeanHelper) params.get(PROP_BEAN_HELPER);</span>
     }
 
     /**
@@ -393,15 +400,15 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
     {
         try
         {
-<span class="fc" id="L396">            final BasicBuilderParameters copy =</span>
-<span class="fc" id="L397">                    (BasicBuilderParameters) super.clone();</span>
-<span class="fc" id="L398">            copy.properties = getParameters();</span>
-<span class="fc" id="L399">            return copy;</span>
+<span class="fc" id="L403">            BasicBuilderParameters copy =</span>
+<span class="fc" id="L404">                    (BasicBuilderParameters) super.clone();</span>
+<span class="fc" id="L405">            copy.properties = getParameters();</span>
+<span class="fc" id="L406">            return copy;</span>
         }
-<span class="nc" id="L401">        catch (final CloneNotSupportedException cnex)</span>
+<span class="nc" id="L408">        catch (CloneNotSupportedException cnex)</span>
         {
             // should not happen
-<span class="nc" id="L404">            throw new AssertionError(cnex);</span>
+<span class="nc" id="L411">            throw new AssertionError(cnex);</span>
         }
     }
 
@@ -414,17 +421,17 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @param key the key of the property
      * @param value the value of the property
      */
-    protected void storeProperty(final String key, final Object value)
+    protected void storeProperty(String key, Object value)
     {
-<span class="fc bfc" id="L419" title="All 2 branches covered.">        if (value == null)</span>
+<span class="fc bfc" id="L426" title="All 2 branches covered.">        if (value == null)</span>
         {
-<span class="fc" id="L421">            properties.remove(key);</span>
+<span class="fc" id="L428">            properties.remove(key);</span>
         }
         else
         {
-<span class="fc" id="L425">            properties.put(key, value);</span>
+<span class="fc" id="L432">            properties.put(key, value);</span>
         }
-<span class="fc" id="L427">    }</span>
+<span class="fc" id="L434">    }</span>
 
     /**
      * Obtains the value of the specified property from the internal map. This
@@ -434,9 +441,9 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @param key the key of the property in question
      * @return the value of the property with this key or &lt;b&gt;null&lt;/b&gt;
      */
-    protected Object fetchProperty(final String key)
+    protected Object fetchProperty(String key)
     {
-<span class="fc" id="L439">        return properties.get(key);</span>
+<span class="fc" id="L446">        return properties.get(key);</span>
     }
 
     /**
@@ -446,17 +453,17 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @param source the source map
      * @param keys the keys to be copied
      */
-    protected void copyPropertiesFrom(final Map&lt;String, ?&gt; source, final String... keys)
+    protected void copyPropertiesFrom(Map&lt;String, ?&gt; source, String... keys)
     {
-<span class="fc bfc" id="L451" title="All 2 branches covered.">        for (final String key : keys)</span>
+<span class="fc bfc" id="L458" title="All 2 branches covered.">        for (String key : keys)</span>
         {
-<span class="fc" id="L453">            final Object value = source.get(key);</span>
-<span class="fc bfc" id="L454" title="All 2 branches covered.">            if (value != null)</span>
+<span class="fc" id="L460">            Object value = source.get(key);</span>
+<span class="fc bfc" id="L461" title="All 2 branches covered.">            if (value != null)</span>
             {
-<span class="fc" id="L456">                storeProperty(key, value);</span>
+<span class="fc" id="L463">                storeProperty(key, value);</span>
             }
         }
-<span class="fc" id="L459">    }</span>
+<span class="fc" id="L466">    }</span>
 
     /**
      * Helper method for setting a property value.
@@ -465,10 +472,10 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @param value the value of the property
      * @return a reference to this object
      */
-    private BasicBuilderParameters setProperty(final String key, final Object value)
+    private BasicBuilderParameters setProperty(String key, Object value)
     {
-<span class="fc" id="L470">        storeProperty(key, value);</span>
-<span class="fc" id="L471">        return this;</span>
+<span class="fc" id="L477">        storeProperty(key, value);</span>
+<span class="fc" id="L478">        return this;</span>
     }
 
     /**
@@ -478,21 +485,21 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      *
      * @param params the map with parameters to be passed to the caller
      */
-    private static void createDefensiveCopies(final HashMap&lt;String, Object&gt; params)
+    private static void createDefensiveCopies(HashMap&lt;String, Object&gt; params)
     {
-<span class="fc" id="L483">        final Map&lt;String, ? extends Lookup&gt; prefixLookups =</span>
-<span class="fc" id="L484">                fetchPrefixLookups(params);</span>
-<span class="fc bfc" id="L485" title="All 2 branches covered.">        if (prefixLookups != null)</span>
+<span class="fc" id="L490">        Map&lt;String, ? extends Lookup&gt; prefixLookups =</span>
+<span class="fc" id="L491">                fetchPrefixLookups(params);</span>
+<span class="fc bfc" id="L492" title="All 2 branches covered.">        if (prefixLookups != null)</span>
         {
-<span class="fc" id="L487">            params.put(PROP_PREFIX_LOOKUPS, new HashMap&lt;&gt;(</span>
+<span class="fc" id="L494">            params.put(PROP_PREFIX_LOOKUPS, new HashMap&lt;&gt;(</span>
                     prefixLookups));
         }
-<span class="fc" id="L490">        final Collection&lt;? extends Lookup&gt; defLookups = fetchDefaultLookups(params);</span>
-<span class="fc bfc" id="L491" title="All 2 branches covered.">        if (defLookups != null)</span>
+<span class="fc" id="L497">        Collection&lt;? extends Lookup&gt; defLookups = fetchDefaultLookups(params);</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">        if (defLookups != null)</span>
         {
-<span class="fc" id="L493">            params.put(PROP_DEFAULT_LOOKUPS, new ArrayList&lt;&gt;(defLookups));</span>
+<span class="fc" id="L500">            params.put(PROP_DEFAULT_LOOKUPS, new ArrayList&lt;&gt;(defLookups));</span>
         }
-<span class="fc" id="L495">    }</span>
+<span class="fc" id="L502">    }</span>
 
     /**
      * Obtains the map with prefix lookups from the parameters map.
@@ -501,16 +508,15 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @return the map with prefix lookups (may be &lt;b&gt;null&lt;/b&gt;)
      */
     private static Map&lt;String, ? extends Lookup&gt; fetchPrefixLookups(
-            final Map&lt;String, Object&gt; params)
+            Map&lt;String, Object&gt; params)
     {
         // This is safe to cast because we either have full control over the map
         // and thus know the types of the contained values or have checked
         // the content before
         @SuppressWarnings(&quot;unchecked&quot;)
-        final
-<span class="fc" id="L511">        Map&lt;String, ? extends Lookup&gt; prefixLookups =</span>
-<span class="fc" id="L512">                (Map&lt;String, ? extends Lookup&gt;) params.get(PROP_PREFIX_LOOKUPS);</span>
-<span class="fc" id="L513">        return prefixLookups;</span>
+<span class="fc" id="L517">        Map&lt;String, ? extends Lookup&gt; prefixLookups =</span>
+<span class="fc" id="L518">                (Map&lt;String, ? extends Lookup&gt;) params.get(PROP_PREFIX_LOOKUPS);</span>
+<span class="fc" id="L519">        return prefixLookups;</span>
     }
 
     /**
@@ -525,26 +531,26 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @throws IllegalArgumentException if the map contains invalid data
      */
     private static Map&lt;String, ? extends Lookup&gt; fetchAndCheckPrefixLookups(
-            final Map&lt;String, Object&gt; params)
+            Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L530">        final Map&lt;?, ?&gt; prefixes =</span>
-<span class="fc" id="L531">                fetchParameter(params, PROP_PREFIX_LOOKUPS, Map.class);</span>
-<span class="fc bfc" id="L532" title="All 2 branches covered.">        if (prefixes == null)</span>
+<span class="fc" id="L536">        Map&lt;?, ?&gt; prefixes =</span>
+<span class="fc" id="L537">                fetchParameter(params, PROP_PREFIX_LOOKUPS, Map.class);</span>
+<span class="fc bfc" id="L538" title="All 2 branches covered.">        if (prefixes == null)</span>
         {
-<span class="fc" id="L534">            return null;</span>
+<span class="fc" id="L540">            return null;</span>
         }
 
-<span class="fc bfc" id="L537" title="All 2 branches covered.">        for (final Map.Entry&lt;?, ?&gt; e : prefixes.entrySet())</span>
+<span class="fc bfc" id="L543" title="All 2 branches covered.">        for (Map.Entry&lt;?, ?&gt; e : prefixes.entrySet())</span>
         {
-<span class="fc bfc" id="L539" title="All 2 branches covered.">            if (!(e.getKey() instanceof String)</span>
-<span class="fc bfc" id="L540" title="All 2 branches covered.">                    || !(e.getValue() instanceof Lookup))</span>
+<span class="fc bfc" id="L545" title="All 2 branches covered.">            if (!(e.getKey() instanceof String)</span>
+<span class="fc bfc" id="L546" title="All 2 branches covered.">                    || !(e.getValue() instanceof Lookup))</span>
             {
-<span class="fc" id="L542">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L548">                throw new IllegalArgumentException(</span>
                         &quot;Map with prefix lookups contains invalid data: &quot;
                                 + prefixes);
             }
-<span class="fc" id="L546">        }</span>
-<span class="fc" id="L547">        return fetchPrefixLookups(params);</span>
+<span class="fc" id="L552">        }</span>
+<span class="fc" id="L553">        return fetchPrefixLookups(params);</span>
     }
 
     /**
@@ -554,16 +560,15 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @return the collection with default lookups (may be &lt;b&gt;null&lt;/b&gt;)
      */
     private static Collection&lt;? extends Lookup&gt; fetchDefaultLookups(
-            final Map&lt;String, Object&gt; params)
+            Map&lt;String, Object&gt; params)
     {
         // This is safe to cast because we either have full control over the map
         // and thus know the types of the contained values or have checked
         // the content before
         @SuppressWarnings(&quot;unchecked&quot;)
-        final
-<span class="fc" id="L564">        Collection&lt;? extends Lookup&gt; defLookups =</span>
-<span class="fc" id="L565">                (Collection&lt;? extends Lookup&gt;) params.get(PROP_DEFAULT_LOOKUPS);</span>
-<span class="fc" id="L566">        return defLookups;</span>
+<span class="fc" id="L569">        Collection&lt;? extends Lookup&gt; defLookups =</span>
+<span class="fc" id="L570">                (Collection&lt;? extends Lookup&gt;) params.get(PROP_DEFAULT_LOOKUPS);</span>
+<span class="fc" id="L571">        return defLookups;</span>
     }
 
     /**
@@ -577,25 +582,25 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @throws IllegalArgumentException if invalid data is found
      */
     private static Collection&lt;? extends Lookup&gt; fetchAndCheckDefaultLookups(
-            final Map&lt;String, Object&gt; params)
+            Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L582">        final Collection&lt;?&gt; col =</span>
-<span class="fc" id="L583">                fetchParameter(params, PROP_DEFAULT_LOOKUPS, Collection.class);</span>
-<span class="fc bfc" id="L584" title="All 2 branches covered.">        if (col == null)</span>
+<span class="fc" id="L587">        Collection&lt;?&gt; col =</span>
+<span class="fc" id="L588">                fetchParameter(params, PROP_DEFAULT_LOOKUPS, Collection.class);</span>
+<span class="fc bfc" id="L589" title="All 2 branches covered.">        if (col == null)</span>
         {
-<span class="fc" id="L586">            return null;</span>
+<span class="fc" id="L591">            return null;</span>
         }
 
-<span class="fc bfc" id="L589" title="All 2 branches covered.">        for (final Object o : col)</span>
+<span class="fc bfc" id="L594" title="All 2 branches covered.">        for (Object o : col)</span>
         {
-<span class="fc bfc" id="L591" title="All 2 branches covered.">            if (!(o instanceof Lookup))</span>
+<span class="fc bfc" id="L596" title="All 2 branches covered.">            if (!(o instanceof Lookup))</span>
             {
-<span class="fc" id="L593">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L598">                throw new IllegalArgumentException(</span>
                         &quot;Collection with default lookups contains invalid data: &quot;
                                 + col);
             }
-<span class="fc" id="L597">        }</span>
-<span class="fc" id="L598">        return fetchDefaultLookups(params);</span>
+<span class="fc" id="L602">        }</span>
+<span class="fc" id="L603">        return fetchDefaultLookups(params);</span>
     }
 
     /**
@@ -609,21 +614,21 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @throws IllegalArgumentException if the parameter is not of the expected
      *         type
      */
-    private static &lt;T&gt; T fetchParameter(final Map&lt;String, Object&gt; params, final String key,
-            final Class&lt;T&gt; expClass)
+    private static &lt;T&gt; T fetchParameter(Map&lt;String, Object&gt; params, String key,
+            Class&lt;T&gt; expClass)
     {
-<span class="fc" id="L615">        final Object value = params.get(key);</span>
-<span class="fc bfc" id="L616" title="All 2 branches covered.">        if (value == null)</span>
+<span class="fc" id="L620">        Object value = params.get(key);</span>
+<span class="fc bfc" id="L621" title="All 2 branches covered.">        if (value == null)</span>
         {
-<span class="fc" id="L618">            return null;</span>
+<span class="fc" id="L623">            return null;</span>
         }
-<span class="fc bfc" id="L620" title="All 2 branches covered.">        if (!expClass.isInstance(value))</span>
+<span class="fc bfc" id="L625" title="All 2 branches covered.">        if (!expClass.isInstance(value))</span>
         {
-<span class="fc" id="L622">            throw new IllegalArgumentException(String.format(</span>
+<span class="fc" id="L627">            throw new IllegalArgumentException(String.format(</span>
                     &quot;Parameter %s is not of type %s!&quot;, key,
-<span class="fc" id="L624">                    expClass.getSimpleName()));</span>
+<span class="fc" id="L629">                    expClass.getSimpleName()));</span>
         }
-<span class="fc" id="L626">        return expClass.cast(value);</span>
+<span class="fc" id="L631">        return expClass.cast(value);</span>
     }
 
     /**
@@ -633,13 +638,13 @@ public class BasicBuilderParameters implements Cloneable, BuilderParameters,
      * @param params the map with parameters to check
      * @throws IllegalArgumentException if the map is &lt;b&gt;null&lt;/b&gt;
      */
-    private static void checkParameters(final Map&lt;String, Object&gt; params)
+    private static void checkParameters(Map&lt;String, Object&gt; params)
     {
-<span class="fc bfc" id="L638" title="All 2 branches covered.">        if (params == null)</span>
+<span class="fc bfc" id="L643" title="All 2 branches covered.">        if (params == null)</span>
         {
-<span class="fc" id="L640">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L645">            throw new IllegalArgumentException(</span>
                     &quot;Parameters map must not be null!&quot;);
         }
-<span class="fc" id="L643">    }</span>
+<span class="fc" id="L648">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

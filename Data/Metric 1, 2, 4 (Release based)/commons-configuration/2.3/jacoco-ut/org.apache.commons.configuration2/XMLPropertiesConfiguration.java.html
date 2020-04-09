@@ -17,25 +17,25 @@
 
 package org.apache.commons.configuration2;
 
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
 import org.apache.commons.configuration2.convert.ListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileLocator;
 import org.apache.commons.configuration2.io.FileLocatorAware;
-import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.Attributes;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
@@ -65,6 +65,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * by multiple threads. However if one of these threads modifies the object,
  * synchronization has to be performed manually.
  *
+ * @author Emmanuel Bourg
+ * @author Alistair Young
+ * @version $Id$
  * @since 1.1
  */
 public class XMLPropertiesConfiguration extends BaseConfiguration implements
@@ -95,8 +98,8 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      */
     public XMLPropertiesConfiguration()
     {
-<span class="fc" id="L98">        super();</span>
-<span class="fc" id="L99">    }</span>
+<span class="fc" id="L101">        super();</span>
+<span class="fc" id="L102">    }</span>
 
     /**
      * Creates and loads the xml properties from the specified DOM node.
@@ -105,11 +108,11 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      * @throws ConfigurationException Error while loading the properties file
      * @since 2.0
      */
-    public XMLPropertiesConfiguration(final Element element) throws ConfigurationException
+    public XMLPropertiesConfiguration(Element element) throws ConfigurationException
     {
-<span class="fc" id="L110">        super();</span>
-<span class="fc" id="L111">        this.load(element);</span>
-<span class="fc" id="L112">    }</span>
+<span class="fc" id="L113">        super();</span>
+<span class="fc" id="L114">        this.load(element);</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * Returns the header comment of this configuration.
@@ -118,7 +121,7 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      */
     public String getHeader()
     {
-<span class="fc" id="L121">        return header;</span>
+<span class="fc" id="L124">        return header;</span>
     }
 
     /**
@@ -126,35 +129,41 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      *
      * @param header the header comment
      */
-    public void setHeader(final String header)
+    public void setHeader(String header)
     {
-<span class="fc" id="L131">        this.header = header;</span>
-<span class="fc" id="L132">    }</span>
+<span class="fc" id="L134">        this.header = header;</span>
+<span class="fc" id="L135">    }</span>
 
     @Override
-    public void read(final Reader in) throws ConfigurationException
+    public void read(Reader in) throws ConfigurationException
     {
-<span class="fc" id="L137">        final SAXParserFactory factory = SAXParserFactory.newInstance();</span>
-<span class="fc" id="L138">        factory.setNamespaceAware(false);</span>
-<span class="fc" id="L139">        factory.setValidating(true);</span>
+<span class="fc" id="L140">        SAXParserFactory factory = SAXParserFactory.newInstance();</span>
+<span class="fc" id="L141">        factory.setNamespaceAware(false);</span>
+<span class="fc" id="L142">        factory.setValidating(true);</span>
 
         try
         {
-<span class="fc" id="L143">            final SAXParser parser = factory.newSAXParser();</span>
+<span class="fc" id="L146">            SAXParser parser = factory.newSAXParser();</span>
 
-<span class="fc" id="L145">            final XMLReader xmlReader = parser.getXMLReader();</span>
-<span class="fc" id="L146">            xmlReader.setEntityResolver((publicId, systemId) -&gt;</span>
-<span class="fc" id="L147">                new InputSource(getClass().getClassLoader().getResourceAsStream(&quot;properties.dtd&quot;)));</span>
-<span class="fc" id="L148">            xmlReader.setContentHandler(new XMLPropertiesHandler());</span>
-<span class="fc" id="L149">            xmlReader.parse(new InputSource(in));</span>
+<span class="fc" id="L148">            XMLReader xmlReader = parser.getXMLReader();</span>
+<span class="fc" id="L149">            xmlReader.setEntityResolver(new EntityResolver()</span>
+<span class="fc" id="L150">            {</span>
+                @Override
+                public InputSource resolveEntity(String publicId, String systemId)
+                {
+<span class="fc" id="L154">                    return new InputSource(getClass().getClassLoader().getResourceAsStream(&quot;properties.dtd&quot;));</span>
+                }
+            });
+<span class="fc" id="L157">            xmlReader.setContentHandler(new XMLPropertiesHandler());</span>
+<span class="fc" id="L158">            xmlReader.parse(new InputSource(in));</span>
         }
-<span class="nc" id="L151">        catch (final Exception e)</span>
+<span class="nc" id="L160">        catch (Exception e)</span>
         {
-<span class="nc" id="L153">            throw new ConfigurationException(&quot;Unable to parse the configuration file&quot;, e);</span>
-<span class="fc" id="L154">        }</span>
+<span class="nc" id="L162">            throw new ConfigurationException(&quot;Unable to parse the configuration file&quot;, e);</span>
+<span class="fc" id="L163">        }</span>
 
         // todo: support included properties ?
-<span class="fc" id="L157">    }</span>
+<span class="fc" id="L166">    }</span>
 
     /**
      * Parses a DOM element containing the properties. The DOM element has to follow
@@ -165,73 +174,73 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      * @throws ConfigurationException Error while interpreting the DOM
      * @since 2.0
      */
-    public void load(final Element element) throws ConfigurationException
+    public void load(Element element) throws ConfigurationException
     {
-<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        if (!element.getNodeName().equals(&quot;properties&quot;))</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        if (!element.getNodeName().equals(&quot;properties&quot;))</span>
         {
-<span class="nc" id="L172">            throw new ConfigurationException(MALFORMED_XML_EXCEPTION);</span>
+<span class="nc" id="L181">            throw new ConfigurationException(MALFORMED_XML_EXCEPTION);</span>
         }
-<span class="fc" id="L174">        final NodeList childNodes = element.getChildNodes();</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">        for (int i = 0; i &lt; childNodes.getLength(); i++)</span>
+<span class="fc" id="L183">        NodeList childNodes = element.getChildNodes();</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        for (int i = 0; i &lt; childNodes.getLength(); i++)</span>
         {
-<span class="fc" id="L177">            final Node item = childNodes.item(i);</span>
-<span class="fc bfc" id="L178" title="All 2 branches covered.">            if (item instanceof Element)</span>
+<span class="fc" id="L186">            Node item = childNodes.item(i);</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">            if (item instanceof Element)</span>
             {
-<span class="fc bfc" id="L180" title="All 2 branches covered.">                if (item.getNodeName().equals(&quot;comment&quot;))</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">                if (item.getNodeName().equals(&quot;comment&quot;))</span>
                 {
-<span class="fc" id="L182">                    setHeader(item.getTextContent());</span>
+<span class="fc" id="L191">                    setHeader(item.getTextContent());</span>
                 }
-<span class="pc bpc" id="L184" title="1 of 2 branches missed.">                else if (item.getNodeName().equals(&quot;entry&quot;))</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                else if (item.getNodeName().equals(&quot;entry&quot;))</span>
                 {
-<span class="fc" id="L186">                    final String key = ((Element) item).getAttribute(&quot;key&quot;);</span>
-<span class="fc" id="L187">                    addProperty(key, item.getTextContent());</span>
-<span class="fc" id="L188">                }</span>
+<span class="fc" id="L195">                    String key = ((Element) item).getAttribute(&quot;key&quot;);</span>
+<span class="fc" id="L196">                    addProperty(key, item.getTextContent());</span>
+<span class="fc" id="L197">                }</span>
                 else
                 {
-<span class="nc" id="L191">                    throw new ConfigurationException(MALFORMED_XML_EXCEPTION);</span>
+<span class="nc" id="L200">                    throw new ConfigurationException(MALFORMED_XML_EXCEPTION);</span>
                 }
             }
         }
-<span class="fc" id="L195">    }</span>
+<span class="fc" id="L204">    }</span>
 
     @Override
-    public void write(final Writer out) throws ConfigurationException
+    public void write(Writer out) throws ConfigurationException
     {
-<span class="fc" id="L200">        final PrintWriter writer = new PrintWriter(out);</span>
+<span class="fc" id="L209">        PrintWriter writer = new PrintWriter(out);</span>
 
-<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        String encoding = locator != null ? locator.getEncoding() : null;</span>
-<span class="pc bpc" id="L203" title="1 of 2 branches missed.">        if (encoding == null)</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">        String encoding = (locator != null) ? locator.getEncoding() : null;</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">        if (encoding == null)</span>
         {
-<span class="fc" id="L205">            encoding = DEFAULT_ENCODING;</span>
+<span class="fc" id="L214">            encoding = DEFAULT_ENCODING;</span>
         }
-<span class="fc" id="L207">        writer.println(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;&quot; + encoding + &quot;\&quot;?&gt;&quot;);</span>
-<span class="fc" id="L208">        writer.println(&quot;&lt;!DOCTYPE properties SYSTEM \&quot;http://java.sun.com/dtd/properties.dtd\&quot;&gt;&quot;);</span>
-<span class="fc" id="L209">        writer.println(&quot;&lt;properties&gt;&quot;);</span>
+<span class="fc" id="L216">        writer.println(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;&quot; + encoding + &quot;\&quot;?&gt;&quot;);</span>
+<span class="fc" id="L217">        writer.println(&quot;&lt;!DOCTYPE properties SYSTEM \&quot;http://java.sun.com/dtd/properties.dtd\&quot;&gt;&quot;);</span>
+<span class="fc" id="L218">        writer.println(&quot;&lt;properties&gt;&quot;);</span>
 
-<span class="pc bpc" id="L211" title="1 of 2 branches missed.">        if (getHeader() != null)</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">        if (getHeader() != null)</span>
         {
-<span class="fc" id="L213">            writer.println(&quot;  &lt;comment&gt;&quot; + StringEscapeUtils.escapeXml10(getHeader()) + &quot;&lt;/comment&gt;&quot;);</span>
+<span class="fc" id="L222">            writer.println(&quot;  &lt;comment&gt;&quot; + StringEscapeUtils.escapeXml(getHeader()) + &quot;&lt;/comment&gt;&quot;);</span>
         }
 
-<span class="fc" id="L216">        final Iterator&lt;String&gt; keys = getKeys();</span>
-<span class="fc bfc" id="L217" title="All 2 branches covered.">        while (keys.hasNext())</span>
+<span class="fc" id="L225">        Iterator&lt;String&gt; keys = getKeys();</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        while (keys.hasNext())</span>
         {
-<span class="fc" id="L219">            final String key = keys.next();</span>
-<span class="fc" id="L220">            final Object value = getProperty(key);</span>
+<span class="fc" id="L228">            String key = keys.next();</span>
+<span class="fc" id="L229">            Object value = getProperty(key);</span>
 
-<span class="pc bpc" id="L222" title="1 of 2 branches missed.">            if (value instanceof List)</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">            if (value instanceof List)</span>
             {
-<span class="nc" id="L224">                writeProperty(writer, key, (List&lt;?&gt;) value);</span>
+<span class="nc" id="L233">                writeProperty(writer, key, (List&lt;?&gt;) value);</span>
             }
             else
             {
-<span class="fc" id="L228">                writeProperty(writer, key, value);</span>
+<span class="fc" id="L237">                writeProperty(writer, key, value);</span>
             }
-<span class="fc" id="L230">        }</span>
+<span class="fc" id="L239">        }</span>
 
-<span class="fc" id="L232">        writer.println(&quot;&lt;/properties&gt;&quot;);</span>
-<span class="fc" id="L233">        writer.flush();</span>
-<span class="fc" id="L234">    }</span>
+<span class="fc" id="L241">        writer.println(&quot;&lt;/properties&gt;&quot;);</span>
+<span class="fc" id="L242">        writer.flush();</span>
+<span class="fc" id="L243">    }</span>
 
     /**
      * Write a property.
@@ -240,21 +249,21 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      * @param key the key of the property
      * @param value the value of the property
      */
-    private void writeProperty(final PrintWriter out, final String key, final Object value)
+    private void writeProperty(PrintWriter out, String key, Object value)
     {
         // escape the key
-<span class="fc" id="L246">        final String k = StringEscapeUtils.escapeXml10(key);</span>
+<span class="fc" id="L255">        String k = StringEscapeUtils.escapeXml(key);</span>
 
-<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        if (value != null)</span>
+<span class="pc bpc" id="L257" title="1 of 2 branches missed.">        if (value != null)</span>
         {
-<span class="fc" id="L250">            final String v = escapeValue(value);</span>
-<span class="fc" id="L251">            out.println(&quot;  &lt;entry key=\&quot;&quot; + k + &quot;\&quot;&gt;&quot; + v + &quot;&lt;/entry&gt;&quot;);</span>
-<span class="fc" id="L252">        }</span>
+<span class="fc" id="L259">            String v = escapeValue(value);</span>
+<span class="fc" id="L260">            out.println(&quot;  &lt;entry key=\&quot;&quot; + k + &quot;\&quot;&gt;&quot; + v + &quot;&lt;/entry&gt;&quot;);</span>
+<span class="fc" id="L261">        }</span>
         else
         {
-<span class="nc" id="L255">            out.println(&quot;  &lt;entry key=\&quot;&quot; + k + &quot;\&quot;/&gt;&quot;);</span>
+<span class="nc" id="L264">            out.println(&quot;  &lt;entry key=\&quot;&quot; + k + &quot;\&quot;/&gt;&quot;);</span>
         }
-<span class="fc" id="L257">    }</span>
+<span class="fc" id="L266">    }</span>
 
     /**
      * Write a list property.
@@ -263,13 +272,13 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      * @param key the key of the property
      * @param values a list with all property values
      */
-    private void writeProperty(final PrintWriter out, final String key, final List&lt;?&gt; values)
+    private void writeProperty(PrintWriter out, String key, List&lt;?&gt; values)
     {
-<span class="nc bnc" id="L268" title="All 2 branches missed.">        for (final Object value : values)</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        for (Object value : values)</span>
         {
-<span class="nc" id="L270">            writeProperty(out, key, value);</span>
-<span class="nc" id="L271">        }</span>
-<span class="nc" id="L272">    }</span>
+<span class="nc" id="L279">            writeProperty(out, key, value);</span>
+<span class="nc" id="L280">        }</span>
+<span class="nc" id="L281">    }</span>
 
     /**
      * Writes the configuration as child to the given DOM node
@@ -278,33 +287,33 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      * @param parent The DOM parent node
      * @since 2.0
      */
-    public void save(final Document document, final Node parent)
+    public void save(Document document, Node parent)
     {
-<span class="fc" id="L283">        final Element properties = document.createElement(&quot;properties&quot;);</span>
-<span class="fc" id="L284">        parent.appendChild(properties);</span>
-<span class="pc bpc" id="L285" title="1 of 2 branches missed.">        if (getHeader() != null)</span>
+<span class="fc" id="L292">        Element properties = document.createElement(&quot;properties&quot;);</span>
+<span class="fc" id="L293">        parent.appendChild(properties);</span>
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (getHeader() != null)</span>
         {
-<span class="fc" id="L287">            final Element comment = document.createElement(&quot;comment&quot;);</span>
-<span class="fc" id="L288">            properties.appendChild(comment);</span>
-<span class="fc" id="L289">            comment.setTextContent(StringEscapeUtils.escapeXml10(getHeader()));</span>
+<span class="fc" id="L296">            Element comment = document.createElement(&quot;comment&quot;);</span>
+<span class="fc" id="L297">            properties.appendChild(comment);</span>
+<span class="fc" id="L298">            comment.setTextContent(StringEscapeUtils.escapeXml(getHeader()));</span>
         }
 
-<span class="fc" id="L292">        final Iterator&lt;String&gt; keys = getKeys();</span>
-<span class="fc bfc" id="L293" title="All 2 branches covered.">        while (keys.hasNext())</span>
+<span class="fc" id="L301">        Iterator&lt;String&gt; keys = getKeys();</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">        while (keys.hasNext())</span>
         {
-<span class="fc" id="L295">            final String key = keys.next();</span>
-<span class="fc" id="L296">            final Object value = getProperty(key);</span>
+<span class="fc" id="L304">            String key = keys.next();</span>
+<span class="fc" id="L305">            Object value = getProperty(key);</span>
 
-<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            if (value instanceof List)</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">            if (value instanceof List)</span>
             {
-<span class="nc" id="L300">                writeProperty(document, properties, key, (List&lt;?&gt;) value);</span>
+<span class="nc" id="L309">                writeProperty(document, properties, key, (List&lt;?&gt;) value);</span>
             }
             else
             {
-<span class="fc" id="L304">                writeProperty(document, properties, key, value);</span>
+<span class="fc" id="L313">                writeProperty(document, properties, key, value);</span>
             }
-<span class="fc" id="L306">        }</span>
-<span class="fc" id="L307">    }</span>
+<span class="fc" id="L315">        }</span>
+<span class="fc" id="L316">    }</span>
 
     /**
      * Initializes this object with a {@code FileLocator}. The locator is
@@ -313,34 +322,34 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      * @param locator the associated {@code FileLocator}
      */
     @Override
-    public void initFileLocator(final FileLocator locator)
+    public void initFileLocator(FileLocator locator)
     {
-<span class="fc" id="L318">        this.locator = locator;</span>
-<span class="fc" id="L319">    }</span>
+<span class="fc" id="L327">        this.locator = locator;</span>
+<span class="fc" id="L328">    }</span>
 
-    private void writeProperty(final Document document, final Node properties, final String key, final Object value)
+    private void writeProperty(Document document, Node properties, String key, Object value)
     {
-<span class="fc" id="L323">        final Element entry = document.createElement(&quot;entry&quot;);</span>
-<span class="fc" id="L324">        properties.appendChild(entry);</span>
+<span class="fc" id="L332">        Element entry = document.createElement(&quot;entry&quot;);</span>
+<span class="fc" id="L333">        properties.appendChild(entry);</span>
 
         // escape the key
-<span class="fc" id="L327">        final String k = StringEscapeUtils.escapeXml10(key);</span>
-<span class="fc" id="L328">        entry.setAttribute(&quot;key&quot;, k);</span>
+<span class="fc" id="L336">        String k = StringEscapeUtils.escapeXml(key);</span>
+<span class="fc" id="L337">        entry.setAttribute(&quot;key&quot;, k);</span>
 
-<span class="pc bpc" id="L330" title="1 of 2 branches missed.">        if (value != null)</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">        if (value != null)</span>
         {
-<span class="fc" id="L332">            final String v = escapeValue(value);</span>
-<span class="fc" id="L333">            entry.setTextContent(v);</span>
+<span class="fc" id="L341">            String v = escapeValue(value);</span>
+<span class="fc" id="L342">            entry.setTextContent(v);</span>
         }
-<span class="fc" id="L335">    }</span>
+<span class="fc" id="L344">    }</span>
 
-    private void writeProperty(final Document document, final Node properties, final String key, final List&lt;?&gt; values)
+    private void writeProperty(Document document, Node properties, String key, List&lt;?&gt; values)
     {
-<span class="nc bnc" id="L339" title="All 2 branches missed.">        for (final Object value : values)</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">        for (Object value : values)</span>
         {
-<span class="nc" id="L341">            writeProperty(document, properties, key, value);</span>
-<span class="nc" id="L342">        }</span>
-<span class="nc" id="L343">    }</span>
+<span class="nc" id="L350">            writeProperty(document, properties, key, value);</span>
+<span class="nc" id="L351">        }</span>
+<span class="nc" id="L352">    }</span>
 
     /**
      * Escapes a property value before it is written to disk.
@@ -348,25 +357,26 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
      * @param value the value to be escaped
      * @return the escaped value
      */
-    private String escapeValue(final Object value)
+    private String escapeValue(Object value)
     {
-<span class="fc" id="L353">        final String v = StringEscapeUtils.escapeXml10(String.valueOf(value));</span>
-<span class="fc" id="L354">        return String.valueOf(getListDelimiterHandler().escape(v,</span>
+<span class="fc" id="L362">        String v = StringEscapeUtils.escapeXml(String.valueOf(value));</span>
+<span class="fc" id="L363">        return String.valueOf(getListDelimiterHandler().escape(v,</span>
                 ListDelimiterHandler.NOOP_TRANSFORMER));
     }
 
     /**
      * SAX Handler to parse a XML properties file.
      *
+     * @author Alistair Young
      * @since 1.2
      */
-<span class="fc" id="L363">    private class XMLPropertiesHandler extends DefaultHandler</span>
+<span class="fc" id="L373">    private class XMLPropertiesHandler extends DefaultHandler</span>
     {
         /** The key of the current entry being parsed. */
         private String key;
 
         /** The value of the current entry being parsed. */
-<span class="fc" id="L369">        private StringBuilder value = new StringBuilder();</span>
+<span class="fc" id="L379">        private StringBuilder value = new StringBuilder();</span>
 
         /** Indicates that a comment is being parsed. */
         private boolean inCommentElement;
@@ -375,50 +385,50 @@ public class XMLPropertiesConfiguration extends BaseConfiguration implements
         private boolean inEntryElement;
 
         @Override
-        public void startElement(final String uri, final String localName, final String qName, final Attributes attrs)
+        public void startElement(String uri, String localName, String qName, Attributes attrs)
         {
-<span class="fc bfc" id="L380" title="All 2 branches covered.">            if (&quot;comment&quot;.equals(qName))</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">            if (&quot;comment&quot;.equals(qName))</span>
             {
-<span class="fc" id="L382">                inCommentElement = true;</span>
+<span class="fc" id="L392">                inCommentElement = true;</span>
             }
 
-<span class="fc bfc" id="L385" title="All 2 branches covered.">            if (&quot;entry&quot;.equals(qName))</span>
+<span class="fc bfc" id="L395" title="All 2 branches covered.">            if (&quot;entry&quot;.equals(qName))</span>
             {
-<span class="fc" id="L387">                key = attrs.getValue(&quot;key&quot;);</span>
-<span class="fc" id="L388">                inEntryElement = true;</span>
+<span class="fc" id="L397">                key = attrs.getValue(&quot;key&quot;);</span>
+<span class="fc" id="L398">                inEntryElement = true;</span>
             }
-<span class="fc" id="L390">        }</span>
+<span class="fc" id="L400">        }</span>
 
         @Override
-        public void endElement(final String uri, final String localName, final String qName)
+        public void endElement(String uri, String localName, String qName)
         {
-<span class="fc bfc" id="L395" title="All 2 branches covered.">            if (inCommentElement)</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">            if (inCommentElement)</span>
             {
                 // We've just finished a &lt;comment&gt; element so set the header
-<span class="fc" id="L398">                setHeader(value.toString());</span>
-<span class="fc" id="L399">                inCommentElement = false;</span>
+<span class="fc" id="L408">                setHeader(value.toString());</span>
+<span class="fc" id="L409">                inCommentElement = false;</span>
             }
 
-<span class="fc bfc" id="L402" title="All 2 branches covered.">            if (inEntryElement)</span>
+<span class="fc bfc" id="L412" title="All 2 branches covered.">            if (inEntryElement)</span>
             {
                 // We've just finished an &lt;entry&gt; element, so add the key/value pair
-<span class="fc" id="L405">                addProperty(key, value.toString());</span>
-<span class="fc" id="L406">                inEntryElement = false;</span>
+<span class="fc" id="L415">                addProperty(key, value.toString());</span>
+<span class="fc" id="L416">                inEntryElement = false;</span>
             }
 
             // Clear the element value buffer
-<span class="fc" id="L410">            value = new StringBuilder();</span>
-<span class="fc" id="L411">        }</span>
+<span class="fc" id="L420">            value = new StringBuilder();</span>
+<span class="fc" id="L421">        }</span>
 
         @Override
-        public void characters(final char[] chars, final int start, final int length)
+        public void characters(char[] chars, int start, int length)
         {
             /**
              * We're currently processing an element. All character data from now until
              * the next endElement() call will be the data for this  element.
              */
-<span class="fc" id="L420">            value.append(chars, start, length);</span>
-<span class="fc" id="L421">        }</span>
+<span class="fc" id="L430">            value.append(chars, start, length);</span>
+<span class="fc" id="L431">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

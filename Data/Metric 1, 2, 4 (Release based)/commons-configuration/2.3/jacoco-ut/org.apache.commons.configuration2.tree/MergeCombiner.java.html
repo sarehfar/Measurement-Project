@@ -21,7 +21,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+
+import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * &lt;p&gt;
@@ -38,9 +39,10 @@ import java.util.Objects;
  * &lt;li&gt;Nodes in both files that do not match are added to the result.&lt;/li&gt;
  * &lt;/ol&gt;
  *
+ * @version $Id$
  * @since 1.7
  */
-<span class="fc" id="L43">public class MergeCombiner extends NodeCombiner</span>
+<span class="fc" id="L45">public class MergeCombiner extends NodeCombiner</span>
 {
     /**
      * Combines the given nodes to a new union node.
@@ -51,35 +53,35 @@ import java.util.Objects;
      */
 
     @Override
-    public ImmutableNode combine(final ImmutableNode node1, final ImmutableNode node2)
+    public ImmutableNode combine(ImmutableNode node1, ImmutableNode node2)
     {
-<span class="fc" id="L56">        final ImmutableNode.Builder result = new ImmutableNode.Builder();</span>
-<span class="fc" id="L57">        result.name(node1.getNodeName());</span>
-<span class="fc" id="L58">        result.value(node1.getValue());</span>
-<span class="fc" id="L59">        addAttributes(result, node1, node2);</span>
+<span class="fc" id="L58">        ImmutableNode.Builder result = new ImmutableNode.Builder();</span>
+<span class="fc" id="L59">        result.name(node1.getNodeName());</span>
+<span class="fc" id="L60">        result.value(node1.getValue());</span>
+<span class="fc" id="L61">        addAttributes(result, node1, node2);</span>
 
         // Check if nodes can be combined
-<span class="fc" id="L62">        final List&lt;ImmutableNode&gt; children2 = new LinkedList&lt;&gt;(node2.getChildren());</span>
-<span class="fc bfc" id="L63" title="All 2 branches covered.">        for (final ImmutableNode child1 : node1.getChildren())</span>
+<span class="fc" id="L64">        List&lt;ImmutableNode&gt; children2 = new LinkedList&lt;&gt;(node2.getChildren());</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        for (ImmutableNode child1 : node1.getChildren())</span>
         {
-<span class="fc" id="L65">            final ImmutableNode child2 = canCombine(node2, child1, children2);</span>
-<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (child2 != null)</span>
+<span class="fc" id="L67">            ImmutableNode child2 = canCombine(node2, child1, children2);</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (child2 != null)</span>
             {
-<span class="fc" id="L68">                result.addChild(combine(child1, child2));</span>
-<span class="fc" id="L69">                children2.remove(child2);</span>
+<span class="fc" id="L70">                result.addChild(combine(child1, child2));</span>
+<span class="fc" id="L71">                children2.remove(child2);</span>
             }
             else
             {
-<span class="fc" id="L73">                result.addChild(child1);</span>
+<span class="fc" id="L75">                result.addChild(child1);</span>
             }
-<span class="fc" id="L75">        }</span>
+<span class="fc" id="L77">        }</span>
 
         // Add remaining children of node 2
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (final ImmutableNode c : children2)</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        for (ImmutableNode c : children2)</span>
         {
-<span class="fc" id="L80">            result.addChild(c);</span>
-<span class="fc" id="L81">        }</span>
-<span class="fc" id="L82">        return result.create();</span>
+<span class="fc" id="L82">            result.addChild(c);</span>
+<span class="fc" id="L83">        }</span>
+<span class="fc" id="L84">        return result.create();</span>
     }
 
     /**
@@ -92,20 +94,20 @@ import java.util.Objects;
      * @param node1 the first node
      * @param node2 the second node
      */
-    protected void addAttributes(final ImmutableNode.Builder result, final ImmutableNode node1,
-            final ImmutableNode node2)
+    protected void addAttributes(ImmutableNode.Builder result, ImmutableNode node1,
+            ImmutableNode node2)
     {
-<span class="fc" id="L98">        final Map&lt;String, Object&gt; attributes = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L99">        attributes.putAll(node1.getAttributes());</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (final Map.Entry&lt;String, Object&gt; e : node2.getAttributes().entrySet())</span>
+<span class="fc" id="L100">        Map&lt;String, Object&gt; attributes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L101">        attributes.putAll(node1.getAttributes());</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (Map.Entry&lt;String, Object&gt; e : node2.getAttributes().entrySet())</span>
         {
-<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (!attributes.containsKey(e.getKey()))</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (!attributes.containsKey(e.getKey()))</span>
             {
-<span class="fc" id="L104">                attributes.put(e.getKey(), e.getValue());</span>
+<span class="fc" id="L106">                attributes.put(e.getKey(), e.getValue());</span>
             }
-<span class="fc" id="L106">        }</span>
-<span class="fc" id="L107">        result.addAttributes(attributes);</span>
-<span class="fc" id="L108">    }</span>
+<span class="fc" id="L108">        }</span>
+<span class="fc" id="L109">        result.addAttributes(attributes);</span>
+<span class="fc" id="L110">    }</span>
 
     /**
      * Tests if the first node can be combined with the second node. A node can
@@ -117,35 +119,35 @@ import java.util.Objects;
      * @param children2 the children of the 2nd node
      * @return a child of the second node, with which a combination is possible
      */
-    protected ImmutableNode canCombine(final ImmutableNode node2,
-            final ImmutableNode child, final List&lt;ImmutableNode&gt; children2)
+    protected ImmutableNode canCombine(ImmutableNode node2,
+            ImmutableNode child, List&lt;ImmutableNode&gt; children2)
     {
-<span class="fc" id="L123">        final Map&lt;String, Object&gt; attrs1 = child.getAttributes();</span>
-<span class="fc" id="L124">        final List&lt;ImmutableNode&gt; nodes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L125">        Map&lt;String, Object&gt; attrs1 = child.getAttributes();</span>
+<span class="fc" id="L126">        List&lt;ImmutableNode&gt; nodes = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L126">        final List&lt;ImmutableNode&gt; children =</span>
-<span class="fc" id="L127">                HANDLER.getChildren(node2, child.getNodeName());</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">        for (final ImmutableNode node : children)</span>
+<span class="fc" id="L128">        List&lt;ImmutableNode&gt; children =</span>
+<span class="fc" id="L129">                HANDLER.getChildren(node2, child.getNodeName());</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        for (ImmutableNode node : children)</span>
         {
-<span class="fc bfc" id="L130" title="All 2 branches covered.">            if (matchAttributes(attrs1, node))</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            if (matchAttributes(attrs1, node))</span>
             {
-<span class="fc" id="L132">                nodes.add(node);</span>
+<span class="fc" id="L134">                nodes.add(node);</span>
             }
-<span class="fc" id="L134">        }</span>
+<span class="fc" id="L136">        }</span>
 
-<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (nodes.size() == 1)</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (nodes.size() == 1)</span>
         {
-<span class="fc" id="L138">            return nodes.get(0);</span>
+<span class="fc" id="L140">            return nodes.get(0);</span>
         }
-<span class="pc bpc" id="L140" title="1 of 4 branches missed.">        if (nodes.size() &gt; 1 &amp;&amp; !isListNode(child))</span>
+<span class="pc bpc" id="L142" title="1 of 4 branches missed.">        if (nodes.size() &gt; 1 &amp;&amp; !isListNode(child))</span>
         {
-<span class="fc bfc" id="L142" title="All 2 branches covered.">            for (final ImmutableNode node : nodes)</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">            for (ImmutableNode node : nodes)</span>
             {
-<span class="fc" id="L144">                children2.remove(node);</span>
-<span class="fc" id="L145">            }</span>
+<span class="fc" id="L146">                children2.remove(node);</span>
+<span class="fc" id="L147">            }</span>
         }
 
-<span class="fc" id="L148">        return null;</span>
+<span class="fc" id="L150">        return null;</span>
     }
 
     /**
@@ -156,20 +158,20 @@ import java.util.Objects;
      * @return a flag whether these nodes can be combined regarding their
      *         attributes
      */
-    private static boolean matchAttributes(final Map&lt;String, Object&gt; attrs1,
-            final ImmutableNode node)
+    private static boolean matchAttributes(Map&lt;String, Object&gt; attrs1,
+            ImmutableNode node)
     {
-<span class="fc" id="L162">        final Map&lt;String, Object&gt; attrs2 = node.getAttributes();</span>
-<span class="fc bfc" id="L163" title="All 2 branches covered.">        for (final Map.Entry&lt;String, Object&gt; e : attrs1.entrySet())</span>
+<span class="fc" id="L164">        Map&lt;String, Object&gt; attrs2 = node.getAttributes();</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        for (Map.Entry&lt;String, Object&gt; e : attrs1.entrySet())</span>
         {
-<span class="fc bfc" id="L165" title="All 2 branches covered.">            if (attrs2.containsKey(e.getKey())</span>
-                    &amp;&amp; !Objects
-<span class="fc bfc" id="L167" title="All 2 branches covered.">                            .equals(e.getValue(), attrs2.get(e.getKey())))</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">            if (attrs2.containsKey(e.getKey())</span>
+                    &amp;&amp; !ObjectUtils
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                            .equals(e.getValue(), attrs2.get(e.getKey())))</span>
             {
-<span class="fc" id="L169">                return false;</span>
+<span class="fc" id="L171">                return false;</span>
             }
-<span class="fc" id="L171">        }</span>
-<span class="fc" id="L172">        return true;</span>
+<span class="fc" id="L173">        }</span>
+<span class="fc" id="L174">        return true;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

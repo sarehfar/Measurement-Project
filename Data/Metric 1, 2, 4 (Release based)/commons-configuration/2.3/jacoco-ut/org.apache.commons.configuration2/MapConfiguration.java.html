@@ -84,6 +84,8 @@ import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
  * might throw {@code ClassCastException} exceptions later.
  * &lt;/p&gt;
  *
+ * @author Emmanuel Bourg
+ * @version $Id$
  * @since 1.1
  */
 public class MapConfiguration extends AbstractConfiguration implements Cloneable
@@ -101,10 +103,10 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
      *
      * @param map the map
      */
-    public MapConfiguration(final Map&lt;String, ?&gt; map)
-<span class="fc" id="L105">    {</span>
-<span class="fc" id="L106">        this.map = (Map&lt;String, Object&gt;) map;</span>
-<span class="fc" id="L107">    }</span>
+    public MapConfiguration(Map&lt;String, ?&gt; map)
+<span class="fc" id="L107">    {</span>
+<span class="fc" id="L108">        this.map = (Map&lt;String, Object&gt;) map;</span>
+<span class="fc" id="L109">    }</span>
 
     /**
      * Creates a new instance of {@code MapConfiguration} which uses the
@@ -119,10 +121,10 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
      *        configuration
      * @since 1.8
      */
-    public MapConfiguration(final Properties props)
-<span class="fc" id="L123">    {</span>
-<span class="fc" id="L124">        map = convertPropertiesToMap(props);</span>
-<span class="fc" id="L125">    }</span>
+    public MapConfiguration(Properties props)
+<span class="fc" id="L125">    {</span>
+<span class="fc" id="L126">        map = convertPropertiesToMap(props);</span>
+<span class="fc" id="L127">    }</span>
 
     /**
      * Return the Map decorated by this configuration.
@@ -131,7 +133,7 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
      */
     public Map&lt;String, Object&gt; getMap()
     {
-<span class="fc" id="L134">        return map;</span>
+<span class="fc" id="L136">        return map;</span>
     }
 
     /**
@@ -143,7 +145,7 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
      */
     public boolean isTrimmingDisabled()
     {
-<span class="fc" id="L146">        return trimmingDisabled;</span>
+<span class="fc" id="L148">        return trimmingDisabled;</span>
     }
 
     /**
@@ -155,77 +157,80 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
      *        be disabled
      * @since 1.7
      */
-    public void setTrimmingDisabled(final boolean trimmingDisabled)
+    public void setTrimmingDisabled(boolean trimmingDisabled)
     {
-<span class="fc" id="L160">        this.trimmingDisabled = trimmingDisabled;</span>
-<span class="fc" id="L161">    }</span>
+<span class="fc" id="L162">        this.trimmingDisabled = trimmingDisabled;</span>
+<span class="fc" id="L163">    }</span>
 
     @Override
-    protected Object getPropertyInternal(final String key)
+    protected Object getPropertyInternal(String key)
     {
-<span class="fc" id="L166">        final Object value = map.get(key);</span>
-<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (value instanceof String)</span>
+<span class="fc" id="L168">        Object value = map.get(key);</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (value instanceof String)</span>
         {
-<span class="fc bfc" id="L169" title="All 2 branches covered.">            final Collection&lt;String&gt; list = getListDelimiterHandler().split((String) value, !isTrimmingDisabled());</span>
-<span class="fc bfc" id="L170" title="All 2 branches covered.">            return list.size() &gt; 1 ? list : list.iterator().next();</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">            Collection&lt;String&gt; list = getListDelimiterHandler().split((String) value, !isTrimmingDisabled());</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            return list.size() &gt; 1 ? list : list.iterator().next();</span>
         }
-<span class="fc" id="L172">        return value;</span>
+        else
+        {
+<span class="fc" id="L176">            return value;</span>
+        }
     }
 
     @Override
-    protected void addPropertyDirect(final String key, final Object value)
+    protected void addPropertyDirect(String key, Object value)
     {
-<span class="fc" id="L178">        final Object previousValue = getProperty(key);</span>
+<span class="fc" id="L183">        Object previousValue = getProperty(key);</span>
 
-<span class="fc bfc" id="L180" title="All 2 branches covered.">        if (previousValue == null)</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (previousValue == null)</span>
         {
-<span class="fc" id="L182">            map.put(key, value);</span>
+<span class="fc" id="L187">            map.put(key, value);</span>
         }
-<span class="fc bfc" id="L184" title="All 2 branches covered.">        else if (previousValue instanceof List)</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        else if (previousValue instanceof List)</span>
         {
             // the value is added to the existing list
             // Note: This is problematic. See header comment!
-<span class="fc" id="L188">            ((List&lt;Object&gt;) previousValue).add(value);</span>
+<span class="fc" id="L193">            ((List&lt;Object&gt;) previousValue).add(value);</span>
         }
         else
         {
             // the previous value is replaced by a list containing the previous value and the new value
-<span class="fc" id="L193">            final List&lt;Object&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L194">            list.add(previousValue);</span>
-<span class="fc" id="L195">            list.add(value);</span>
+<span class="fc" id="L198">            List&lt;Object&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L199">            list.add(previousValue);</span>
+<span class="fc" id="L200">            list.add(value);</span>
 
-<span class="fc" id="L197">            map.put(key, list);</span>
+<span class="fc" id="L202">            map.put(key, list);</span>
         }
-<span class="fc" id="L199">    }</span>
+<span class="fc" id="L204">    }</span>
 
     @Override
     protected boolean isEmptyInternal()
     {
-<span class="fc" id="L204">        return map.isEmpty();</span>
+<span class="fc" id="L209">        return map.isEmpty();</span>
     }
 
     @Override
-    protected boolean containsKeyInternal(final String key)
+    protected boolean containsKeyInternal(String key)
     {
-<span class="fc" id="L210">        return map.containsKey(key);</span>
+<span class="fc" id="L215">        return map.containsKey(key);</span>
     }
 
     @Override
-    protected void clearPropertyDirect(final String key)
+    protected void clearPropertyDirect(String key)
     {
-<span class="fc" id="L216">        map.remove(key);</span>
-<span class="fc" id="L217">    }</span>
+<span class="fc" id="L221">        map.remove(key);</span>
+<span class="fc" id="L222">    }</span>
 
     @Override
     protected Iterator&lt;String&gt; getKeysInternal()
     {
-<span class="fc" id="L222">        return map.keySet().iterator();</span>
+<span class="fc" id="L227">        return map.keySet().iterator();</span>
     }
 
     @Override
     protected int sizeInternal()
     {
-<span class="fc" id="L228">        return map.size();</span>
+<span class="fc" id="L233">        return map.size();</span>
     }
 
     /**
@@ -240,19 +245,18 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
     {
         try
         {
-<span class="fc" id="L243">            final MapConfiguration copy = (MapConfiguration) super.clone();</span>
+<span class="fc" id="L248">            MapConfiguration copy = (MapConfiguration) super.clone();</span>
             // Safe because ConfigurationUtils returns a map of the same types.
             @SuppressWarnings(&quot;unchecked&quot;)
-            final
-<span class="fc" id="L247">            Map&lt;String, Object&gt; clonedMap = (Map&lt;String, Object&gt;) ConfigurationUtils.clone(map);</span>
-<span class="fc" id="L248">            copy.map = clonedMap;</span>
-<span class="fc" id="L249">            copy.cloneInterpolator(this);</span>
-<span class="fc" id="L250">            return copy;</span>
+<span class="fc" id="L251">            Map&lt;String, Object&gt; clonedMap = (Map&lt;String, Object&gt;) ConfigurationUtils.clone(map);</span>
+<span class="fc" id="L252">            copy.map = clonedMap;</span>
+<span class="fc" id="L253">            copy.cloneInterpolator(this);</span>
+<span class="fc" id="L254">            return copy;</span>
         }
-<span class="nc" id="L252">        catch (final CloneNotSupportedException cex)</span>
+<span class="nc" id="L256">        catch (CloneNotSupportedException cex)</span>
         {
             // cannot happen
-<span class="nc" id="L255">            throw new ConfigurationRuntimeException(cex);</span>
+<span class="nc" id="L259">            throw new ConfigurationRuntimeException(cex);</span>
         }
     }
 
@@ -266,12 +270,11 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
      * @return a newly created map with all string keys of the properties
      */
     @SuppressWarnings(&quot;unchecked&quot;)
-    private static Map&lt;String, Object&gt; convertPropertiesToMap(final Properties props)
+    private static Map&lt;String, Object&gt; convertPropertiesToMap(Properties props)
     {
         @SuppressWarnings(&quot;rawtypes&quot;)
-        final
-<span class="fc" id="L273">        Map map = props;</span>
-<span class="fc" id="L274">        return map;</span>
+<span class="fc" id="L276">        Map map = props;</span>
+<span class="fc" id="L277">        return map;</span>
     }
 
     /**
@@ -282,7 +285,7 @@ public class MapConfiguration extends AbstractConfiguration implements Cloneable
     @Override
     public String toString()
     {
-<span class="nc" id="L285">        return getClass().getSimpleName() + &quot; [map=&quot; + map + &quot;, trimmingDisabled=&quot; + trimmingDisabled + &quot;]&quot;;</span>
+<span class="nc" id="L288">        return getClass().getSimpleName() + &quot; [map=&quot; + map + &quot;, trimmingDisabled=&quot; + trimmingDisabled + &quot;]&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

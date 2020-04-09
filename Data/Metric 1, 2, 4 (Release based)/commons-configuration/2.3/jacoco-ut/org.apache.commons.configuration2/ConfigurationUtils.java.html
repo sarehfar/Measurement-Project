@@ -42,6 +42,9 @@ import org.apache.commons.logging.LogFactory;
  *
  * @see ConfigurationConverter Utility methods to convert configurations.
  *
+ * @author &lt;a href=&quot;mailto:herve.quiroz@esil.univ-mrs.fr&quot;&gt;Herve Quiroz&lt;/a&gt;
+ * @author Emmanuel Bourg
+ * @version $Id$
  */
 public final class ConfigurationUtils
 {
@@ -52,7 +55,7 @@ public final class ConfigurationUtils
      * An array with interfaces to be implemented by a proxy for an immutable
      * configuration.
      */
-<span class="fc" id="L55">    private static final Class&lt;?&gt;[] IMMUTABLE_CONFIG_IFCS = {</span>
+<span class="fc" id="L58">    private static final Class&lt;?&gt;[] IMMUTABLE_CONFIG_IFCS = {</span>
         ImmutableConfiguration.class
     };
 
@@ -60,7 +63,7 @@ public final class ConfigurationUtils
      * An array with interfaces to be implemented by a proxy for an immutable
      * hierarchical configuration.
      */
-<span class="fc" id="L63">    private static final Class&lt;?&gt;[] IMMUTABLE_HIERARCHICAL_CONFIG_IFCS = {</span>
+<span class="fc" id="L66">    private static final Class&lt;?&gt;[] IMMUTABLE_HIERARCHICAL_CONFIG_IFCS = {</span>
         ImmutableHierarchicalConfiguration.class
     };
     /**
@@ -68,25 +71,25 @@ public final class ConfigurationUtils
      * mock object has to be returned. It provides empty dummy implementations
      * for all interface methods.
      */
-<span class="fc" id="L71">    private static final EventSource DUMMY_EVENT_SOURCE = new EventSource()</span>
-<span class="fc" id="L72">    {</span>
+<span class="fc" id="L74">    private static final EventSource DUMMY_EVENT_SOURCE = new EventSource()</span>
+<span class="fc" id="L75">    {</span>
 
         @Override
-        public &lt;T extends Event&gt; void addEventListener(final EventType&lt;T&gt; eventType,
-                final EventListener&lt;? super T&gt; listener)
+        public &lt;T extends Event&gt; void addEventListener(EventType&lt;T&gt; eventType,
+                EventListener&lt;? super T&gt; listener)
         {
-<span class="fc" id="L78">        }</span>
+<span class="fc" id="L81">        }</span>
 
         @Override
         public &lt;T extends Event&gt; boolean removeEventListener(
-                final EventType&lt;T&gt; eventType, final EventListener&lt;? super T&gt; listener)
+                EventType&lt;T&gt; eventType, EventListener&lt;? super T&gt; listener)
         {
-<span class="fc" id="L84">            return false;</span>
+<span class="fc" id="L87">            return false;</span>
         }
     };
 
     /** The logger.*/
-<span class="fc" id="L89">    private static final Log LOG = LogFactory.getLog(ConfigurationUtils.class);</span>
+<span class="fc" id="L92">    private static final Log LOG = LogFactory.getLog(ConfigurationUtils.class);</span>
 
     /**
      * Private constructor. Prevents instances from being created.
@@ -103,10 +106,10 @@ public final class ConfigurationUtils
      * @param out the output stream to dump the configuration to
      * @since 2.2
      */
-    public static void dump(final ImmutableConfiguration configuration, final PrintStream out)
+    public static void dump(ImmutableConfiguration configuration, PrintStream out)
     {
-<span class="nc" id="L108">        dump(configuration, new PrintWriter(out));</span>
-<span class="nc" id="L109">    }</span>
+<span class="nc" id="L111">        dump(configuration, new PrintWriter(out));</span>
+<span class="nc" id="L112">    }</span>
 
     /**
      * Dump the configuration key/value mappings to some ouput stream.
@@ -115,10 +118,10 @@ public final class ConfigurationUtils
      * @param configuration the configuration
      * @param out the output stream to dump the configuration to
      */
-    public static void dump(final Configuration configuration, final PrintStream out)
+    public static void dump(Configuration configuration, PrintStream out)
     {
-<span class="nc" id="L120">        dump((ImmutableConfiguration) configuration, out);</span>
-<span class="nc" id="L121">    }</span>
+<span class="nc" id="L123">        dump((ImmutableConfiguration) configuration, out);</span>
+<span class="nc" id="L124">    }</span>
 
     /**
      * Dump the configuration key/value mappings to some writer.
@@ -127,24 +130,24 @@ public final class ConfigurationUtils
      * @param out the writer to dump the configuration to
      * @since 2.2
      */
-    public static void dump(final ImmutableConfiguration configuration, final PrintWriter out)
+    public static void dump(ImmutableConfiguration configuration, PrintWriter out)
     {
-<span class="fc bfc" id="L132" title="All 2 branches covered.">        for (final Iterator&lt;String&gt; keys = configuration.getKeys(); keys.hasNext();)</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        for (Iterator&lt;String&gt; keys = configuration.getKeys(); keys.hasNext();)</span>
         {
-<span class="fc" id="L134">            final String key = keys.next();</span>
-<span class="fc" id="L135">            final Object value = configuration.getProperty(key);</span>
-<span class="fc" id="L136">            out.print(key);</span>
-<span class="fc" id="L137">            out.print(&quot;=&quot;);</span>
-<span class="fc" id="L138">            out.print(value);</span>
+<span class="fc" id="L137">            String key = keys.next();</span>
+<span class="fc" id="L138">            Object value = configuration.getProperty(key);</span>
+<span class="fc" id="L139">            out.print(key);</span>
+<span class="fc" id="L140">            out.print(&quot;=&quot;);</span>
+<span class="fc" id="L141">            out.print(value);</span>
 
-<span class="fc bfc" id="L140" title="All 2 branches covered.">            if (keys.hasNext())</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            if (keys.hasNext())</span>
             {
-<span class="fc" id="L142">                out.println();</span>
+<span class="fc" id="L145">                out.println();</span>
             }
-<span class="fc" id="L144">        }</span>
+<span class="fc" id="L147">        }</span>
 
-<span class="fc" id="L146">        out.flush();</span>
-<span class="fc" id="L147">    }</span>
+<span class="fc" id="L149">        out.flush();</span>
+<span class="fc" id="L150">    }</span>
 
     /**
      * Dump the configuration key/value mappings to some writer.
@@ -153,10 +156,10 @@ public final class ConfigurationUtils
      * @param configuration the configuration
      * @param out the writer to dump the configuration to
      */
-    public static void dump(final Configuration configuration, final PrintWriter out)
+    public static void dump(Configuration configuration, PrintWriter out)
     {
-<span class="nc" id="L158">        dump((ImmutableConfiguration) configuration, out);</span>
-<span class="nc" id="L159">    }</span>
+<span class="nc" id="L161">        dump((ImmutableConfiguration) configuration, out);</span>
+<span class="nc" id="L162">    }</span>
 
     /**
      * Get a string representation of the key/value mappings of a
@@ -166,11 +169,11 @@ public final class ConfigurationUtils
      * @return a string representation of the configuration
      * @since 2.2
      */
-    public static String toString(final ImmutableConfiguration configuration)
+    public static String toString(ImmutableConfiguration configuration)
     {
-<span class="fc" id="L171">        final StringWriter writer = new StringWriter();</span>
-<span class="fc" id="L172">        dump(configuration, new PrintWriter(writer));</span>
-<span class="fc" id="L173">        return writer.toString();</span>
+<span class="fc" id="L174">        StringWriter writer = new StringWriter();</span>
+<span class="fc" id="L175">        dump(configuration, new PrintWriter(writer));</span>
+<span class="fc" id="L176">        return writer.toString();</span>
     }
 
     /**
@@ -181,9 +184,9 @@ public final class ConfigurationUtils
      * @param configuration the configuration
      * @return a string representation of the configuration
      */
-    public static String toString(final Configuration configuration)
+    public static String toString(Configuration configuration)
     {
-<span class="fc" id="L186">        return toString((ImmutableConfiguration) configuration);</span>
+<span class="fc" id="L189">        return toString((ImmutableConfiguration) configuration);</span>
     }
 
     /**
@@ -200,14 +203,14 @@ public final class ConfigurationUtils
      * @param target the target configuration
      * @since 2.2
      */
-    public static void copy(final ImmutableConfiguration source, final Configuration target)
+    public static void copy(ImmutableConfiguration source, Configuration target)
     {
-<span class="fc bfc" id="L205" title="All 2 branches covered.">        for (final Iterator&lt;String&gt; keys = source.getKeys(); keys.hasNext();)</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        for (Iterator&lt;String&gt; keys = source.getKeys(); keys.hasNext();)</span>
         {
-<span class="fc" id="L207">            final String key = keys.next();</span>
-<span class="fc" id="L208">            target.setProperty(key, source.getProperty(key));</span>
-<span class="fc" id="L209">        }</span>
-<span class="fc" id="L210">    }</span>
+<span class="fc" id="L210">            String key = keys.next();</span>
+<span class="fc" id="L211">            target.setProperty(key, source.getProperty(key));</span>
+<span class="fc" id="L212">        }</span>
+<span class="fc" id="L213">    }</span>
 
     /**
      * &lt;p&gt;Copy all properties from the source configuration to the target
@@ -223,10 +226,10 @@ public final class ConfigurationUtils
      * @param target the target configuration
      * @since 1.1
      */
-    public static void copy(final Configuration source, final Configuration target)
+    public static void copy(Configuration source, Configuration target)
     {
-<span class="fc" id="L228">        copy((ImmutableConfiguration) source, target);</span>
-<span class="fc" id="L229">    }</span>
+<span class="fc" id="L231">        copy((ImmutableConfiguration) source, target);</span>
+<span class="fc" id="L232">    }</span>
 
     /**
      * &lt;p&gt;Append all properties from the source configuration to the target
@@ -242,14 +245,14 @@ public final class ConfigurationUtils
      * @param target the target configuration
      * @since 2.2
      */
-    public static void append(final ImmutableConfiguration source, final Configuration target)
+    public static void append(ImmutableConfiguration source, Configuration target)
     {
-<span class="fc bfc" id="L247" title="All 2 branches covered.">        for (final Iterator&lt;String&gt; keys = source.getKeys(); keys.hasNext();)</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        for (Iterator&lt;String&gt; keys = source.getKeys(); keys.hasNext();)</span>
         {
-<span class="fc" id="L249">            final String key = keys.next();</span>
-<span class="fc" id="L250">            target.addProperty(key, source.getProperty(key));</span>
-<span class="fc" id="L251">        }</span>
-<span class="fc" id="L252">    }</span>
+<span class="fc" id="L252">            String key = keys.next();</span>
+<span class="fc" id="L253">            target.addProperty(key, source.getProperty(key));</span>
+<span class="fc" id="L254">        }</span>
+<span class="fc" id="L255">    }</span>
 
     /**
      * &lt;p&gt;Append all properties from the source configuration to the target
@@ -265,10 +268,10 @@ public final class ConfigurationUtils
      * @param target the target configuration
      * @since 1.1
      */
-    public static void append(final Configuration source, final Configuration target)
+    public static void append(Configuration source, Configuration target)
     {
-<span class="fc" id="L270">        append((ImmutableConfiguration) source, target);</span>
-<span class="fc" id="L271">    }</span>
+<span class="fc" id="L273">        append((ImmutableConfiguration) source, target);</span>
+<span class="fc" id="L274">    }</span>
 
     /**
      * Converts the passed in configuration to a hierarchical one. If the
@@ -281,9 +284,9 @@ public final class ConfigurationUtils
      * @since 1.3
      */
     public static HierarchicalConfiguration&lt;?&gt; convertToHierarchical(
-            final Configuration conf)
+            Configuration conf)
     {
-<span class="fc" id="L286">        return convertToHierarchical(conf, null);</span>
+<span class="fc" id="L289">        return convertToHierarchical(conf, null);</span>
     }
 
     /**
@@ -310,33 +313,36 @@ public final class ConfigurationUtils
      * @since 1.6
      */
     public static HierarchicalConfiguration&lt;?&gt; convertToHierarchical(
-            final Configuration conf, final ExpressionEngine engine)
+            Configuration conf, ExpressionEngine engine)
     {
-<span class="fc bfc" id="L315" title="All 2 branches covered.">        if (conf == null)</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">        if (conf == null)</span>
         {
-<span class="fc" id="L317">            return null;</span>
+<span class="fc" id="L320">            return null;</span>
         }
 
-<span class="fc bfc" id="L320" title="All 2 branches covered.">        if (conf instanceof HierarchicalConfiguration)</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        if (conf instanceof HierarchicalConfiguration)</span>
         {
-<span class="fc" id="L322">            final HierarchicalConfiguration&lt;?&gt; hc = (HierarchicalConfiguration&lt;?&gt;) conf;</span>
-<span class="fc bfc" id="L323" title="All 2 branches covered.">            if (engine != null)</span>
+<span class="fc" id="L325">            HierarchicalConfiguration&lt;?&gt; hc = (HierarchicalConfiguration&lt;?&gt;) conf;</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">            if (engine != null)</span>
             {
-<span class="fc" id="L325">                hc.setExpressionEngine(engine);</span>
+<span class="fc" id="L328">                hc.setExpressionEngine(engine);</span>
             }
 
-<span class="fc" id="L328">            return hc;</span>
+<span class="fc" id="L331">            return hc;</span>
         }
-<span class="fc" id="L330">        final BaseHierarchicalConfiguration hc = new BaseHierarchicalConfiguration();</span>
-<span class="fc bfc" id="L331" title="All 2 branches covered.">        if (engine != null)</span>
+        else
         {
-<span class="fc" id="L333">            hc.setExpressionEngine(engine);</span>
-        }
+<span class="fc" id="L335">            BaseHierarchicalConfiguration hc = new BaseHierarchicalConfiguration();</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">            if (engine != null)</span>
+            {
+<span class="fc" id="L338">                hc.setExpressionEngine(engine);</span>
+            }
 
-        // Per default, a DisabledListDelimiterHandler is set.
-        // So list delimiters in property values are not an issue.
-<span class="fc" id="L338">        hc.copy(conf);</span>
-<span class="fc" id="L339">        return hc;</span>
+            // Per default, a DisabledListDelimiterHandler is set.
+            // So list delimiters in property values are not an issue.
+<span class="fc" id="L343">            hc.copy(conf);</span>
+<span class="fc" id="L344">            return hc;</span>
+        }
     }
 
     /**
@@ -352,20 +358,23 @@ public final class ConfigurationUtils
      * this object
      * @since 1.3
      */
-    public static Configuration cloneConfiguration(final Configuration config)
+    public static Configuration cloneConfiguration(Configuration config)
             throws ConfigurationRuntimeException
     {
-<span class="fc bfc" id="L358" title="All 2 branches covered.">        if (config == null)</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">        if (config == null)</span>
         {
-<span class="fc" id="L360">            return null;</span>
+<span class="fc" id="L366">            return null;</span>
         }
-        try
+        else
         {
-<span class="fc" id="L364">            return (Configuration) clone(config);</span>
-        }
-<span class="fc" id="L366">        catch (final CloneNotSupportedException cnex)</span>
-        {
-<span class="fc" id="L368">            throw new ConfigurationRuntimeException(cnex);</span>
+            try
+            {
+<span class="fc" id="L372">                return (Configuration) clone(config);</span>
+            }
+<span class="fc" id="L374">            catch (CloneNotSupportedException cnex)</span>
+            {
+<span class="fc" id="L376">                throw new ConfigurationRuntimeException(cnex);</span>
+            }
         }
     }
 
@@ -381,15 +390,15 @@ public final class ConfigurationUtils
      * @return the result of the cloning attempt
      * @since 2.0
      */
-    public static Object cloneIfPossible(final Object obj)
+    public static Object cloneIfPossible(Object obj)
     {
         try
         {
-<span class="fc" id="L388">            return clone(obj);</span>
+<span class="fc" id="L397">            return clone(obj);</span>
         }
-<span class="fc" id="L390">        catch (final Exception ex)</span>
+<span class="fc" id="L399">        catch (Exception ex)</span>
         {
-<span class="fc" id="L392">            return obj;</span>
+<span class="fc" id="L401">            return obj;</span>
         }
     }
 
@@ -406,32 +415,35 @@ public final class ConfigurationUtils
      * @return the cloned object
      * @throws CloneNotSupportedException if the object cannot be cloned
      */
-    static Object clone(final Object obj) throws CloneNotSupportedException
+    static Object clone(Object obj) throws CloneNotSupportedException
     {
-<span class="fc bfc" id="L411" title="All 2 branches covered.">        if (obj instanceof Cloneable)</span>
+<span class="fc bfc" id="L420" title="All 2 branches covered.">        if (obj instanceof Cloneable)</span>
         {
             try
             {
-<span class="fc" id="L415">                final Method m = obj.getClass().getMethod(METHOD_CLONE);</span>
-<span class="fc" id="L416">                return m.invoke(obj);</span>
+<span class="fc" id="L424">                Method m = obj.getClass().getMethod(METHOD_CLONE);</span>
+<span class="fc" id="L425">                return m.invoke(obj);</span>
             }
-<span class="nc" id="L418">            catch (final NoSuchMethodException nmex)</span>
+<span class="nc" id="L427">            catch (NoSuchMethodException nmex)</span>
             {
-<span class="nc" id="L420">                throw new CloneNotSupportedException(</span>
+<span class="nc" id="L429">                throw new CloneNotSupportedException(</span>
                         &quot;No clone() method found for class&quot;
-<span class="nc" id="L422">                                + obj.getClass().getName());</span>
+<span class="nc" id="L431">                                + obj.getClass().getName());</span>
             }
-<span class="nc" id="L424">            catch (final IllegalAccessException iaex)</span>
+<span class="nc" id="L433">            catch (IllegalAccessException iaex)</span>
             {
-<span class="nc" id="L426">                throw new ConfigurationRuntimeException(iaex);</span>
+<span class="nc" id="L435">                throw new ConfigurationRuntimeException(iaex);</span>
             }
-<span class="fc" id="L428">            catch (final InvocationTargetException itex)</span>
+<span class="fc" id="L437">            catch (InvocationTargetException itex)</span>
             {
-<span class="fc" id="L430">                throw new ConfigurationRuntimeException(itex);</span>
+<span class="fc" id="L439">                throw new ConfigurationRuntimeException(itex);</span>
             }
         }
-<span class="fc" id="L433">        throw new CloneNotSupportedException(obj.getClass().getName()</span>
-                + &quot; does not implement Cloneable&quot;);
+        else
+        {
+<span class="fc" id="L444">            throw new CloneNotSupportedException(obj.getClass().getName()</span>
+                    + &quot; does not implement Cloneable&quot;);
+        }
     }
 
     /**
@@ -453,33 +465,33 @@ public final class ConfigurationUtils
      * @throws ConfigurationRuntimeException if no clone can be created
      * @throws IllegalArgumentException if &lt;b&gt;null&lt;/b&gt; is passed in
      */
-    public static Synchronizer cloneSynchronizer(final Synchronizer sync)
+    public static Synchronizer cloneSynchronizer(Synchronizer sync)
     {
-<span class="fc bfc" id="L458" title="All 2 branches covered.">        if (sync == null)</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">        if (sync == null)</span>
         {
-<span class="fc" id="L460">            throw new IllegalArgumentException(&quot;Synchronizer must not be null!&quot;);</span>
+<span class="fc" id="L472">            throw new IllegalArgumentException(&quot;Synchronizer must not be null!&quot;);</span>
         }
-<span class="fc bfc" id="L462" title="All 2 branches covered.">        if (NoOpSynchronizer.INSTANCE == sync)</span>
+<span class="fc bfc" id="L474" title="All 2 branches covered.">        if (NoOpSynchronizer.INSTANCE == sync)</span>
         {
-<span class="fc" id="L464">            return sync;</span>
-        }
-
-        try
-        {
-<span class="fc" id="L469">            return sync.getClass().newInstance();</span>
-        }
-<span class="fc" id="L471">        catch (final Exception ex)</span>
-        {
-<span class="fc" id="L473">            LOG.info(&quot;Cannot create new instance of &quot; + sync.getClass());</span>
+<span class="fc" id="L476">            return sync;</span>
         }
 
         try
         {
-<span class="fc" id="L478">            return (Synchronizer) clone(sync);</span>
+<span class="fc" id="L481">            return sync.getClass().newInstance();</span>
         }
-<span class="fc" id="L480">        catch (final CloneNotSupportedException cnex)</span>
+<span class="fc" id="L483">        catch (Exception ex)</span>
         {
-<span class="fc" id="L482">            throw new ConfigurationRuntimeException(</span>
+<span class="fc" id="L485">            LOG.info(&quot;Cannot create new instance of &quot; + sync.getClass());</span>
+        }
+
+        try
+        {
+<span class="fc" id="L490">            return (Synchronizer) clone(sync);</span>
+        }
+<span class="fc" id="L492">        catch (CloneNotSupportedException cnex)</span>
+        {
+<span class="fc" id="L494">            throw new ConfigurationRuntimeException(</span>
                     &quot;Cannot clone Synchronizer &quot; + sync);
         }
     }
@@ -497,20 +509,25 @@ public final class ConfigurationUtils
      * @param src the configuration, for which runtime exceptions are to be
      * enabled; this configuration must implement {@link EventSource}
      */
-    public static void enableRuntimeExceptions(final Configuration src)
+    public static void enableRuntimeExceptions(Configuration src)
     {
-<span class="fc bfc" id="L502" title="All 2 branches covered.">        if (!(src instanceof EventSource))</span>
+<span class="fc bfc" id="L514" title="All 2 branches covered.">        if (!(src instanceof EventSource))</span>
         {
-<span class="fc" id="L504">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L516">            throw new IllegalArgumentException(</span>
                     &quot;Configuration must implement EventSource!&quot;);
         }
-<span class="fc" id="L507">        ((EventSource) src).addEventListener(ConfigurationErrorEvent.ANY,</span>
-                event -&gt; {
-                    // Throw a runtime exception
-<span class="fc" id="L510">                    throw new ConfigurationRuntimeException(event</span>
-<span class="fc" id="L511">                            .getCause());</span>
+<span class="fc" id="L519">        ((EventSource) src).addEventListener(ConfigurationErrorEvent.ANY,</span>
+                new EventListener&lt;ConfigurationErrorEvent&gt;()
+<span class="fc" id="L521">                {</span>
+                    @Override
+                    public void onEvent(ConfigurationErrorEvent event)
+                    {
+                        // Throw a runtime exception
+<span class="fc" id="L526">                        throw new ConfigurationRuntimeException(event</span>
+<span class="fc" id="L527">                                .getCause());</span>
+                    }
                 });
-<span class="fc" id="L513">    }</span>
+<span class="fc" id="L530">    }</span>
 
     /**
      * Loads the class with the given name. This method is used whenever a class
@@ -522,29 +539,29 @@ public final class ConfigurationUtils
      * @throws ClassNotFoundException if the class cannot be resolved
      * @since 2.0
      */
-    public static Class&lt;?&gt; loadClass(final String clsName)
+    public static Class&lt;?&gt; loadClass(String clsName)
             throws ClassNotFoundException
     {
-<span class="pc bpc" id="L528" title="1 of 2 branches missed.">        if (LOG.isDebugEnabled())</span>
+<span class="pc bpc" id="L545" title="1 of 2 branches missed.">        if (LOG.isDebugEnabled())</span>
         {
-<span class="fc" id="L530">            LOG.debug(&quot;Loading class &quot; + clsName);</span>
+<span class="fc" id="L547">            LOG.debug(&quot;Loading class &quot; + clsName);</span>
         }
 
-<span class="fc" id="L533">        final ClassLoader cl = Thread.currentThread().getContextClassLoader();</span>
+<span class="fc" id="L550">        ClassLoader cl = Thread.currentThread().getContextClassLoader();</span>
         try
         {
-<span class="fc bfc" id="L536" title="All 2 branches covered.">            if (cl != null)</span>
+<span class="fc bfc" id="L553" title="All 2 branches covered.">            if (cl != null)</span>
             {
-<span class="fc" id="L538">                return cl.loadClass(clsName);</span>
+<span class="fc" id="L555">                return cl.loadClass(clsName);</span>
             }
         }
-<span class="fc" id="L541">        catch (final ClassNotFoundException cnfex)</span>
+<span class="fc" id="L558">        catch (ClassNotFoundException cnfex)</span>
         {
-<span class="fc" id="L543">            LOG.info(&quot;Could not load class &quot; + clsName</span>
+<span class="fc" id="L560">            LOG.info(&quot;Could not load class &quot; + clsName</span>
                     + &quot; using CCL. Falling back to default CL.&quot;, cnfex);
-<span class="fc" id="L545">        }</span>
+<span class="fc" id="L562">        }</span>
 
-<span class="fc" id="L547">        return ConfigurationUtils.class.getClassLoader().loadClass(clsName);</span>
+<span class="fc" id="L564">        return ConfigurationUtils.class.getClassLoader().loadClass(clsName);</span>
     }
 
     /**
@@ -558,15 +575,15 @@ public final class ConfigurationUtils
      * @throws ConfigurationRuntimeException if the class cannot be resolved
      * @since 2.0
      */
-    public static Class&lt;?&gt; loadClassNoEx(final String clsName)
+    public static Class&lt;?&gt; loadClassNoEx(String clsName)
     {
         try
         {
-<span class="fc" id="L565">            return loadClass(clsName);</span>
+<span class="fc" id="L582">            return loadClass(clsName);</span>
         }
-<span class="fc" id="L567">        catch (final ClassNotFoundException cnfex)</span>
+<span class="fc" id="L584">        catch (ClassNotFoundException cnfex)</span>
         {
-<span class="fc" id="L569">            throw new ConfigurationRuntimeException(&quot;Cannot load class &quot;</span>
+<span class="fc" id="L586">            throw new ConfigurationRuntimeException(&quot;Cannot load class &quot;</span>
                     + clsName, cnfex);
         }
     }
@@ -589,9 +606,9 @@ public final class ConfigurationUtils
      * @since 2.0
      */
     public static ImmutableConfiguration unmodifiableConfiguration(
-            final Configuration c)
+            Configuration c)
     {
-<span class="fc" id="L594">        return createUnmodifiableConfiguration(IMMUTABLE_CONFIG_IFCS, c);</span>
+<span class="fc" id="L611">        return createUnmodifiableConfiguration(IMMUTABLE_CONFIG_IFCS, c);</span>
     }
 
     /**
@@ -609,9 +626,9 @@ public final class ConfigurationUtils
      * @since 2.0
      */
     public static ImmutableHierarchicalConfiguration unmodifiableConfiguration(
-            final HierarchicalConfiguration&lt;?&gt; c)
+            HierarchicalConfiguration&lt;?&gt; c)
     {
-<span class="fc" id="L614">        return (ImmutableHierarchicalConfiguration) createUnmodifiableConfiguration(</span>
+<span class="fc" id="L631">        return (ImmutableHierarchicalConfiguration) createUnmodifiableConfiguration(</span>
                 IMMUTABLE_HIERARCHICAL_CONFIG_IFCS, c);
     }
 
@@ -625,10 +642,10 @@ public final class ConfigurationUtils
      * @throws NullPointerException if the configuration is &lt;b&gt;null&lt;/b&gt;
      */
     private static ImmutableConfiguration createUnmodifiableConfiguration(
-            final Class&lt;?&gt;[] ifcs, final Configuration c)
+            Class&lt;?&gt;[] ifcs, Configuration c)
     {
-<span class="fc" id="L630">        return (ImmutableConfiguration) Proxy.newProxyInstance(</span>
-<span class="fc" id="L631">                ConfigurationUtils.class.getClassLoader(), ifcs,</span>
+<span class="fc" id="L647">        return (ImmutableConfiguration) Proxy.newProxyInstance(</span>
+<span class="fc" id="L648">                ConfigurationUtils.class.getClassLoader(), ifcs,</span>
                 new ImmutableConfigurationInvocationHandler(c));
     }
 
@@ -648,20 +665,20 @@ public final class ConfigurationUtils
      *         {@code EventSource} and the mock flag is &lt;b&gt;false&lt;/b&gt;
      * @since 2.0
      */
-    public static EventSource asEventSource(final Object obj,
-            final boolean mockIfUnsupported)
+    public static EventSource asEventSource(Object obj,
+            boolean mockIfUnsupported)
     {
-<span class="fc bfc" id="L654" title="All 2 branches covered.">        if (obj instanceof EventSource)</span>
+<span class="fc bfc" id="L671" title="All 2 branches covered.">        if (obj instanceof EventSource)</span>
         {
-<span class="fc" id="L656">            return (EventSource) obj;</span>
+<span class="fc" id="L673">            return (EventSource) obj;</span>
         }
 
-<span class="fc bfc" id="L659" title="All 2 branches covered.">        if (!mockIfUnsupported)</span>
+<span class="fc bfc" id="L676" title="All 2 branches covered.">        if (!mockIfUnsupported)</span>
         {
-<span class="fc" id="L661">            throw new ConfigurationRuntimeException(</span>
+<span class="fc" id="L678">            throw new ConfigurationRuntimeException(</span>
                     &quot;Cannot cast to EventSource: &quot; + obj);
         }
-<span class="fc" id="L664">        return DUMMY_EVENT_SOURCE;</span>
+<span class="fc" id="L681">        return DUMMY_EVENT_SOURCE;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -38,6 +38,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * static factory methods.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  * @param &lt;T&gt; the type of the result nodes
  */
@@ -55,11 +56,11 @@ public final class QueryResult&lt;T&gt;
      * @param nd the node
      * @param attr the attribute name
      */
-    private QueryResult(final T nd, final String attr)
-<span class="fc" id="L59">    {</span>
-<span class="fc" id="L60">        node = nd;</span>
-<span class="fc" id="L61">        attributeName = attr;</span>
-<span class="fc" id="L62">    }</span>
+    private QueryResult(T nd, String attr)
+<span class="fc" id="L60">    {</span>
+<span class="fc" id="L61">        node = nd;</span>
+<span class="fc" id="L62">        attributeName = attr;</span>
+<span class="fc" id="L63">    }</span>
 
     /**
      * Creates a {@code QueryResult} instance representing the specified result
@@ -69,9 +70,9 @@ public final class QueryResult&lt;T&gt;
      * @param resultNode the result node
      * @return the newly created instance
      */
-    public static &lt;T&gt; QueryResult&lt;T&gt; createNodeResult(final T resultNode)
+    public static &lt;T&gt; QueryResult&lt;T&gt; createNodeResult(T resultNode)
     {
-<span class="fc" id="L74">        return new QueryResult&lt;&gt;(resultNode, null);</span>
+<span class="fc" id="L75">        return new QueryResult&lt;&gt;(resultNode, null);</span>
     }
 
     /**
@@ -84,10 +85,10 @@ public final class QueryResult&lt;T&gt;
      * @param &lt;T&gt; the type of the parent node
      * @return the newly created instance
      */
-    public static &lt;T&gt; QueryResult&lt;T&gt; createAttributeResult(final T parentNode,
-                                                           final String attrName)
+    public static &lt;T&gt; QueryResult&lt;T&gt; createAttributeResult(T parentNode,
+                                                           String attrName)
     {
-<span class="fc" id="L90">        return new QueryResult&lt;&gt;(parentNode, attrName);</span>
+<span class="fc" id="L91">        return new QueryResult&lt;&gt;(parentNode, attrName);</span>
     }
 
     /**
@@ -99,7 +100,7 @@ public final class QueryResult&lt;T&gt;
      */
     public T getNode()
     {
-<span class="fc" id="L102">        return node;</span>
+<span class="fc" id="L103">        return node;</span>
     }
 
     /**
@@ -110,7 +111,7 @@ public final class QueryResult&lt;T&gt;
      */
     public String getAttributeName()
     {
-<span class="fc" id="L113">        return attributeName;</span>
+<span class="fc" id="L114">        return attributeName;</span>
     }
 
     /**
@@ -122,7 +123,7 @@ public final class QueryResult&lt;T&gt;
      */
     public boolean isAttributeResult()
     {
-<span class="fc" id="L125">        return StringUtils.isNotEmpty(getAttributeName());</span>
+<span class="fc" id="L126">        return StringUtils.isNotEmpty(getAttributeName());</span>
     }
 
     /**
@@ -133,21 +134,21 @@ public final class QueryResult&lt;T&gt;
      * @return the attribute value
      * @throws IllegalStateException if this is not an attribute result
      */
-    public Object getAttributeValue(final NodeHandler&lt;T&gt; handler)
+    public Object getAttributeValue(NodeHandler&lt;T&gt; handler)
     {
-<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (!isAttributeResult())</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (!isAttributeResult())</span>
         {
-<span class="fc" id="L140">            throw new IllegalStateException(&quot;This is not an attribute result! &quot;</span>
+<span class="fc" id="L141">            throw new IllegalStateException(&quot;This is not an attribute result! &quot;</span>
                     + &quot;Attribute value cannot be fetched.&quot;);
         }
-<span class="fc" id="L143">        return handler.getAttributeValue(getNode(), getAttributeName());</span>
+<span class="fc" id="L144">        return handler.getAttributeValue(getNode(), getAttributeName());</span>
     }
 
     @Override
     public int hashCode()
     {
-<span class="fc" id="L149">        return new HashCodeBuilder().append(getNode())</span>
-<span class="fc" id="L150">                .append(getAttributeName()).toHashCode();</span>
+<span class="fc" id="L150">        return new HashCodeBuilder().append(getNode())</span>
+<span class="fc" id="L151">                .append(getAttributeName()).toHashCode();</span>
     }
 
     /**
@@ -159,20 +160,20 @@ public final class QueryResult&lt;T&gt;
      * @return a flag whether these objects are equal
      */
     @Override
-    public boolean equals(final Object obj)
+    public boolean equals(Object obj)
     {
-<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (this == obj)</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (this == obj)</span>
         {
-<span class="fc" id="L166">            return true;</span>
+<span class="fc" id="L167">            return true;</span>
         }
-<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (!(obj instanceof QueryResult))</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (!(obj instanceof QueryResult))</span>
         {
-<span class="fc" id="L170">            return false;</span>
+<span class="fc" id="L171">            return false;</span>
         }
 
-<span class="fc" id="L173">        final QueryResult&lt;?&gt; c = (QueryResult&lt;?&gt;) obj;</span>
-<span class="fc" id="L174">        return new EqualsBuilder().append(getNode(), c.getNode())</span>
-<span class="fc" id="L175">                .append(getAttributeName(), c.getAttributeName()).isEquals();</span>
+<span class="fc" id="L174">        QueryResult&lt;?&gt; c = (QueryResult&lt;?&gt;) obj;</span>
+<span class="fc" id="L175">        return new EqualsBuilder().append(getNode(), c.getNode())</span>
+<span class="fc" id="L176">                .append(getAttributeName(), c.getAttributeName()).isEquals();</span>
     }
 
     /**
@@ -185,17 +186,17 @@ public final class QueryResult&lt;T&gt;
     @Override
     public String toString()
     {
-<span class="fc" id="L188">        final ToStringBuilder sb = new ToStringBuilder(this);</span>
-<span class="fc bfc" id="L189" title="All 2 branches covered.">        if (isAttributeResult())</span>
+<span class="fc" id="L189">        ToStringBuilder sb = new ToStringBuilder(this);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        if (isAttributeResult())</span>
         {
-<span class="fc" id="L191">            sb.append(&quot;parentNode&quot;, getNode()).append(&quot;attribute&quot;,</span>
-<span class="fc" id="L192">                    getAttributeName());</span>
+<span class="fc" id="L192">            sb.append(&quot;parentNode&quot;, getNode()).append(&quot;attribute&quot;,</span>
+<span class="fc" id="L193">                    getAttributeName());</span>
         }
         else
         {
-<span class="fc" id="L196">            sb.append(&quot;resultNode&quot;, getNode());</span>
+<span class="fc" id="L197">            sb.append(&quot;resultNode&quot;, getNode());</span>
         }
-<span class="fc" id="L198">        return sb.toString();</span>
+<span class="fc" id="L199">        return sb.toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

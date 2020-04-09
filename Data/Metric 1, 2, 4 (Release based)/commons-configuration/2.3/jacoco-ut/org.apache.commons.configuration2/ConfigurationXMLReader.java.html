@@ -37,6 +37,10 @@ import org.xml.sax.helpers.AttributesImpl;
  * special purpose. There will be concrete sub classes that process specific
  * configuration classes.&lt;/p&gt;
  *
+ * @author &lt;a
+ * href=&quot;http://commons.apache.org/configuration/team-list.html&quot;&gt;Commons
+ * Configuration team&lt;/a&gt;
+ * @version $Id$
  */
 public abstract class ConfigurationXMLReader implements XMLReader
 {
@@ -47,7 +51,7 @@ public abstract class ConfigurationXMLReader implements XMLReader
     private static final String DEFAULT_ROOT_NAME = &quot;config&quot;;
 
     /** An empty attributes object.*/
-<span class="fc" id="L50">    private static final Attributes EMPTY_ATTRS = new AttributesImpl();</span>
+<span class="fc" id="L54">    private static final Attributes EMPTY_ATTRS = new AttributesImpl();</span>
 
     /** Stores the content handler.*/
     private ContentHandler contentHandler;
@@ -63,9 +67,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      */
     protected ConfigurationXMLReader()
     {
-<span class="fc" id="L66">        super();</span>
-<span class="fc" id="L67">        rootName = DEFAULT_ROOT_NAME;</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L70">        super();</span>
+<span class="fc" id="L71">        rootName = DEFAULT_ROOT_NAME;</span>
+<span class="fc" id="L72">    }</span>
 
     /**
      * Parses the current configuration object. The passed system ID will be
@@ -76,10 +80,10 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @throws SAXException if an error occurs during parsing
      */
     @Override
-    public void parse(final String systemId) throws IOException, SAXException
+    public void parse(String systemId) throws IOException, SAXException
     {
-<span class="nc" id="L81">        parseConfiguration();</span>
-<span class="nc" id="L82">    }</span>
+<span class="nc" id="L85">        parseConfiguration();</span>
+<span class="nc" id="L86">    }</span>
 
     /**
      * Parses the actual configuration object. The passed input source will be
@@ -90,10 +94,10 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @throws SAXException if an error occurs during parsing
      */
     @Override
-    public void parse(final InputSource input) throws IOException, SAXException
+    public void parse(InputSource input) throws IOException, SAXException
     {
-<span class="fc" id="L95">        parseConfiguration();</span>
-<span class="fc" id="L96">    }</span>
+<span class="fc" id="L99">        parseConfiguration();</span>
+<span class="fc" id="L100">    }</span>
 
     /**
      * Dummy implementation of the interface method.
@@ -102,9 +106,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @return always &lt;b&gt;false&lt;/b&gt; (no features are supported)
      */
     @Override
-    public boolean getFeature(final String name)
+    public boolean getFeature(String name)
     {
-<span class="nc" id="L107">        return false;</span>
+<span class="nc" id="L111">        return false;</span>
     }
 
     /**
@@ -114,9 +118,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @param value the value of the feature
      */
     @Override
-    public void setFeature(final String name, final boolean value)
+    public void setFeature(String name, boolean value)
     {
-<span class="fc" id="L119">    }</span>
+<span class="fc" id="L123">    }</span>
 
     /**
      * Returns the actually set content handler.
@@ -126,7 +130,7 @@ public abstract class ConfigurationXMLReader implements XMLReader
     @Override
     public ContentHandler getContentHandler()
     {
-<span class="fc" id="L129">        return contentHandler;</span>
+<span class="fc" id="L133">        return contentHandler;</span>
     }
 
     /**
@@ -136,10 +140,10 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @param handler the content handler
      */
     @Override
-    public void setContentHandler(final ContentHandler handler)
+    public void setContentHandler(ContentHandler handler)
     {
-<span class="fc" id="L141">        contentHandler = handler;</span>
-<span class="fc" id="L142">    }</span>
+<span class="fc" id="L145">        contentHandler = handler;</span>
+<span class="fc" id="L146">    }</span>
 
     /**
      * Returns the DTD handler. This class does not support DTD handlers,
@@ -150,7 +154,7 @@ public abstract class ConfigurationXMLReader implements XMLReader
     @Override
     public DTDHandler getDTDHandler()
     {
-<span class="nc" id="L153">        return null;</span>
+<span class="nc" id="L157">        return null;</span>
     }
 
     /**
@@ -159,9 +163,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @param handler the handler to be set
      */
     @Override
-    public void setDTDHandler(final DTDHandler handler)
+    public void setDTDHandler(DTDHandler handler)
     {
-<span class="nc" id="L164">    }</span>
+<span class="nc" id="L168">    }</span>
 
     /**
      * Returns the entity resolver. This class does not support an entity
@@ -172,7 +176,7 @@ public abstract class ConfigurationXMLReader implements XMLReader
     @Override
     public EntityResolver getEntityResolver()
     {
-<span class="nc" id="L175">        return null;</span>
+<span class="nc" id="L179">        return null;</span>
     }
 
     /**
@@ -181,9 +185,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @param resolver the entity resolver
      */
     @Override
-    public void setEntityResolver(final EntityResolver resolver)
+    public void setEntityResolver(EntityResolver resolver)
     {
-<span class="nc" id="L186">    }</span>
+<span class="nc" id="L190">    }</span>
 
     /**
      * Returns the error handler. This class does not support an error handler,
@@ -194,7 +198,7 @@ public abstract class ConfigurationXMLReader implements XMLReader
     @Override
     public ErrorHandler getErrorHandler()
     {
-<span class="nc" id="L197">        return null;</span>
+<span class="nc" id="L201">        return null;</span>
     }
 
     /**
@@ -203,9 +207,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @param handler the error handler
      */
     @Override
-    public void setErrorHandler(final ErrorHandler handler)
+    public void setErrorHandler(ErrorHandler handler)
     {
-<span class="nc" id="L208">    }</span>
+<span class="nc" id="L212">    }</span>
 
     /**
      * Dummy implementation of the interface method. No properties are
@@ -215,9 +219,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @return the property value
      */
     @Override
-    public Object getProperty(final String name)
+    public Object getProperty(String name)
     {
-<span class="nc" id="L220">        return null;</span>
+<span class="nc" id="L224">        return null;</span>
     }
 
     /**
@@ -228,9 +232,9 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @param value the property value
      */
     @Override
-    public void setProperty(final String name, final Object value)
+    public void setProperty(String name, Object value)
     {
-<span class="fc" id="L233">    }</span>
+<span class="fc" id="L237">    }</span>
 
     /**
      * Returns the name to be used for the root element.
@@ -239,7 +243,7 @@ public abstract class ConfigurationXMLReader implements XMLReader
      */
     public String getRootName()
     {
-<span class="fc" id="L242">        return rootName;</span>
+<span class="fc" id="L246">        return rootName;</span>
     }
 
     /**
@@ -247,10 +251,10 @@ public abstract class ConfigurationXMLReader implements XMLReader
      *
      * @param string the name for the root element.
      */
-    public void setRootName(final String string)
+    public void setRootName(String string)
     {
-<span class="fc" id="L252">        rootName = string;</span>
-<span class="fc" id="L253">    }</span>
+<span class="fc" id="L256">        rootName = string;</span>
+<span class="fc" id="L257">    }</span>
 
     /**
      * Fires a SAX element start event.
@@ -258,62 +262,62 @@ public abstract class ConfigurationXMLReader implements XMLReader
      * @param name the name of the actual element
      * @param attribs the attributes of this element (can be &lt;b&gt;null&lt;/b&gt;)
      */
-    protected void fireElementStart(final String name, final Attributes attribs)
+    protected void fireElementStart(String name, Attributes attribs)
     {
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (getException() == null)</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (getException() == null)</span>
         {
             try
             {
-<span class="fc bfc" id="L267" title="All 2 branches covered.">                final Attributes at = attribs == null ? EMPTY_ATTRS : attribs;</span>
-<span class="fc" id="L268">                getContentHandler().startElement(NS_URI, name, name, at);</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">                Attributes at = (attribs == null) ? EMPTY_ATTRS : attribs;</span>
+<span class="fc" id="L272">                getContentHandler().startElement(NS_URI, name, name, at);</span>
             }
-<span class="nc" id="L270">            catch (final SAXException ex)</span>
+<span class="nc" id="L274">            catch (SAXException ex)</span>
             {
-<span class="nc" id="L272">                exception = ex;</span>
-<span class="fc" id="L273">            }</span>
+<span class="nc" id="L276">                exception = ex;</span>
+<span class="fc" id="L277">            }</span>
         }
-<span class="fc" id="L275">    }</span>
+<span class="fc" id="L279">    }</span>
 
     /**
      * Fires a SAX element end event.
      *
      * @param name the name of the affected element
      */
-    protected void fireElementEnd(final String name)
+    protected void fireElementEnd(String name)
     {
-<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (getException() == null)</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">        if (getException() == null)</span>
         {
             try
             {
-<span class="fc" id="L288">                getContentHandler().endElement(NS_URI, name, name);</span>
+<span class="fc" id="L292">                getContentHandler().endElement(NS_URI, name, name);</span>
             }
-<span class="nc" id="L290">            catch (final SAXException ex)</span>
+<span class="nc" id="L294">            catch (SAXException ex)</span>
             {
-<span class="nc" id="L292">                exception = ex;</span>
-<span class="fc" id="L293">            }</span>
+<span class="nc" id="L296">                exception = ex;</span>
+<span class="fc" id="L297">            }</span>
         }
-<span class="fc" id="L295">    }</span>
+<span class="fc" id="L299">    }</span>
 
     /**
      * Fires a SAX characters event.
      *
      * @param text the text
      */
-    protected void fireCharacters(final String text)
+    protected void fireCharacters(String text)
     {
-<span class="fc bfc" id="L304" title="All 2 branches covered.">        if (getException() == null)</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (getException() == null)</span>
         {
             try
             {
-<span class="fc" id="L308">                final char[] ch = text.toCharArray();</span>
-<span class="fc" id="L309">                getContentHandler().characters(ch, 0, ch.length);</span>
+<span class="fc" id="L312">                char[] ch = text.toCharArray();</span>
+<span class="fc" id="L313">                getContentHandler().characters(ch, 0, ch.length);</span>
             }
-<span class="fc" id="L311">            catch (final SAXException ex)</span>
+<span class="fc" id="L315">            catch (SAXException ex)</span>
             {
-<span class="fc" id="L313">                exception = ex;</span>
-<span class="fc" id="L314">            }</span>
+<span class="fc" id="L317">                exception = ex;</span>
+<span class="fc" id="L318">            }</span>
         }
-<span class="fc" id="L316">    }</span>
+<span class="fc" id="L320">    }</span>
 
     /**
      * Returns a reference to an exception that occurred during parsing.
@@ -322,7 +326,7 @@ public abstract class ConfigurationXMLReader implements XMLReader
      */
     public SAXException getException()
     {
-<span class="fc" id="L325">        return exception;</span>
+<span class="fc" id="L329">        return exception;</span>
     }
 
     /**
@@ -334,23 +338,23 @@ public abstract class ConfigurationXMLReader implements XMLReader
      */
     protected void parseConfiguration() throws IOException, SAXException
     {
-<span class="fc bfc" id="L337" title="All 2 branches covered.">        if (getParsedConfiguration() == null)</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">        if (getParsedConfiguration() == null)</span>
         {
-<span class="fc" id="L339">            throw new IOException(&quot;No configuration specified!&quot;);</span>
+<span class="fc" id="L343">            throw new IOException(&quot;No configuration specified!&quot;);</span>
         }
 
-<span class="pc bpc" id="L342" title="1 of 2 branches missed.">        if (getContentHandler() != null)</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">        if (getContentHandler() != null)</span>
         {
-<span class="fc" id="L344">            exception = null;</span>
-<span class="fc" id="L345">            getContentHandler().startDocument();</span>
-<span class="fc" id="L346">            processKeys();</span>
-<span class="fc bfc" id="L347" title="All 2 branches covered.">            if (getException() != null)</span>
+<span class="fc" id="L348">            exception = null;</span>
+<span class="fc" id="L349">            getContentHandler().startDocument();</span>
+<span class="fc" id="L350">            processKeys();</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">            if (getException() != null)</span>
             {
-<span class="fc" id="L349">                throw getException();</span>
+<span class="fc" id="L353">                throw getException();</span>
             }
-<span class="fc" id="L351">            getContentHandler().endDocument();</span>
+<span class="fc" id="L355">            getContentHandler().endDocument();</span>
         }
-<span class="fc" id="L353">    }</span>
+<span class="fc" id="L357">    }</span>
 
     /**
      * Returns a reference to the configuration that is parsed by this object.

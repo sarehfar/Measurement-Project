@@ -20,7 +20,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
-import java.util.Objects;
 
 /**
  * &lt;p&gt;
@@ -45,6 +44,7 @@ import java.util.Objects;
  * remove operation.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 class ImmutableConfigurationInvocationHandler implements InvocationHandler
@@ -56,13 +56,18 @@ class ImmutableConfigurationInvocationHandler implements InvocationHandler
      * Creates a new instance of {@code ImmutableConfigurationInvocationHandler}
      * and initializes it with the wrapped configuration object.
      *
-     * @param configuration the wrapped {@code Configuration} (must not be &lt;b&gt;null&lt;/b&gt;)
+     * @param conf the wrapped {@code Configuration} (must not be &lt;b&gt;null&lt;/b&gt;)
      * @throws NullPointerException if the {@code Configuration} is &lt;b&gt;null&lt;/b&gt;
      */
-    public ImmutableConfigurationInvocationHandler(final Configuration configuration)
+    public ImmutableConfigurationInvocationHandler(final Configuration conf)
 <span class="fc" id="L63">    {</span>
-<span class="fc" id="L64">        wrappedConfiguration = Objects.requireNonNull(configuration, &quot;configuration&quot;);</span>
-<span class="fc" id="L65">    }</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (conf == null)</span>
+        {
+<span class="fc" id="L66">            throw new NullPointerException(</span>
+                    &quot;Wrapped configuration must not be null!&quot;);
+        }
+<span class="fc" id="L69">        wrappedConfiguration = conf;</span>
+<span class="fc" id="L70">    }</span>
 
     /**
      * {@inheritDoc} This implementation delegates to the wrapped configuration
@@ -74,12 +79,12 @@ class ImmutableConfigurationInvocationHandler implements InvocationHandler
     {
         try
         {
-<span class="fc" id="L77">            return handleResult(method.invoke(wrappedConfiguration, args));</span>
+<span class="fc" id="L82">            return handleResult(method.invoke(wrappedConfiguration, args));</span>
         }
-<span class="fc" id="L79">        catch (final InvocationTargetException e)</span>
+<span class="fc" id="L84">        catch (final InvocationTargetException e)</span>
         {
             // unwrap
-<span class="fc" id="L82">            throw e.getCause();</span>
+<span class="fc" id="L87">            throw e.getCause();</span>
         }
     }
 
@@ -93,11 +98,11 @@ class ImmutableConfigurationInvocationHandler implements InvocationHandler
      */
     private static Object handleResult(final Object result)
     {
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (result instanceof Iterator)</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (result instanceof Iterator)</span>
         {
-<span class="fc" id="L98">            return new ImmutableIterator((Iterator&lt;?&gt;) result);</span>
+<span class="fc" id="L103">            return new ImmutableIterator((Iterator&lt;?&gt;) result);</span>
         }
-<span class="fc" id="L100">        return result;</span>
+<span class="fc" id="L105">        return result;</span>
     }
 
     /**
@@ -116,9 +121,9 @@ class ImmutableConfigurationInvocationHandler implements InvocationHandler
          * @param it the underlying iterator
          */
         public ImmutableIterator(final Iterator&lt;?&gt; it)
-<span class="fc" id="L119">        {</span>
-<span class="fc" id="L120">            wrappedIterator = it;</span>
-<span class="fc" id="L121">        }</span>
+<span class="fc" id="L124">        {</span>
+<span class="fc" id="L125">            wrappedIterator = it;</span>
+<span class="fc" id="L126">        }</span>
 
         /**
          * {@inheritDoc} This implementation just delegates to the underlying
@@ -127,7 +132,7 @@ class ImmutableConfigurationInvocationHandler implements InvocationHandler
         @Override
         public boolean hasNext()
         {
-<span class="fc" id="L130">            return wrappedIterator.hasNext();</span>
+<span class="fc" id="L135">            return wrappedIterator.hasNext();</span>
         }
 
         /**
@@ -137,7 +142,7 @@ class ImmutableConfigurationInvocationHandler implements InvocationHandler
         @Override
         public Object next()
         {
-<span class="fc" id="L140">            return wrappedIterator.next();</span>
+<span class="fc" id="L145">            return wrappedIterator.next();</span>
         }
 
         /**
@@ -147,7 +152,7 @@ class ImmutableConfigurationInvocationHandler implements InvocationHandler
         @Override
         public void remove()
         {
-<span class="fc" id="L150">            throw new UnsupportedOperationException(</span>
+<span class="fc" id="L155">            throw new UnsupportedOperationException(</span>
                     &quot;remove() operation not supported!&quot;);
         }
     }

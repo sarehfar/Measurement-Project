@@ -62,7 +62,7 @@ import org.apache.commons.lang3.ObjectUtils;
  * A concrete sub class only needs to provide a generic {@code getProperty()}
  * method.&lt;/li&gt;
  * &lt;li&gt;Support for variable interpolation. Property values containing special
- * variable tokens (like {@code ${var}}) will be replaced by their
+ * variable tokens (like &lt;code&gt;${var}&lt;/code&gt;) will be replaced by their
  * corresponding values.&lt;/li&gt;
  * &lt;li&gt;Optional support for string lists. The values of properties to be added to this
  * configuration are checked whether they contain a list delimiter character. If
@@ -95,6 +95,8 @@ import org.apache.commons.lang3.ObjectUtils;
  * functionality.
  * &lt;/p&gt;
  *
+ * @author &lt;a href=&quot;mailto:ksh@scand.com&quot;&gt;Konstantin Shaposhnikov &lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:hps@intermeta.de&quot;&gt;Henning P. Schmiedehausen &lt;/a&gt;
  */
 public abstract class AbstractConfiguration extends BaseEventSource implements Configuration
 {
@@ -126,13 +128,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      * Creates a new instance of {@code AbstractConfiguration}.
      */
     public AbstractConfiguration()
-<span class="fc" id="L129">    {</span>
-<span class="fc" id="L130">        interpolator = new AtomicReference&lt;&gt;();</span>
-<span class="fc" id="L131">        initLogger(null);</span>
-<span class="fc" id="L132">        installDefaultInterpolator();</span>
-<span class="fc" id="L133">        listDelimiterHandler = DisabledListDelimiterHandler.INSTANCE;</span>
-<span class="fc" id="L134">        conversionHandler = DefaultConversionHandler.INSTANCE;</span>
-<span class="fc" id="L135">    }</span>
+<span class="fc" id="L131">    {</span>
+<span class="fc" id="L132">        interpolator = new AtomicReference&lt;&gt;();</span>
+<span class="fc" id="L133">        initLogger(null);</span>
+<span class="fc" id="L134">        installDefaultInterpolator();</span>
+<span class="fc" id="L135">        listDelimiterHandler = DisabledListDelimiterHandler.INSTANCE;</span>
+<span class="fc" id="L136">        conversionHandler = DefaultConversionHandler.INSTANCE;</span>
+<span class="fc" id="L137">    }</span>
 
     /**
      * Returns the {@code ListDelimiterHandler} used by this instance.
@@ -142,7 +144,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public ListDelimiterHandler getListDelimiterHandler()
     {
-<span class="fc" id="L145">        return listDelimiterHandler;</span>
+<span class="fc" id="L147">        return listDelimiterHandler;</span>
     }
 
     /**
@@ -173,13 +175,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     public void setListDelimiterHandler(
             final ListDelimiterHandler listDelimiterHandler)
     {
-<span class="fc bfc" id="L176" title="All 2 branches covered.">        if (listDelimiterHandler == null)</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (listDelimiterHandler == null)</span>
         {
-<span class="fc" id="L178">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L180">            throw new IllegalArgumentException(</span>
                     &quot;List delimiter handler must not be null!&quot;);
         }
-<span class="fc" id="L181">        this.listDelimiterHandler = listDelimiterHandler;</span>
-<span class="fc" id="L182">    }</span>
+<span class="fc" id="L183">        this.listDelimiterHandler = listDelimiterHandler;</span>
+<span class="fc" id="L184">    }</span>
 
     /**
      * Returns the {@code ConversionHandler} used by this instance.
@@ -189,7 +191,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public ConversionHandler getConversionHandler()
     {
-<span class="fc" id="L192">        return conversionHandler;</span>
+<span class="fc" id="L194">        return conversionHandler;</span>
     }
 
     /**
@@ -209,13 +211,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public void setConversionHandler(final ConversionHandler conversionHandler)
     {
-<span class="fc bfc" id="L212" title="All 2 branches covered.">        if (conversionHandler == null)</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (conversionHandler == null)</span>
         {
-<span class="fc" id="L214">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L216">            throw new IllegalArgumentException(</span>
                     &quot;ConversionHandler must not be null!&quot;);
         }
-<span class="fc" id="L217">        this.conversionHandler = conversionHandler;</span>
-<span class="fc" id="L218">    }</span>
+<span class="fc" id="L219">        this.conversionHandler = conversionHandler;</span>
+<span class="fc" id="L220">    }</span>
 
     /**
      * Allows to set the {@code throwExceptionOnMissing} flag. This
@@ -230,8 +232,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public void setThrowExceptionOnMissing(final boolean throwExceptionOnMissing)
     {
-<span class="fc" id="L233">        this.throwExceptionOnMissing = throwExceptionOnMissing;</span>
-<span class="fc" id="L234">    }</span>
+<span class="fc" id="L235">        this.throwExceptionOnMissing = throwExceptionOnMissing;</span>
+<span class="fc" id="L236">    }</span>
 
     /**
      * Returns true if missing values throw Exceptions.
@@ -240,7 +242,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public boolean isThrowExceptionOnMissing()
     {
-<span class="fc" id="L243">        return throwExceptionOnMissing;</span>
+<span class="fc" id="L245">        return throwExceptionOnMissing;</span>
     }
 
     /**
@@ -254,7 +256,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public ConfigurationInterpolator getInterpolator()
     {
-<span class="fc" id="L257">        return interpolator.get();</span>
+<span class="fc" id="L259">        return interpolator.get();</span>
     }
 
     /**
@@ -267,8 +269,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final void setInterpolator(final ConfigurationInterpolator ci)
     {
-<span class="fc" id="L270">        interpolator.set(ci);</span>
-<span class="fc" id="L271">    }</span>
+<span class="fc" id="L272">        interpolator.set(ci);</span>
+<span class="fc" id="L273">    }</span>
 
     /**
      * {@inheritDoc} This implementation creates a new
@@ -283,14 +285,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
             final Map&lt;String, ? extends Lookup&gt; prefixLookups,
             final Collection&lt;? extends Lookup&gt; defLookups)
     {
-<span class="fc" id="L286">        final InterpolatorSpecification spec =</span>
+<span class="fc" id="L288">        final InterpolatorSpecification spec =</span>
                 new InterpolatorSpecification.Builder()
-<span class="fc" id="L288">                        .withPrefixLookups(prefixLookups)</span>
-<span class="fc" id="L289">                        .withDefaultLookups(defLookups)</span>
-<span class="fc" id="L290">                        .withDefaultLookup(new ConfigurationLookup(this))</span>
-<span class="fc" id="L291">                        .create();</span>
-<span class="fc" id="L292">        setInterpolator(ConfigurationInterpolator.fromSpecification(spec));</span>
-<span class="fc" id="L293">    }</span>
+<span class="fc" id="L290">                        .withPrefixLookups(prefixLookups)</span>
+<span class="fc" id="L291">                        .withDefaultLookups(defLookups)</span>
+<span class="fc" id="L292">                        .withDefaultLookup(new ConfigurationLookup(this))</span>
+<span class="fc" id="L293">                        .create();</span>
+<span class="fc" id="L294">        setInterpolator(ConfigurationInterpolator.fromSpecification(spec));</span>
+<span class="fc" id="L295">    }</span>
 
     /**
      * Registers all {@code Lookup} objects in the given map at the current
@@ -314,13 +316,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
         {
             // do this in a loop because the ConfigurationInterpolator
             // instance may be changed by another thread
-<span class="fc" id="L317">            final ConfigurationInterpolator ciOld = getInterpolator();</span>
+<span class="fc" id="L319">            final ConfigurationInterpolator ciOld = getInterpolator();</span>
             final ConfigurationInterpolator ciNew =
-<span class="fc bfc" id="L319" title="All 2 branches covered.">                    ciOld != null ? ciOld : new ConfigurationInterpolator();</span>
-<span class="fc" id="L320">            ciNew.registerLookups(lookups);</span>
-<span class="fc" id="L321">            success = interpolator.compareAndSet(ciOld, ciNew);</span>
-<span class="pc bpc" id="L322" title="1 of 2 branches missed.">        } while (!success);</span>
-<span class="fc" id="L323">    }</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">                    (ciOld != null) ? ciOld : new ConfigurationInterpolator();</span>
+<span class="fc" id="L322">            ciNew.registerLookups(lookups);</span>
+<span class="fc" id="L323">            success = interpolator.compareAndSet(ciOld, ciNew);</span>
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">        } while (!success);</span>
+<span class="fc" id="L325">    }</span>
 
     /**
      * Adds all {@code Lookup} objects in the given collection as default
@@ -344,23 +346,23 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
         boolean success;
         do
         {
-<span class="fc" id="L347">            final ConfigurationInterpolator ciOld = getInterpolator();</span>
+<span class="fc" id="L349">            final ConfigurationInterpolator ciOld = getInterpolator();</span>
             final ConfigurationInterpolator ciNew =
-<span class="fc bfc" id="L349" title="All 2 branches covered.">                    ciOld != null ? ciOld : new ConfigurationInterpolator();</span>
-<span class="fc" id="L350">            Lookup confLookup = findConfigurationLookup(ciNew);</span>
-<span class="fc bfc" id="L351" title="All 2 branches covered.">            if (confLookup == null)</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">                    (ciOld != null) ? ciOld : new ConfigurationInterpolator();</span>
+<span class="fc" id="L352">            Lookup confLookup = findConfigurationLookup(ciNew);</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">            if (confLookup == null)</span>
             {
-<span class="fc" id="L353">                confLookup = new ConfigurationLookup(this);</span>
+<span class="fc" id="L355">                confLookup = new ConfigurationLookup(this);</span>
             }
             else
             {
-<span class="fc" id="L357">                ciNew.removeDefaultLookup(confLookup);</span>
+<span class="fc" id="L359">                ciNew.removeDefaultLookup(confLookup);</span>
             }
-<span class="fc" id="L359">            ciNew.addDefaultLookups(lookups);</span>
-<span class="fc" id="L360">            ciNew.addDefaultLookup(confLookup);</span>
-<span class="fc" id="L361">            success = interpolator.compareAndSet(ciOld, ciNew);</span>
-<span class="pc bpc" id="L362" title="1 of 2 branches missed.">        } while (!success);</span>
-<span class="fc" id="L363">    }</span>
+<span class="fc" id="L361">            ciNew.addDefaultLookups(lookups);</span>
+<span class="fc" id="L362">            ciNew.addDefaultLookup(confLookup);</span>
+<span class="fc" id="L363">            success = interpolator.compareAndSet(ciOld, ciNew);</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">        } while (!success);</span>
+<span class="fc" id="L365">    }</span>
 
     /**
      * Sets the specified {@code ConfigurationInterpolator} as the parent of
@@ -378,13 +380,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
         boolean success;
         do
         {
-<span class="fc" id="L381">            final ConfigurationInterpolator ciOld = getInterpolator();</span>
+<span class="fc" id="L383">            final ConfigurationInterpolator ciOld = getInterpolator();</span>
             final ConfigurationInterpolator ciNew =
-<span class="fc bfc" id="L383" title="All 2 branches covered.">                    ciOld != null ? ciOld : new ConfigurationInterpolator();</span>
-<span class="fc" id="L384">            ciNew.setParentInterpolator(parent);</span>
-<span class="fc" id="L385">            success = interpolator.compareAndSet(ciOld, ciNew);</span>
-<span class="pc bpc" id="L386" title="1 of 2 branches missed.">        } while (!success);</span>
-<span class="fc" id="L387">    }</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">                    (ciOld != null) ? ciOld : new ConfigurationInterpolator();</span>
+<span class="fc" id="L386">            ciNew.setParentInterpolator(parent);</span>
+<span class="fc" id="L387">            success = interpolator.compareAndSet(ciOld, ciNew);</span>
+<span class="pc bpc" id="L388" title="1 of 2 branches missed.">        } while (!success);</span>
+<span class="fc" id="L389">    }</span>
 
     /**
      * Sets the {@code ConfigurationDecoder} for this configuration. This object
@@ -396,8 +398,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     public void setConfigurationDecoder(
             final ConfigurationDecoder configurationDecoder)
     {
-<span class="fc" id="L399">        this.configurationDecoder = configurationDecoder;</span>
-<span class="fc" id="L400">    }</span>
+<span class="fc" id="L401">        this.configurationDecoder = configurationDecoder;</span>
+<span class="fc" id="L402">    }</span>
 
     /**
      * Returns the {@code ConfigurationDecoder} used by this instance.
@@ -407,7 +409,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public ConfigurationDecoder getConfigurationDecoder()
     {
-<span class="fc" id="L410">        return configurationDecoder;</span>
+<span class="fc" id="L412">        return configurationDecoder;</span>
     }
 
     /**
@@ -431,17 +433,17 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void cloneInterpolator(final AbstractConfiguration orgConfig)
     {
-<span class="fc" id="L434">        interpolator = new AtomicReference&lt;&gt;();</span>
-<span class="fc" id="L435">        final ConfigurationInterpolator orgInterpolator = orgConfig.getInterpolator();</span>
-<span class="fc" id="L436">        final List&lt;Lookup&gt; defaultLookups = orgInterpolator.getDefaultLookups();</span>
-<span class="fc" id="L437">        final Lookup lookup = findConfigurationLookup(orgInterpolator, orgConfig);</span>
-<span class="pc bpc" id="L438" title="1 of 2 branches missed.">        if (lookup != null)</span>
+<span class="fc" id="L436">        interpolator = new AtomicReference&lt;&gt;();</span>
+<span class="fc" id="L437">        final ConfigurationInterpolator orgInterpolator = orgConfig.getInterpolator();</span>
+<span class="fc" id="L438">        final List&lt;Lookup&gt; defaultLookups = orgInterpolator.getDefaultLookups();</span>
+<span class="fc" id="L439">        final Lookup lookup = findConfigurationLookup(orgInterpolator, orgConfig);</span>
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">        if (lookup != null)</span>
         {
-<span class="fc" id="L440">            defaultLookups.remove(lookup);</span>
+<span class="fc" id="L442">            defaultLookups.remove(lookup);</span>
         }
 
-<span class="fc" id="L443">        installInterpolator(orgInterpolator.getLookups(), defaultLookups);</span>
-<span class="fc" id="L444">    }</span>
+<span class="fc" id="L445">        installInterpolator(orgInterpolator.getLookups(), defaultLookups);</span>
+<span class="fc" id="L446">    }</span>
 
     /**
      * Creates a default {@code ConfigurationInterpolator} which is initialized
@@ -451,9 +453,9 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private void installDefaultInterpolator()
     {
-<span class="fc" id="L454">        installInterpolator(</span>
-<span class="fc" id="L455">                ConfigurationInterpolator.getDefaultPrefixLookups(), null);</span>
-<span class="fc" id="L456">    }</span>
+<span class="fc" id="L456">        installInterpolator(</span>
+<span class="fc" id="L457">                ConfigurationInterpolator.getDefaultPrefixLookups(), null);</span>
+<span class="fc" id="L458">    }</span>
 
     /**
      * Finds a {@code ConfigurationLookup} pointing to this configuration in the
@@ -466,7 +468,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private Lookup findConfigurationLookup(final ConfigurationInterpolator ci)
     {
-<span class="fc" id="L469">        return findConfigurationLookup(ci, this);</span>
+<span class="fc" id="L471">        return findConfigurationLookup(ci, this);</span>
     }
 
     /**
@@ -481,17 +483,17 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     private static Lookup findConfigurationLookup(final ConfigurationInterpolator ci,
             final ImmutableConfiguration targetConf)
     {
-<span class="fc bfc" id="L484" title="All 2 branches covered.">        for (final Lookup l : ci.getDefaultLookups())</span>
+<span class="fc bfc" id="L486" title="All 2 branches covered.">        for (final Lookup l : ci.getDefaultLookups())</span>
         {
-<span class="pc bpc" id="L486" title="1 of 2 branches missed.">            if (l instanceof ConfigurationLookup)</span>
+<span class="pc bpc" id="L488" title="1 of 2 branches missed.">            if (l instanceof ConfigurationLookup)</span>
             {
-<span class="pc bpc" id="L488" title="1 of 2 branches missed.">                if (targetConf == ((ConfigurationLookup) l).getConfiguration())</span>
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">                if (targetConf == ((ConfigurationLookup) l).getConfiguration())</span>
                 {
-<span class="fc" id="L490">                    return l;</span>
+<span class="fc" id="L492">                    return l;</span>
                 }
             }
-<span class="nc" id="L493">        }</span>
-<span class="fc" id="L494">        return null;</span>
+<span class="nc" id="L495">        }</span>
+<span class="fc" id="L496">        return null;</span>
     }
 
     /**
@@ -502,7 +504,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public ConfigurationLogger getLogger()
     {
-<span class="fc" id="L505">        return log;</span>
+<span class="fc" id="L507">        return log;</span>
     }
 
     /**
@@ -518,8 +520,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public void setLogger(final ConfigurationLogger log)
     {
-<span class="fc" id="L521">        initLogger(log);</span>
-<span class="fc" id="L522">    }</span>
+<span class="fc" id="L523">        initLogger(log);</span>
+<span class="fc" id="L524">    }</span>
 
     /**
      * Adds a special {@link EventListener} object to this configuration that
@@ -531,9 +533,16 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public final void addErrorLogListener()
     {
-<span class="fc" id="L534">        addEventListener(ConfigurationErrorEvent.ANY,</span>
-<span class="nc" id="L535">                event -&gt; getLogger().warn(&quot;Internal error&quot;, event.getCause()));</span>
-<span class="fc" id="L536">    }</span>
+<span class="fc" id="L536">        addEventListener(ConfigurationErrorEvent.ANY,</span>
+                new EventListener&lt;ConfigurationErrorEvent&gt;()
+<span class="fc" id="L538">                {</span>
+                    @Override
+                    public void onEvent(final ConfigurationErrorEvent event)
+                    {
+<span class="nc" id="L542">                        getLogger().warn(&quot;Internal error&quot;, event.getCause());</span>
+<span class="nc" id="L543">                    }</span>
+                });
+<span class="fc" id="L545">    }</span>
 
     /**
      * Returns the object responsible for synchronizing this configuration. All
@@ -549,8 +558,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final Synchronizer getSynchronizer()
     {
-<span class="fc" id="L552">        final Synchronizer sync = synchronizer;</span>
-<span class="fc bfc" id="L553" title="All 2 branches covered.">        return sync != null ? sync : NoOpSynchronizer.INSTANCE;</span>
+<span class="fc" id="L561">        final Synchronizer sync = synchronizer;</span>
+<span class="fc bfc" id="L562" title="All 2 branches covered.">        return (sync != null) ? sync : NoOpSynchronizer.INSTANCE;</span>
     }
 
     /**
@@ -565,8 +574,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final void setSynchronizer(final Synchronizer synchronizer)
     {
-<span class="fc" id="L568">        this.synchronizer = synchronizer;</span>
-<span class="fc" id="L569">    }</span>
+<span class="fc" id="L577">        this.synchronizer = synchronizer;</span>
+<span class="fc" id="L578">    }</span>
 
     /**
      * {@inheritDoc} This implementation delegates to {@code beginRead()} or
@@ -580,18 +589,18 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final void lock(final LockMode mode)
     {
-<span class="pc bpc" id="L583" title="1 of 3 branches missed.">        switch (mode)</span>
+<span class="pc bpc" id="L592" title="1 of 3 branches missed.">        switch (mode)</span>
         {
         case READ:
-<span class="fc" id="L586">            beginRead(false);</span>
-<span class="fc" id="L587">            break;</span>
+<span class="fc" id="L595">            beginRead(false);</span>
+<span class="fc" id="L596">            break;</span>
         case WRITE:
-<span class="fc" id="L589">            beginWrite(false);</span>
-<span class="fc" id="L590">            break;</span>
+<span class="fc" id="L598">            beginWrite(false);</span>
+<span class="fc" id="L599">            break;</span>
         default:
-<span class="nc" id="L592">            throw new IllegalArgumentException(&quot;Unsupported LockMode: &quot; + mode);</span>
+<span class="nc" id="L601">            throw new IllegalArgumentException(&quot;Unsupported LockMode: &quot; + mode);</span>
         }
-<span class="fc" id="L594">    }</span>
+<span class="fc" id="L603">    }</span>
 
     /**
      * {@inheritDoc} This implementation delegates to {@code endRead()} or
@@ -604,18 +613,18 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final void unlock(final LockMode mode)
     {
-<span class="pc bpc" id="L607" title="1 of 3 branches missed.">        switch (mode)</span>
+<span class="pc bpc" id="L616" title="1 of 3 branches missed.">        switch (mode)</span>
         {
         case READ:
-<span class="fc" id="L610">            endRead();</span>
-<span class="fc" id="L611">            break;</span>
+<span class="fc" id="L619">            endRead();</span>
+<span class="fc" id="L620">            break;</span>
         case WRITE:
-<span class="fc" id="L613">            endWrite();</span>
-<span class="fc" id="L614">            break;</span>
+<span class="fc" id="L622">            endWrite();</span>
+<span class="fc" id="L623">            break;</span>
         default:
-<span class="nc" id="L616">            throw new IllegalArgumentException(&quot;Unsupported LockMode: &quot; + mode);</span>
+<span class="nc" id="L625">            throw new IllegalArgumentException(&quot;Unsupported LockMode: &quot; + mode);</span>
         }
-<span class="fc" id="L618">    }</span>
+<span class="fc" id="L627">    }</span>
 
     /**
      * Notifies this configuration's {@link Synchronizer} that a read operation
@@ -638,8 +647,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void beginRead(final boolean optimize)
     {
-<span class="fc" id="L641">        getSynchronizer().beginRead();</span>
-<span class="fc" id="L642">    }</span>
+<span class="fc" id="L650">        getSynchronizer().beginRead();</span>
+<span class="fc" id="L651">    }</span>
 
     /**
      * Notifies this configuration's {@link Synchronizer} that a read operation
@@ -653,8 +662,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void endRead()
     {
-<span class="fc" id="L656">        getSynchronizer().endRead();</span>
-<span class="fc" id="L657">    }</span>
+<span class="fc" id="L665">        getSynchronizer().endRead();</span>
+<span class="fc" id="L666">    }</span>
 
     /**
      * Notifies this configuration's {@link Synchronizer} that an update
@@ -671,8 +680,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void beginWrite(final boolean optimize)
     {
-<span class="fc" id="L674">        getSynchronizer().beginWrite();</span>
-<span class="fc" id="L675">    }</span>
+<span class="fc" id="L683">        getSynchronizer().beginWrite();</span>
+<span class="fc" id="L684">    }</span>
 
     /**
      * Notifies this configuration's {@link Synchronizer} that an update
@@ -686,24 +695,24 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void endWrite()
     {
-<span class="fc" id="L689">        getSynchronizer().endWrite();</span>
-<span class="fc" id="L690">    }</span>
+<span class="fc" id="L698">        getSynchronizer().endWrite();</span>
+<span class="fc" id="L699">    }</span>
 
     @Override
     public final void addProperty(final String key, final Object value)
     {
-<span class="fc" id="L695">        beginWrite(false);</span>
+<span class="fc" id="L704">        beginWrite(false);</span>
         try
         {
-<span class="fc" id="L698">            fireEvent(ConfigurationEvent.ADD_PROPERTY, key, value, true);</span>
-<span class="fc" id="L699">            addPropertyInternal(key, value);</span>
-<span class="fc" id="L700">            fireEvent(ConfigurationEvent.ADD_PROPERTY, key, value, false);</span>
+<span class="fc" id="L707">            fireEvent(ConfigurationEvent.ADD_PROPERTY, key, value, true);</span>
+<span class="fc" id="L708">            addPropertyInternal(key, value);</span>
+<span class="fc" id="L709">            fireEvent(ConfigurationEvent.ADD_PROPERTY, key, value, false);</span>
         }
         finally
         {
-<span class="fc" id="L704">            endWrite();</span>
+<span class="fc" id="L713">            endWrite();</span>
         }
-<span class="fc" id="L706">    }</span>
+<span class="fc" id="L715">    }</span>
 
     /**
      * Actually adds a property to this configuration. This method is called by
@@ -717,11 +726,11 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void addPropertyInternal(final String key, final Object value)
     {
-<span class="fc bfc" id="L720" title="All 2 branches covered.">        for (final Object obj : getListDelimiterHandler().parse(value))</span>
+<span class="fc bfc" id="L729" title="All 2 branches covered.">        for (final Object obj : getListDelimiterHandler().parse(value))</span>
         {
-<span class="fc" id="L722">            addPropertyDirect(key, obj);</span>
-<span class="fc" id="L723">        }</span>
-<span class="fc" id="L724">    }</span>
+<span class="fc" id="L731">            addPropertyDirect(key, obj);</span>
+<span class="fc" id="L732">        }</span>
+<span class="fc" id="L733">    }</span>
 
     /**
      * Adds a key/value pair to the Configuration. Override this method to
@@ -741,8 +750,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected String interpolate(final String base)
     {
-<span class="fc" id="L744">        final Object result = interpolate((Object) base);</span>
-<span class="fc bfc" id="L745" title="All 2 branches covered.">        return result == null ? null : result.toString();</span>
+<span class="fc" id="L753">        final Object result = interpolate((Object) base);</span>
+<span class="fc bfc" id="L754" title="All 2 branches covered.">        return result == null ? null : result.toString();</span>
     }
 
     /**
@@ -756,37 +765,37 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected Object interpolate(final Object value)
     {
-<span class="fc" id="L759">        final ConfigurationInterpolator ci = getInterpolator();</span>
-<span class="pc bpc" id="L760" title="1 of 2 branches missed.">        return ci != null ? ci.interpolate(value) : value;</span>
+<span class="fc" id="L768">        final ConfigurationInterpolator ci = getInterpolator();</span>
+<span class="pc bpc" id="L769" title="1 of 2 branches missed.">        return ci != null ? ci.interpolate(value) : value;</span>
     }
 
     @Override
     public Configuration subset(final String prefix)
     {
-<span class="fc" id="L766">        return new SubsetConfiguration(this, prefix, &quot;.&quot;);</span>
+<span class="fc" id="L775">        return new SubsetConfiguration(this, prefix, &quot;.&quot;);</span>
     }
 
     @Override
     public ImmutableConfiguration immutableSubset(final String prefix)
     {
-<span class="fc" id="L772">        return ConfigurationUtils.unmodifiableConfiguration(subset(prefix));</span>
+<span class="fc" id="L781">        return ConfigurationUtils.unmodifiableConfiguration(subset(prefix));</span>
     }
 
     @Override
     public final void setProperty(final String key, final Object value)
     {
-<span class="fc" id="L778">        beginWrite(false);</span>
+<span class="fc" id="L787">        beginWrite(false);</span>
         try
         {
-<span class="fc" id="L781">            fireEvent(ConfigurationEvent.SET_PROPERTY, key, value, true);</span>
-<span class="fc" id="L782">            setPropertyInternal(key, value);</span>
-<span class="fc" id="L783">            fireEvent(ConfigurationEvent.SET_PROPERTY, key, value, false);</span>
+<span class="fc" id="L790">            fireEvent(ConfigurationEvent.SET_PROPERTY, key, value, true);</span>
+<span class="fc" id="L791">            setPropertyInternal(key, value);</span>
+<span class="fc" id="L792">            fireEvent(ConfigurationEvent.SET_PROPERTY, key, value, false);</span>
         }
         finally
         {
-<span class="fc" id="L787">            endWrite();</span>
+<span class="fc" id="L796">            endWrite();</span>
         }
-<span class="fc" id="L789">    }</span>
+<span class="fc" id="L798">    }</span>
 
     /**
      * Actually sets the value of a property. This method is called by
@@ -801,17 +810,17 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void setPropertyInternal(final String key, final Object value)
     {
-<span class="fc" id="L804">        setDetailEvents(false);</span>
+<span class="fc" id="L813">        setDetailEvents(false);</span>
         try
         {
-<span class="fc" id="L807">            clearProperty(key);</span>
-<span class="fc" id="L808">            addProperty(key, value);</span>
+<span class="fc" id="L816">            clearProperty(key);</span>
+<span class="fc" id="L817">            addProperty(key, value);</span>
         }
         finally
         {
-<span class="fc" id="L812">            setDetailEvents(true);</span>
+<span class="fc" id="L821">            setDetailEvents(true);</span>
         }
-<span class="fc" id="L814">    }</span>
+<span class="fc" id="L823">    }</span>
 
     /**
      * Removes the specified property from this configuration. This
@@ -823,18 +832,18 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final void clearProperty(final String key)
     {
-<span class="fc" id="L826">        beginWrite(false);</span>
+<span class="fc" id="L835">        beginWrite(false);</span>
         try
         {
-<span class="fc" id="L829">            fireEvent(ConfigurationEvent.CLEAR_PROPERTY, key, null, true);</span>
-<span class="fc" id="L830">            clearPropertyDirect(key);</span>
-<span class="fc" id="L831">            fireEvent(ConfigurationEvent.CLEAR_PROPERTY, key, null, false);</span>
+<span class="fc" id="L838">            fireEvent(ConfigurationEvent.CLEAR_PROPERTY, key, null, true);</span>
+<span class="fc" id="L839">            clearPropertyDirect(key);</span>
+<span class="fc" id="L840">            fireEvent(ConfigurationEvent.CLEAR_PROPERTY, key, null, false);</span>
         }
         finally
         {
-<span class="fc" id="L835">            endWrite();</span>
+<span class="fc" id="L844">            endWrite();</span>
         }
-<span class="fc" id="L837">    }</span>
+<span class="fc" id="L846">    }</span>
 
     /**
      * Removes the specified property from this configuration. This method is
@@ -848,18 +857,18 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final void clear()
     {
-<span class="fc" id="L851">        beginWrite(false);</span>
+<span class="fc" id="L860">        beginWrite(false);</span>
         try
         {
-<span class="fc" id="L854">            fireEvent(ConfigurationEvent.CLEAR, null, null, true);</span>
-<span class="fc" id="L855">            clearInternal();</span>
-<span class="fc" id="L856">            fireEvent(ConfigurationEvent.CLEAR, null, null, false);</span>
+<span class="fc" id="L863">            fireEvent(ConfigurationEvent.CLEAR, null, null, true);</span>
+<span class="fc" id="L864">            clearInternal();</span>
+<span class="fc" id="L865">            fireEvent(ConfigurationEvent.CLEAR, null, null, false);</span>
         }
         finally
         {
-<span class="fc" id="L860">            endWrite();</span>
+<span class="fc" id="L869">            endWrite();</span>
         }
-<span class="fc" id="L862">    }</span>
+<span class="fc" id="L871">    }</span>
 
     /**
      * Clears the whole configuration. This method is called by {@code clear()}
@@ -870,45 +879,45 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected void clearInternal()
     {
-<span class="fc" id="L873">        setDetailEvents(false);</span>
-<span class="fc" id="L874">        boolean useIterator = true;</span>
+<span class="fc" id="L882">        setDetailEvents(false);</span>
+<span class="fc" id="L883">        boolean useIterator = true;</span>
         try
         {
-<span class="fc" id="L877">            final Iterator&lt;String&gt; it = getKeys();</span>
-<span class="fc bfc" id="L878" title="All 2 branches covered.">            while (it.hasNext())</span>
+<span class="fc" id="L886">            final Iterator&lt;String&gt; it = getKeys();</span>
+<span class="fc bfc" id="L887" title="All 2 branches covered.">            while (it.hasNext())</span>
             {
-<span class="fc" id="L880">                final String key = it.next();</span>
-<span class="fc bfc" id="L881" title="All 2 branches covered.">                if (useIterator)</span>
+<span class="fc" id="L889">                final String key = it.next();</span>
+<span class="fc bfc" id="L890" title="All 2 branches covered.">                if (useIterator)</span>
                 {
                     try
                     {
-<span class="fc" id="L885">                        it.remove();</span>
+<span class="fc" id="L894">                        it.remove();</span>
                     }
-<span class="fc" id="L887">                    catch (final UnsupportedOperationException usoex)</span>
+<span class="fc" id="L896">                    catch (final UnsupportedOperationException usoex)</span>
                     {
-<span class="fc" id="L889">                        useIterator = false;</span>
-<span class="fc" id="L890">                    }</span>
+<span class="fc" id="L898">                        useIterator = false;</span>
+<span class="fc" id="L899">                    }</span>
                 }
 
-<span class="fc bfc" id="L893" title="All 4 branches covered.">                if (useIterator &amp;&amp; containsKey(key))</span>
+<span class="fc bfc" id="L902" title="All 4 branches covered.">                if (useIterator &amp;&amp; containsKey(key))</span>
                 {
-<span class="fc" id="L895">                    useIterator = false;</span>
+<span class="fc" id="L904">                    useIterator = false;</span>
                 }
 
-<span class="fc bfc" id="L898" title="All 2 branches covered.">                if (!useIterator)</span>
+<span class="fc bfc" id="L907" title="All 2 branches covered.">                if (!useIterator)</span>
                 {
                     // workaround for Iterators that do not remove the
                     // property
                     // on calling remove() or do not support remove() at all
-<span class="fc" id="L903">                    clearProperty(key);</span>
+<span class="fc" id="L912">                    clearProperty(key);</span>
                 }
-<span class="fc" id="L905">            }</span>
+<span class="fc" id="L914">            }</span>
         }
         finally
         {
-<span class="fc" id="L909">            setDetailEvents(true);</span>
+<span class="fc" id="L918">            setDetailEvents(true);</span>
         }
-<span class="fc" id="L911">    }</span>
+<span class="fc" id="L920">    }</span>
 
     /**
      * {@inheritDoc} This implementation takes care of synchronization and then
@@ -919,14 +928,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final Iterator&lt;String&gt; getKeys()
     {
-<span class="fc" id="L922">        beginRead(false);</span>
+<span class="fc" id="L931">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L925">            return getKeysInternal();</span>
+<span class="fc" id="L934">            return getKeysInternal();</span>
         }
         finally
         {
-<span class="fc" id="L929">            endRead();</span>
+<span class="fc" id="L938">            endRead();</span>
         }
     }
 
@@ -940,14 +949,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final Iterator&lt;String&gt; getKeys(final String prefix)
     {
-<span class="fc" id="L943">        beginRead(false);</span>
+<span class="fc" id="L952">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L946">            return getKeysInternal(prefix);</span>
+<span class="fc" id="L955">            return getKeysInternal(prefix);</span>
         }
         finally
         {
-<span class="fc" id="L950">            endRead();</span>
+<span class="fc" id="L959">            endRead();</span>
         }
     }
 
@@ -975,7 +984,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected Iterator&lt;String&gt; getKeysInternal(final String prefix)
     {
-<span class="fc" id="L978">        return new PrefixedKeysIterator(getKeysInternal(), prefix);</span>
+<span class="fc" id="L987">        return new PrefixedKeysIterator(getKeysInternal(), prefix);</span>
     }
 
     /**
@@ -986,14 +995,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final Object getProperty(final String key)
     {
-<span class="fc" id="L989">        beginRead(false);</span>
+<span class="fc" id="L998">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L992">            return getPropertyInternal(key);</span>
+<span class="fc" id="L1001">            return getPropertyInternal(key);</span>
         }
         finally
         {
-<span class="fc" id="L996">            endRead();</span>
+<span class="fc" id="L1005">            endRead();</span>
         }
     }
 
@@ -1015,14 +1024,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final boolean isEmpty()
     {
-<span class="fc" id="L1018">        beginRead(false);</span>
+<span class="fc" id="L1027">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L1021">            return isEmptyInternal();</span>
+<span class="fc" id="L1030">            return isEmptyInternal();</span>
         }
         finally
         {
-<span class="fc" id="L1025">            endRead();</span>
+<span class="fc" id="L1034">            endRead();</span>
         }
     }
 
@@ -1043,14 +1052,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final int size()
     {
-<span class="fc" id="L1046">        beginRead(false);</span>
+<span class="fc" id="L1055">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L1049">            return sizeInternal();</span>
+<span class="fc" id="L1058">            return sizeInternal();</span>
         }
         finally
         {
-<span class="fc" id="L1053">            endRead();</span>
+<span class="fc" id="L1062">            endRead();</span>
         }
     }
 
@@ -1065,12 +1074,12 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected int sizeInternal()
     {
-<span class="fc" id="L1068">        int size = 0;</span>
-<span class="fc bfc" id="L1069" title="All 2 branches covered.">        for (final Iterator&lt;String&gt; keyIt = getKeysInternal(); keyIt.hasNext(); size++)</span>
+<span class="fc" id="L1077">        int size = 0;</span>
+<span class="fc bfc" id="L1078" title="All 2 branches covered.">        for (final Iterator&lt;String&gt; keyIt = getKeysInternal(); keyIt.hasNext(); size++)</span>
         {
-<span class="fc" id="L1071">            keyIt.next();</span>
+<span class="fc" id="L1080">            keyIt.next();</span>
         }
-<span class="fc" id="L1073">        return size;</span>
+<span class="fc" id="L1082">        return size;</span>
     }
 
     /**
@@ -1080,14 +1089,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public final boolean containsKey(final String key)
     {
-<span class="fc" id="L1083">        beginRead(false);</span>
+<span class="fc" id="L1092">        beginRead(false);</span>
         try
         {
-<span class="fc" id="L1086">            return containsKeyInternal(key);</span>
+<span class="fc" id="L1095">            return containsKeyInternal(key);</span>
         }
         finally
         {
-<span class="fc" id="L1090">            endRead();</span>
+<span class="fc" id="L1099">            endRead();</span>
         }
     }
 
@@ -1106,7 +1115,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public Properties getProperties(final String key)
     {
-<span class="fc" id="L1109">        return getProperties(key, null);</span>
+<span class="fc" id="L1118">        return getProperties(key, null);</span>
     }
 
     /**
@@ -1129,46 +1138,46 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
         /*
          * Grab an array of the tokens for this key.
          */
-<span class="fc" id="L1132">        final String[] tokens = getStringArray(key);</span>
+<span class="fc" id="L1141">        final String[] tokens = getStringArray(key);</span>
 
         /*
          * Each token is of the form 'key=value'.
          */
-<span class="pc bpc" id="L1137" title="1 of 2 branches missed.">        final Properties props = defaults == null ? new Properties() : new Properties(defaults);</span>
-<span class="fc bfc" id="L1138" title="All 2 branches covered.">        for (final String token : tokens)</span>
+<span class="pc bpc" id="L1146" title="1 of 2 branches missed.">        final Properties props = defaults == null ? new Properties() : new Properties(defaults);</span>
+<span class="fc bfc" id="L1147" title="All 2 branches covered.">        for (final String token : tokens)</span>
         {
-<span class="fc" id="L1140">            final int equalSign = token.indexOf('=');</span>
-<span class="pc bpc" id="L1141" title="1 of 2 branches missed.">            if (equalSign &gt; 0)</span>
+<span class="fc" id="L1149">            final int equalSign = token.indexOf('=');</span>
+<span class="pc bpc" id="L1150" title="1 of 2 branches missed.">            if (equalSign &gt; 0)</span>
             {
-<span class="fc" id="L1143">                final String pkey = token.substring(0, equalSign).trim();</span>
-<span class="fc" id="L1144">                final String pvalue = token.substring(equalSign + 1).trim();</span>
-<span class="fc" id="L1145">                props.put(pkey, pvalue);</span>
-<span class="fc" id="L1146">            }</span>
-<span class="nc bnc" id="L1147" title="All 4 branches missed.">            else if (tokens.length == 1 &amp;&amp; &quot;&quot;.equals(token))</span>
+<span class="fc" id="L1152">                final String pkey = token.substring(0, equalSign).trim();</span>
+<span class="fc" id="L1153">                final String pvalue = token.substring(equalSign + 1).trim();</span>
+<span class="fc" id="L1154">                props.put(pkey, pvalue);</span>
+<span class="fc" id="L1155">            }</span>
+<span class="nc bnc" id="L1156" title="All 4 branches missed.">            else if (tokens.length == 1 &amp;&amp; &quot;&quot;.equals(token))</span>
             {
                 // Semantically equivalent to an empty Properties
                 // object.
-<span class="nc" id="L1151">                break;</span>
+<span class="nc" id="L1160">                break;</span>
             }
             else
             {
-<span class="nc" id="L1155">                throw new IllegalArgumentException('\'' + token + &quot;' does not contain an equals sign&quot;);</span>
+<span class="nc" id="L1164">                throw new IllegalArgumentException('\'' + token + &quot;' does not contain an equals sign&quot;);</span>
             }
         }
-<span class="fc" id="L1158">        return props;</span>
+<span class="fc" id="L1167">        return props;</span>
     }
 
     @Override
     public boolean getBoolean(final String key)
     {
-<span class="fc" id="L1164">        final Boolean b = convert(Boolean.class, key, null, true);</span>
-<span class="fc" id="L1165">        return checkNonNullValue(key, b).booleanValue();</span>
+<span class="fc" id="L1173">        final Boolean b = convert(Boolean.class, key, null, true);</span>
+<span class="fc" id="L1174">        return checkNonNullValue(key, b).booleanValue();</span>
     }
 
     @Override
     public boolean getBoolean(final String key, final boolean defaultValue)
     {
-<span class="fc" id="L1171">        return getBoolean(key, Boolean.valueOf(defaultValue)).booleanValue();</span>
+<span class="fc" id="L1180">        return getBoolean(key, Boolean.valueOf(defaultValue)).booleanValue();</span>
     }
 
     /**
@@ -1185,121 +1194,121 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public Boolean getBoolean(final String key, final Boolean defaultValue)
     {
-<span class="fc" id="L1188">        return convert(Boolean.class, key, defaultValue, false);</span>
+<span class="fc" id="L1197">        return convert(Boolean.class, key, defaultValue, false);</span>
     }
 
     @Override
     public byte getByte(final String key)
     {
-<span class="fc" id="L1194">        final Byte b = convert(Byte.class, key, null, true);</span>
-<span class="fc" id="L1195">        return checkNonNullValue(key, b).byteValue();</span>
+<span class="fc" id="L1203">        final Byte b = convert(Byte.class, key, null, true);</span>
+<span class="fc" id="L1204">        return checkNonNullValue(key, b).byteValue();</span>
     }
 
     @Override
     public byte getByte(final String key, final byte defaultValue)
     {
-<span class="fc" id="L1201">        return getByte(key, Byte.valueOf(defaultValue)).byteValue();</span>
+<span class="fc" id="L1210">        return getByte(key, Byte.valueOf(defaultValue)).byteValue();</span>
     }
 
     @Override
     public Byte getByte(final String key, final Byte defaultValue)
     {
-<span class="fc" id="L1207">        return convert(Byte.class, key, defaultValue, false);</span>
+<span class="fc" id="L1216">        return convert(Byte.class, key, defaultValue, false);</span>
     }
 
     @Override
     public double getDouble(final String key)
     {
-<span class="fc" id="L1213">        final Double d = convert(Double.class, key, null, true);</span>
-<span class="fc" id="L1214">        return checkNonNullValue(key, d).doubleValue();</span>
+<span class="fc" id="L1222">        final Double d = convert(Double.class, key, null, true);</span>
+<span class="fc" id="L1223">        return checkNonNullValue(key, d).doubleValue();</span>
     }
 
     @Override
     public double getDouble(final String key, final double defaultValue)
     {
-<span class="fc" id="L1220">        return getDouble(key, Double.valueOf(defaultValue)).doubleValue();</span>
+<span class="fc" id="L1229">        return getDouble(key, Double.valueOf(defaultValue)).doubleValue();</span>
     }
 
     @Override
     public Double getDouble(final String key, final Double defaultValue)
     {
-<span class="fc" id="L1226">        return convert(Double.class, key, defaultValue, false);</span>
+<span class="fc" id="L1235">        return convert(Double.class, key, defaultValue, false);</span>
     }
 
     @Override
     public float getFloat(final String key)
     {
-<span class="fc" id="L1232">        final Float f = convert(Float.class, key, null, true);</span>
-<span class="fc" id="L1233">        return checkNonNullValue(key, f).floatValue();</span>
+<span class="fc" id="L1241">        final Float f = convert(Float.class, key, null, true);</span>
+<span class="fc" id="L1242">        return checkNonNullValue(key, f).floatValue();</span>
     }
 
     @Override
     public float getFloat(final String key, final float defaultValue)
     {
-<span class="fc" id="L1239">        return getFloat(key, Float.valueOf(defaultValue)).floatValue();</span>
+<span class="fc" id="L1248">        return getFloat(key, Float.valueOf(defaultValue)).floatValue();</span>
     }
 
     @Override
     public Float getFloat(final String key, final Float defaultValue)
     {
-<span class="fc" id="L1245">        return convert(Float.class, key, defaultValue, false);</span>
+<span class="fc" id="L1254">        return convert(Float.class, key, defaultValue, false);</span>
     }
 
     @Override
     public int getInt(final String key)
     {
-<span class="fc" id="L1251">        final Integer i = convert(Integer.class, key, null, true);</span>
-<span class="fc" id="L1252">        return checkNonNullValue(key, i).intValue();</span>
+<span class="fc" id="L1260">        final Integer i = convert(Integer.class, key, null, true);</span>
+<span class="fc" id="L1261">        return checkNonNullValue(key, i).intValue();</span>
     }
 
     @Override
     public int getInt(final String key, final int defaultValue)
     {
-<span class="fc" id="L1258">        return getInteger(key, Integer.valueOf(defaultValue)).intValue();</span>
+<span class="fc" id="L1267">        return getInteger(key, Integer.valueOf(defaultValue)).intValue();</span>
     }
 
     @Override
     public Integer getInteger(final String key, final Integer defaultValue)
     {
-<span class="fc" id="L1264">        return convert(Integer.class, key, defaultValue, false);</span>
+<span class="fc" id="L1273">        return convert(Integer.class, key, defaultValue, false);</span>
     }
 
     @Override
     public long getLong(final String key)
     {
-<span class="fc" id="L1270">        final Long l = convert(Long.class, key, null, true);</span>
-<span class="fc" id="L1271">        return checkNonNullValue(key, l).longValue();</span>
+<span class="fc" id="L1279">        final Long l = convert(Long.class, key, null, true);</span>
+<span class="fc" id="L1280">        return checkNonNullValue(key, l).longValue();</span>
     }
 
     @Override
     public long getLong(final String key, final long defaultValue)
     {
-<span class="fc" id="L1277">        return getLong(key, Long.valueOf(defaultValue)).longValue();</span>
+<span class="fc" id="L1286">        return getLong(key, Long.valueOf(defaultValue)).longValue();</span>
     }
 
     @Override
     public Long getLong(final String key, final Long defaultValue)
     {
-<span class="fc" id="L1283">        return convert(Long.class, key, defaultValue, false);</span>
+<span class="fc" id="L1292">        return convert(Long.class, key, defaultValue, false);</span>
     }
 
     @Override
     public short getShort(final String key)
     {
-<span class="fc" id="L1289">        final Short s = convert(Short.class, key, null, true);</span>
-<span class="fc" id="L1290">        return checkNonNullValue(key, s).shortValue();</span>
+<span class="fc" id="L1298">        final Short s = convert(Short.class, key, null, true);</span>
+<span class="fc" id="L1299">        return checkNonNullValue(key, s).shortValue();</span>
     }
 
     @Override
     public short getShort(final String key, final short defaultValue)
     {
-<span class="fc" id="L1296">        return getShort(key, Short.valueOf(defaultValue)).shortValue();</span>
+<span class="fc" id="L1305">        return getShort(key, Short.valueOf(defaultValue)).shortValue();</span>
     }
 
     @Override
     public Short getShort(final String key, final Short defaultValue)
     {
-<span class="fc" id="L1302">        return convert(Short.class, key, defaultValue, false);</span>
+<span class="fc" id="L1311">        return convert(Short.class, key, defaultValue, false);</span>
     }
 
     /**
@@ -1309,13 +1318,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public BigDecimal getBigDecimal(final String key)
     {
-<span class="fc" id="L1312">        return convert(BigDecimal.class, key, null, true);</span>
+<span class="fc" id="L1321">        return convert(BigDecimal.class, key, null, true);</span>
     }
 
     @Override
     public BigDecimal getBigDecimal(final String key, final BigDecimal defaultValue)
     {
-<span class="fc" id="L1318">        return convert(BigDecimal.class, key, defaultValue, false);</span>
+<span class="fc" id="L1327">        return convert(BigDecimal.class, key, defaultValue, false);</span>
     }
 
     /**
@@ -1325,13 +1334,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public BigInteger getBigInteger(final String key)
     {
-<span class="fc" id="L1328">        return convert(BigInteger.class, key, null, true);</span>
+<span class="fc" id="L1337">        return convert(BigInteger.class, key, null, true);</span>
     }
 
     @Override
     public BigInteger getBigInteger(final String key, final BigInteger defaultValue)
     {
-<span class="fc" id="L1334">        return convert(BigInteger.class, key, defaultValue, false);</span>
+<span class="fc" id="L1343">        return convert(BigInteger.class, key, defaultValue, false);</span>
     }
 
     /**
@@ -1341,14 +1350,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public String getString(final String key)
     {
-<span class="fc" id="L1344">        return convert(String.class, key, null, true);</span>
+<span class="fc" id="L1353">        return convert(String.class, key, null, true);</span>
     }
 
     @Override
     public String getString(final String key, final String defaultValue)
     {
-<span class="fc" id="L1350">        final String result = convert(String.class, key, null, false);</span>
-<span class="fc bfc" id="L1351" title="All 2 branches covered.">        return result != null ? result : interpolate(defaultValue);</span>
+<span class="fc" id="L1359">        final String result = convert(String.class, key, null, false);</span>
+<span class="fc bfc" id="L1360" title="All 2 branches covered.">        return (result != null) ? result : interpolate(defaultValue);</span>
     }
 
     /**
@@ -1361,14 +1370,14 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public String getEncodedString(final String key, final ConfigurationDecoder decoder)
     {
-<span class="fc bfc" id="L1364" title="All 2 branches covered.">        if (decoder == null)</span>
+<span class="fc bfc" id="L1373" title="All 2 branches covered.">        if (decoder == null)</span>
         {
-<span class="fc" id="L1366">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L1375">            throw new IllegalArgumentException(</span>
                     &quot;ConfigurationDecoder must not be null!&quot;);
         }
 
-<span class="fc" id="L1370">        final String value = getString(key);</span>
-<span class="fc bfc" id="L1371" title="All 2 branches covered.">        return value != null ? decoder.decode(value) : null;</span>
+<span class="fc" id="L1379">        final String value = getString(key);</span>
+<span class="fc bfc" id="L1380" title="All 2 branches covered.">        return (value != null) ? decoder.decode(value) : null;</span>
     }
 
     /**
@@ -1383,13 +1392,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public String getEncodedString(final String key)
     {
-<span class="fc" id="L1386">        final ConfigurationDecoder decoder = getConfigurationDecoder();</span>
-<span class="fc bfc" id="L1387" title="All 2 branches covered.">        if (decoder == null)</span>
+<span class="fc" id="L1395">        final ConfigurationDecoder decoder = getConfigurationDecoder();</span>
+<span class="fc bfc" id="L1396" title="All 2 branches covered.">        if (decoder == null)</span>
         {
-<span class="fc" id="L1389">            throw new IllegalStateException(</span>
+<span class="fc" id="L1398">            throw new IllegalStateException(</span>
                     &quot;No default ConfigurationDecoder defined!&quot;);
         }
-<span class="fc" id="L1392">        return getEncodedString(key, decoder);</span>
+<span class="fc" id="L1401">        return getEncodedString(key, decoder);</span>
     }
 
     /**
@@ -1411,8 +1420,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public String[] getStringArray(final String key)
     {
-<span class="fc" id="L1414">        final String[] result = (String[]) getArray(String.class, key);</span>
-<span class="fc bfc" id="L1415" title="All 2 branches covered.">        return result == null ? new String[0] : result;</span>
+<span class="fc" id="L1423">        final String[] result = (String[]) getArray(String.class, key);</span>
+<span class="fc bfc" id="L1424" title="All 2 branches covered.">        return (result == null) ? new String[0] : result;</span>
     }
 
     /**
@@ -1422,59 +1431,59 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public List&lt;Object&gt; getList(final String key)
     {
-<span class="fc" id="L1425">        return getList(key, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L1434">        return getList(key, new ArrayList&lt;&gt;());</span>
     }
 
     @Override
     public List&lt;Object&gt; getList(final String key, final List&lt;?&gt; defaultValue)
     {
-<span class="fc" id="L1431">        final Object value = getProperty(key);</span>
+<span class="fc" id="L1440">        final Object value = getProperty(key);</span>
         List&lt;Object&gt; list;
 
-<span class="fc bfc" id="L1434" title="All 2 branches covered.">        if (value instanceof String)</span>
+<span class="fc bfc" id="L1443" title="All 2 branches covered.">        if (value instanceof String)</span>
         {
-<span class="fc" id="L1436">            list = new ArrayList&lt;&gt;(1);</span>
-<span class="fc" id="L1437">            list.add(interpolate((String) value));</span>
+<span class="fc" id="L1445">            list = new ArrayList&lt;&gt;(1);</span>
+<span class="fc" id="L1446">            list.add(interpolate((String) value));</span>
         }
-<span class="fc bfc" id="L1439" title="All 2 branches covered.">        else if (value instanceof List)</span>
+<span class="fc bfc" id="L1448" title="All 2 branches covered.">        else if (value instanceof List)</span>
         {
-<span class="fc" id="L1441">            list = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L1442">            final List&lt;?&gt; l = (List&lt;?&gt;) value;</span>
+<span class="fc" id="L1450">            list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1451">            final List&lt;?&gt; l = (List&lt;?&gt;) value;</span>
 
             // add the interpolated elements in the new list
-<span class="fc bfc" id="L1445" title="All 2 branches covered.">            for (final Object elem : l)</span>
+<span class="fc bfc" id="L1454" title="All 2 branches covered.">            for (final Object elem : l)</span>
             {
-<span class="fc" id="L1447">                list.add(interpolate(elem));</span>
-<span class="fc" id="L1448">            }</span>
-<span class="fc" id="L1449">        }</span>
-<span class="fc bfc" id="L1450" title="All 2 branches covered.">        else if (value == null)</span>
+<span class="fc" id="L1456">                list.add(interpolate(elem));</span>
+<span class="fc" id="L1457">            }</span>
+<span class="fc" id="L1458">        }</span>
+<span class="fc bfc" id="L1459" title="All 2 branches covered.">        else if (value == null)</span>
         {
             // This is okay because we just return this list to the caller
             @SuppressWarnings(&quot;unchecked&quot;)
             final
-<span class="fc" id="L1455">            List&lt;Object&gt; resultList = (List&lt;Object&gt;) defaultValue;</span>
-<span class="fc" id="L1456">            list = resultList;</span>
-<span class="fc" id="L1457">        }</span>
-<span class="fc bfc" id="L1458" title="All 2 branches covered.">        else if (value.getClass().isArray())</span>
+<span class="fc" id="L1464">            List&lt;Object&gt; resultList = (List&lt;Object&gt;) defaultValue;</span>
+<span class="fc" id="L1465">            list = resultList;</span>
+<span class="fc" id="L1466">        }</span>
+<span class="fc bfc" id="L1467" title="All 2 branches covered.">        else if (value.getClass().isArray())</span>
         {
-<span class="fc" id="L1460">            return Arrays.asList((Object[]) value);</span>
+<span class="fc" id="L1469">            return Arrays.asList((Object[]) value);</span>
         }
-<span class="pc bpc" id="L1462" title="1 of 2 branches missed.">        else if (isScalarValue(value))</span>
+<span class="pc bpc" id="L1471" title="1 of 2 branches missed.">        else if (isScalarValue(value))</span>
         {
-<span class="fc" id="L1464">            return Collections.singletonList((Object) value.toString());</span>
+<span class="fc" id="L1473">            return Collections.singletonList((Object) value.toString());</span>
         }
         else
         {
-<span class="nc" id="L1468">            throw new ConversionException('\'' + key + &quot;' doesn't map to a List object: &quot; + value + &quot;, a &quot;</span>
-<span class="nc" id="L1469">                    + value.getClass().getName());</span>
+<span class="nc" id="L1477">            throw new ConversionException('\'' + key + &quot;' doesn't map to a List object: &quot; + value + &quot;, a &quot;</span>
+<span class="nc" id="L1478">                    + value.getClass().getName());</span>
         }
-<span class="fc" id="L1471">        return list;</span>
+<span class="fc" id="L1480">        return list;</span>
     }
 
     @Override
     public &lt;T&gt; T get(final Class&lt;T&gt; cls, final String key)
     {
-<span class="fc" id="L1477">        return convert(cls, key, null, true);</span>
+<span class="fc" id="L1486">        return convert(cls, key, null, true);</span>
     }
 
     /**
@@ -1484,13 +1493,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public &lt;T&gt; T get(final Class&lt;T&gt; cls, final String key, final T defaultValue)
     {
-<span class="fc" id="L1487">        return convert(cls, key, defaultValue, false);</span>
+<span class="fc" id="L1496">        return convert(cls, key, defaultValue, false);</span>
     }
 
     @Override
     public Object getArray(final Class&lt;?&gt; cls, final String key)
     {
-<span class="fc" id="L1493">        return getArray(cls, key, null);</span>
+<span class="fc" id="L1502">        return getArray(cls, key, null);</span>
     }
 
     /**
@@ -1506,13 +1515,13 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public Object getArray(final Class&lt;?&gt; cls, final String key, final Object defaultValue)
     {
-<span class="fc" id="L1509">        return convertToArray(cls, key, defaultValue);</span>
+<span class="fc" id="L1518">        return convertToArray(cls, key, defaultValue);</span>
     }
 
     @Override
     public &lt;T&gt; List&lt;T&gt; getList(final Class&lt;T&gt; cls, final String key)
     {
-<span class="fc" id="L1515">        return getList(cls, key, null);</span>
+<span class="fc" id="L1524">        return getList(cls, key, null);</span>
     }
 
     /**
@@ -1523,19 +1532,19 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     @Override
     public &lt;T&gt; List&lt;T&gt; getList(final Class&lt;T&gt; cls, final String key, final List&lt;T&gt; defaultValue)
     {
-<span class="fc" id="L1526">        final List&lt;T&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L1527" title="All 2 branches covered.">        if (getCollection(cls, key, result, defaultValue) == null)</span>
+<span class="fc" id="L1535">        final List&lt;T&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1536" title="All 2 branches covered.">        if (getCollection(cls, key, result, defaultValue) == null)</span>
         {
-<span class="fc" id="L1529">            return null;</span>
+<span class="fc" id="L1538">            return null;</span>
         }
-<span class="fc" id="L1531">        return result;</span>
+<span class="fc" id="L1540">        return result;</span>
     }
 
     @Override
     public &lt;T&gt; Collection&lt;T&gt; getCollection(final Class&lt;T&gt; cls, final String key,
             final Collection&lt;T&gt; target)
     {
-<span class="fc" id="L1538">        return getCollection(cls, key, target, null);</span>
+<span class="fc" id="L1547">        return getCollection(cls, key, target, null);</span>
     }
 
     /**
@@ -1547,17 +1556,17 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     public &lt;T&gt; Collection&lt;T&gt; getCollection(final Class&lt;T&gt; cls, final String key,
             final Collection&lt;T&gt; target, final Collection&lt;T&gt; defaultValue)
     {
-<span class="fc" id="L1550">        final Object src = getProperty(key);</span>
-<span class="fc bfc" id="L1551" title="All 2 branches covered.">        if (src == null)</span>
+<span class="fc" id="L1559">        final Object src = getProperty(key);</span>
+<span class="fc bfc" id="L1560" title="All 2 branches covered.">        if (src == null)</span>
         {
-<span class="fc" id="L1553">            return handleDefaultCollection(target, defaultValue);</span>
+<span class="fc" id="L1562">            return handleDefaultCollection(target, defaultValue);</span>
         }
 
         final Collection&lt;T&gt; targetCol =
-<span class="fc bfc" id="L1557" title="All 2 branches covered.">                target != null ? target : new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L1558">        getConversionHandler().toCollection(src, cls, getInterpolator(),</span>
+<span class="fc bfc" id="L1566" title="All 2 branches covered.">                (target != null) ? target : new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1567">        getConversionHandler().toCollection(src, cls, getInterpolator(),</span>
                 targetCol);
-<span class="fc" id="L1560">        return targetCol;</span>
+<span class="fc" id="L1569">        return targetCol;</span>
     }
 
     /**
@@ -1575,7 +1584,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected boolean isScalarValue(final Object value)
     {
-<span class="pc bpc" id="L1578" title="1 of 2 branches missed.">        return ClassUtils.wrapperToPrimitive(value.getClass()) != null;</span>
+<span class="pc bpc" id="L1587" title="1 of 2 branches missed.">        return ClassUtils.wrapperToPrimitive(value.getClass()) != null;</span>
     }
 
     /**
@@ -1595,24 +1604,24 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public void copy(final Configuration c)
     {
-<span class="fc bfc" id="L1598" title="All 2 branches covered.">        if (c != null)</span>
+<span class="fc bfc" id="L1607" title="All 2 branches covered.">        if (c != null)</span>
         {
-<span class="fc" id="L1600">            c.lock(LockMode.READ);</span>
+<span class="fc" id="L1609">            c.lock(LockMode.READ);</span>
             try
             {
-<span class="fc bfc" id="L1603" title="All 2 branches covered.">                for (final Iterator&lt;String&gt; it = c.getKeys(); it.hasNext();)</span>
+<span class="fc bfc" id="L1612" title="All 2 branches covered.">                for (final Iterator&lt;String&gt; it = c.getKeys(); it.hasNext();)</span>
                 {
-<span class="fc" id="L1605">                    final String key = it.next();</span>
-<span class="fc" id="L1606">                    final Object value = encodeForCopy(c.getProperty(key));</span>
-<span class="fc" id="L1607">                    setProperty(key, value);</span>
-<span class="fc" id="L1608">                }</span>
+<span class="fc" id="L1614">                    final String key = it.next();</span>
+<span class="fc" id="L1615">                    final Object value = encodeForCopy(c.getProperty(key));</span>
+<span class="fc" id="L1616">                    setProperty(key, value);</span>
+<span class="fc" id="L1617">                }</span>
             }
             finally
             {
-<span class="fc" id="L1612">                c.unlock(LockMode.READ);</span>
+<span class="fc" id="L1621">                c.unlock(LockMode.READ);</span>
             }
         }
-<span class="fc" id="L1615">    }</span>
+<span class="fc" id="L1624">    }</span>
 
     /**
      * Appends the content of the specified configuration to this configuration.
@@ -1633,30 +1642,30 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     public void append(final Configuration c)
     {
-<span class="fc bfc" id="L1636" title="All 2 branches covered.">        if (c != null)</span>
+<span class="fc bfc" id="L1645" title="All 2 branches covered.">        if (c != null)</span>
         {
-<span class="fc" id="L1638">            c.lock(LockMode.READ);</span>
+<span class="fc" id="L1647">            c.lock(LockMode.READ);</span>
             try
             {
-<span class="fc bfc" id="L1641" title="All 2 branches covered.">                for (final Iterator&lt;String&gt; it = c.getKeys(); it.hasNext();)</span>
+<span class="fc bfc" id="L1650" title="All 2 branches covered.">                for (final Iterator&lt;String&gt; it = c.getKeys(); it.hasNext();)</span>
                 {
-<span class="fc" id="L1643">                    final String key = it.next();</span>
-<span class="fc" id="L1644">                    final Object value = encodeForCopy(c.getProperty(key));</span>
-<span class="fc" id="L1645">                    addProperty(key, value);</span>
-<span class="fc" id="L1646">                }</span>
+<span class="fc" id="L1652">                    final String key = it.next();</span>
+<span class="fc" id="L1653">                    final Object value = encodeForCopy(c.getProperty(key));</span>
+<span class="fc" id="L1654">                    addProperty(key, value);</span>
+<span class="fc" id="L1655">                }</span>
             }
             finally
             {
-<span class="fc" id="L1650">                c.unlock(LockMode.READ);</span>
+<span class="fc" id="L1659">                c.unlock(LockMode.READ);</span>
             }
         }
-<span class="fc" id="L1653">    }</span>
+<span class="fc" id="L1662">    }</span>
 
     /**
      * Returns a configuration with the same content as this configuration, but
      * with all variables replaced by their actual values. This method tries to
      * clone the configuration and then perform interpolation on all properties.
-     * So property values of the form {@code ${var}} will be resolved as
+     * So property values of the form &lt;code&gt;${var}&lt;/code&gt; will be resolved as
      * far as possible (if a variable cannot be resolved, it remains unchanged).
      * This operation is useful if the content of a configuration is to be
      * exported or processed by an external component that does not support
@@ -1670,19 +1679,19 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     public Configuration interpolatedConfiguration()
     {
         // first clone this configuration
-<span class="fc" id="L1673">        final AbstractConfiguration c = (AbstractConfiguration) ConfigurationUtils</span>
-<span class="fc" id="L1674">                .cloneConfiguration(this);</span>
+<span class="fc" id="L1682">        final AbstractConfiguration c = (AbstractConfiguration) ConfigurationUtils</span>
+<span class="fc" id="L1683">                .cloneConfiguration(this);</span>
 
         // now perform interpolation
-<span class="fc" id="L1677">        c.setListDelimiterHandler(new DisabledListDelimiterHandler());</span>
-<span class="fc bfc" id="L1678" title="All 2 branches covered.">        for (final Iterator&lt;String&gt; it = getKeys(); it.hasNext();)</span>
+<span class="fc" id="L1686">        c.setListDelimiterHandler(new DisabledListDelimiterHandler());</span>
+<span class="fc bfc" id="L1687" title="All 2 branches covered.">        for (final Iterator&lt;String&gt; it = getKeys(); it.hasNext();)</span>
         {
-<span class="fc" id="L1680">            final String key = it.next();</span>
-<span class="fc" id="L1681">            c.setProperty(key, getList(key));</span>
-<span class="fc" id="L1682">        }</span>
+<span class="fc" id="L1689">            final String key = it.next();</span>
+<span class="fc" id="L1690">            c.setProperty(key, getList(key));</span>
+<span class="fc" id="L1691">        }</span>
 
-<span class="fc" id="L1684">        c.setListDelimiterHandler(getListDelimiterHandler());</span>
-<span class="fc" id="L1685">        return c;</span>
+<span class="fc" id="L1693">        c.setListDelimiterHandler(getListDelimiterHandler());</span>
+<span class="fc" id="L1694">        return c;</span>
     }
 
     /**
@@ -1694,8 +1703,8 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     protected final void initLogger(final ConfigurationLogger log)
     {
-<span class="fc bfc" id="L1697" title="All 2 branches covered.">        this.log = log != null ? log : ConfigurationLogger.newDummyLogger();</span>
-<span class="fc" id="L1698">    }</span>
+<span class="fc bfc" id="L1706" title="All 2 branches covered.">        this.log = (log != null) ? log : ConfigurationLogger.newDummyLogger();</span>
+<span class="fc" id="L1707">    }</span>
 
     /**
      * Encodes a property value so that it can be added to this configuration.
@@ -1708,11 +1717,11 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private Object encodeForCopy(final Object value)
     {
-<span class="fc bfc" id="L1711" title="All 2 branches covered.">        if (value instanceof Collection)</span>
+<span class="fc bfc" id="L1720" title="All 2 branches covered.">        if (value instanceof Collection)</span>
         {
-<span class="fc" id="L1713">            return encodeListForCopy((Collection&lt;?&gt;) value);</span>
+<span class="fc" id="L1722">            return encodeListForCopy((Collection&lt;?&gt;) value);</span>
         }
-<span class="fc" id="L1715">        return getListDelimiterHandler().escape(value,</span>
+<span class="fc" id="L1724">        return getListDelimiterHandler().escape(value,</span>
                 ListDelimiterHandler.NOOP_TRANSFORMER);
     }
 
@@ -1726,12 +1735,12 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private Object encodeListForCopy(final Collection&lt;?&gt; values)
     {
-<span class="fc" id="L1729">        final List&lt;Object&gt; result = new ArrayList&lt;&gt;(values.size());</span>
-<span class="fc bfc" id="L1730" title="All 2 branches covered.">        for (final Object value : values)</span>
+<span class="fc" id="L1738">        final List&lt;Object&gt; result = new ArrayList&lt;&gt;(values.size());</span>
+<span class="fc bfc" id="L1739" title="All 2 branches covered.">        for (final Object value : values)</span>
         {
-<span class="fc" id="L1732">            result.add(encodeForCopy(value));</span>
-<span class="fc" id="L1733">        }</span>
-<span class="fc" id="L1734">        return result;</span>
+<span class="fc" id="L1741">            result.add(encodeForCopy(value));</span>
+<span class="fc" id="L1742">        }</span>
+<span class="fc" id="L1743">        return result;</span>
     }
 
     /**
@@ -1747,20 +1756,20 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private &lt;T&gt; T getAndConvertProperty(final Class&lt;T&gt; cls, final String key, final T defaultValue)
     {
-<span class="fc" id="L1750">        final Object value = getProperty(key);</span>
+<span class="fc" id="L1759">        final Object value = getProperty(key);</span>
         try
         {
-<span class="fc" id="L1753">            return ObjectUtils.defaultIfNull(</span>
-<span class="fc" id="L1754">                    getConversionHandler().to(value, cls, getInterpolator()),</span>
+<span class="fc" id="L1762">            return ObjectUtils.defaultIfNull(</span>
+<span class="fc" id="L1763">                    getConversionHandler().to(value, cls, getInterpolator()),</span>
                     defaultValue);
         }
-<span class="fc" id="L1757">        catch (final ConversionException cex)</span>
+<span class="fc" id="L1766">        catch (final ConversionException cex)</span>
         {
             // improve error message
-<span class="fc" id="L1760">            throw new ConversionException(</span>
-<span class="fc" id="L1761">                    String.format(</span>
+<span class="fc" id="L1769">            throw new ConversionException(</span>
+<span class="fc" id="L1770">                    String.format(</span>
                             &quot;Key '%s' cannot be converted to class %s. Value is: '%s'.&quot;,
-<span class="fc" id="L1763">                            key, cls.getName(), String.valueOf(value)), cex.getCause());</span>
+<span class="fc" id="L1772">                            key, cls.getName(), String.valueOf(value)), cex.getCause());</span>
         }
     }
 
@@ -1778,22 +1787,22 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     private &lt;T&gt; T convert(final Class&lt;T&gt; cls, final String key, final T defValue,
             final boolean throwOnMissing)
     {
-<span class="fc bfc" id="L1781" title="All 2 branches covered.">        if (cls.isArray())</span>
+<span class="fc bfc" id="L1790" title="All 2 branches covered.">        if (cls.isArray())</span>
         {
-<span class="fc" id="L1783">            return cls.cast(convertToArray(cls.getComponentType(), key, defValue));</span>
+<span class="fc" id="L1792">            return cls.cast(convertToArray(cls.getComponentType(), key, defValue));</span>
         }
 
-<span class="fc" id="L1786">        final T result = getAndConvertProperty(cls, key, defValue);</span>
-<span class="fc bfc" id="L1787" title="All 2 branches covered.">        if (result == null)</span>
+<span class="fc" id="L1795">        final T result = getAndConvertProperty(cls, key, defValue);</span>
+<span class="fc bfc" id="L1796" title="All 2 branches covered.">        if (result == null)</span>
         {
-<span class="fc bfc" id="L1789" title="All 4 branches covered.">            if (throwOnMissing &amp;&amp; isThrowExceptionOnMissing())</span>
+<span class="fc bfc" id="L1798" title="All 4 branches covered.">            if (throwOnMissing &amp;&amp; isThrowExceptionOnMissing())</span>
             {
-<span class="nc" id="L1791">                throwMissingPropertyException(key);</span>
+<span class="nc" id="L1800">                throwMissingPropertyException(key);</span>
             }
-<span class="fc" id="L1793">            return defValue;</span>
+<span class="fc" id="L1802">            return defValue;</span>
         }
 
-<span class="fc" id="L1796">        return result;</span>
+<span class="fc" id="L1805">        return result;</span>
     }
 
     /**
@@ -1813,9 +1822,9 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private Object convertToArray(final Class&lt;?&gt; cls, final String key, final Object defaultValue)
     {
-<span class="fc" id="L1816">        checkDefaultValueArray(cls, defaultValue);</span>
-<span class="fc" id="L1817">        return ObjectUtils.defaultIfNull(getConversionHandler().toArray(</span>
-<span class="fc" id="L1818">                getProperty(key), cls, getInterpolator()), defaultValue);</span>
+<span class="fc" id="L1825">        checkDefaultValueArray(cls, defaultValue);</span>
+<span class="fc" id="L1826">        return ObjectUtils.defaultIfNull(getConversionHandler().toArray(</span>
+<span class="fc" id="L1827">                getProperty(key), cls, getInterpolator()), defaultValue);</span>
     }
 
     /**
@@ -1829,17 +1838,17 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private static void checkDefaultValueArray(final Class&lt;?&gt; cls, final Object defaultValue)
     {
-<span class="fc bfc" id="L1832" title="All 2 branches covered.">        if (defaultValue != null</span>
-<span class="fc bfc" id="L1833" title="All 2 branches covered.">                &amp;&amp; (!defaultValue.getClass().isArray() || !cls</span>
-<span class="fc bfc" id="L1834" title="All 2 branches covered.">                        .isAssignableFrom(defaultValue.getClass()</span>
-<span class="fc" id="L1835">                                .getComponentType())))</span>
+<span class="fc bfc" id="L1841" title="All 2 branches covered.">        if (defaultValue != null</span>
+<span class="fc bfc" id="L1842" title="All 2 branches covered.">                &amp;&amp; (!defaultValue.getClass().isArray() || !cls</span>
+<span class="fc bfc" id="L1843" title="All 2 branches covered.">                        .isAssignableFrom(defaultValue.getClass()</span>
+<span class="fc" id="L1844">                                .getComponentType())))</span>
         {
-<span class="fc" id="L1837">            throw new IllegalArgumentException(</span>
-<span class="fc" id="L1838">                    &quot;The type of the default value (&quot; + defaultValue.getClass()</span>
+<span class="fc" id="L1846">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L1847">                    &quot;The type of the default value (&quot; + defaultValue.getClass()</span>
                             + &quot;)&quot; + &quot; is not an array of the specified class (&quot;
                             + cls + &quot;)&quot;);
         }
-<span class="fc" id="L1842">    }</span>
+<span class="fc" id="L1851">    }</span>
 
     /**
      * Handles the default collection for a collection conversion. This method
@@ -1853,22 +1862,22 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
     private static &lt;T&gt; Collection&lt;T&gt; handleDefaultCollection(final Collection&lt;T&gt; target,
             final Collection&lt;T&gt; defaultValue)
     {
-<span class="fc bfc" id="L1856" title="All 2 branches covered.">        if (defaultValue == null)</span>
+<span class="fc bfc" id="L1865" title="All 2 branches covered.">        if (defaultValue == null)</span>
         {
-<span class="fc" id="L1858">            return null;</span>
+<span class="fc" id="L1867">            return null;</span>
         }
 
         Collection&lt;T&gt; result;
-<span class="fc bfc" id="L1862" title="All 2 branches covered.">        if (target == null)</span>
+<span class="fc bfc" id="L1871" title="All 2 branches covered.">        if (target == null)</span>
         {
-<span class="fc" id="L1864">            result = new ArrayList&lt;&gt;(defaultValue);</span>
+<span class="fc" id="L1873">            result = new ArrayList&lt;&gt;(defaultValue);</span>
         }
         else
         {
-<span class="fc" id="L1868">            target.addAll(defaultValue);</span>
-<span class="fc" id="L1869">            result = target;</span>
+<span class="fc" id="L1877">            target.addAll(defaultValue);</span>
+<span class="fc" id="L1878">            result = target;</span>
         }
-<span class="fc" id="L1871">        return result;</span>
+<span class="fc" id="L1880">        return result;</span>
     }
 
     /**
@@ -1884,11 +1893,11 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private static &lt;T&gt; T checkNonNullValue(final String key, final T value)
     {
-<span class="fc bfc" id="L1887" title="All 2 branches covered.">        if (value == null)</span>
+<span class="fc bfc" id="L1896" title="All 2 branches covered.">        if (value == null)</span>
         {
-<span class="nc" id="L1889">            throwMissingPropertyException(key);</span>
+<span class="nc" id="L1898">            throwMissingPropertyException(key);</span>
         }
-<span class="fc" id="L1891">        return value;</span>
+<span class="fc" id="L1900">        return value;</span>
     }
 
     /**
@@ -1899,7 +1908,7 @@ public abstract class AbstractConfiguration extends BaseEventSource implements C
      */
     private static void throwMissingPropertyException(final String key)
     {
-<span class="fc" id="L1902">        throw new NoSuchElementException(String.format(</span>
+<span class="fc" id="L1911">        throw new NoSuchElementException(String.format(</span>
                 &quot;Key '%s' does not map to an existing object!&quot;, key));
     }
 }

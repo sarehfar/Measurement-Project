@@ -53,6 +53,7 @@ import org.apache.commons.configuration2.reloading.ReloadingControllerSupport;
  * in one of these configuration sources or in the definition configuration.
  * &lt;/p&gt;
  *
+ * @version $Id$
  * @since 2.0
  */
 public class ReloadingCombinedConfigurationBuilder extends
@@ -67,8 +68,8 @@ public class ReloadingCombinedConfigurationBuilder extends
      */
     public ReloadingCombinedConfigurationBuilder()
     {
-<span class="fc" id="L70">        super();</span>
-<span class="fc" id="L71">    }</span>
+<span class="fc" id="L71">        super();</span>
+<span class="fc" id="L72">    }</span>
 
     /**
      * Creates a new instance of {@code ReloadingCombinedConfigurationBuilder}
@@ -78,11 +79,11 @@ public class ReloadingCombinedConfigurationBuilder extends
      * @param params a map with initialization parameters
      * @param allowFailOnInit the &lt;em&gt;allowFailOnInit&lt;/em&gt; flag
      */
-    public ReloadingCombinedConfigurationBuilder(final Map&lt;String, Object&gt; params,
-            final boolean allowFailOnInit)
+    public ReloadingCombinedConfigurationBuilder(Map&lt;String, Object&gt; params,
+            boolean allowFailOnInit)
     {
-<span class="fc" id="L84">        super(params, allowFailOnInit);</span>
-<span class="fc" id="L85">    }</span>
+<span class="fc" id="L85">        super(params, allowFailOnInit);</span>
+<span class="fc" id="L86">    }</span>
 
     /**
      * Creates a new instance of {@code ReloadingCombinedConfigurationBuilder}
@@ -90,19 +91,19 @@ public class ReloadingCombinedConfigurationBuilder extends
      *
      * @param params a map with initialization parameters
      */
-    public ReloadingCombinedConfigurationBuilder(final Map&lt;String, Object&gt; params)
+    public ReloadingCombinedConfigurationBuilder(Map&lt;String, Object&gt; params)
     {
-<span class="fc" id="L95">        super(params);</span>
-<span class="fc" id="L96">    }</span>
+<span class="fc" id="L96">        super(params);</span>
+<span class="fc" id="L97">    }</span>
 
     /**
      * {@inheritDoc} This method is overridden to adapt the return type.
      */
     @Override
-    public ReloadingCombinedConfigurationBuilder configure(final BuilderParameters... params)
+    public ReloadingCombinedConfigurationBuilder configure(BuilderParameters... params)
     {
-<span class="fc" id="L104">        super.configure(params);</span>
-<span class="fc" id="L105">        return this;</span>
+<span class="fc" id="L105">        super.configure(params);</span>
+<span class="fc" id="L106">        return this;</span>
     }
 
     /**
@@ -118,7 +119,7 @@ public class ReloadingCombinedConfigurationBuilder extends
     @Override
     public synchronized ReloadingController getReloadingController()
     {
-<span class="fc" id="L121">        return reloadingController;</span>
+<span class="fc" id="L122">        return reloadingController;</span>
     }
 
     /**
@@ -131,9 +132,9 @@ public class ReloadingCombinedConfigurationBuilder extends
     @Override
     public CombinedConfiguration getConfiguration() throws ConfigurationException
     {
-<span class="fc" id="L134">        final CombinedConfiguration result = super.getConfiguration();</span>
-<span class="fc" id="L135">        reloadingController.resetReloadingState();</span>
-<span class="fc" id="L136">        return result;</span>
+<span class="fc" id="L135">        CombinedConfiguration result = super.getConfiguration();</span>
+<span class="fc" id="L136">        reloadingController.resetReloadingState();</span>
+<span class="fc" id="L137">        return result;</span>
     }
 
     /**
@@ -142,10 +143,10 @@ public class ReloadingCombinedConfigurationBuilder extends
      */
     @Override
     protected ConfigurationBuilder&lt;? extends HierarchicalConfiguration&lt;?&gt;&gt; createXMLDefinitionBuilder(
-            final BuilderParameters builderParams)
+            BuilderParameters builderParams)
     {
-<span class="fc" id="L147">        return new ReloadingFileBasedConfigurationBuilder&lt;&gt;(</span>
-<span class="fc" id="L148">                XMLConfiguration.class).configure(builderParams);</span>
+<span class="fc" id="L148">        return new ReloadingFileBasedConfigurationBuilder&lt;&gt;(</span>
+<span class="fc" id="L149">                XMLConfiguration.class).configure(builderParams);</span>
     }
 
     /**
@@ -155,15 +156,15 @@ public class ReloadingCombinedConfigurationBuilder extends
      * with reloading support.
      */
     @Override
-    protected void initResultInstance(final CombinedConfiguration result)
+    protected void initResultInstance(CombinedConfiguration result)
             throws ConfigurationException
     {
-<span class="fc" id="L161">        super.initResultInstance(result);</span>
-<span class="fc bfc" id="L162" title="All 2 branches covered.">        if (reloadingController == null)</span>
+<span class="fc" id="L162">        super.initResultInstance(result);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (reloadingController == null)</span>
         {
-<span class="fc" id="L164">            reloadingController = createReloadingController();</span>
+<span class="fc" id="L165">            reloadingController = createReloadingController();</span>
         }
-<span class="fc" id="L166">    }</span>
+<span class="fc" id="L167">    }</span>
 
     /**
      * Creates the {@code ReloadingController} for this builder. This method is
@@ -177,21 +178,21 @@ public class ReloadingCombinedConfigurationBuilder extends
     protected ReloadingController createReloadingController()
             throws ConfigurationException
     {
-<span class="fc" id="L180">        final Collection&lt;ReloadingController&gt; subControllers =</span>
+<span class="fc" id="L181">        Collection&lt;ReloadingController&gt; subControllers =</span>
                 new LinkedList&lt;&gt;();
-<span class="fc" id="L182">        final ConfigurationBuilder&lt;? extends HierarchicalConfiguration&lt;?&gt;&gt; defBuilder =</span>
-<span class="fc" id="L183">                getDefinitionBuilder();</span>
-<span class="fc" id="L184">        obtainReloadingController(subControllers, defBuilder);</span>
+<span class="fc" id="L183">        ConfigurationBuilder&lt;? extends HierarchicalConfiguration&lt;?&gt;&gt; defBuilder =</span>
+<span class="fc" id="L184">                getDefinitionBuilder();</span>
+<span class="fc" id="L185">        obtainReloadingController(subControllers, defBuilder);</span>
 
-<span class="fc bfc" id="L186" title="All 2 branches covered.">        for (final ConfigurationBuilder&lt;? extends Configuration&gt; b : getChildBuilders())</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        for (ConfigurationBuilder&lt;? extends Configuration&gt; b : getChildBuilders())</span>
         {
-<span class="fc" id="L188">            obtainReloadingController(subControllers, b);</span>
-<span class="fc" id="L189">        }</span>
+<span class="fc" id="L189">            obtainReloadingController(subControllers, b);</span>
+<span class="fc" id="L190">        }</span>
 
-<span class="fc" id="L191">        final CombinedReloadingController ctrl =</span>
+<span class="fc" id="L192">        CombinedReloadingController ctrl =</span>
                 new CombinedReloadingController(subControllers);
-<span class="fc" id="L193">        ctrl.resetInitialReloadingState();</span>
-<span class="fc" id="L194">        return ctrl;</span>
+<span class="fc" id="L194">        ctrl.resetInitialReloadingState();</span>
+<span class="fc" id="L195">        return ctrl;</span>
     }
 
     /**
@@ -202,13 +203,13 @@ public class ReloadingCombinedConfigurationBuilder extends
      * @param builder the builder object to be checked
      */
     public static void obtainReloadingController(
-            final Collection&lt;ReloadingController&gt; subControllers, final Object builder)
+            Collection&lt;ReloadingController&gt; subControllers, Object builder)
     {
-<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (builder instanceof ReloadingControllerSupport)</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        if (builder instanceof ReloadingControllerSupport)</span>
         {
-<span class="fc" id="L209">            subControllers.add(((ReloadingControllerSupport) builder)</span>
-<span class="fc" id="L210">                    .getReloadingController());</span>
+<span class="fc" id="L210">            subControllers.add(((ReloadingControllerSupport) builder)</span>
+<span class="fc" id="L211">                    .getReloadingController());</span>
         }
-<span class="fc" id="L212">    }</span>
+<span class="fc" id="L213">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
