@@ -47,14 +47,15 @@ Description
 Description
 
 ### Spearman
-Description
+Reads data from excel file, calculate the spearman correlation coefficient and plots the result.
 
 - Location: Script/Spearman
 - Language: Python
-- Dependencies: x
+- Dependencies: Pandas (reading excel file), spearmanr from scipy (calculating correlation), matplotlib (drawing the graph)
 
 #### How to Run
-Description
+Install Python above dependencies, in the Python code set the name of the excel file, the name of the excel sheet, and the title of the x and y columns. Save the file and run the following in the command line:
+Python Spearman.py
 
 ## Maven Plugins
 ### JaCoCo (Test Coverage and Complexity)
