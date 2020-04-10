@@ -54,12 +54,13 @@ Description
 
 #### How to Run
 
-## JaCoCo
+## Maven Plugins
+### JaCoCo (Test Coverage and Complexity)
 Description
 
 `Code`
 
-## JaCoCo
+### Pit (Mutation Coverage)
 Description
 
 `Code`
