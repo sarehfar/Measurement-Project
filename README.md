@@ -26,7 +26,7 @@ Project 2 | Apache Commons Collections | https://github.com/apache/commons-colle
 Project 3 | Apache Commons Configuration | https://github.com/apache/commons-configuration
 Project 4 | Apache Maven Doxia | https://github.com/apache/maven-doxia
 
-## Project Directory Structure
+## Directory Structure
 Directory  | Description
 ---------- | -----------
 Correlation  | Contains the correlation data for all the metrics including scatter plots.
