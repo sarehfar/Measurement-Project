@@ -25,12 +25,11 @@ Hanieh QasemiBoroujeni | 40057756
 ## Project Directory Structure
 Directory  | Description
 ------------- | -------------
-Correlation  | Description
-Data  | Description
-Presentation  | Description
-Report  | Description
-Script/Mutation  | Description
-Script/Spearman  | Description
+Correlation  | Contains the correlation data for all the metrics including scatter plots.
+Data  | Contains the raw data collected for all the metrics.
+Presentation  | Contains the project presentation in PDF format.
+Report  | Contains the project report in PDF format.
+Script  | Contains all the scripts that were used for the project.
 
 ## Scripts
 ### Mutation
