@@ -58,9 +58,54 @@ Description
 ### JaCoCo (Test Coverage and Complexity)
 Description
 
-`Code`
+```xml
+<plugin>
+   <groupId>org.jacoco</groupId>
+   <artifactId>jacoco-maven-plugin</artifactId>
+   <version>0.8.3</version>
+   <executions>
+      <execution>
+         <id>prepare-agent</id>
+         <goals>
+            <goal>prepare-agent</goal>
+         </goals>
+      </execution>
+      <execution>
+         <id>post-unit-test</id>
+         <phase>test</phase>
+         <goals>
+            <goal>report</goal>
+         </goals>
+         <configuration>
+            <!--Sets the path to the file which contains the execution data. -->
+            <dataFile>target/jacoco.exec</dataFile>
+            <!--Sets the output directory for the code coverage report. -->
+            <outputDirectory>target/jacoco-ut</outputDirectory>
+         </configuration>
+      </execution>
+   </executions>
+</plugin>
+```
 
 ### Pit (Mutation Coverage)
 Description
 
-`Code`
+```xml
+<plugin>
+   <groupId>org.pitest</groupId>
+   <artifactId>pitest-maven</artifactId>
+   <version>1.2.0</version>
+   <executions>
+      <execution>
+         <id>pit-report</id>
+         <phase>test</phase>
+         <goals>
+            <goal>mutationCoverage</goal>
+         </goals>
+         <configuration>
+            <outputFormats>CSV</outputFormats>
+         </configuration>
+      </execution>
+   </executions>
+</plugin>
+```
