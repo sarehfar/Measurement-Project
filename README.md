@@ -1,7 +1,7 @@
 # Software Measurement Project
 ## Team G
-Student Name  | Student ID
-------------- | ----------
+Student  | Student ID
+-------- | ----------
 Sareh Farid  | 27845782
 Seyed Hamed Valiollahi Bayeki  | 40057506
 Ahmad Memari (Arash) | 40088010
