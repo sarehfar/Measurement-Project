@@ -39,5 +39,27 @@ Script  | Contains all the scripts that were used for the project.
 ### Mutation
 Description
 
+- Location: Script/Mutation
+- Language: Java
+- Dependencies: x
+
+#### How to Run
+
 ### Spearman
 Description
+
+- Location: Script/Spearman
+- Language: Python
+- Dependencies: x
+
+#### How to Run
+
+## JaCoCo
+Description
+
+`Code`
+
+## JaCoCo
+Description
+
+`Code`
