@@ -58,7 +58,7 @@ Description
 
 ## Maven Plugins
 ### JaCoCo (Test Coverage and Complexity)
-Description
+The following plugin needs to be added in the pom.xml file of the respective project.
 
 ```xml
 <plugin>
@@ -90,7 +90,7 @@ Description
 ```
 
 ### Pit (Mutation Coverage)
-Description
+The following plugin needs to be added in the pom.xml file of the respective project.
 
 ```xml
 <plugin>
